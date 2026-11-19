@@ -29,6 +29,7 @@ import enHubNotices from "./locales/en/hub-notices.json"
 import enHubEvents from "./locales/en/hub-events.json"
 import enNavigation from "./locales/en/navigation.json"
 import enPageAdmin from "./locales/en/page-admin.json"
+import enPageSleep from "./locales/en/page-sleep.json"
 import enPageBrowsing from "./locales/en/page-browsing.json"
 import enPageSharing from "./locales/en/page-sharing.json"
 import enPageContentLinks from "./locales/en/page-content-links.json"
@@ -109,6 +110,7 @@ import frHubNotices from "./locales/fr/hub-notices.json"
 import frHubEvents from "./locales/fr/hub-events.json"
 import frNavigation from "./locales/fr/navigation.json"
 import frPageAdmin from "./locales/fr/page-admin.json"
+import frPageSleep from "./locales/fr/page-sleep.json"
 import frPageBrowsing from "./locales/fr/page-browsing.json"
 import frPageSharing from "./locales/fr/page-sharing.json"
 import frPageContentLinks from "./locales/fr/page-content-links.json"
@@ -194,6 +196,7 @@ export const LOCALE_PARTS = {
     "hub-events": frHubEvents,
     navigation: frNavigation,
     "page-admin": frPageAdmin,
+    "page-sleep": frPageSleep,
     "page-browsing": frPageBrowsing,
     "page-sharing": frPageSharing,
     "page-content-links": frPageContentLinks,
@@ -276,6 +279,7 @@ export const LOCALE_PARTS = {
     "hub-events": enHubEvents,
     navigation: enNavigation,
     "page-admin": enPageAdmin,
+    "page-sleep": enPageSleep,
     "page-browsing": enPageBrowsing,
     "page-sharing": enPageSharing,
     "page-content-links": enPageContentLinks,

@@ -435,6 +435,13 @@ export interface PageDetailView {
   /** Le moteur n'a pas encore d'organisateur « page » : vide plutôt qu'inventé. */
   readonly events: readonly EventView[]
   readonly viewer: PageViewerView
+  /**
+   * AS-11a — la page n'a plus de responsable : aucun administrateur vivant, page
+   * native, hors institution (`pageStanding.orphan` du moteur). Un booléen, jamais
+   * l'identité de l'équipe ; la fiche le dit à tout lecteur. Absent : fournisseur
+   * antérieur, rien n'est dit.
+   */
+  readonly orphan?: boolean
 }
 
 /**

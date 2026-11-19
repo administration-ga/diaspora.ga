@@ -186,14 +186,15 @@ function viewerOf(state: DemoState, now: number): Viewer | ActionErrorCode {
  * démonstration de la gestion des pages. Revendicable pour CE lecteur, comme le
  * moteur : confiance « communauté », pas une institution, et soit aucun
  * administrateur dans l'équipe fictive, soit le lecteur l'administre (demande de
- * vérification).
+ * vérification). AS-11a : et si la page n'a plus de responsable, pour tout lecteur.
  */
 function standingFor(store: DemoStore): DemoPageStanding {
   return (page, base) => {
     const managed = demoManagedPage(store, page.handle)
     const trust = managed?.badge ?? base.trust
     const role = managed?.myRole ?? null
-    const administered = demoPageAdminContext(store).hasLiveAdmin(page.id)
+    const teams = demoPageAdminContext(store)
+    const administered = teams.hasLiveAdmin(page.id)
     const { associationType: baseAssociationType, sector: baseSector, ...baseIdentity } = base
     const associationType = managed?.associationType === undefined ? baseAssociationType : managed.associationType
     const sector = managed?.sector === undefined ? baseSector : managed.sector
@@ -206,7 +207,7 @@ function standingFor(store: DemoStore): DemoPageStanding {
       badge: trust,
       claimable: trust === "community" && base.ownerKind !== "institution" && (role === "admin" || !administered),
     }
-    return { view, role }
+    return { view, role, orphan: teams.isOrphan(page) }
   }
 }
 

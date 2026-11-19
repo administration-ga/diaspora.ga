@@ -6,7 +6,8 @@
  * AS-10 : chaque page n'offre que ce que mon rôle permet — un modérateur y trouve
  * l'équipe et la modération des commentaires, ni publication ni gestion.
  * L'instruction des revendications est au bureau de modération, onglet
- * « Pages à vérifier » (AS-01).
+ * « Pages à vérifier » (AS-01). AS-11a : la section « En sommeil » dit l'échéance de
+ * chaque page endormie et la laisse réactiver.
  * PROPRIÉTAIRE : chantier « gestion des pages ». « Mon activité » (chantier
  * « catalogue ») le monte ; la signature est figée.
  */
@@ -33,6 +34,7 @@ import { toast } from "sonner"
 import { routes } from "@/lib/routes"
 
 import { ClaimStatusChip, ConfirmSheet, ErrorNotice, PageAdminUnavailable, RoleChip } from "./page-admin-parts"
+import { MySleepingPages } from "./page-sleep-section"
 
 export function MyPagesPanel() {
   const capability = usePageAdmin()
@@ -101,6 +103,7 @@ function PanelBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; r
         )}
         {props.management && pages.status === "ready" && pages.data.length > 0 ? <CreateLinks /> : null}
       </section>
+      {props.management ? <MySleepingPages management={props.management} /> : null}
       {props.management ? <Invitations management={props.management} /> : null}
       {props.management ? <MyClaims management={props.management} /> : null}
     </div>

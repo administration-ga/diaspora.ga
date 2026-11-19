@@ -135,7 +135,10 @@ function invalidField(error: unknown): string | null {
 /** Les refus des gestes de modération, en codes FERMÉS ; le reste suit la table commune du moteur. */
 export function moderationDeskErrorCode(error: unknown): ActionErrorCode {
   if (error instanceof Refusal) return error.code
-  if (engineErrorRule(error)?.rule === "DECISION_REASON_LENGTH") return "moderation_desk_reason_length"
+  const rule = engineErrorRule(error)?.rule
+  if (rule === "DECISION_REASON_LENGTH") return "moderation_desk_reason_length"
+  // AS-11a : revendication sur une page en sommeil — elle reste en attente, elle se refuse seulement ; jamais « déjà tranchée ».
+  if (rule === "PAGE_ASLEEP") return "moderation_desk_page_asleep"
   const code = engineErrorCode(error)
   if (code === "conflict") return "moderation_desk_conflict"
   if (code === "policyRefused") return "moderation_desk_limit"

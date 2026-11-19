@@ -16,6 +16,7 @@ import {
   type AppResources,
   type Locale,
 } from "@antsia/social-features/i18n"
+import { PAGE_SLEEP_DAYS } from "@antsia/social-domain/pages"
 import type { i18n as I18nInstance } from "i18next"
 
 import { MEDIA_LIMIT_VARIABLES } from "./media-limits"
@@ -32,6 +33,13 @@ export const DIASPORALE_NAMESPACE = "diasporale"
 
 /** La marque, variable `{{brand}}` des textes du moteur. */
 export const DIASPORALE_BRAND = "DIASPORALE"
+
+/**
+ * AS-11a : la durée du sommeil d'une page, celle du moteur, dite par un refus que l'écran
+ * traduit sans paramètre (`errors.page_sleep_expired`). Un nom propre, jamais `days` : une
+ * phrase qui oublierait de passer ses jours ne recevrait pas trente en silence.
+ */
+export const PAGE_RULE_VARIABLES = { pageSleepDays: String(PAGE_SLEEP_DAYS) } as const satisfies Record<string, string>
 
 /** Les ressources de l'espace de noms `diasporale`, par langue (fichier principal et fragments fusionnés). */
 export const diasporaleResources: AppResources = {
@@ -54,7 +62,7 @@ export function createAppI18n(options: { locale: Locale; appResources?: AppResou
     locale: options.locale,
     appResources,
     defaultNS: options.defaultNS ?? DIASPORALE_NAMESPACE,
-    defaultVariables: { brand: DIASPORALE_BRAND, ...MEDIA_LIMIT_VARIABLES },
+    defaultVariables: { brand: DIASPORALE_BRAND, ...MEDIA_LIMIT_VARIABLES, ...PAGE_RULE_VARIABLES },
   })
 }
 

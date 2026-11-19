@@ -646,6 +646,10 @@ describe("Guichet — pages à vérifier (AS-01)", () => {
     expect(await closed.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "rejected", reason: "Pièces illisibles, mandat absent." })).toEqual({ ok: false, code: "moderation_desk_conflict" })
     const official = setup({ [DECIDE]: () => { throw engineError({ code: "invalidArgument", rule: "PAGE_NOT_CLAIMABLE", params: {} }) } })
     expect(await official.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: false, code: "page_not_claimable" })
+    // AS-11a : une page en sommeil — la revendication reste en attente, elle se refuse seulement ; jamais « déjà tranchée ».
+    const asleep = setup({ [DECIDE]: () => { throw engineError({ code: "invalidArgument", rule: "PAGE_ASLEEP", params: {} }) } })
+    expect(await asleep.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Statuts et procès-verbal conformes." })).toEqual({ ok: false, code: "moderation_desk_page_asleep" })
+    expect(moderationDeskErrorCode(engineError({ code: "conflict", rule: "PAGE_ASLEEP", params: {} }))).toBe("moderation_desk_page_asleep")
     const other = setup({ "modules/people/persons:getMyPerson": () => ({ _id: "autre-personne" }), [DECIDE]: () => ({ status: "approved" }) })
     expect(await other.desk.decideClaim({ personId: PERSON._id, claimId: "claim-1", decision: "approved", reason: "Décision par une autre session." })).toEqual({ ok: false, code: "not_found" })
     expect(other.writes()).toEqual([])

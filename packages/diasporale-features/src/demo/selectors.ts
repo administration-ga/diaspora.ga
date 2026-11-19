@@ -391,6 +391,8 @@ export function isConnected(state: DemoState, a: string, b: string): boolean {
 export function canRead(state: DemoState, post: DemoPost, viewerId: string, now: number): boolean {
   const isMine = post.author.kind === "person" && post.author.id === viewerId
   const pageContext = PAGE_READING_CONTEXTS.get(state)
+  // AS-11a : la garde de page du moteur — une page absente des pages lisibles (en sommeil) ne parle plus, à personne.
+  if (post.author.kind === "page" && pageContext?.pages !== undefined && pageContext.pages[post.author.id] === undefined) return false
   const isPageSignatory = post.author.kind === "page" && (pageContext?.isSignatory?.(post.author.id, viewerId) ?? false)
   if (!isReadableByOthers(post.moderation) && !isMine && !isPageSignatory) return false
   const status = statusOf(state, viewerId, now)
@@ -690,8 +692,9 @@ export function hubCounters(state: DemoState, country: CountryCode, now: number)
     members,
     associations: pages.filter((page) => page.ownerKind === "association").length,
     companies: pages.filter((page) => page.ownerKind === "company").length,
+    // AS-11a : compté comme la liste du hub — l'évènement d'une page qui n'est plus lisible (en sommeil) se tait avec elle.
     upcomingEvents: state.events.filter(
-      (event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country),
+      (event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country) && state.pages[event.organizerPageId] !== undefined,
     ).length,
   })
 }
@@ -711,7 +714,8 @@ export function countryHubView(state: DemoState, country: CountryCode, now: numb
     associations: pages.filter((page) => page.ownerKind === "association"),
     companies: pages.filter((page) => page.ownerKind === "company"),
     events: state.events
-      .filter((event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country))
+      // AS-11a : l'évènement d'une page qui n'est plus lisible (en sommeil) se tait avec elle.
+      .filter((event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country) && state.pages[event.organizerPageId] !== undefined)
       .sort((a, b) => a.startsAt - b.startsAt)
       .map((event) => eventView(state, event, now)),
     eventsSource: "demo",
@@ -894,7 +898,8 @@ export function demoAccountsView(state: DemoState): DemoAccountView[] {
  * l'identité et la confiance à jour (surcouches de la gestion des pages) et le
  * rôle VIVANT du lecteur. Sans elle, la page du jeu fictif, sans rôle.
  */
-export type DemoPageStanding = (page: DemoPage, base: PageView) => { readonly view: PageView; readonly role: PageViewerRole | null }
+/** `orphan` (AS-11a) : la page n'a plus de responsable ; absent, la fiche n'en dit rien. */
+export type DemoPageStanding = (page: DemoPage, base: PageView) => { readonly view: PageView; readonly role: PageViewerRole | null; readonly orphan?: boolean }
 
 export interface DemoPageContext {
   /** Les abonnements locaux ([qui suit, quelle page], `pageFollowKey`). */
@@ -930,7 +935,7 @@ export function findDemoPage(state: DemoState, rawHandle: string): DemoPage | nu
   return Object.values(state.pages).find((candidate) => candidate.handle === handle) ?? null
 }
 
-function standingOf(page: DemoPage, context: DemoPageContext): { view: PageView; role: PageViewerRole | null } {
+function standingOf(page: DemoPage, context: DemoPageContext): ReturnType<DemoPageStanding> {
   const base = pageView(page, { follows: context.follows ?? NO_PAGE_FOLLOWS })
   return context.standing ? context.standing(page, base) : { view: base, role: null }
 }
@@ -948,7 +953,7 @@ function matchesPage(query: string, page: PageView): boolean {
 export function pageDetailView(state: DemoState, handle: string, viewerId: string | null, now: number, context: DemoPageContext = {}): PageDetailView | null {
   const page = findDemoPage(state, handle)
   if (!page || viewerId === null || statusOf(state, viewerId, now) === null) return null
-  const { view, role } = standingOf(page, context)
+  const { view, role, orphan } = standingOf(page, context)
   const pagePosts = state.posts.filter((post) => post.author.kind === "page" && post.author.id === page.id)
   return {
     page: view,
@@ -964,6 +969,7 @@ export function pageDetailView(state: DemoState, handle: string, viewerId: strin
       .sort((a, b) => a.startsAt - b.startsAt)
       .map((event) => eventView(state, event, now)),
     viewer: { role, following: (context.follows ?? NO_PAGE_FOLLOWS).has(pageFollowKey(viewerId, page.id)) },
+    ...(orphan !== undefined ? { orphan } : {}),
   }
 }
 

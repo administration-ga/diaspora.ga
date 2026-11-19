@@ -1,0 +1,56 @@
+{
+  "pageSleep": {
+    "section": {
+      "title": "Put the page to sleep",
+      "lead": "Is your organisation winding up or taking a break? Put the page to sleep: it disappears for everyone, and any administrator can wake it up within {{days}} days.",
+      "action": "Put the page to sleep",
+      "actionLabel": "Put the page {{name}} to sleep"
+    },
+    "confirm": {
+      "title": "Put {{name}} to sleep?",
+      "body": "Here is what changes as soon as you confirm.",
+      "hidden": "The page, its offers, its jobs, its events and its posts disappear for everyone, your team included.",
+      "deadlines": "Requests, applications and registrations stay as they are on the page side, but their deadlines keep running: an unanswered request can expire, and its author is told; a job offer can close when it is due.",
+      "live": "A live stream of the page in progress stops.",
+      "kept": "Memberships, followers and the team are kept.",
+      "silent": "Nobody is notified that the page is asleep. If registrants must be told, cancel your events first.",
+      "reversible": "Any administrator of the page can wake it up from “My pages” until {{date}}: everything that has not expired in the meantime then comes back.",
+      "after": "After that date, only the ANTSIA platform team can act.",
+      "action": "Put to sleep"
+    },
+    "done": "{{name}} is asleep until {{date}}.",
+    "myPages": {
+      "title": "Asleep",
+      "lead": "These pages are no longer visible. While the period runs, any administrator can wake them up: each one comes back with everything that has not expired in the meantime.",
+      "until": "Asleep until {{date}}",
+      "expired": "Period ended on {{date}}: only the ANTSIA platform team can act now.",
+      "adminOnly": "Only an administrator of the page can wake it up.",
+      "wake": "Wake up",
+      "wakeLabel": "Wake up the page {{name}}",
+      "woken": "{{name}} is visible again."
+    },
+    "manage": {
+      "title": "This page is asleep",
+      "asleepBody": "{{name}} is no longer visible, nor are its offers, jobs, events or posts. Any administrator can wake it up until {{date}}.",
+      "expiredBody": "{{name}} has been asleep for more than {{days}} days: it can no longer be woken up from here, and nothing has been erased. Only the ANTSIA platform team can act.",
+      "myPages": "Open “My pages”"
+    },
+    "expired": {
+      "contact": "Write to the platform team",
+      "contactLabel": "Write to the platform team about {{name}}"
+    },
+    "orphan": {
+      "title": "This page no longer has anyone in charge",
+      "claimBody": "Nobody administers it today. Do you represent it? Claim it with supporting documents: the network moderation will decide.",
+      "claim": "Claim this page",
+      "pendingBody": "Nobody administers it today. Your claim is being reviewed by the network moderation.",
+      "contactBody": "Nobody administers it today. To tell us who represents it, write to the DIASPORALE team.",
+      "contact": "Write to the team"
+    }
+  },
+  "errors": {
+    "page_sleep_expired": "This page has been asleep for more than {{pageSleepDays}} days: it can no longer be woken up from here. Only the ANTSIA platform team can act.",
+    "page_asleep": "This page is asleep: nothing changes on it until an administrator wakes it up.",
+    "moderation_desk_page_asleep": "This page is asleep: the claim can only be refused."
+  }
+}

@@ -24,8 +24,17 @@
  * prête l'état et les règles des pages (`demoPageClaimsDesk`) : file en
  * attente, conflit d'intérêts (demandeur, toute ligne de signataire même
  * invitée), effet d'une décision validée.
+ *
+ * AS-11a : une page EN SOMMEIL est une échéance posée dans cet état (`sleeping`),
+ * jamais une écriture sur ses objets. Les pages résolues l'omettent, donc la
+ * projection de lecture du magasin (`pagesOf`) aussi : fiche, annuaire, hub, fil,
+ * offres, emplois, évènements et groupes la taisent comme une page retirée, et son
+ * équipe est figée. Seule son équipe la relit, sur le jeu fictif SANS projection
+ * (`getBaseState`), pour la réactiver ; retirer l'échéance rend ce qui n'a pas expiré
+ * entre-temps (les délais des demandes et des emplois courent pendant le sommeil, lus à l'heure).
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
+import { pageSleepState } from "@antsia/social-domain/pages"
 import { normalizePageAssociationType, normalizePageCity, normalizePageSector } from "@antsia/social-domain/pagePresentation"
 import { hasCapability, isCountryCode, type CountryCode, type MembershipStatus, type PageTrustLevel } from "@diasporale/domain"
 import { useMemo, useSyncExternalStore } from "react"
@@ -33,6 +42,7 @@ import { useMemo, useSyncExternalStore } from "react"
 import type { ActionErrorCode } from "../data/errors"
 import type { DeskClaimDecision, DeskClaimDetailView, DeskClaimParty, DeskClaimView } from "../data/moderation-desk-port"
 import {
+  isMemberPageKind,
   isRegistrablePageKind,
   pageClaimNoteRefusal,
   pageDescriptionRefusal,
@@ -43,6 +53,7 @@ import {
   pageShortNameRefusal,
   isPageSignatoryRole,
   PAGE_SIGNATORIES_MAX,
+  PAGE_SLEEP_MS,
   type ManagedPageDetailView,
   type ManagedPageRole,
   type ManagedPageView,
@@ -55,6 +66,8 @@ import {
   type PageRefView,
   type PageSignatoryView,
   type PageTeamRole,
+  type SleepingPageState,
+  type SleepingPageView,
   type TeamPageView,
 } from "../data/page-admin-port"
 import { pageAssociationTypeRefusal, pageCityRefusal, pageSectorRefusal } from "../data/page-presentation"
@@ -111,6 +124,12 @@ interface DemoCreatedPage {
   readonly createdAt: number
 }
 
+/** AS-11a : le sommeil d'une page — son début et son échéance ; aucune personne n'y est gardée. */
+interface DemoSleep {
+  readonly since: number
+  readonly endsAt: number
+}
+
 interface DemoIdentity {
   readonly name?: string
   readonly shortName?: string | null
@@ -132,6 +151,8 @@ export interface DemoPageAdminState {
   readonly identity: Readonly<Record<string, DemoIdentity>>
   /** Pages devenues « Vérifié » par une revendication validée (jamais « Officiel »). */
   readonly verified: readonly string[]
+  /** AS-11a : les pages en sommeil, par identifiant ; absent (état antérieur) : aucune. */
+  readonly sleeping?: Readonly<Record<string, DemoSleep>>
 }
 
 /**
@@ -162,6 +183,7 @@ export function seedPageAdmin(state: DemoState): DemoPageAdminState {
     created: [],
     identity: {},
     verified: [],
+    sleeping: {},
   }
 }
 
@@ -306,7 +328,21 @@ interface ResolvedPage extends PageRefView {
   readonly sector: CompanySector | null
 }
 
-function resolvedPages(state: DemoState, overlay: DemoPageAdminState): ResolvedPage[] {
+/** AS-11a : le sommeil posé sur une page, ou `null` ; échu ou non, la page reste masquée. */
+function sleepOf(overlay: DemoPageAdminState, pageId: string): DemoSleep | null {
+  return overlay.sleeping?.[pageId] ?? null
+}
+
+/** L'état dérivé par la règle du moteur (`pageSleepState`) : l'échéance se constate à la lecture. */
+function sleepStateOf(sleep: DemoSleep, now: number): SleepingPageState {
+  return pageSleepState({ status: "inactive", deactivatedAt: sleep.since, sleepEndsAt: sleep.endsAt }, now) === "expired" ? "expired" : "asleep"
+}
+
+/**
+ * Les pages lisibles d'ici, identités et vérifications comprises. Une page en sommeil en
+ * est absente (AS-11a), sauf pour les lectures de son équipe (`includeSleeping`).
+ */
+function resolvedPages(state: DemoState, overlay: DemoPageAdminState, options: { readonly includeSleeping?: boolean } = {}): ResolvedPage[] {
   const createdIds = new Set(overlay.created.map((page) => page.id))
   const seeded = Object.values(state.pages).filter((page) => !createdIds.has(page.id)).map((page): ResolvedPage => {
     const view = pageView(page)
@@ -337,7 +373,8 @@ function resolvedPages(state: DemoState, overlay: DemoPageAdminState): ResolvedP
     associationType: page.associationType ?? null,
     sector: page.sector ?? null,
   }))
-  return [...seeded, ...created].map((page) => {
+  const pages = options.includeSleeping === true ? [...seeded, ...created] : [...seeded, ...created].filter((page) => sleepOf(overlay, page.id) === null)
+  return pages.map((page) => {
     const identity = overlay.identity[page.id] ?? {}
     // La confiance ne se déclare pas : seule une revendication validée fait « Vérifié », jamais « Officiel ».
     const badge: PageTrustLevel = page.badge === "official" ? "official" : overlay.verified.includes(page.id) ? "verified" : page.badge
@@ -362,6 +399,20 @@ function pageById(state: DemoState, overlay: DemoPageAdminState, pageId: string)
 function pageByHandle(state: DemoState, overlay: DemoPageAdminState, rawHandle: string): ResolvedPage | null {
   const handle = pageHandleFor({ name: rawHandle })
   return resolvedPages(state, overlay).find((page) => page.handle === handle) ?? null
+}
+
+/** AS-11a : une page en sommeil, relue sur le jeu fictif SANS projection (la projection la masque). */
+function sleepingPageById(base: DemoState, overlay: DemoPageAdminState, pageId: string): ResolvedPage | null {
+  if (sleepOf(overlay, pageId) === null) return null
+  return resolvedPages(base, overlay, { includeSleeping: true }).find((page) => page.id === pageId) ?? null
+}
+
+/**
+ * AS-11a : une revendication garde sa page, même endormie (le moteur la lit sans garde
+ * d'état) : la page éveillée, sinon la page en sommeil relue sur le jeu fictif `base`.
+ */
+function claimPageById(state: DemoState, base: DemoState, overlay: DemoPageAdminState, pageId: string): ResolvedPage | null {
+  return pageById(state, overlay, pageId) ?? sleepingPageById(base, overlay, pageId)
 }
 
 function refOf(page: ResolvedPage): PageRefView {
@@ -401,8 +452,8 @@ function personLabel(state: DemoState, personId: string): { personId: string; ha
   return { personId, handle: person.profile.handle, displayName: person.profile.displayName }
 }
 
-function claimView(state: DemoState, overlay: DemoPageAdminState, claim: DemoClaim): PageClaimView | null {
-  const page = pageById(state, overlay, claim.pageId)
+function claimView(state: DemoState, overlay: DemoPageAdminState, claim: DemoClaim, base: DemoState): PageClaimView | null {
+  const page = claimPageById(state, base, overlay, claim.pageId)
   if (!page) return null
   return {
     id: claim.id,
@@ -510,14 +561,36 @@ export function invitationsView(state: DemoState, overlay: DemoPageAdminState, n
   return { status: "ready", data: out }
 }
 
-export function myClaimsView(state: DemoState, overlay: DemoPageAdminState, now: number): Loadable<readonly PageClaimView[]> {
+/**
+ * AS-11a : les pages en sommeil dont le lecteur est de l'équipe vivante (invitation acceptée,
+ * membre actif), l'échéance la plus proche d'abord, comme `mySleepingPages` du moteur.
+ * `canWake` : administrateur et délai qui court.
+ */
+export function mySleepingPagesView(state: DemoState, base: DemoState, overlay: DemoPageAdminState, now: number): Loadable<readonly SleepingPageView[]> {
+  const viewer = readerOf(state, now)
+  if (typeof viewer === "string") return { status: "error", code: viewer }
+  const pages: SleepingPageView[] = []
+  for (const row of overlay.signatories) {
+    if (row.personId !== viewer.id || row.acceptedAt === null) continue
+    const sleep = sleepOf(overlay, row.pageId)
+    const page = sleep ? sleepingPageById(base, overlay, row.pageId) : null
+    const teamRole = page ? liveTeamRole(state, overlay, page, viewer.id, now) : null
+    if (!sleep || !page || teamRole === null) continue
+    const sleepState = sleepStateOf(sleep, now)
+    pages.push({ ...refOf(page), teamRole, sleepEndsAt: sleep.endsAt, state: sleepState, canWake: teamRole === "admin" && sleepState === "asleep" })
+  }
+  return { status: "ready", data: pages.sort((left, right) => left.sleepEndsAt - right.sleepEndsAt) }
+}
+
+/** `base` (AS-11a) : le jeu fictif sans projection, pour relire la page endormie d'une revendication. */
+export function myClaimsView(state: DemoState, overlay: DemoPageAdminState, now: number, base: DemoState = state): Loadable<readonly PageClaimView[]> {
   const viewer = readerOf(state, now)
   if (typeof viewer === "string") return { status: "error", code: viewer }
   const claims = overlay.claims
     .filter((claim) => claim.claimantId === viewer.id)
     .sort((left, right) => right.createdAt - left.createdAt || (left.id < right.id ? 1 : -1))
     .slice(0, MY_CLAIMS_MAX)
-    .flatMap((claim) => claimView(state, overlay, claim) ?? [])
+    .flatMap((claim) => claimView(state, overlay, claim, base) ?? [])
   return { status: "ready", data: claims }
 }
 
@@ -563,7 +636,7 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
     },
     useMyClaims() {
       const version = useVersions()
-      return useMemo(() => (version === null ? LOADING : myClaimsView(store.getState(), overlay.current(), store.now())), [version])
+      return useMemo(() => (version === null ? LOADING : myClaimsView(store.getState(), overlay.current(), store.now(), store.getBaseState())), [version])
     },
 
     async createPage(input) {
@@ -757,6 +830,48 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
       overlay.commit({ ...current, claims: current.claims.map((candidate) => (candidate === claim ? { ...claim, status: "withdrawn", evidence: [], decidedAt: null } : candidate)) })
       return ok({ withdrawn: true })
     },
+
+    // AS-11a : mêmes règles et même ordre que `putPageToSleep` du moteur ; rien n'est écrit sur les objets de la page.
+    async putToSleep(pageId) {
+      const state = store.getState()
+      const now = store.now()
+      const writer = writerOf(state, now, "declaree")
+      if (typeof writer === "string") return fail(writer)
+      const current = overlay.current()
+      const page = pageById(state, current, pageId)
+      if (!page) return fail("not_found")
+      if (liveRole(state, current, page, writer.id, now) !== "admin") return fail("page_role_required")
+      // Une institution passe par la console : son équipe ne l'endort pas.
+      if (!isMemberPageKind(page.ownerKind)) return fail("page_role_required")
+      const sleepEndsAt = now + PAGE_SLEEP_MS
+      overlay.commit({ ...current, sleeping: { ...current.sleeping, [pageId]: { since: now, endsAt: sleepEndsAt } } })
+      return ok({ sleepEndsAt })
+    },
+
+    // AS-11a : tout administrateur de la page, vivant hormis l'état de la page, tant que le délai court.
+    async wake(pageId) {
+      const state = store.getState()
+      const now = store.now()
+      const writer = writerOf(state, now, "declaree")
+      if (typeof writer === "string") return fail(writer)
+      const current = overlay.current()
+      const sleep = sleepOf(current, pageId)
+      const page = sleep ? sleepingPageById(store.getBaseState(), current, pageId) : null
+      if (!sleep || !page) return fail("not_found")
+      const role = liveTeamRole(state, current, page, writer.id, now)
+      if (role === null) return fail("not_found")
+      if (role !== "admin") return fail("page_role_required")
+      // Échu : rien n'est effacé, mais la page ne se réveille plus d'ici.
+      if (sleepStateOf(sleep, now) === "expired") return fail("page_sleep_expired")
+      const sleeping = Object.fromEntries(Object.entries(current.sleeping ?? {}).filter(([id]) => id !== pageId))
+      overlay.commit({ ...current, sleeping })
+      return ok({ status: "active" as const })
+    },
+
+    useMySleepingPages() {
+      const version = useVersions()
+      return useMemo(() => (version === null ? LOADING : mySleepingPagesView(store.getState(), store.getBaseState(), overlay.current(), store.now())), [version])
+    },
   }
 
   return {
@@ -803,7 +918,7 @@ export function demoPageClaimsDesk(store: DemoStore) {
         .filter((claim) => claim.status === "pending")
         .sort((left, right) => left.createdAt - right.createdAt || (left.id < right.id ? -1 : 1))
         .flatMap((claim) => {
-          const page = pageById(state, current, claim.pageId)
+          const page = claimPageById(state, store.getBaseState(), current, claim.pageId)
           if (!page) return []
           return [{ claimId: claim.id, page: refOf(page), country: page.country, evidenceCount: claim.evidence.length, createdAt: claim.createdAt, party: claimParty(current, claim, viewerId) }]
         })
@@ -813,7 +928,7 @@ export function demoPageClaimsDesk(store: DemoStore) {
       const state = store.getState()
       const current = overlay.current()
       const claim = current.claims.find((candidate) => candidate.id === claimId)
-      if (!claim || claim.status !== "pending" || !pageById(state, current, claim.pageId)) return null
+      if (!claim || claim.status !== "pending" || !claimPageById(state, store.getBaseState(), current, claim.pageId)) return null
       return {
         claimId: claim.id,
         claimant: personLabel(state, claim.claimantId),
@@ -831,12 +946,14 @@ export function demoPageClaimsDesk(store: DemoStore) {
       if (!claim) return fail("not_found")
       if (claimParty(current, claim, input.deciderId) !== null) return fail("not_found")
       if (claim.status !== "pending") return fail("moderation_desk_conflict")
-      const page = pageById(state, current, claim.pageId)
+      const page = claimPageById(state, store.getBaseState(), current, claim.pageId)
       if (!page) return fail("not_found")
       let signatories = current.signatories
       let verified = current.verified
       if (input.decision === "approved") {
         if (page.badge === "official") return fail("page_not_claimable")
+        // AS-11a : l'équipe d'une page en sommeil est figée — la revendication se refuse, elle ne s'accorde pas (`PAGE_ASLEEP`).
+        if (sleepOf(current, page.id) !== null) return fail("moderation_desk_page_asleep")
         if (!isActiveMember(state, claim.claimantId, now)) return fail("moderation_desk_conflict")
         const row = rowOf(current, page.id, claim.claimantId)
         signatories = row
@@ -857,10 +974,14 @@ export function demoPageAdminContext(store: DemoStore) {
   return {
     subscribe: overlay.subscribe,
     getVersion: overlay.getVersion,
-    /** Projection des identités : aucun rôle ni droit personnel n'est stocké sur la page. */
+    /**
+     * Projection des identités : aucun rôle ni droit personnel n'est stocké sur la page.
+     * AS-11a : une page en sommeil en sort, comme une page retirée du moteur.
+     */
     pagesOf(state: DemoState): Readonly<Record<string, DemoPage>> {
-      const pages = { ...state.pages }
-      for (const page of resolvedPages(state, overlay.current())) {
+      const current = overlay.current()
+      const pages = Object.fromEntries(Object.entries(state.pages).filter(([id]) => sleepOf(current, id) === null))
+      for (const page of resolvedPages(state, current)) {
         const base = state.pages[page.id]
         pages[page.id] = {
           id: page.id,
@@ -896,6 +1017,17 @@ export function demoPageAdminContext(store: DemoStore) {
     },
     hasLiveAdmin(pageId: string): boolean {
       return liveAdminCount(store.getState(), overlay.current(), pageId, store.now()) > 0
+    },
+    /**
+     * AS-11a : une page SANS RESPONSABLE, comme le moteur (`isPageOrphan`) — lisible d'ici,
+     * hors institution, native (un reflet reste sous l'autorité de sa source), sans
+     * administrateur vivant. Un booléen seulement.
+     */
+    isOrphan(page: Pick<DemoPage, "id" | "ownerKind" | "source">): boolean {
+      if (page.ownerKind === "institution" || page.source === "federation") return false
+      const state = store.getState()
+      const current = overlay.current()
+      return pageById(state, current, page.id) !== null && liveAdminCount(state, current, page.id, store.now()) === 0
     },
     /** Les personnes qui PARLENT au nom de la page ; RP-03 n'y compte pas les modérateurs. */
     signatoriesOf(pageId: string): readonly string[] {

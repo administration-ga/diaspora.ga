@@ -112,7 +112,7 @@ function refused(code: string): FakeQuery {
   return { data: undefined, isError: true, isSuccess: false, isFetching: false, dataUpdatedAt: 0, error: new ConvexError({ code }), refetch: vi.fn().mockResolvedValue(undefined) }
 }
 
-function serveDetail(page: unknown = PAGE, wall: unknown = { items: [POST], nextCursor: { publishedAt: 5, postId: "post-page-1" } }, standing: unknown = { claimable: false }) {
+function serveDetail(page: unknown = PAGE, wall: unknown = { items: [POST], nextCursor: { publishedAt: 5, postId: "post-page-1" } }, standing: unknown = { claimable: false, orphan: false }) {
   mocks.queries.set(GET_PAGE, ok(page))
   mocks.queries.set(PAGE_POSTS, ok(wall))
   mocks.queries.set(STANDING, ok(standing))
@@ -147,7 +147,7 @@ afterEach(cleanup)
 
 describe("fiche d'une page — adaptateur moteur", () => {
   it("projette fidèlement getPage, la première fenêtre du mur et la revendicabilité de la tranche", () => {
-    serveDetail(PAGE, undefined, { claimable: true })
+    serveDetail(PAGE, undefined, { claimable: true, orphan: false })
     const { result } = renderHook(() => useEnginePage(" collectif-lyon "))
 
     expect(lastArgs(GET_PAGE)).toEqual({ networkId: "network-diasporale", handle: "collectif-lyon" })
@@ -176,6 +176,7 @@ describe("fiche d'une page — adaptateur moteur", () => {
       morePosts: true,
       events: [],
       viewer: { role: "admin", following: true },
+      orphan: false,
     })
     expect(result.current.data.posts).toHaveLength(1)
     expect(result.current.data.posts[0]).toMatchObject({
@@ -187,11 +188,19 @@ describe("fiche d'une page — adaptateur moteur", () => {
   })
 
   it("un pays hors diaspora est écarté, jamais deviné ; un mur épuisé ne promet rien de plus", () => {
-    serveDetail({ ...PAGE, country: "GA", badge: "community", viewer: { following: false, role: null } }, { items: [], nextCursor: null }, { claimable: false })
+    serveDetail({ ...PAGE, country: "GA", badge: "community", viewer: { following: false, role: null } }, { items: [], nextCursor: null }, { claimable: false, orphan: false })
     const { result } = renderHook(() => useEnginePage("collectif-lyon"))
     if (result.current.status !== "ready" || result.current.data === null) throw new Error("fiche attendue")
     expect(result.current.data.page).toMatchObject({ country: null, trust: "community", badge: "community", claimable: false })
     expect(result.current.data).toMatchObject({ morePosts: false, posts: [], viewer: { role: null, following: false } })
+  })
+
+  it("AS-11a : dit la page sans responsable telle que la tranche la juge, un booléen seulement", () => {
+    serveDetail({ ...PAGE, badge: "community", viewer: { following: false, role: null } }, { items: [], nextCursor: null }, { claimable: true, orphan: true })
+    const { result } = renderHook(() => useEnginePage("collectif-lyon"))
+    if (result.current.status !== "ready" || result.current.data === null) throw new Error("fiche attendue")
+    expect(result.current.data.orphan).toBe(true)
+    expect(result.current.data.page.claimable).toBe(true)
   })
 
   it("le null du moteur (inconnue, retirée ou d'ailleurs) rend le même null", () => {

@@ -13,6 +13,8 @@
  *     décisions de modération qui ont retiré un contenu de la page, et son recours.
  *     AS-10 : un MODÉRATEUR de la page n'y voit que ce qu'il peut faire — l'équipe
  *     (la lire, s'en retirer) et la modération des commentaires ; ni publication ni gestion.
+ *     AS-11a : l'onglet identité porte « Mettre la page en sommeil » pour un administrateur ;
+ *     la gestion d'une page endormie dit « en sommeil » à son équipe, et la laisse réactiver.
  *
  * Chaque écran dit chargement, erreur, vide, succès, et « indisponible » quand
  * le fournisseur ne sert pas la capacité.
@@ -22,7 +24,7 @@ import { isJobEmployerOwnerKind, isServiceProviderOwnerKind } from "@diasporale/
 import type { ManagedPageDetailView, MemberPageKind, MembershipView, PageClaimView, PageManagement } from "@diasporale/features/data"
 import { myTeamRoleOf, useJobs, usePageDecisions, useServiceReviews } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, BadgeCheckIcon, FlagIcon, MessageSquareXIcon, ShieldOffIcon, UserRoundXIcon } from "lucide-react"
+import { ArrowLeftIcon, BadgeCheckIcon, FlagIcon, MessageSquareXIcon, ShieldOffIcon } from "lucide-react"
 import NextLink from "next/link"
 import type { ReactNode } from "react"
 
@@ -39,6 +41,7 @@ import { PageTeamPanel } from "@/components/page-team-panel"
 import { PagePublicationsPanel } from "@/components/page-publications-panel"
 import { PageServiceManagement } from "@/components/page-service-management"
 import { PageServiceReviews } from "@/components/page-reviews-section"
+import { canOfferPageSleep, ManagedPageUnavailable, PageSleepSection } from "@/components/page-sleep-section"
 import { routes } from "@/lib/routes"
 
 export type PageManageTab = "identite" | "equipe" | "revendications" | "publications" | "services" | "demandes" | "avis" | "emplois" | "decisions"
@@ -123,7 +126,8 @@ function ManagedPageRead(props: {
     )
   }
   if (page.status === "error") return <ErrorNotice code={page.code} className="rounded-xl bg-muted p-4 text-[15px]" />
-  if (page.data === null) return <EmptyState icon={<UserRoundXIcon />} title={t("page.unavailableTitle")} description={t("page.unavailableBody")} />
+  // AS-11a : une page en sommeil ne se lit plus ; à son équipe, l'écran le dit au lieu d'un « introuvable ».
+  if (page.data === null) return <ManagedPageUnavailable management={props.management} handle={props.handle} />
   return <>{props.children(props.management, page.data)}</>
 }
 
@@ -256,7 +260,7 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
           : <EmptyState icon={<ShieldOffIcon />} title={t("pageReviews.unavailableTitle")} description={t("pageReviews.unavailableBody")} />
         : props.tab === "decisions" ? <PageDecisionsPanel pageId={page.id} />
         : props.tab === "emplois" ? isJobEmployerOwnerKind(page.ownerKind) ? <JobRecruiterPanel key={page.id} pageId={page.id} pageHandle={page.handle} /> : <JobsUnavailable />
-        : <Card className="p-5">
+        : <><Card className="p-5">
         {props.tab === "identite" ? (
           page.myRole === "admin" ? (
             <div className="flex flex-col gap-4">
@@ -274,7 +278,14 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
         ) : (
           <VerificationPanel management={props.management} page={page} />
         )}
-      </Card>}
+      </Card>
+      {/* AS-11a : une zone à part, son seul bouton plein, sous l'identité. */}
+      {props.tab === "identite" && canOfferPageSleep(props.management, page) ? (
+        <Card className="p-5">
+          <PageSleepSection management={props.management} page={page} />
+        </Card>
+      ) : null}
+      </>}
     </>
   )
 }
