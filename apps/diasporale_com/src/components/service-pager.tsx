@@ -13,7 +13,7 @@ import {
 import { Button, Card, Skeleton } from "@diasporale/features"
 import type { ActionErrorCode, Loadable } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { useCallback, useLayoutEffect, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useLayoutEffect, useState, type ReactNode } from "react"
 
 /**
  * Les fenêtres d'une liste (offres ou avis) : une
@@ -32,11 +32,28 @@ export interface ServicePagerProps<Row> {
   readonly children: (rows: readonly Row[]) => ReactNode
   /** Ce qui s'affiche quand la liste est vide et close. */
   readonly empty: ReactNode
-  /** Discret (fiche d'une page) : rien pendant le chargement, rien pour une page illisible. */
+  /**
+   * Discret (fiche d'une page) : rien pendant le chargement, rien pour une page illisible, et
+   * jamais un bouton seul — une fenêtre vide qui annonce une suite (lignes écartées après la
+   * lecture de l'index) fait lire la suivante d'elle-même, `QUIET_MAX_WINDOWS` au plus.
+   */
   readonly quiet?: boolean
+  /**
+   * Le cadre de la rubrique (son titre) : en mode discret, les lignes, l'erreur d'une fenêtre
+   * suivante et le bouton de suite s'y rendent, et rien ne s'affiche tant qu'aucune ligne n'est lue.
+   */
+  readonly frame?: (content: ReactNode) => ReactNode
+  /** Le libellé propre du bouton de suite, lu dans sa rubrique ; sinon « Afficher plus ». */
+  readonly loadMoreLabel?: string
   /** Les médias privés sont démontés aussi sur une erreur transitoire de leur lecture. */
   readonly clearOnError?: boolean
 }
+
+/**
+ * Les fenêtres lues d'elles-mêmes, en mode discret, tant qu'aucune ligne n'est servie : de quoi
+ * couvrir le plafond d'une page (trente offres, six par fenêtre) sans lire sans fin.
+ */
+export const QUIET_MAX_WINDOWS = 5
 
 /** Un refus d'accès retire aussi les lignes déjà lues : aucun cache ne survit à un refus. */
 const ACCESS_ERRORS: ReadonlySet<string> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable", "association_group_access_required", "association_group_closed", "association_event_access_required"])
@@ -94,6 +111,11 @@ export function ServicePager<Row>(props: ServicePagerProps<Row>) {
   const loadingMore = pages.mounts.length > 1 && (!last?.data || last.isPending) && !last?.isError
   const hasMore = nextCursor(pages) !== null
   const empty = rows.length === 0 && !initialLoading && error === null && !hasMore && !loadingMore
+  // Discret : une fenêtre vide qui annonce sa suite ne laisse pas un bouton seul, la suivante se lit d'elle-même.
+  const autoAdvance = props.quiet === true && rows.length === 0 && hasMore && !loadingMore && error === null && pages.mounts.length < QUIET_MAX_WINDOWS
+  useEffect(() => {
+    if (autoAdvance) setState((current) => ({ ...current, pages: appendCursorPage(current.pages) }))
+  }, [autoAdvance])
   const retry = () => {
     // Les médias fermés après un refus ne reviennent pas pendant la nouvelle lecture.
     setState((current) => props.clearOnError ? { pages: initialCursorPages<Row>(), errors: {} } : { ...current, errors: {} })
@@ -101,10 +123,11 @@ export function ServicePager<Row>(props: ServicePagerProps<Row>) {
   }
 
   const readers = pages.mounts.map((mount) => <WindowReader key={`${generation}:${mount.id}`} mount={mount} read={props.read} report={report} />)
-  if (props.quiet && (initialLoading || error === "not_found" || empty)) return <>{readers}</>
-  return (
+  // Discret : rien sans ligne lue — ni bouton seul, ni, dans un cadre, une erreur sans titre.
+  const silent = props.quiet === true && (initialLoading || error === "not_found" || empty || (rows.length === 0 && (error === null || props.frame !== undefined)))
+  if (silent) return <>{readers}</>
+  const content = (
     <>
-      {readers}
       {initialLoading ? <Skeleton className="h-32 w-full rounded-xl" /> : null}
       {error !== null ? (
         <Card role="alert" className="flex flex-col items-start gap-3 p-4">
@@ -122,9 +145,15 @@ export function ServicePager<Row>(props: ServicePagerProps<Row>) {
           aria-busy={loadingMore}
           onClick={() => setState((current) => ({ ...current, pages: appendCursorPage(current.pages) }))}
         >
-          {t(loadingMore ? "services.results.loadingMore" : "services.results.loadMore")}
+          {loadingMore ? t("services.results.loadingMore") : (props.loadMoreLabel ?? t("services.results.loadMore"))}
         </Button>
       ) : null}
+    </>
+  )
+  return (
+    <>
+      {readers}
+      {props.frame ? props.frame(content) : content}
     </>
   )
 }

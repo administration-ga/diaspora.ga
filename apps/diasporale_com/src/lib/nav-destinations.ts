@@ -107,6 +107,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   pages: member("explore", routes.pages()),
   page: member("explore", routes.page(SEGMENT)),
   pageServices: member("explore", routes.pageServices(SEGMENT)),
+  pageOpenJobs: member("explore", routes.pageOpenJobs(SEGMENT)),
   pageClaim: member("explore", routes.pageClaim(SEGMENT)),
   // Pas encore servie ici : rangée comme le volet des conférences de la coque du moteur (Découvrir).
   conference: member("explore", routes.conference(SEGMENT)),

@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { PAGE_JOBS_ANCHOR, routes } from "@/lib/routes"
 
 import { PageJobsSection } from "./page-jobs-section"
+import { QUIET_MAX_WINDOWS } from "./service-pager"
 
 const t = getFixedT("fr")
 
@@ -112,13 +113,57 @@ describe("rubrique « Emplois » de la fiche d'une page (EM-04)", () => {
     expect(render(tree()).container).toBeEmptyDOMElement()
   })
 
-  it("une suite annoncée se lit à la demande, sans doublon", () => {
+  it("une suite annoncée se lit à la demande, par un bouton DANS la rubrique, sans doublon", () => {
     mocks.windows.set(null, windowOf([offer("job-1", "Cuisinier (démo)")], "suite-1"))
     mocks.windows.set("suite-1", windowOf([offer("job-1", "Cuisinier (démo)"), offer("job-3", "Plongeur (démo)")]))
     render(tree())
-    fireEvent.click(screen.getByRole("button", { name: t("services.results.loadMore") }))
+    const rubric = within(heading()!.closest("section")!)
+    fireEvent.click(rubric.getByRole("button", { name: t("jobs.pageSection.more") }))
     expect(mocks.reads.map((read) => read.cursor)).toContain("suite-1")
     expect(screen.getAllByRole("link", { name: "Cuisinier (démo)" })).toHaveLength(1)
-    expect(screen.getByRole("link", { name: "Plongeur (démo)" })).toHaveAttribute("href", routes.jobOffer("job-3"))
+    expect(rubric.getByRole("link", { name: "Plongeur (démo)" })).toHaveAttribute("href", routes.jobOffer("job-3"))
+  })
+
+  it("une fenêtre vide qui annonce une suite (offres écartées après l'index) lit la suivante d'elle-même, jamais un bouton seul", () => {
+    mocks.windows.set(null, windowOf([], "suite-1"))
+    mocks.windows.set("suite-1", windowOf([offer("job-3", "Plongeur (démo)")]))
+    render(tree())
+    expect(within(heading()!.closest("section")!).getByRole("link", { name: "Plongeur (démo)" })).toBeInTheDocument()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  it("des fenêtres toutes vides : la lecture s'arrête au plafond, sans rubrique ni bouton", () => {
+    for (let index = 0; index < 8; index += 1) mocks.windows.set(index === 0 ? null : `suite-${index}`, windowOf([], `suite-${index + 1}`))
+    const { container } = render(tree())
+    expect(container).toBeEmptyDOMElement()
+    expect(new Set(mocks.reads.map((read) => read.cursor)).size).toBe(QUIET_MAX_WINDOWS)
+  })
+
+  it("une erreur sans offre lue se tait ; après des offres, elle se dit dans la rubrique", () => {
+    mocks.windows.set(null, { status: "error", code: "unknown" })
+    expect(render(tree()).container).toBeEmptyDOMElement()
+    cleanup()
+    mocks.windows.clear()
+    mocks.windows.set(null, windowOf([offer("job-1", "Cuisinier (démo)")], "suite-1"))
+    mocks.windows.set("suite-1", { status: "error", code: "unknown" })
+    render(tree())
+    const rubric = within(heading()!.closest("section")!)
+    fireEvent.click(rubric.getByRole("button", { name: t("jobs.pageSection.more") }))
+    expect(rubric.getByRole("alert")).toHaveTextContent(t("errors.unknown"))
+  })
+
+  it("arrivé par l'ancre de la rubrique, on y descend et le focus s'y pose", () => {
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    window.location.hash = `#${PAGE_JOBS_ANCHOR}`
+    try {
+      mocks.windows.set(null, windowOf([offer("job-1", "Cuisinier (démo)")]))
+      render(tree())
+      const section = heading()!.closest("section")!
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "start" })
+      expect(document.activeElement).toBe(section)
+    } finally {
+      window.location.hash = ""
+    }
   })
 })

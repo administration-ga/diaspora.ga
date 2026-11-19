@@ -62,7 +62,8 @@
       "closesAt": "Candidatures jusqu'au {{date}}"
     },
     "pageSection": {
-      "title": "Emplois"
+      "title": "Emplois",
+      "more": "Voir d'autres offres de la page"
     },
     "talentCard": {
       "skills": "Compétences déclarées",

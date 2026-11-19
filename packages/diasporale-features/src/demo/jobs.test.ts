@@ -138,6 +138,12 @@ describe("démonstration de l'emploi — offres fictives", () => {
     expect(renderHook(() => anonymous.jobs.usePageOpenOffers({ pageId: "page-saveurs", cursor: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
   })
 
+  it("un blocage avec toute l'équipe ferme la candidature, pas la lecture de la rubrique (RP-03, docs/40), comme au moteur", async () => {
+    const { jobs } = setup("p-rodrigue", (state) => ({ ...state, blocks: [{ id: "bl-rodrigue-mireille", byId: "p-rodrigue", targetId: "p-mireille", createdAt: NOW }] }))
+    expect(data(renderHook(() => jobs.usePageOpenOffers({ pageId: "page-saveurs", cursor: null })).result.current)?.items.map((item) => item.id)).toEqual(["job-demo-livraison", "job-demo-cuisine"])
+    expect(await jobs.apply({ jobId: "job-demo-cuisine", offerVersion: 1, ...APPLY })).toEqual({ ok: false, code: "not_found" })
+  })
+
   it("l'équipe crée, modifie à la version lue, suspend et clôt ; close est terminale", async () => {
     const { jobs } = setup("p-mireille")
     const created = await jobs.createOffer({ ...INPUT, pageId: "page-saveurs", publish: false })

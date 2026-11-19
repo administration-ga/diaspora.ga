@@ -642,14 +642,18 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     return ready(detailView(found, page, now, false, mine))
   }
 
-  /** EM-04 : les offres ouvertes d'une page lisible, comme la recherche ; `null` pour une page illisible. */
+  /**
+   * EM-04 : les offres ouvertes d'une page lisible, comme la recherche ; `null` pour une page
+   * inconnue ou non employeuse. Un blocage avec l'équipe ne ferme que les demandes faites à la
+   * page, jamais sa lecture (RP-03, docs/40), comme au moteur.
+   */
   function pageOpenOffers({ pageId, cursor }: Parameters<JobsCapability["usePageOpenOffers"]>[0]): Loadable<JobsPage<JobOfferCardView> | null> {
     const main = store.getState()
     const now = store.now()
     const viewer = viewerOf(main, now, "read_network")
     if ("refusal" in viewer) return failed(viewer.refusal)
     const page = employerPage(main, pageId)
-    if (!page || isPageClosedByBlocks(main, signatoriesOf(page.id), viewer.personId)) return ready(null)
+    if (!page) return ready(null)
     const data = current()
     const scope = JSON.stringify(["page-open", page.id, data.seedCreatedAt])
     const boundary = decodeCursor(cursor, scope)

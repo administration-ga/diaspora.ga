@@ -253,7 +253,8 @@ export interface JobsCapability {
   /**
    * EM-04 : les offres OUVERTES d'une page, pour la rubrique « Emplois » de sa fiche —
    * la projection de la recherche. `null` : page illisible pour ce lecteur (inconnue,
-   * d'ailleurs, fermée ou de nature non employeuse : même réponse).
+   * d'ailleurs, inactive, retirée ou de nature non employeuse : même réponse). Un blocage
+   * avec l'équipe ne ferme pas cette lecture (RP-03, docs/40).
    */
   usePageOpenOffers(request: { readonly pageId: string; readonly cursor: string | null }): Loadable<JobsPage<JobOfferCardView> | null>
   /** Les offres d'une page que je gère, dans tous leurs états. */

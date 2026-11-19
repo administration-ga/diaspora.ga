@@ -62,7 +62,8 @@
       "closesAt": "Applications until {{date}}"
     },
     "pageSection": {
-      "title": "Jobs"
+      "title": "Jobs",
+      "more": "See more job offers from this page"
     },
     "talentCard": {
       "skills": "Declared skills",
