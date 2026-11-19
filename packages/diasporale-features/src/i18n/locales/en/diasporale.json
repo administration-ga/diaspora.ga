@@ -1233,7 +1233,11 @@
     "someone": "A member",
     "edit": "Edit",
     "editLabel": "Edit your comment",
-    "updated": "Comment updated."
+    "updated": "Comment updated.",
+    "removeLabel": "Remove the comment by {{name}}",
+    "removeLabelNeutral": "Remove this comment",
+    "confirmRemoveLabel": "Remove the comment by {{name}} for good",
+    "confirmRemoveLabelNeutral": "Remove this comment for good"
   },
   "postMenu": {
     "open": "More actions on this post",

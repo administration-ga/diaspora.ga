@@ -113,7 +113,7 @@ describe("FD-05 — signaler un commentaire", () => {
     mount({ postIsMine: true })
     await screen.findByText(THEIRS.body)
     const theirs = row(THEIRS.body)
-    expect(within(theirs).getByRole("button", { name: t("comments.remove") })).toBeInTheDocument()
+    expect(within(theirs).getByRole("button", { name: t("comments.removeLabel", { name: OTHER.displayName }) })).toBeInTheDocument()
     expect(within(theirs).getByRole("button", { name: t("contentReports.action.comment") })).toBeInTheDocument()
   })
 

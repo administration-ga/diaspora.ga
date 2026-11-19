@@ -1233,7 +1233,11 @@
     "someone": "Un membre",
     "edit": "Modifier",
     "editLabel": "Modifier votre commentaire",
-    "updated": "Commentaire modifié."
+    "updated": "Commentaire modifié.",
+    "removeLabel": "Retirer le commentaire de {{name}}",
+    "removeLabelNeutral": "Retirer ce commentaire",
+    "confirmRemoveLabel": "Retirer définitivement le commentaire de {{name}}",
+    "confirmRemoveLabelNeutral": "Retirer définitivement ce commentaire"
   },
   "postMenu": {
     "open": "Plus d'actions sur cette publication",

@@ -131,7 +131,7 @@ describe("Commentaires — édition de l'auteur", () => {
     if (!allowed) session = signedIn("person-a", true)
     mount({ postIsMine: postMine, canComment: allowed })
     expect(screen.queryByRole("button", { name: t("comments.edit") })).toBeNull()
-    expect(Boolean(screen.queryByRole("button", { name: t("comments.remove") }))).toBe(removable)
+    expect(Boolean(screen.queryByRole("button", { name: t("comments.removeLabel", { name: "Membre A" }) }))).toBe(removable)
     expect(Boolean(screen.queryByRole("textbox", { name: t("comments.label") }))).toBe(allowed)
     expect(mocks.edit).not.toHaveBeenCalled()
   })
@@ -243,13 +243,13 @@ describe("Commentaires — envoi, retrait et identité", () => {
       const form = field.closest("form")!
       act(() => { fireEvent.submit(form); fireEvent.submit(form) })
     } else {
-      fireEvent.click(screen.getByRole("button", { name: t("comments.remove") }))
-      const button = screen.getByRole("button", { name: t("comments.confirmRemove") })
+      fireEvent.click(screen.getByRole("button", { name: t("comments.removeLabel", { name: "Membre A" }) }))
+      const button = screen.getByRole("button", { name: t("comments.confirmRemoveLabel", { name: "Membre A" }) })
       act(() => { fireEvent.click(button); fireEvent.click(button) })
     }
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
     if (kind === "envoi") expect(screen.getByRole("textbox", { name: t("comments.label") })).toBeDisabled()
-    else expect(screen.getByRole("button", { name: t("comments.confirmRemove") })).toBeDisabled()
+    else expect(screen.getByRole("button", { name: t("comments.confirmRemoveLabel", { name: "Membre A" }) })).toBeDisabled()
     session = signedIn("person-b")
     view.update()
     const nextDraft = screen.getByRole("textbox", { name: t("comments.label") })
@@ -259,7 +259,7 @@ describe("Commentaires — envoi, retrait et identité", () => {
     expect(screen.queryByText("Ancien envoi")).toBeNull()
     expect(mocks.success).not.toHaveBeenCalled()
     expect(mocks.error).not.toHaveBeenCalled()
-    expect(screen.queryByRole("button", { name: t("comments.confirmRemove") })).toBeNull()
+    expect(screen.queryByRole("button", { name: t("comments.confirmRemoveLabel", { name: "Membre A" }) })).toBeNull()
   })
 
   it("conserve une réponse refusée puis envoie le même parent et le texte normalisé", async () => {
@@ -329,8 +329,8 @@ describe("AS-10 — retirer un commentaire sous une publication de page", () => 
     // La publication est celle d'une page (jamais « la mienne ») ; le commentaire est celui d'autrui.
     setThreads([comment({ id: "comment-tiers", isMine: false, canRemove: true, author: { personId: "person-b", handle: "membre.b", displayName: "Membre B" } })])
     mount({ postIsMine: false })
-    fireEvent.click(screen.getByRole("button", { name: t("comments.remove") }))
-    fireEvent.click(screen.getByRole("button", { name: t("comments.confirmRemove") }))
+    fireEvent.click(screen.getByRole("button", { name: t("comments.removeLabel", { name: "Membre B" }) }))
+    fireEvent.click(screen.getByRole("button", { name: t("comments.confirmRemoveLabel", { name: "Membre B" }) }))
     await waitFor(() => expect(mocks.remove).toHaveBeenCalledExactlyOnceWith("comment-tiers"))
     expect(mocks.success).toHaveBeenCalledWith(t("comments.removed"))
   })
@@ -338,6 +338,21 @@ describe("AS-10 — retirer un commentaire sous une publication de page", () => 
   it("sans `canRemove` (lecteur hors de l'équipe), aucun « Retirer » sur le commentaire d'autrui", () => {
     setThreads([comment({ id: "comment-tiers", isMine: false, author: { personId: "person-b", handle: "membre.b", displayName: "Membre B" } })])
     mount({ postIsMine: false })
-    expect(screen.queryByRole("button", { name: t("comments.remove") })).toBeNull()
+    expect(screen.queryByRole("button", { name: t("comments.removeLabel", { name: "Membre B" }) })).toBeNull()
+  })
+
+  it("chaque « Retirer » porte le nom de l'auteur ; un profil retiré se dit « ce commentaire »", () => {
+    setThreads([
+      comment({ id: "comment-b", isMine: false, canRemove: true, author: { personId: "person-b", handle: "membre.b", displayName: "Membre B" } }),
+      comment({ id: "comment-c", isMine: false, canRemove: true, author: { personId: "person-c", handle: "membre.c", displayName: "Membre C" } }),
+      comment({ id: "comment-neutre", isMine: false, canRemove: true, author: { personId: "person-d", handle: null, displayName: null } }),
+    ])
+    mount({ postIsMine: false })
+    expect(screen.getByRole("button", { name: t("comments.removeLabel", { name: "Membre B" }) })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t("comments.removeLabel", { name: "Membre C" }) })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: t("comments.removeLabelNeutral") }))
+    expect(screen.getByRole("button", { name: t("comments.confirmRemoveLabelNeutral") })).toBeInTheDocument()
+    // Le texte visible reste court ; le nom accessible le précise.
+    expect(screen.getAllByText(t("comments.remove"))).toHaveLength(2)
   })
 })
