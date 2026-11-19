@@ -33,7 +33,17 @@
       "mentoring": "Mentorat",
       "jobs": "Emploi"
     },
-    "moderation": "Modération"
+    "moderation": "Modération",
+    "create": {
+      "label": "Créer",
+      "title": "Créer",
+      "story": "Une actu",
+      "storyHint": "Une photo ou une courte vidéo, dans le bandeau des actus.",
+      "association": "Inscrire une association",
+      "associationHint": "Sa page, ses adhérents, son groupe et ses évènements.",
+      "company": "Inscrire une entreprise",
+      "companyHint": "Sa page, ses offres d'emploi et ses services."
+    }
   },
   "explore": {
     "title": "Explorer",

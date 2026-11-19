@@ -809,3 +809,43 @@ describe("coque — le contexte pays", () => {
     expect(screen.getByRole("link", { name: "Back to my country" })).toHaveAttribute("href", "/communautes")
   })
 })
+
+describe("coque — « Créer », le menu de création (modèle du réseau de l'administration)", () => {
+  it("au bureau, sous « Publier » : une actu quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
+    const user = userEvent.setup()
+    renderShell({ icom: true })
+    // « Publier » garde son bouton à part : le menu ne le double pas (vu avant l'ouverture, le menu étant modal).
+    expect(screen.getAllByRole("button", { name: "Publier" })).toHaveLength(2)
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    const menu = await screen.findByRole("menu")
+    const items = within(menu).getAllByRole("menuitem")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), routes.newPage("association"), routes.newPage("company")])
+    expect(items[1]).toHaveTextContent("Inscrire une association")
+    expect(items[1]).toHaveTextContent("Sa page, ses adhérents, son groupe et ses évènements.")
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("menu")).toBeNull()
+  })
+
+  it("sans iCom (démonstration), seulement les inscriptions", async () => {
+    const user = userEvent.setup()
+    renderShell()
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
+  })
+
+  it("au téléphone, la feuille du compte porte « Créer » ; suspendu, aucun format", async () => {
+    mocks.desktop = false
+    const user = userEvent.setup()
+    renderShell({ network: true })
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(linksOf(within(sheet).getByRole("navigation", { name: "Créer" }))).toEqual([
+      ["Inscrire une association", routes.newPage("association")],
+      ["Inscrire une entreprise", routes.newPage("company")],
+    ])
+    cleanup()
+    renderShell({ membership: { ...MEMBER, status: "suspendue", canPublish: false } })
+    expect(screen.queryByRole("button", { name: "Créer" })).toBeNull()
+  })
+})

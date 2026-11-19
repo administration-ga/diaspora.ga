@@ -35,6 +35,8 @@ import {
   BookmarkIcon,
   BookTextIcon,
   BriefcaseBusinessIcon,
+  Building2Icon,
+  CameraIcon,
   ChartColumnIcon,
   ChevronsUpDownIcon,
   ClipboardListIcon,
@@ -69,6 +71,7 @@ import { DropdownMenu, Popover } from "radix-ui"
 import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import { createFormats, type CreateFormat, type CreateFormatId } from "@/lib/create-menu"
 import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
@@ -346,6 +349,8 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   ]
   const account = accountEntries(membership, current, personal)
   const information = informationEntries(pathname)
+  // Le menu « Créer » (modèle du réseau de l'administration) : les actus suivent iCom, l'inscription la règle partagée.
+  const create = createFormats({ canPublish, stories: icom !== null, status: membership.status })
   const openComposer = () => setComposerOpen(true)
 
   const startShare = (post: PostView) => {
@@ -358,10 +363,10 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={primary} personal={personal} account={account} information={information} onPublish={openComposer} />
+          <DesktopRail membership={membership} primary={primary} personal={personal} account={account} information={information} create={create} onPublish={openComposer} />
 
           <div className="min-w-0 flex-1">
-            <MobileHeader membership={membership} account={account} information={information} onPublish={openComposer} />
+            <MobileHeader membership={membership} account={account} information={information} create={create} onPublish={openComposer} />
             <main
               id="contenu"
               className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
@@ -436,6 +441,7 @@ function DesktopRail(props: {
   personal: readonly NavEntry[]
   account: readonly NavEntry[]
   information: readonly NavEntry[]
+  create: readonly CreateFormat[]
   onPublish: () => void
 }) {
   const { t } = useDiasporaleT()
@@ -464,6 +470,7 @@ function DesktopRail(props: {
         ))}
       </nav>
       <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
+      {props.create.length > 0 ? <CreateMenu formats={props.create} /> : null}
       <AccountMenu membership={props.membership} entries={props.account} information={props.information} />
     </aside>
   )
@@ -611,7 +618,7 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
 // Téléphone : l'en-tête, la feuille du compte, la barre basse
 // ═══════════════════════════════════════════════════════════════
 
-function MobileHeader(props: { membership: MembershipView; account: readonly NavEntry[]; information: readonly NavEntry[]; onPublish: () => void }) {
+function MobileHeader(props: { membership: MembershipView; account: readonly NavEntry[]; information: readonly NavEntry[]; create: readonly CreateFormat[]; onPublish: () => void }) {
   const { t } = useDiasporaleT()
   const demo = useDataSource().kind === "demo"
   return (
@@ -632,7 +639,7 @@ function MobileHeader(props: { membership: MembershipView; account: readonly Nav
         <HomeCountryLink membership={props.membership} caption="hidden" className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
-        <AccountSheet membership={props.membership} entries={props.account} information={props.information} />
+        <AccountSheet membership={props.membership} entries={props.account} information={props.information} create={props.create} />
       </div>
     </header>
   )
@@ -660,11 +667,81 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
   )
 }
 
+const CREATE_ICONS: Readonly<Record<CreateFormatId, LucideIcon>> = {
+  story: CameraIcon,
+  association: UsersRoundIcon,
+  company: Building2Icon,
+}
+
+/**
+ * « Créer » au bureau, sous « Publier » : un menu de formats, chacun dit en une ligne
+ * (comme le menu de création du réseau de l'administration). Flèches, Échap et focus rendu par Radix.
+ */
+function CreateMenu(props: { formats: readonly CreateFormat[] }) {
+  const { t } = useDiasporaleT()
+  return (
+    <DropdownMenu.Root>
+      <DropdownMenu.Trigger asChild>
+        <Button variant="outline" className="w-full">
+          <PlusIcon aria-hidden />
+          {t("nav.create.label")}
+        </Button>
+      </DropdownMenu.Trigger>
+      <DropdownMenu.Portal>
+        <DropdownMenu.Content
+          side="right"
+          align="start"
+          sideOffset={8}
+          collisionPadding={12}
+          className="z-60 w-[min(20rem,calc(100vw-2rem))] rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
+        >
+          <DropdownMenu.Label className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{t("nav.create.title")}</DropdownMenu.Label>
+          {props.formats.map((format) => {
+            const Icon = CREATE_ICONS[format.id]
+            return (
+              <DropdownMenu.Item key={format.id} asChild>
+                <NextLink
+                  href={format.href}
+                  className="flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"
+                >
+                  <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">{t(format.labelKey)}</span>
+                    <span className="block text-[13px] leading-snug text-muted-foreground">{t(format.hintKey)}</span>
+                  </span>
+                </NextLink>
+              </DropdownMenu.Item>
+            )
+          })}
+        </DropdownMenu.Content>
+      </DropdownMenu.Portal>
+    </DropdownMenu.Root>
+  )
+}
+
+function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) {
+  const { t } = useDiasporaleT()
+  const Icon = CREATE_ICONS[props.format.id]
+  return (
+    <li>
+      <NextLink
+        href={props.format.href}
+        onClick={props.onFollow}
+        className="flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
+      >
+        <Icon className="size-5 shrink-0" aria-hidden />
+        <span className="min-w-0 truncate">{t(props.format.labelKey)}</span>
+      </NextLink>
+    </li>
+  )
+}
+
 /** Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar). */
-function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[] }) {
+function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[]; create: readonly CreateFormat[] }) {
   const { t } = useDiasporaleT()
   const [open, setOpen] = useState(false)
   const informationId = useId()
+  const createId = useId()
   const exit = useAccountSignOut()
   const { membership } = props
   const close = () => setOpen(false)
@@ -695,6 +772,19 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
             ))}
           </ul>
         </nav>
+        {/* Au téléphone, l'en-tête n'a plus de place : les formats de « Créer » vivent dans la feuille du compte. */}
+        {props.create.length > 0 ? (
+          <nav aria-labelledby={createId} className="mt-3 border-t border-border pt-3">
+            <p id={createId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
+              {t("nav.create.title")}
+            </p>
+            <ul className="flex flex-col gap-0.5">
+              {props.create.map((format) => (
+                <CreateSheetLink key={format.id} format={format} onFollow={close} />
+              ))}
+            </ul>
+          </nav>
+        ) : null}
         <nav aria-labelledby={informationId} className="mt-3 border-t border-border pt-3">
           <p id={informationId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
             {t("nav.account.info")}

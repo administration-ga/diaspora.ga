@@ -33,7 +33,17 @@
       "mentoring": "Mentoring",
       "jobs": "Jobs"
     },
-    "moderation": "Moderation"
+    "moderation": "Moderation",
+    "create": {
+      "label": "Create",
+      "title": "Create",
+      "story": "A story",
+      "storyHint": "A photo or a short video, in the stories bar.",
+      "association": "Register an association",
+      "associationHint": "Its page, members, group and events.",
+      "company": "Register a business",
+      "companyHint": "Its page, job offers and services."
+    }
   },
   "explore": {
     "title": "Explore",
