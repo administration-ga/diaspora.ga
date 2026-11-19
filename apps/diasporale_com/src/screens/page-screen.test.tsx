@@ -44,6 +44,7 @@ const mocks = vi.hoisted(() => ({
   association: vi.fn(),
   services: vi.fn(),
   contact: vi.fn(),
+  jobs: vi.fn(),
   consulateUrl: null as string | null,
 }))
 
@@ -79,6 +80,12 @@ vi.mock("@/components/page-services-section", () => ({
   },
   PageServiceContactEntry: (props: unknown) => {
     mocks.contact(props)
+    return null
+  },
+}))
+vi.mock("@/components/page-jobs-section", () => ({
+  PageJobsSection: (props: unknown) => {
+    mocks.jobs(props)
     return null
   },
 }))
@@ -369,6 +376,39 @@ describe("PageScreen — fiche d'une institution (VC-01)", () => {
     render(tree())
     expect(mocks.contact).toHaveBeenCalled()
     expect(screen.queryByText("Les questions sur un dossier se traitent sur consulat.ga.")).not.toBeInTheDocument()
+  })
+})
+
+describe("PageScreen — vie des pages : aucun « Écrire » sans fonction (AS-07), rubrique « Emplois » (EM-04)", () => {
+  function ofKind(ownerKind: PageDetailView["page"]["ownerKind"], role: "admin" | "signatory" | null = null): PageDetailView {
+    const base = view({ role })
+    return { ...base, page: { ...base.page, id: `page-${ownerKind}`, handle: `page-${ownerKind}`, ownerKind } }
+  }
+
+  it.each(["media", "community"] as const)("une page « %s » ne montre plus de « Écrire » grisé, ni contact de service, ni rubrique d'emplois", (ownerKind) => {
+    mocks.detail = { status: "ready", data: ofKind(ownerKind) }
+    render(tree())
+    expect(screen.getByRole("heading", { level: 1, name: "Collectif de Lyon" })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /Écrire/ })).not.toBeInTheDocument()
+    expect(screen.queryByTitle(t("contact.soon"))).not.toBeInTheDocument()
+    expect(mocks.contact).not.toHaveBeenCalled()
+    expect(mocks.jobs).not.toHaveBeenCalled()
+  })
+
+  it("une entreprise et une association montent leur rubrique d'emplois ; qui tient un rôle la gère", () => {
+    mocks.detail = { status: "ready", data: ofKind("company") }
+    render(tree())
+    expect(mocks.jobs).toHaveBeenLastCalledWith({ pageId: "page-company", pageHandle: "page-company", canManage: false })
+    cleanup()
+    mocks.detail = { status: "ready", data: ofKind("association", "admin") }
+    render(tree())
+    expect(mocks.jobs).toHaveBeenLastCalledWith({ pageId: "page-association", pageHandle: "page-association", canManage: true })
+  })
+
+  it("une institution ne monte pas de rubrique d'emplois", () => {
+    mocks.detail = { status: "ready", data: ofKind("institution") }
+    render(tree())
+    expect(mocks.jobs).not.toHaveBeenCalled()
   })
 })
 

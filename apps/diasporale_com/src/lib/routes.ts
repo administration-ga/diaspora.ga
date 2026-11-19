@@ -190,6 +190,9 @@ export const COMMUNITY_RULE_ANCHORS: Readonly<Record<CommunityRule, string>> = {
 /** Le paramètre de `/parrainer` qui porte l'identifiant public à parrainer (EA-10). */
 export const SPONSOR_REQUEST_PARAM = "pour"
 
+/** L'ancre de la rubrique « Emplois » de la fiche d'une page (EM-04). */
+export const PAGE_JOBS_ANCHOR = "emplois-de-la-page"
+
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
@@ -216,6 +219,11 @@ export const routes = {
   page: (handle: string) => `/pages/${handle}`,
   /** Section publique du catalogue réel de la page, sans créer de conversation. */
   pageServices: (handle: string) => `/pages/${handle}#services-de-la-page`,
+  /**
+   * La rubrique « Emplois » de la fiche : les offres ouvertes de la page (EM-04). À ne pas
+   * confondre avec `pageJobs` des surfaces, l'onglet « Emplois » de la GESTION de la page.
+   */
+  pageOpenJobs: (handle: string) => `/pages/${handle}#${PAGE_JOBS_ANCHOR}`,
   /** Annuaire des pages et abonnements du lecteur, distincts de leur gestion. */
   pages: pagesHref,
   /** Une publication seule (depuis la cloche, un signet, son horodatage). */

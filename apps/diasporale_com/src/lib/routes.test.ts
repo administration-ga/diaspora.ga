@@ -98,6 +98,7 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
     expect(routes.pageManage("asso-lyon")).toBe("/pages/asso-lyon/gerer")
     expect(routes.pageManage("asso-lyon", "equipe")).toBe("/pages/asso-lyon/gerer?onglet=equipe")
     expect(routes.pageManage("asso-lyon", "emplois")).toBe("/pages/asso-lyon/gerer?onglet=emplois")
+    expect(routes.pageOpenJobs("asso-lyon")).toBe("/pages/asso-lyon#emplois-de-la-page")
     expect(routes.pageDecisions("asso-lyon")).toBe("/pages/asso-lyon/gerer?onglet=decisions")
     expect(routes.pageDecisions("asso-lyon")).toBe(routes.pageManage("asso-lyon", "decisions"))
     expect(routes.pageClaim("asso-lyon")).toBe("/pages/asso-lyon/revendiquer")

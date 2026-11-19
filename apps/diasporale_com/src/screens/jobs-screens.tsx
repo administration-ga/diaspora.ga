@@ -358,6 +358,12 @@ function JobOfferArticle(props: { readonly offer: JobOfferDetailView }) {
           <TrustBadge badge={offer.employer.badge} />
         </p>
         <p className="text-[13px] text-muted-foreground">{t("jobs.offer.badgeNote")}</p>
+        {/* EM-04 : depuis une offre, les autres offres ouvertes de la page, sur sa fiche. */}
+        {offer.viewerCanManage ? null : (
+          <Button asChild variant="link" className="min-h-11 self-start whitespace-normal text-left">
+            <NextLink href={routes.pageOpenJobs(offer.employer.handle)}>{t("jobs.offer.pageOffers")}</NextLink>
+          </Button>
+        )}
       </Card>
 
       <dl className="grid min-w-0 gap-3 sm:grid-cols-2">

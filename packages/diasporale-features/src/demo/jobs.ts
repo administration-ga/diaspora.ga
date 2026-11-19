@@ -59,6 +59,7 @@ import {
   JOB_APPLICATIONS_PAGE_SIZE,
   JOB_RESULTS_PAGE_SIZE,
   MANAGED_JOBS_PAGE_SIZE,
+  PAGE_OPEN_JOBS_PAGE_SIZE,
   TALENT_RESULTS_PAGE_SIZE,
   type JobEmployerView,
   type JobOfferCardView,
@@ -641,6 +642,30 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     return ready(detailView(found, page, now, false, mine))
   }
 
+  /**
+   * EM-04 : les offres ouvertes d'une page lisible, comme la recherche ; `null` pour une page
+   * inconnue ou non employeuse. Un blocage avec l'équipe ne ferme que les demandes faites à la
+   * page, jamais sa lecture (RP-03, docs/40), comme au moteur.
+   */
+  function pageOpenOffers({ pageId, cursor }: Parameters<JobsCapability["usePageOpenOffers"]>[0]): Loadable<JobsPage<JobOfferCardView> | null> {
+    const main = store.getState()
+    const now = store.now()
+    const viewer = viewerOf(main, now, "read_network")
+    if ("refusal" in viewer) return failed(viewer.refusal)
+    const page = employerPage(main, pageId)
+    if (!page) return ready(null)
+    const data = current()
+    const scope = JSON.stringify(["page-open", page.id, data.seedCreatedAt])
+    const boundary = decodeCursor(cursor, scope)
+    if (boundary === undefined) return failed("unknown")
+    const rows = data.offers.flatMap((candidate) => {
+      if (candidate.pageId !== page.id || !isJobOfferOpen(stateOf(candidate), now)) return []
+      // Les plus récemment créées d'abord, comme l'index de la page au moteur.
+      return [{ key: [-candidate.createdAt, 0, candidate.id] as Boundary, row: cardView(candidate, page) }]
+    })
+    return ready(windowAfter(rows, boundary, PAGE_OPEN_JOBS_PAGE_SIZE, scope))
+  }
+
   function pageOffers({ pageId, status, cursor }: Parameters<JobsCapability["usePageOffers"]>[0]): Loadable<JobsPage<JobOfferDetailView>> {
     const main = store.getState()
     const now = store.now()
@@ -844,6 +869,10 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     useOffer(jobId) {
       const snap = useSnapshot()
       return useMemo(() => (snap === OUT_OF_SESSION ? LOADING : offer(jobId)), [snap, jobId])
+    },
+    usePageOpenOffers({ pageId, cursor }) {
+      const snap = useSnapshot()
+      return useMemo(() => (snap === OUT_OF_SESSION ? LOADING : pageOpenOffers({ pageId, cursor })), [snap, pageId, cursor])
     },
     usePageOffers({ pageId, status, cursor }) {
       const snap = useSnapshot()

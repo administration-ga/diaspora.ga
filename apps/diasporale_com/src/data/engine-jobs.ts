@@ -21,6 +21,7 @@ import {
   JOB_APPLICATIONS_PAGE_SIZE,
   JOB_RESULTS_PAGE_SIZE,
   MANAGED_JOBS_PAGE_SIZE,
+  PAGE_OPEN_JOBS_PAGE_SIZE,
   TALENT_RESULTS_PAGE_SIZE,
   type ActionErrorCode,
   type JobEmployerView,
@@ -237,6 +238,15 @@ export function createEngineJobs(deps: EngineSourceDeps): JobsCapability {
       const { networkId, refusal } = useReadableNetwork()
       const loaded = useLoaded(JOBS.getJobOffer, networkId ? { networkId, jobId } : "skip")
       return useProjected(refusal, loaded, (result) => ready(result === null ? null : toJobOfferDetail(result)))
+    },
+
+    usePageOpenOffers({ pageId, cursor }) {
+      const { networkId, refusal } = useReadableNetwork()
+      const loaded = useLoaded(
+        JOBS.pageOpenJobOffers,
+        networkId ? { networkId, pageId, paginationOpts: { numItems: PAGE_OPEN_JOBS_PAGE_SIZE, cursor } } : "skip",
+      )
+      return useProjected(refusal, loaded, (result) => ready(result === null ? null : pageOf(result, toJobOfferCard)))
     },
 
     usePageOffers({ pageId, status, cursor }) {

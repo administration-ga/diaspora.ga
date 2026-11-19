@@ -1,8 +1,8 @@
 "use client"
 
 import { Avatar as EngineAvatar } from "@antsia/social-features/reseau-personnel"
-import { isServiceProviderOwnerKind } from "@diasporale/domain"
-import { Avatar, Button, Card, ContactButton, CountryTag, EmptyState, EventCard, PostCard, Skeleton, TrustBadge } from "@diasporale/features"
+import { isJobEmployerOwnerKind, isServiceProviderOwnerKind } from "@diasporale/domain"
+import { Avatar, Button, Card, CountryTag, EmptyState, EventCard, PostCard, Skeleton, TrustBadge } from "@diasporale/features"
 import {
   ERROR_CODES,
   type ErrorCode,
@@ -32,6 +32,7 @@ import { PagePostPages } from "@/components/feed-pages"
 import { PageAdminEntry } from "@/components/page-admin-entry"
 import { PageAbout } from "@/components/page-about"
 import { PageContentViews } from "@/components/page-content-views"
+import { PageJobsSection } from "@/components/page-jobs-section"
 import { PageServiceReviews } from "@/components/page-reviews-section"
 import { PageServiceContactEntry, PageServicesSection } from "@/components/page-services-section"
 import { ObjectMenu, ObjectMenuItem } from "@/components/object-menu"
@@ -200,9 +201,13 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
                 filled={view.viewer.role === null}
               />
             ) : null}
-            {/* Une institution n'a pas de messagerie ici (VC-01) : le renvoi vers consulat.ga, dessous, remplace un « Écrire » inactif. */}
-            {serviceProvider ? view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null
-              : page.ownerKind === "institution" ? null : <ContactButton recipientName={page.name} />}
+            {/*
+              * Aucun « Écrire » sans fonction (AS-07, étape 1) : écrire à une page attend la prise
+              * de contact du moteur (IM-06). Une entreprise ou une association mène à ses services ;
+              * une institution renvoie vers consulat.ga, dessous (VC-01) ; un média ou une page de
+              * communauté n'offre aucun contact pour l'instant.
+              */}
+            {serviceProvider && view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null}
             <PageAdminEntry pageId={page.id} handle={page.handle} viewerRole={view.viewer.role} claimable={page.claimable} />
             <AssociationMembershipEntry pageId={page.id} handle={page.handle} ownerKind={page.ownerKind} />
             <PagePublishButton page={page} membership={props.membership} role={view.viewer.role} />
@@ -218,6 +223,9 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
       {serviceProvider ? <PageAbout page={page} canEdit={view.viewer.role === "admin" && props.membership.canPublish && source?.pageAdmin?.management?.supportsPresentation === true} canBrowseCategories={source?.pages?.supportsDirectoryCategories === true} /> : null}
 
       {serviceProvider ? <PageServicesSection pageId={page.id} pageHandle={page.handle} canManage={view.viewer.role !== null} showEmpty /> : null}
+
+      {/* EM-04 : les offres ouvertes de la page ; aucune rubrique sans offre. */}
+      {isJobEmployerOwnerKind(page.ownerKind) ? <PageJobsSection pageId={page.id} pageHandle={page.handle} canManage={view.viewer.role !== null} /> : null}
 
       {page.ownerKind === "association" ? <>
         <AssociationGroupEntry pageId={page.id} handle={page.handle} isAdmin={view.viewer.role === "admin"} canPublish={props.membership.canPublish} />
