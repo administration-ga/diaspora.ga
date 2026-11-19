@@ -50,6 +50,7 @@
   },
   "errors": {
     "page_sleep_expired": "Cette page dort depuis plus de {{pageSleepDays}} jours : elle ne se réactive plus d'ici. Seule l'équipe de la plateforme ANTSIA peut agir.",
+    "page_asleep": "Cette page est en sommeil : rien n'y change tant qu'un administrateur ne l'a pas réactivée.",
     "moderation_desk_page_asleep": "Cette page est en sommeil : la revendication peut seulement être refusée."
   }
 }

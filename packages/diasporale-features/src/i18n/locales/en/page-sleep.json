@@ -50,6 +50,7 @@
   },
   "errors": {
     "page_sleep_expired": "This page has been asleep for more than {{pageSleepDays}} days: it can no longer be woken up from here. Only the ANTSIA platform team can act.",
+    "page_asleep": "This page is asleep: nothing changes on it until an administrator wakes it up.",
     "moderation_desk_page_asleep": "This page is asleep: the claim can only be refused."
   }
 }

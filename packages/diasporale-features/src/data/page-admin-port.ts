@@ -117,6 +117,8 @@ export const PAGE_ADMIN_ERROR_CODES = [
   "page_image_too_large",
   // AS-11a : la page dort depuis plus de trente jours ; seule l'équipe de la plateforme ANTSIA (sa console) peut agir.
   "page_sleep_expired",
+  // AS-11a : la page est en sommeil, son équipe est figée (règle PAGE_ASLEEP du moteur, hors du bureau de modération).
+  "page_asleep",
 ] as const
 
 export type PageAdminErrorCode = (typeof PAGE_ADMIN_ERROR_CODES)[number]

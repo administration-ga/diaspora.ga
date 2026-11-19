@@ -494,5 +494,8 @@ describe("gestion des pages — refus lus dans leur contexte", () => {
     expect(pageAdminErrorCode(upload, { rules: { UPLOAD_TYPE_NOT_ALLOWED: "page_image_type_invalid" } })).toBe("page_image_type_invalid")
     expect(pageAdminErrorCode(new ConvexError({ code: "invalidArgument", rule: "PAGE_NAME_LENGTH" }))).toBe("page_name_invalid")
     expect(pageAdminErrorCode(new ConvexError({ code: "pageRoleRequired" }))).toBe("page_role_required")
+    // AS-11a : les deux règles du sommeil, par la table commune.
+    expect(pageAdminErrorCode(new ConvexError({ code: "invalidArgument", rule: "PAGE_SLEEP_EXPIRED", params: { days: 30 } }))).toBe("page_sleep_expired")
+    expect(pageAdminErrorCode(new ConvexError({ code: "invalidArgument", rule: "PAGE_ASLEEP", params: {} }))).toBe("page_asleep")
   })
 })

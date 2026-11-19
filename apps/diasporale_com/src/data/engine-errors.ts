@@ -76,8 +76,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   PAGE_CLAIM_NOTE_TOO_LONG: "page_claim_note_too_long",
   // AS-11a : le sommeil d'une page a passé son échéance ; la réactivation n'est plus ouverte depuis la page.
   PAGE_SLEEP_EXPIRED: "page_sleep_expired",
-  // AS-11a : une revendication ne s'accorde pas sur une page en sommeil ; le bureau peut seulement la refuser.
-  PAGE_ASLEEP: "moderation_desk_page_asleep",
+  // AS-11a : la page est en sommeil, rien n'y change ; le bureau de modération le dit à sa façon (`moderation_desk_page_asleep`).
+  PAGE_ASLEEP: "page_asleep",
   // Conversations de mise en relation (CC-6) : refus explicites d'une ouverture, dits à une partie seulement.
   CONTEXT_NOT_OPEN: "context_not_open",
   CONTEXT_CLOSED: "context_closed",
@@ -86,17 +86,12 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   NETWORK_LAST_ADMIN: "moderation_desk_last_admin",
 }
 
-/** Le code FERMÉ d'une règle du domaine du moteur que DIASPORALE sait dire, ou `null`. */
-export function engineRuleActionCode(error: unknown): ActionErrorCode | null {
-  const rule = engineErrorRule(error)
-  return (rule ? ENGINE_RULES[rule.rule] : undefined) ?? null
-}
-
 /** Le code FERMÉ d'une erreur levée par une fonction du moteur. */
 export function engineActionErrorCode(error: unknown): ActionErrorCode {
   const app = engineErrorAppRule(error)
   if (app && isActionErrorCode(app.appRule)) return app.appRule
-  const ruleCode = engineRuleActionCode(error)
+  const rule = engineErrorRule(error)
+  const ruleCode = rule ? ENGINE_RULES[rule.rule] : undefined
   if (ruleCode) return ruleCode
   const code = engineErrorCode(error)
   return (code ? ENGINE_CODES[code] : undefined) ?? "unknown"

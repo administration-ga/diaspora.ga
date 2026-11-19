@@ -83,7 +83,7 @@ import {
 import type { FunctionArgs, FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
 
-import { engineActionErrorCode, engineRuleActionCode } from "./engine-errors"
+import { engineActionErrorCode } from "./engine-errors"
 import {
   failed,
   LOADING,
@@ -135,10 +135,12 @@ function invalidField(error: unknown): string | null {
 /** Les refus des gestes de modération, en codes FERMÉS ; le reste suit la table commune du moteur. */
 export function moderationDeskErrorCode(error: unknown): ActionErrorCode {
   if (error instanceof Refusal) return error.code
-  if (engineErrorRule(error)?.rule === "DECISION_REASON_LENGTH") return "moderation_desk_reason_length"
+  const rule = engineErrorRule(error)?.rule
+  if (rule === "DECISION_REASON_LENGTH") return "moderation_desk_reason_length"
+  // AS-11a : revendication sur une page en sommeil — elle reste en attente, elle se refuse seulement ; jamais « déjà tranchée ».
+  if (rule === "PAGE_ASLEEP") return "moderation_desk_page_asleep"
   const code = engineErrorCode(error)
-  // Une règle que DIASPORALE sait dire l'emporte sur le conflit générique (AS-11a : `PAGE_ASLEEP`, page en sommeil).
-  if (code === "conflict") return engineRuleActionCode(error) ?? "moderation_desk_conflict"
+  if (code === "conflict") return "moderation_desk_conflict"
   if (code === "policyRefused") return "moderation_desk_limit"
   const field = invalidField(error)
   if (field === "sanctions" || field === "until") return "moderation_desk_measure_refused"
