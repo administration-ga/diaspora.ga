@@ -1,9 +1,10 @@
 /** DG-010 : groupe privé et événements d'une association, participations volontaires. */
 import { isPageEventCancellationReason, PAGE_EVENT_CANCELLATION_REASONS, type PageEventCancellationReason } from "@antsia/social-domain/events"
 
-import type { ActionResult } from "./port"
-import type { Loadable } from "./types"
-import type { AssociationEventReminderState, CountryCode } from "@diasporale/domain"
+import type { PagePinnedQuery } from "./page-publications-port"
+import type { ActionResult, PublishMediaInput } from "./port"
+import type { FeedCursorView, FeedPageQuery, Loadable } from "./types"
+import type { AssociationEventReminderState, ContentModerationState, CountryCode } from "@diasporale/domain"
 import type { AssociationEventAttendanceCapability } from "./association-attendance-port"
 import type { AssociationEventGalleryCapability } from "./association-event-gallery-port"
 import type { AssociationEventCalendarCapability } from "./association-event-calendar-port"
@@ -12,7 +13,7 @@ export const ASSOCIATION_ACTIVITY_PAGE_SIZE = 20
 export const ASSOCIATION_EVENT_AUDIENCES = ["network", "association"] as const
 export type AssociationEventAudience = (typeof ASSOCIATION_EVENT_AUDIENCES)[number]
 export const ASSOCIATION_ACTIVITY_ERROR_CODES = [
-  "association_group_access_required", "association_group_closed", "association_group_exists",
+  "association_group_access_required", "association_group_closed", "association_group_exists", "association_group_changed",
   "association_event_invalid", "association_event_version_changed", "association_event_cancelled",
   "association_event_schedule_locked", "association_event_access_required",
   "association_event_capacity_invalid", "association_event_capacity_below_confirmed",
@@ -46,6 +47,10 @@ export interface AssociationGroupView {
   readonly pageId: string
   readonly name: string
   readonly state: "active" | "closed"
+  /** AS-03 : la fermeture en vigueur, que cite la réouverture ; servie au seul responsable qui peut rouvrir. */
+  readonly closedAt: number | null
+  /** AS-03 : la réouverture serait admise pour ce lecteur (mêmes gardes que le fournisseur). */
+  readonly canReopen: boolean
   readonly role: "owner" | "moderator" | "member" | null
   readonly isMember: boolean
   readonly canJoin: boolean
@@ -64,7 +69,23 @@ export interface AssociationGroupPostView {
   readonly moderation: "published" | "pending_review" | "removed"
 }
 
+/**
+ * AS-08 : le mur du groupe au format du fil (décision 5 du plan 07) — cartes, réactions,
+ * commentaires, signalement, auteur qui ouvre son profil. Chaque fenêtre repasse la garde
+ * d'association du moteur ; seuls les membres vivants d'un groupe actif le lisent.
+ */
+export interface AssociationGroupWallCapability {
+  useWall(input: { readonly groupId: string; readonly cursor: FeedCursorView | null }): FeedPageQuery
+  /** La publication épinglée en tête, relue avec sa garde ; `null` sans épingle. */
+  usePinned(groupId: string): PagePinnedQuery
+  /** Épingler une publication du groupe : qui anime le groupe (responsable, animateur). */
+  pin(input: { readonly groupId: string; readonly postId: string }): Promise<ActionResult>
+  unpin(groupId: string): Promise<ActionResult>
+}
+
 export interface AssociationGroupsCapability {
+  /** AS-08 : facultatif ; sans lui, le mur garde sa projection en texte. */
+  readonly wall?: AssociationGroupWallCapability
   useGroup(pageId: string): Loadable<AssociationGroupView | null>
   usePosts(input: { readonly groupId: string; readonly cursor: string | null }): Loadable<AssociationActivityPage<AssociationGroupPostView>>
   /** Crée au plus un groupe lié ; ce geste du responsable n'inscrit aucun adhérent. */
@@ -72,8 +93,10 @@ export interface AssociationGroupsCapability {
   join(groupId: string): Promise<ActionResult>
   leave(groupId: string): Promise<ActionResult>
   close(groupId: string): Promise<ActionResult>
-  /** Texte dans le groupe seulement ; aucune audience publique ni publication racine. */
-  publish(input: { readonly groupId: string; readonly body: string; readonly idempotencyKey: string }): Promise<ActionResult>
+  /** AS-03 : rouvrir, en citant la fermeture lue ; l'administrateur de la page seul. */
+  reopen(input: { readonly groupId: string; readonly expectedClosedAt: number }): Promise<ActionResult>
+  /** Dans le groupe seulement ; aucune audience publique ni publication racine. Photos ou vidéo jointes (AS-08). */
+  publish(input: { readonly groupId: string; readonly body: string; readonly idempotencyKey: string; readonly media?: readonly PublishMediaInput[] }): Promise<ActionResult<{ readonly postId: string; readonly created: boolean; readonly moderation?: ContentModerationState }>>
   removePost(input: { readonly groupId: string; readonly postId: string; readonly isMine: boolean }): Promise<ActionResult>
 }
 

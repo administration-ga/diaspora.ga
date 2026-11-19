@@ -197,7 +197,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaleDataSo
   }
 
   const useMember = useEngineMember
-  const associationActivities = createEngineAssociationActivities(deps)
+  const associationActivities = createEngineAssociationActivities(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } })
 
   return {
     kind: "engine",

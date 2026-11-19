@@ -126,7 +126,7 @@ afterEach(() => {
 // ── AS-02 : les publications du mur d'un groupe d'association ─────────────
 
 const GROUP: AssociationGroupView = {
-  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", role: "member",
+  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, canReopen: false, role: "member",
   isMember: true, canJoin: false, canManage: false, canPublish: true,
 }
 const THEIRS: AssociationGroupPostView = {
@@ -143,7 +143,7 @@ function groups(posts: readonly AssociationGroupPostView[]): AssociationGroupsCa
   const ok = async () => ({ ok: true as const, value: null })
   return {
     useGroup: () => group, usePosts: () => mocks.posts, create: async () => ({ ok: true, value: { groupId: GROUP.groupId, created: true } }),
-    join: ok, leave: ok, close: ok, publish: async () => ({ ok: true, value: { postId: "post-new", created: true } }), removePost: ok,
+    join: ok, leave: ok, close: ok, reopen: ok, publish: async () => ({ ok: true, value: { postId: "post-new", created: true } }), removePost: ok,
   } as unknown as AssociationGroupsCapability
 }
 const card = (body: string) => screen.getByText(body).closest("li")!
