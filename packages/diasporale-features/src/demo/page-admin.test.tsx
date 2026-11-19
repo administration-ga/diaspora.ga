@@ -86,9 +86,12 @@ describe("démonstration — créer une page", () => {
     await demo.ready
     expect(await demo.management.createPage({ ownerKind: "company", name: "Saveurs", handle: "saveurs-okoume-demo", country: "FR" })).toEqual({ ok: false, code: "page_handle_taken" })
     expect(await demo.management.createPage({ ownerKind: "institution" as never, name: "Ministère", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
-    expect(await demo.management.createPage({ ownerKind: "media", name: " ", country: "FR" })).toEqual({ ok: false, code: "page_name_invalid" })
-    expect(await demo.management.createPage({ ownerKind: "media", name: "Radio", handle: "r!", country: "FR" })).toEqual({ ok: false, code: "page_handle_length" })
-    expect(await demo.management.createPage({ ownerKind: "media", name: "Radio Diaspora", country: "ZZ" as never })).toEqual({ ok: false, code: "page_country_invalid" })
+    // AS-05 : DIASPORALE n'inscrit qu'une association ou une entreprise, même si le moteur en accepte davantage.
+    expect(await demo.management.createPage({ ownerKind: "media", name: "Radio Diaspora", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
+    expect(await demo.management.createPage({ ownerKind: "community", name: "Cercle de Nantes", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
+    expect(await demo.management.createPage({ ownerKind: "company", name: " ", country: "FR" })).toEqual({ ok: false, code: "page_name_invalid" })
+    expect(await demo.management.createPage({ ownerKind: "company", name: "Radio", handle: "r!", country: "FR" })).toEqual({ ok: false, code: "page_handle_length" })
+    expect(await demo.management.createPage({ ownerKind: "company", name: "Radio Diaspora", country: "ZZ" as never })).toEqual({ ok: false, code: "page_country_invalid" })
   })
 })
 
@@ -210,7 +213,7 @@ describe("démonstration — persistance", () => {
     storage.setItem(DEMO_STORAGE_KEY, JSON.stringify(createDemoSeed(NOW)))
     const first = setup("p-mireille", { storage, clock })
     await first.ready
-    await act(async () => { await first.management.createPage({ ownerKind: "community", name: "Cercle de Nantes", country: "FR" }) })
+    await act(async () => { await first.management.createPage({ ownerKind: "association", name: "Cercle de Nantes", country: "FR" }) })
     expect(storage.getItem(DEMO_PAGE_ADMIN_STORAGE_KEY)).toContain("cercle-de-nantes")
 
     // Un nouvel onglet relit le même état.
@@ -230,7 +233,7 @@ describe("démonstration — persistance", () => {
     const store = new DemoStore(null, () => NOW, 0)
     const management = createDemoPageAdmin(store, { storage }).management as PageManagement
     await act(async () => { await store.switchTo("p-mireille") })
-    await act(async () => { expect(await management.createPage({ ownerKind: "community", name: "Cercle de Rennes", country: "FR" })).toMatchObject({ ok: true }) })
+    await act(async () => { expect(await management.createPage({ ownerKind: "association", name: "Cercle de Rennes", country: "FR" })).toMatchObject({ ok: true }) })
     expect(storage.values.size).toBe(0)
   })
 })

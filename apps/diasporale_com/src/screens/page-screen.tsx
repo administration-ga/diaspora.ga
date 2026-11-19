@@ -141,7 +141,8 @@ function PageError(props: { code: ErrorCode; retry?: PagesRetry }) {
 
 function PageLogo(props: { page: PageDetailView["page"] }) {
   const { page } = props
-  const shape = page.ownerKind === "association" ? "round" : "square"
+  // Une page est une organisation : son logo est carré, association comprise (règle de l'Avatar).
+  const shape = "square"
   // Le logo n'est montré que délivré par la garde des fichiers ; sinon, les initiales.
   return page.logoUrl ? (
     <span className="inline-flex shrink-0 ring-4 ring-card">

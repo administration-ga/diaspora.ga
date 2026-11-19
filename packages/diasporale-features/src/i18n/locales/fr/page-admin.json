@@ -22,15 +22,13 @@
       "withdrawn": "Retirée"
     },
     "create": {
-      "metaTitle": "Créer une page",
-      "title": "Créer une page",
-      "lead": "Une page présente une association, une entreprise, un média ou une communauté de la diaspora. Elle parle par ses signataires, jamais au nom de l'État.",
-      "kindLegend": "Nature de la page",
+      "metaTitle": "Inscrire une organisation",
+      "title": "Inscrire une organisation",
+      "lead": "Votre association ou votre entreprise a sa page dans DIASPORALE : elle publie, recrute, accueille ses adhérents ou propose ses services. Elle parle par ses signataires, jamais au nom de l'État.",
+      "kindLegend": "Que souhaitez-vous inscrire ?",
       "kindHint": {
         "association": "Une association déclarée ou en cours de déclaration.",
-        "company": "Une entreprise, un commerce ou un professionnel indépendant.",
-        "media": "Un média, une radio, une chaîne ou un blog d'information.",
-        "community": "Un collectif informel, un groupe d'entraide ou une amicale."
+        "company": "Une entreprise, un commerce ou un professionnel indépendant."
       },
       "name": "Nom de la page",
       "nameHint": "Le nom complet, tel que vos membres le connaissent ({{max}} caractères au plus).",
@@ -44,14 +42,90 @@
       "country": "Pays de la page",
       "countryHint": "Celui de ses activités : la page apparaît dans le hub de ce pays.",
       "countryPlaceholder": "Choisir un pays",
-      "trustNote": "Une page créée par un membre porte le badge « Communauté ». Le badge « Vérifié » s'obtient par une revendication validée par la modération ; « Officiel » est réservé aux institutions.",
-      "submit": "Créer la page",
-      "created": "Page créée : vous en êtes l'administrateur.",
+      "trustNote": "Une page inscrite par un membre porte le badge « Communauté ». Le badge « Vérifié » s'obtient par une revendication validée par la modération ; « Officiel » est réservé aux institutions.",
+      "submit": "Inscrire la page",
+      "created": "Page inscrite : vous en êtes l'administrateur.",
       "verifiedOnly": {
-        "title": "Créer une page est réservé aux membres vérifiés",
+        "title": "Inscrire une organisation est réservé aux membres vérifiés",
         "body": "Votre adhésion est actuellement : {{status}}. Elle devient vérifiée avec la vérification de votre inscription consulaire, ou avec une identité IDN de niveau 2 et un parrainage.",
         "attestation": "Vérifier mon inscription consulaire",
         "sponsor": "Obtenir un parrainage"
+      }
+    },
+    "register": {
+      "steps": "Étapes de l'inscription",
+      "stepOf": "Étape {{current}} sur {{total}} : {{step}}",
+      "step": {
+        "nature": "Nature",
+        "identity": "Identité",
+        "review": "Récapitulatif"
+      },
+      "next": "Continuer",
+      "back": "Retour",
+      "natureClosed": "Pendant le pilote, DIASPORALE inscrit les associations et les entreprises. Un collectif informel se retrouve dans un groupe ; les médias attendent leur label.",
+      "natureOffer": {
+        "association": "Adhérents, groupe privé, évènements, offres d'emploi et services.",
+        "company": "Offres d'emploi, services sur rendez-vous et avis de clients."
+      },
+      "identityTitle": "Identité de la page",
+      "identityLead": "Ce que les membres liront sur la page et dans l'annuaire. Le logo et la bannière s'ajoutent juste après l'inscription.",
+      "reviewTitle": "Vérifiez avant d'inscrire",
+      "reviewLead": "La page paraît dans l'annuaire et dans le hub de son pays dès son inscription.",
+      "edit": "Modifier",
+      "editLabel": "Modifier : {{field}}",
+      "notProvided": "Non renseigné",
+      "review": {
+        "kind": "Nature",
+        "name": "Nom",
+        "shortName": "Sigle",
+        "handle": "Adresse",
+        "country": "Pays",
+        "city": "Ville",
+        "category": "Activité",
+        "description": "Présentation"
+      },
+      "nearby": {
+        "title": "Votre organisation est peut-être déjà inscrite",
+        "lead": "Ces pages portent un nom proche. Si l'une est la vôtre, revendiquez-la plutôt que d'en inscrire une seconde.",
+        "claim": "Revendiquer",
+        "claimLabel": "Revendiquer {{name}}",
+        "see": "Voir",
+        "seeLabel": "Voir {{name}}",
+        "continue": "Aucune n'est la mienne : je continue"
+      },
+      "done": {
+        "title": "{{name}} est inscrite",
+        "lead": "Vous en êtes l'administrateur. La page porte le badge « Communauté » : voici les premiers gestes qui la feront vivre.",
+        "stepsLabel": "Premiers gestes",
+        "seePage": "Voir la page",
+        "identity": {
+          "title": "Ajouter le logo et la bannière",
+          "hint": "Une page reconnaissable inspire confiance."
+        },
+        "verification": {
+          "title": "Demander le badge « Vérifié »",
+          "hint": "Statuts, récépissé ou extrait d'immatriculation : la modération instruit votre demande."
+        },
+        "team": {
+          "title": "Inviter votre équipe",
+          "hint": "Les signataires publient au nom de la page."
+        },
+        "members": {
+          "title": "Accueillir vos adhérents",
+          "hint": "Les demandes d'adhésion arrivent ici ; adhérer n'est pas suivre."
+        },
+        "jobs": {
+          "title": "Publier une offre d'emploi",
+          "hint": "Elle paraît dans l'emploi de DIASPORALE, au nom de la page."
+        },
+        "services": {
+          "title": "Proposer vos services",
+          "hint": "Sur rendez-vous, avec les avis de vos clients."
+        },
+        "publication": {
+          "title": "Publier une première annonce",
+          "hint": "Elle paraît sur la page et dans le fil de ses abonnés."
+        }
       }
     },
     "claim": {
@@ -204,10 +278,9 @@
       "title": "Mes pages",
       "lead": "Les pages au nom desquelles vous parlez dans DIASPORALE.",
       "emptyTitle": "Vous ne gérez encore aucune page",
-      "emptyBody": "Créez la page de votre association ou de votre entreprise, ou revendiquez celle qui existe déjà.",
-      "createAssociation": "Créer une page d'association",
-      "createCompany": "Créer une page d'entreprise",
-      "createOther": "Autre nature de page",
+      "emptyBody": "Inscrivez votre association ou votre entreprise, ou revendiquez sa page si elle existe déjà.",
+      "createAssociation": "Inscrire une association",
+      "createCompany": "Inscrire une entreprise",
       "manage": "Gérer",
       "manageLabel": "Gérer {{name}}",
       "team": "Équipe",
@@ -228,8 +301,8 @@
     }
   },
   "errors": {
-    "page_verified_required": "Créer une page est réservé aux membres vérifiés : faites vérifier votre inscription consulaire, ou reliez une identité IDN de niveau 2 avec un parrainage.",
-    "page_kind_reserved": "Une page d'institution ne se crée pas ici : elle naît d'une décision de la plateforme.",
+    "page_verified_required": "Inscrire une organisation est réservé aux membres vérifiés : faites vérifier votre inscription consulaire, ou reliez une identité IDN de niveau 2 avec un parrainage.",
+    "page_kind_reserved": "Cette nature de page ne s'inscrit pas ici : un membre inscrit une association ou une entreprise, et une page d'institution naît d'une décision de la plateforme.",
     "page_name_invalid": "Le nom de la page compte de 1 à 120 caractères.",
     "page_short_name_too_long": "Le sigle compte 30 caractères au plus.",
     "page_description_too_long": "La présentation compte 1 000 caractères au plus.",

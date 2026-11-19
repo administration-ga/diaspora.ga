@@ -4,11 +4,12 @@
  * Une clé citée en toutes lettres n'a rien à faire ici.
  */
 import { PAGE_OWNER_KINDS, PAGE_TRUST_LEVELS } from "@diasporale/domain"
-import { MANAGED_PAGE_ROLES, MEMBER_PAGE_KINDS, PAGE_CLAIM_MANDATES, PAGE_CLAIM_STATES } from "@diasporale/features/data"
+import { MANAGED_PAGE_ROLES, PAGE_CLAIM_MANDATES, PAGE_CLAIM_STATES, REGISTRABLE_PAGE_KINDS } from "@diasporale/features/data"
 
 export const FAMILIES: readonly string[] = [
   ...PAGE_OWNER_KINDS.map((kind) => `pageAdmin.kind.${kind}`),
-  ...MEMBER_PAGE_KINDS.map((kind) => `pageAdmin.create.kindHint.${kind}`),
+  // AS-05 : seules les natures que DIASPORALE inscrit disent leur aide.
+  ...REGISTRABLE_PAGE_KINDS.map((kind) => `pageAdmin.create.kindHint.${kind}`),
   ...MANAGED_PAGE_ROLES.map((role) => `pageAdmin.role.${role}`),
   ...PAGE_CLAIM_STATES.map((status) => `pageAdmin.claimStatus.${status}`),
   ...PAGE_CLAIM_MANDATES.map((mandate) => `pageAdmin.claim.mandate.${mandate}`),

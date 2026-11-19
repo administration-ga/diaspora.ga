@@ -68,8 +68,12 @@ describe("badges et confiance d'une page", () => {
 
   test("un membre ne crée jamais une institution", () => {
     expect(MEMBER_CREATABLE_PAGE_KINDS).not.toContain("institution")
+  })
+
+  test("au pilote, un membre inscrit une association ou une entreprise, rien d'autre (AS-05)", () => {
+    expect([...MEMBER_CREATABLE_PAGE_KINDS]).toEqual(["association", "company"])
     for (const kind of PAGE_OWNER_KINDS) {
-      expect(canMemberCreatePageKind(kind)).toBe(kind !== "institution")
+      expect(canMemberCreatePageKind(kind)).toBe(kind === "association" || kind === "company")
     }
   })
 })

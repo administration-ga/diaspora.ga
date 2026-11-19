@@ -90,12 +90,16 @@ export function isPageClaimable(facts: PageTrustFacts): boolean {
   return pageTrustLevel(facts) === "community" && facts.ownerKind !== "institution"
 }
 
-/** Ce qu'un membre (vérifié) peut créer : jamais une institution, jamais une page « Officiel ». */
+/**
+ * Ce qu'un membre (vérifié) inscrit dans DIASPORALE : une association ou une entreprise.
+ * Jamais une institution, jamais une page « Officiel ». Décision 2 du plan 07 (AS-05) :
+ * au pilote, « communauté » devient un groupe thématique et « média » attend le label
+ * Presse du moteur ; deux natures sans surface pour les servir ne s'inscrivent pas.
+ * Le moteur en accepte davantage : l'écran ET l'adaptateur s'en tiennent à cette liste.
+ */
 export const MEMBER_CREATABLE_PAGE_KINDS: readonly PageOwnerKind[] = Object.freeze([
   "association",
   "company",
-  "media",
-  "community",
 ])
 
 export function canMemberCreatePageKind(kind: PageOwnerKind): boolean {

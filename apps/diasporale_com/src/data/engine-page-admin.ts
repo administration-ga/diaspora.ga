@@ -29,7 +29,7 @@ import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import { isCountryCode, type CountryCode, type PageTrustLevel } from "@diasporale/domain"
 import {
-  isMemberPageKind,
+  isRegistrablePageKind,
   pageAssociationTypeRefusal,
   pageCityRefusal,
   pageClaimNoteRefusal,
@@ -363,7 +363,8 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
     },
 
     createPage: (input: CreatePageInput) => attempt(async () => {
-      if (!isMemberPageKind(input.ownerKind)) throw new Refusal("page_kind_reserved")
+      // AS-05 : une nature que DIASPORALE n'inscrit pas se refuse ici, avant le moteur qui l'accepterait.
+      if (!isRegistrablePageKind(input.ownerKind)) throw new Refusal("page_kind_reserved")
       const refusal = pageNameRefusal(input.name) ?? pageHandleRefusal(input)
         ?? (input.shortName ? pageShortNameRefusal(input.shortName) : null)
         ?? (input.description ? pageDescriptionRefusal(input.description) : null)

@@ -1,15 +1,19 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
-import type {
-  ActionResult,
-  Loadable,
-  ManagedPageDetailView,
-  ManagedPageView,
-  MembershipView,
-  PageAdminCapability,
-  PageClaimView,
-  PageManagement,
-  PageSignatoryView,
+import {
+  DataSourceProvider,
+  type ActionResult,
+  type DiasporaleDataSource,
+  type Loadable,
+  type ManagedPageDetailView,
+  type ManagedPageView,
+  type MembershipView,
+  type PageAdminCapability,
+  type PageClaimView,
+  type PageDirectoryEntry,
+  type PageDirectoryPage,
+  type PageManagement,
+  type PageSignatoryView,
 } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
@@ -145,27 +149,68 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe("créer une page", () => {
-  it("crée une page d'entreprise valide et mène à sa fiche", async () => {
+/**
+ * Les noms accessibles se comparent sans normalisation : une espace insécable de la typographie
+ * française y reste. Le prédicat ramène le nom lu à la forme de `text()`.
+ */
+const named = (key: string, values: Record<string, unknown> = {}) => (name: string) => normalize(name) === text(key, values)
+/** Un libellé lu dans un nom accessible plus long (carte de nature, geste proposé). */
+const nameWith = (key: string, values: Record<string, unknown> = {}) => (name: string) => normalize(name).includes(text(key, values))
+
+const NEARBY: PageDirectoryEntry = {
+  id: "page-agl",
+  handle: "agl-lyon",
+  name: "Association des Gabonais de Lyon",
+  ownerKind: "association",
+  trust: "community",
+  badge: "community",
+  country: "FR",
+  city: "Lyon",
+  description: "",
+  followers: 0,
+  claimable: false,
+  following: false,
+}
+
+describe("inscrire une organisation (AS-05)", () => {
+  it("inscrit une entreprise en trois étapes, puis propose ses premiers gestes", async () => {
     const manage = provide(management())!
     const user = userEvent.setup()
     wrap(<NewPageScreen kind="company" />)
-    expect(screen.getByRole("radio", { name: new RegExp(text("pageAdmin.kind.company")) })).toBeChecked()
+    // La nature vient de l'adresse : l'inscription s'ouvre sur l'identité.
+    expect(screen.getByRole("heading", { name: named("pageAdmin.register.identityTitle") })).toBeInTheDocument()
     await user.type(screen.getByLabelText(text("pageAdmin.create.name")), "Saveurs de Lille")
     expect(screen.getByText(text("pageAdmin.create.handlePreview", { handle: "saveurs-de-lille" }))).toBeInTheDocument()
-    await user.click(screen.getByRole("button", { name: text("pageAdmin.create.submit") }))
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
+    expect(await screen.findByRole("heading", { name: named("pageAdmin.register.reviewTitle") })).toBeInTheDocument()
+    expect(screen.getByText(text("pageAdmin.kind.company"))).toBeInTheDocument()
+    expect(manage.createPage).not.toHaveBeenCalled()
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.create.submit") }))
     await waitFor(() => expect(manage.createPage).toHaveBeenCalledExactlyOnceWith({ ownerKind: "company", name: "Saveurs de Lille", country: "FR" }))
-    await waitFor(() => expect(mocks.push).toHaveBeenCalledWith(routes.page("saveurs-de-lille")))
+    expect(await screen.findByRole("heading", { name: named("pageAdmin.register.done.title", { name: "Saveurs de Lille" }) })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: named("pageAdmin.register.done.seePage") })).toHaveAttribute("href", routes.page("saveurs-de-lille"))
+    expect(screen.getByRole("link", { name: nameWith("pageAdmin.register.done.verification.title") })).toHaveAttribute("href", routes.pageClaim("saveurs-de-lille"))
+    expect(screen.getByRole("link", { name: nameWith("pageAdmin.register.done.identity.title") })).toHaveAttribute("href", routes.pageManage("saveurs-de-lille", "identite"))
+    // Ni l'emploi ni les services ne sont servis ici : aucun geste ne mène à un onglet « indisponible ».
+    expect(screen.queryByRole("link", { name: nameWith("pageAdmin.register.done.jobs.title") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: nameWith("pageAdmin.register.done.services.title") })).not.toBeInTheDocument()
+    expect(mocks.push).not.toHaveBeenCalled()
   })
 
-  it("refuse un nom vide et une adresse trop courte avant toute écriture", async () => {
+  it("commence par la nature (association ou entreprise), puis refuse un nom vide et une adresse trop courte avant toute écriture", async () => {
     const manage = provide(management())!
     const user = userEvent.setup()
     wrap(<NewPageScreen kind={null} />)
-    await user.type(screen.getByLabelText(text("pageAdmin.create.handle")), "ab")
-    await user.click(screen.getByRole("button", { name: text("pageAdmin.create.submit") }))
+    expect(screen.getByRole("heading", { name: named("pageAdmin.create.kindLegend") })).toBeInTheDocument()
+    expect(screen.getAllByRole("radio")).toHaveLength(2)
+    expect(screen.getByRole("radio", { name: nameWith("pageAdmin.kind.association") })).toBeChecked()
+    expect(screen.queryByRole("radio", { name: nameWith("pageAdmin.kind.media") })).not.toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
+    await user.type(await screen.findByLabelText(text("pageAdmin.create.handle")), "ab")
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
     expect(await screen.findByText(text("errors.page_name_invalid"))).toBeInTheDocument()
     expect(screen.getByText(text("errors.page_handle_length"))).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: named("pageAdmin.register.reviewTitle") })).not.toBeInTheDocument()
     expect(manage.createPage).not.toHaveBeenCalled()
   })
 
@@ -174,18 +219,55 @@ describe("créer une page", () => {
     const user = userEvent.setup()
     wrap(<NewPageScreen kind="association" />)
     await user.type(screen.getByLabelText(text("pageAdmin.create.name")), "Amicale de Lille")
-    await user.click(screen.getByRole("button", { name: text("pageAdmin.create.submit") }))
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
+    await user.click(await screen.findByRole("button", { name: named("pageAdmin.create.submit") }))
     expect(await screen.findByRole("alert")).toHaveTextContent(text("errors.page_verified_required"))
-    expect(screen.getByRole("link", { name: text("pageAdmin.create.verifiedOnly.attestation") })).toHaveAttribute("href", routes.attestation())
-    expect(mocks.push).not.toHaveBeenCalled()
+    expect(screen.getByRole("link", { name: named("pageAdmin.create.verifiedOnly.attestation") })).toHaveAttribute("href", routes.attestation())
+    expect(screen.queryByRole("heading", { name: named("pageAdmin.register.done.title", { name: "Amicale de Lille" }) })).not.toBeInTheDocument()
+  })
+
+  it("une nature que DIASPORALE n'inscrit pas ramène au choix de la nature, sans écriture", async () => {
+    const manage = provide(management())!
+    const user = userEvent.setup()
+    wrap(<NewPageScreen kind="media" />)
+    await user.type(screen.getByLabelText(text("pageAdmin.create.name")), "Radio Diaspora")
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
+    await user.click(await screen.findByRole("button", { name: named("pageAdmin.create.submit") }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(text("errors.page_kind_reserved"))
+    expect(screen.getByRole("heading", { name: named("pageAdmin.create.kindLegend") })).toBeInTheDocument()
+    expect(manage.createPage).not.toHaveBeenCalled()
+  })
+
+  it("avant d'inscrire, propose de revendiquer une page au nom proche du même pays", async () => {
+    provide(management())
+    const useDirectory = vi.fn(() => ready<PageDirectoryPage>({ items: [NEARBY], continueCursor: null, isDone: true }))
+    const user = userEvent.setup()
+    render(
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={{ pages: { useDirectory } } as unknown as DiasporaleDataSource}>
+          <NewPageScreen kind="association" />
+        </DataSourceProvider>
+      </I18nProvider>,
+    )
+    await user.type(screen.getByLabelText(text("pageAdmin.create.name")), "Association des Gabonais de Lyon")
+    const claim = await screen.findByRole("link", { name: named("pageAdmin.register.nearby.claimLabel", { name: NEARBY.name }) }, { timeout: 2000 })
+    expect(claim).toHaveAttribute("href", routes.pageClaim(NEARBY.handle))
+    expect(useDirectory).toHaveBeenLastCalledWith({ query: "Association des Gabonais de Lyon", cursor: null, country: "FR" })
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.next") }))
+    // Au récapitulatif, la revendication se propose encore, avant d'inscrire ; on peut l'écarter.
+    expect(await screen.findByRole("heading", { name: named("pageAdmin.register.reviewTitle") })).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: named("pageAdmin.register.nearby.claimLabel", { name: NEARBY.name }) })).toBeInTheDocument()
+    await user.click(screen.getByRole("button", { name: named("pageAdmin.register.nearby.continue") }))
+    expect(screen.queryByRole("link", { name: named("pageAdmin.register.nearby.claimLabel", { name: NEARBY.name }) })).not.toBeInTheDocument()
+    expect(screen.getByRole("button", { name: named("pageAdmin.create.submit") })).toBeInTheDocument()
   })
 
   it("un membre déclaré lit pourquoi, sans formulaire", () => {
     mocks.membership = membership("declaree")
     provide(management())
     wrap(<NewPageScreen kind="association" />)
-    expect(screen.getByRole("heading", { name: text("pageAdmin.create.verifiedOnly.title") })).toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: text("pageAdmin.create.submit") })).not.toBeInTheDocument()
+    expect(screen.getByRole("heading", { name: named("pageAdmin.create.verifiedOnly.title") })).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: named("pageAdmin.create.submit") })).not.toBeInTheDocument()
   })
 
   it("dit « indisponible » quand le fournisseur ne sert pas la capacité", () => {

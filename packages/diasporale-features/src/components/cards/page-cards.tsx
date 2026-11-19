@@ -11,6 +11,19 @@ import { useRouting } from "../../routing"
 import { CountryTag } from "../country-tag"
 import { TrustBadge } from "../trust-badge"
 
+/**
+ * Le logo d'une page, toujours carré (une organisation, jamais une personne) : délivré par la
+ * garde des fichiers, sinon les initiales. Décoratif : le nom de la page suit, en titre.
+ */
+function PageCardLogo(props: { page: PageView }) {
+  const { page } = props
+  if (!page.logoUrl) return <Avatar id={page.id} name={page.name} shape="square" size="lg" />
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- URL délivrée par la garde des fichiers, sans copie ni optimiseur
+    <img src={page.logoUrl} alt="" width={64} height={64} loading="lazy" decoding="async" data-slot="page-logo" className="size-16 shrink-0 rounded-lg bg-muted object-cover" />
+  )
+}
+
 function PageCardFrame(props: { page: PageView; kindLabel: ReactNode; className?: string }) {
   const { t } = useDiasporaleT()
   const { routes, Link } = useRouting()
@@ -18,7 +31,7 @@ function PageCardFrame(props: { page: PageView; kindLabel: ReactNode; className?
   return (
     <Card className={cn("animate-rise flex flex-col gap-3 p-4", props.className)}>
       <div className="flex items-start gap-3">
-        <Avatar id={page.id} name={page.name} shape={page.ownerKind === "association" ? "round" : "square"} size="lg" />
+        <PageCardLogo page={page} />
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold leading-snug text-foreground">{page.name}</h3>
           <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
