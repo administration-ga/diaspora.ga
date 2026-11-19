@@ -204,7 +204,7 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
   function groupView(group: GroupRow): AssociationGroupView {
     const role = groupRole(group)
     const active = group.closedAt === null
-    return { groupId: group.id, pageId: group.pageId, name: group.name, state: active ? "active" : "closed", role, isMember: role !== null, canJoin: active && role === null && eligible(group.pageId, viewerId()) && refusal(true) === null, canManage: pageRole(group.pageId) === "admin" && eligible(group.pageId, viewerId()), canPublish: active && role !== null && refusal(true) === null }
+    return { groupId: group.id, pageId: group.pageId, name: group.name, state: active ? "active" : "closed", closedAt: group.closedAt, role, isMember: role !== null, canJoin: active && role === null && eligible(group.pageId, viewerId()) && refusal(true) === null, canManage: pageRole(group.pageId) === "admin" && eligible(group.pageId, viewerId()), canPublish: active && role !== null && refusal(true) === null }
   }
   function blocked(a: string, b: string): boolean {
     return store.getState().blocks.some((row) => (row.byId === a && row.targetId === b) || (row.byId === b && row.targetId === a))
@@ -741,19 +741,33 @@ export function createDemoAssociationActivities(store: DemoStore, deps: DemoAsso
         if (group.closedAt === null) commit({ ...data, groups: data.groups.map((row) => row.id === groupId ? { ...row, closedAt: store.now() } : row) })
         return OK
       },
+      async reopen({ groupId, expectedClosedAt }) {
+        const code = refusal(true)
+        if (code) return fail(code)
+        const data = current()
+        const group = data.groups.find((row) => row.id === groupId)
+        // AS-03 : l'administrateur de la page seul ; la fermeture citée doit être celle en vigueur.
+        if (!group || pageRole(group.pageId) !== "admin" || !eligible(group.pageId, viewerId())) return fail("not_found")
+        if (group.closedAt === null) return OK
+        if (group.closedAt !== expectedClosedAt) return fail("association_group_changed")
+        commit({ ...data, groups: data.groups.map((row) => row.id === groupId ? { ...row, closedAt: null } : row) })
+        return OK
+      },
       async publish({ groupId, body, idempotencyKey }) {
         const code = refusal(true)
         if (code) return fail(code)
         const data = current()
         const group = data.groups.find((row) => row.id === groupId)
         if (!group || group.closedAt !== null || groupRole(group) === null) return fail("not_found")
-        if (data.posts.some((row) => row.authorId === viewerId() && row.idempotencyKey === idempotencyKey)) return OK
+        const replay = data.posts.find((row) => row.authorId === viewerId() && row.idempotencyKey === idempotencyKey)
+        if (replay) return { ok: true, value: { postId: replay.id, created: false } }
         const text = body.trim()
         if (!text) return fail("post_empty")
         if (text.length > PERSONAL_POST_MAX_LENGTH) return fail("post_too_long")
         if (!idempotencyKey.trim() || idempotencyKey.length > 200) return fail("unknown")
-        commit({ ...data, sequence: data.sequence + 1, posts: [...data.posts, { id: `publication-association-demo-${data.sequence}`, groupId, authorId: viewerId(), body: text, idempotencyKey, moderation: "pending_review", createdAt: store.now(), removedAt: null }] })
-        return OK
+        const postId = `publication-association-demo-${data.sequence}`
+        commit({ ...data, sequence: data.sequence + 1, posts: [...data.posts, { id: postId, groupId, authorId: viewerId(), body: text, idempotencyKey, moderation: "pending_review", createdAt: store.now(), removedAt: null }] })
+        return { ok: true, value: { postId, created: true } }
       },
       async removePost({ groupId, postId }) {
         const code = refusal()

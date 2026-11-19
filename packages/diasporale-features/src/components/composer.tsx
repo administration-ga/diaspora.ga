@@ -163,7 +163,19 @@ export function PostComposerSheet(props: {
     readonly country: CountryCode | null
     readonly publish: PagePublicationsCapability["publish"]
     /** Un contexte collectif fermé : aucun choix de portée ne peut l'élargir. */
-    readonly fixedScope?: { readonly description: string; readonly audienceLabel: string; readonly requireMedia: boolean }
+    readonly fixedScope?: {
+      readonly description: string
+      readonly audienceLabel: string
+      readonly requireMedia: boolean
+      /**
+       * AS-08 : un lieu où la personne parle en son nom (le groupe d'une association), pas la
+       * voix d'une page : ses propres mots pour le titre, l'identité, l'invite et l'avis d'envoi.
+       */
+      readonly title?: string
+      readonly identity?: string
+      readonly placeholder?: string
+      readonly sentNotice?: string
+    }
   }
 }) {
   const { t, locale } = useDiasporaleT()
@@ -343,7 +355,7 @@ export function PostComposerSheet(props: {
       return
     }
     setPublishKey(newPublishKey())
-    if (page) toast.success(t("pagePublications.sent", { name: page.name }))
+    if (page) toast.success(fixedScope?.sentNotice ?? t("pagePublications.sent", { name: page.name }))
     else toast.success(t(publishNoticeKey("moderation" in result.value ? result.value.moderation : null, share !== null)))
     if (draftKey) writeDraft(draftKey, { body: "", reach: hasFixedScope ? "diaspora" : DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
@@ -373,7 +385,7 @@ export function PostComposerSheet(props: {
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
       <SheetContent
-        title={page ? t("pagePublications.composeTitle") : share ? t("composer.shareTitle") : t("composer.title")}
+        title={page ? (fixedScope?.title ?? t("pagePublications.composeTitle")) : share ? t("composer.shareTitle") : t("composer.title")}
         description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
         hideDescription={!fixedScope}
         closeLabel={t("common.close")}
@@ -384,8 +396,8 @@ export function PostComposerSheet(props: {
           <fieldset disabled={form.formState.isSubmitting} className="contents">
           {page ? (
             <div className="rounded-lg bg-muted p-3">
-              <p className="text-sm font-semibold">{t("pagePublications.identity", { name: page.name })}</p>
-              <p className="mt-1 text-[13px] text-muted-foreground">{t("pagePublications.networkNotice")}</p>
+              <p className="text-sm font-semibold">{fixedScope?.identity ?? t("pagePublications.identity", { name: page.name })}</p>
+              {fixedScope?.identity === undefined ? <p className="mt-1 text-[13px] text-muted-foreground">{t("pagePublications.networkNotice")}</p> : null}
             </div>
           ) : null}
           {share ? (
@@ -411,7 +423,7 @@ export function PostComposerSheet(props: {
                 aria-invalid={control.invalid || undefined}
                 rows={5}
                 maxLength={POST_BODY_MAX + 200}
-                placeholder={page ? t("pagePublications.placeholder", { name: page.name }) : share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
+                placeholder={page ? (fixedScope?.placeholder ?? t("pagePublications.placeholder", { name: page.name })) : share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
                 {...form.register("body")}
               />
             )}

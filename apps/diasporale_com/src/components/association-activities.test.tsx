@@ -7,6 +7,7 @@ import type {
   AssociationEventsCapability,
   AssociationGroupPostView,
   AssociationGroupView,
+  AssociationGroupWallCapability,
   AssociationGroupsCapability,
   Loadable,
   MembershipView,
@@ -35,6 +36,7 @@ const mocks = vi.hoisted(() => ({
   groupJoin: vi.fn<AssociationGroupsCapability["join"]>(),
   groupLeave: vi.fn<AssociationGroupsCapability["leave"]>(),
   groupClose: vi.fn<AssociationGroupsCapability["close"]>(),
+  groupReopen: vi.fn<AssociationGroupsCapability["reopen"]>(),
   groupPublish: vi.fn<AssociationGroupsCapability["publish"]>(),
   groupRemove: vi.fn<AssociationGroupsCapability["removePost"]>(),
   readEvents: vi.fn<AssociationEventsCapability["useEvents"]>(),
@@ -47,6 +49,16 @@ const mocks = vi.hoisted(() => ({
   eventSetReminder: vi.fn<AssociationEventsCapability["setReminder"]>(),
   success: vi.fn(),
   error: vi.fn(),
+  composer: vi.fn(),
+}))
+
+// AS-08 : le composeur à médias a ses propres tests ; ici, on lit ce que le groupe lui confie.
+vi.mock("@diasporale/features", async (original) => ({
+  ...await original<typeof import("@diasporale/features")>(),
+  PostComposerSheet: (props: unknown) => {
+    mocks.composer(props)
+    return <div role="dialog" aria-label="composeur-du-groupe" />
+  },
 }))
 
 vi.mock("@diasporale/features/data", async (original) => ({
@@ -54,6 +66,8 @@ vi.mock("@diasporale/features/data", async (original) => ({
   useAssociationGroups: () => mocks.groups,
   useAssociationEvents: () => mocks.events,
   useSession: () => mocks.session,
+  // AS-08 : la chaîne du fil relit la source pour l'identité de ses abonnements.
+  useDataSource: () => ({ kind: "engine" }),
 }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
@@ -72,7 +86,7 @@ const MEMBER: MembershipView = {
   root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" }, canPublish: true, rateTier: "standard", directoryVisibility: "hidden",
 }
 const GROUP: AssociationGroupView = {
-  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", role: "member",
+  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, role: "member",
   isMember: true, canJoin: false, canManage: false, canPublish: true,
 }
 const POST: AssociationGroupPostView = {
@@ -93,7 +107,7 @@ const WAITLISTED: AssociationEventView = {
 }
 const GROUPS: AssociationGroupsCapability = {
   useGroup: mocks.readGroup, usePosts: mocks.readPosts, create: mocks.groupCreate, join: mocks.groupJoin,
-  leave: mocks.groupLeave, close: mocks.groupClose, publish: mocks.groupPublish, removePost: mocks.groupRemove,
+  leave: mocks.groupLeave, close: mocks.groupClose, reopen: mocks.groupReopen, publish: mocks.groupPublish, removePost: mocks.groupRemove,
 }
 const EVENTS: AssociationEventsCapability = {
   useEvents: mocks.readEvents, useEvent: mocks.readEvent, create: mocks.eventCreate, update: mocks.eventUpdate,
@@ -127,9 +141,9 @@ function fillEvent() {
   fireEvent.change(screen.getByLabelText(t("associationActivities.event.endDate")), { target: { value: "2026-10-26" } })
   fireEvent.change(screen.getByLabelText(t("associationActivities.event.endTime")), { target: { value: "20:00" } })
 }
-function pendingPublication() {
-  let finish: (result: ActionResult) => void = () => {}
-  const promise = new Promise<ActionResult>((resolve) => { finish = resolve })
+function pendingPublication<T = null>() {
+  let finish: (result: ActionResult<T>) => void = () => {}
+  const promise = new Promise<ActionResult<T>>((resolve) => { finish = resolve })
   return { promise, finish }
 }
 
@@ -152,7 +166,8 @@ beforeEach(() => {
   mocks.groupJoin.mockReset().mockResolvedValue({ ok: true, value: null })
   mocks.groupLeave.mockReset().mockResolvedValue({ ok: true, value: null })
   mocks.groupClose.mockReset().mockResolvedValue({ ok: true, value: null })
-  mocks.groupPublish.mockReset().mockResolvedValue({ ok: true, value: null })
+  mocks.groupReopen.mockReset().mockResolvedValue({ ok: true, value: null })
+  mocks.groupPublish.mockReset().mockResolvedValue({ ok: true, value: { postId: "post-new", created: true } })
   mocks.groupRemove.mockReset().mockResolvedValue({ ok: true, value: null })
   mocks.eventCreate.mockReset().mockResolvedValue({ ok: true, value: { eventId: "event-created", created: true } })
   mocks.eventUpdate.mockReset().mockResolvedValue({ ok: true, value: null })
@@ -339,7 +354,7 @@ describe("activités associatives — gestes volontaires et droits vivants", () 
   })
 
   it("ignore une publication tardive de l'ancienne personne sans effacer le nouveau brouillon ni émettre de toast", async () => {
-    const pending = pendingPublication()
+    const pending = pendingPublication<{ readonly postId: string; readonly created: boolean }>()
     mocks.groupPublish.mockReturnValueOnce(pending.promise)
     const view = render(groupTree())
     fireEvent.change(screen.getByLabelText(t("associationActivities.group.body")), { target: { value: "Message de la première personne." } })
@@ -350,7 +365,7 @@ describe("activités associatives — gestes volontaires et droits vivants", () 
     view.rerender(groupTree())
     expect(screen.getByLabelText(t("associationActivities.group.body"))).toHaveValue("")
     fireEvent.change(screen.getByLabelText(t("associationActivities.group.body")), { target: { value: "Brouillon propre à la nouvelle personne." } })
-    await act(async () => { pending.finish({ ok: true, value: null }); await pending.promise })
+    await act(async () => { pending.finish({ ok: true, value: { postId: "post-tardif", created: true } }); await pending.promise })
 
     expect(screen.getByLabelText(t("associationActivities.group.body"))).toHaveValue("Brouillon propre à la nouvelle personne.")
     expect(screen.getByRole("button", { name: t("associationActivities.group.publish") })).toBeEnabled()
@@ -721,5 +736,56 @@ describe("DG-023 — clôture et rappel personnel", () => {
     expect(mocks.eventSetReminder).toHaveBeenCalledExactlyOnceWith({ eventId: "event-1", enabled: true })
     expect(mocks.success).not.toHaveBeenCalled()
     expect(mocks.error).not.toHaveBeenCalled()
+  })
+})
+
+// ── AS-03 et AS-08 : rouvrir le groupe ; le mur au format du fil ─────────────
+
+describe("groupe d'une association — rouvrir (AS-03) et mur au format du fil (AS-08)", () => {
+  const CLOSED: AssociationGroupView = { ...GROUP, state: "closed", closedAt: NOW - 60_000, role: "owner", canManage: true, canPublish: false }
+
+  it("l'administrateur rouvre le groupe fermé en citant la fermeture lue", async () => {
+    mocks.group = { status: "ready", data: CLOSED }
+    render(groupTree())
+    expect(screen.getByText(plain(t("associationActivities.group.closedManage")))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: t("associationActivities.group.reopen") }))
+    await act(async () => { await Promise.resolve() })
+    expect(mocks.groupReopen).toHaveBeenCalledWith({ groupId: "group-1", expectedClosedAt: NOW - 60_000 })
+    expect(mocks.success).toHaveBeenCalledWith(t("associationActivities.group.reopened"))
+  })
+
+  it("un membre sans gestion lit que le groupe est fermé, sans « Rouvrir »", () => {
+    mocks.group = { status: "ready", data: { ...CLOSED, role: "member", canManage: false } }
+    render(groupTree())
+    expect(screen.getByText(t("associationActivities.group.closed"))).toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: t("associationActivities.group.reopen") })).not.toBeInTheDocument()
+    expect(screen.queryByText(plain(t("associationActivities.group.closedManage")))).not.toBeInTheDocument()
+  })
+
+  it("avec le mur du moteur, le groupe prend la chaîne du fil et confie au composeur une publication dans le groupe seul", async () => {
+    const wall: AssociationGroupWallCapability = {
+      useWall: () => ({ data: { items: [], nextCursor: null, lacunar: false }, isLoading: false, error: null, retry: () => undefined }),
+      usePinned: () => ({ data: null, isLoading: false, error: null, retry: () => undefined }),
+      pin: async () => ({ ok: true, value: null }),
+      unpin: async () => ({ ok: true, value: null }),
+    }
+    mocks.groups = { ...GROUPS, wall }
+    render(groupTree())
+    // Le mur en texte et son formulaire laissent la place aux cartes du fil.
+    expect(screen.queryByLabelText(t("associationActivities.group.body"))).not.toBeInTheDocument()
+    expect(mocks.readPosts).not.toHaveBeenCalled()
+    expect(screen.getByText(t("associationActivities.group.empty"))).toBeInTheDocument()
+    fireEvent.click(screen.getByRole("button", { name: t("associationActivities.group.compose") }))
+    const props = mocks.composer.mock.lastCall?.[0] as { page: { id: string; name: string; publish: (input: unknown) => Promise<unknown>; fixedScope: Record<string, unknown> } }
+    expect(props.page).toMatchObject({ id: "group-1", name: "Groupe privé de recette" })
+    expect(props.page.fixedScope).toMatchObject({
+      requireMedia: false,
+      audienceLabel: t("associationActivities.group.audienceLabel"),
+      identity: t("associationActivities.group.composeIdentity", { name: "Groupe privé de recette" }),
+      sentNotice: t("associationActivities.group.composeSent"),
+    })
+    const media = [{ upload: { ref: "photo", kind: "image", mimeType: "image/jpeg", sizeBytes: 10 }, altText: "Photo de la rencontre" }]
+    await props.page.publish({ pageId: "group-1", body: "Photos de samedi.", reach: "diaspora", audience: "public", idempotencyKey: "cle-groupe", media })
+    expect(mocks.groupPublish).toHaveBeenCalledWith({ groupId: "group-1", body: "Photos de samedi.", idempotencyKey: "cle-groupe", media })
   })
 })

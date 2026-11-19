@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY, type FeedScope } from "@diasporale/domain"
 import { RoutingProvider, useRouting, type FeatureRoutes } from "@diasporale/features"
-import type { FeedCursorView, FeedPageView, MembershipView, PostView, ReactionKind } from "@diasporale/features/data"
+import type { AssociationGroupWallCapability, FeedCursorView, FeedPageView, MembershipView, PagePinnedQuery, PostView, ReactionKind } from "@diasporale/features/data"
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { useEffect, type ButtonHTMLAttributes, type HTMLAttributes } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { FeedPages, ProfilePostPages, type FeedPagesProps, type ProfilePostPagesProps } from "./feed-pages"
+import { FeedPages, GroupPostPages, ProfilePostPages, type FeedPagesProps, type GroupPostPagesProps, type ProfilePostPagesProps } from "./feed-pages"
 import { routes } from "@/lib/routes"
 
 interface PageResult {
@@ -28,7 +28,14 @@ const mocks = vi.hoisted(() => ({
   profileUnmounted: vi.fn(),
   react: vi.fn(),
   error: vi.fn(),
+  success: vi.fn(),
   card: vi.fn(),
+  groupPages: new Map<string, PageResult>(),
+  groupPinned: { data: null, isLoading: false, error: null, retry: () => undefined } as PagePinnedQuery,
+  readGroup: vi.fn(),
+  pin: vi.fn(),
+  unpin: vi.fn(),
+  removeGroupPost: vi.fn(),
 }))
 
 function cursorKey(cursor: FeedCursorView | null | undefined) {
@@ -65,7 +72,7 @@ vi.mock("@diasporale/features/i18n/client", () => ({
   useDiasporaleT: () => ({ t: (key: string, options?: { count?: number }) => options?.count === undefined ? key : `${key}:${options.count}` }),
 }))
 
-vi.mock("sonner", () => ({ toast: { error: mocks.error } }))
+vi.mock("sonner", () => ({ toast: { error: mocks.error, success: mocks.success } }))
 
 // Les vraies règles de chaîne du moteur restent actives ; seules les cartes,
 // leurs propres dialogues et les lectures réseau sont remplacés.
@@ -177,6 +184,11 @@ beforeEach(() => {
   mocks.kind = "engine"
   mocks.pages.clear()
   mocks.profilePages.clear()
+  mocks.groupPages.clear()
+  mocks.groupPinned = { data: null, isLoading: false, error: null, retry: () => undefined }
+  mocks.pin.mockResolvedValue({ ok: true, value: null })
+  mocks.unpin.mockResolvedValue({ ok: true, value: null })
+  mocks.removeGroupPost.mockResolvedValue({ ok: true, value: null })
   mocks.react.mockResolvedValue({ ok: true, value: null })
 })
 
@@ -537,5 +549,76 @@ describe("FeedPages — abonnements réactifs du fil DIASPORALE", () => {
 
     expect(mocks.react).toHaveBeenCalledExactlyOnceWith("première", "like")
     expect(mocks.error).toHaveBeenCalledExactlyOnceWith("errors.status_insufficient")
+  })
+})
+
+// ── AS-08 : le mur du groupe d'une association, par la même chaîne ─────────────
+
+const GROUP_WALL: AssociationGroupWallCapability = {
+  useWall: (args) => {
+    mocks.readGroup(args)
+    return mocks.groupPages.get(cursorKey(args.cursor)) ?? { data: undefined, isLoading: true, error: null, retry: vi.fn() }
+  },
+  usePinned: () => mocks.groupPinned,
+  pin: (input) => mocks.pin(input),
+  unpin: (groupId) => mocks.unpin(groupId),
+}
+
+function setGroupPage(cursor: FeedCursorView | null, items: readonly PostView[], nextCursor: FeedCursorView | null) {
+  mocks.groupPages.set(cursorKey(cursor), { data: { items, nextCursor, lacunar: false }, isLoading: false, error: null, retry: vi.fn() })
+}
+
+function groupTree(overrides: Partial<GroupPostPagesProps> = {}) {
+  const featureRoutes: FeatureRoutes = {
+    profile: routes.profile, post: routes.post, page: routes.page, hub: routes.hub,
+    feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
+    sponsor: routes.sponsor, settings: routes.settings, attestation: routes.attestation, enter: routes.enter,
+  }
+  return (
+    <RoutingProvider routes={featureRoutes} Link={({ children, ...rest }) => <a {...rest}>{children}</a>}>
+      <GroupPostPages groupId="group-1" capability={GROUP_WALL} moderator={false} remove={mocks.removeGroupPost} membership={membership} now={1_000} emptyFallback={<p>Groupe vide confirmé</p>} {...overrides} />
+    </RoutingProvider>
+  )
+}
+
+describe("GroupPostPages — AS-08 : le mur du groupe d'une association au format du fil", () => {
+  it("lit le mur du groupe seulement, l'épinglée en tête et une seule fois", () => {
+    mocks.groupPinned = { data: post("épinglée"), isLoading: false, error: null, retry: vi.fn() }
+    setGroupPage(null, [post("courante"), post("épinglée")], null)
+    render(groupTree())
+    expect(mocks.readGroup).toHaveBeenLastCalledWith({ groupId: "group-1", cursor: null })
+    expect(mocks.read).not.toHaveBeenCalled()
+    expect(screen.getAllByRole("article").map((article) => article.getAttribute("aria-label"))).toEqual(["épinglée", "courante"])
+    expect(within(screen.getByRole("region", { name: "associationActivities.group.pinnedSection" })).getByRole("article", { name: "épinglée" })).toBeInTheDocument()
+    // Sans rôle d'animation, aucun geste collectif sous les cartes.
+    expect(screen.queryByRole("button", { name: "associationActivities.group.pin" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.removePost" })).not.toBeInTheDocument()
+  })
+
+  it("qui anime le groupe épingle, désépingle et voit « Retirer » sous chaque publication publiée", async () => {
+    mocks.groupPinned = { data: post("épinglée"), isLoading: false, error: null, retry: vi.fn() }
+    setGroupPage(null, [post("courante"), { ...post("en relecture"), moderation: "pending_review" }], null)
+    render(groupTree({ moderator: true }))
+    expect(screen.getAllByRole("button", { name: "associationActivities.group.removePost" })).toHaveLength(2)
+    fireEvent.click(screen.getByRole("button", { name: "associationActivities.group.pin" }))
+    await vi.waitFor(() => expect(mocks.pin).toHaveBeenCalledWith({ groupId: "group-1", postId: "courante" }))
+    await vi.waitFor(() => expect(mocks.success).toHaveBeenCalledWith("associationActivities.group.pinned"))
+    fireEvent.click(screen.getByRole("button", { name: "associationActivities.group.unpin" }))
+    await vi.waitFor(() => expect(mocks.unpin).toHaveBeenCalledWith("group-1"))
+  })
+
+  it("un membre en attente n'a pas de geste d'animation, même responsable ; seule l'épinglée n'est pas un mur vide", () => {
+    mocks.groupPinned = { data: post("épinglée"), isLoading: false, error: null, retry: vi.fn() }
+    setGroupPage(null, [post("épinglée")], null)
+    render(groupTree({ moderator: true, membership: { ...membership, status: "en_attente", canPublish: false } }))
+    expect(screen.queryByRole("button", { name: "associationActivities.group.pin" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.unpin" })).not.toBeInTheDocument()
+    expect(screen.queryByText("Groupe vide confirmé")).not.toBeInTheDocument()
+  })
+
+  it("un mur sans publication ni épingle dit son état vide", () => {
+    setGroupPage(null, [], null)
+    render(groupTree())
+    expect(screen.getByText("Groupe vide confirmé")).toBeInTheDocument()
   })
 })

@@ -18,6 +18,8 @@ import {
   useFeedPage,
   useProfilePostsPage,
   type ActionErrorCode,
+  type ActionResult,
+  type AssociationGroupWallCapability,
   type FeedCursorView,
   type FeedPageQuery,
   type MembershipView,
@@ -31,6 +33,7 @@ import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import { GroupPostModeration } from "./group-post-moderation"
 import { PagePostRemoveButton } from "./page-publications"
 import { PagePostEditButton } from "./page-post-editor"
 import { PagePostPinButton } from "./page-post-pin"
@@ -57,13 +60,26 @@ interface PagePinContext {
   readonly ready: boolean
 }
 
+/** AS-08 : le mur du groupe d'une association, ses gestes d'animation et son épingle. */
+interface GroupWallContext {
+  readonly groupId: string
+  readonly capability: AssociationGroupWallCapability
+  /** Qui anime le groupe (responsable, animateur) épingle et retire ; le moteur relit ce droit à chaque geste. */
+  readonly moderator: boolean
+  readonly remove: (input: { readonly groupId: string; readonly postId: string; readonly isMine: boolean }) => Promise<ActionResult>
+  readonly pinnedPostId: string | null
+  readonly pinReady: boolean
+}
+
 type PostPagesSource =
   | { readonly kind: "feed"; readonly scope: FeedScope; readonly hubCountry?: CountryCode; readonly tag?: string }
   | { readonly kind: "profile"; readonly handle: string }
   | { readonly kind: "page"; readonly handle: string; readonly pageId: string; readonly canRemove: boolean; readonly capability: PagePublicationsCapability; readonly pinContext?: PagePinContext }
   | { readonly kind: "page-media"; readonly handle: string; readonly pageId: string; readonly mediaKind: PageMediaKind; readonly capability: PageMediaCapability }
+  | ({ readonly kind: "group" } & GroupWallContext)
 
 type PagePostSource = Extract<PostPagesSource, { kind: "page" }>
+type GroupPostSource = Extract<PostPagesSource, { kind: "group" }>
 type PageMediaSource = Extract<PostPagesSource, { kind: "page-media" }>
 type PagePostPagesProps = PostPagesProps & { handle: string; pageId: string; canRemove: boolean; capability: PagePublicationsCapability }
 type PageMediaPagesProps = PostPagesProps & { handle: string; pageId: string; kind: PageMediaKind; capability: PageMediaCapability }
@@ -135,6 +151,62 @@ export function PageMediaPages(props: PageMediaPagesProps) {
   const handle = props.handle.trim().replace(/^@/, "").toLowerCase()
   const key = JSON.stringify([source.kind, props.membership.personId, "page-media", props.pageId, handle, props.kind])
   return <PostPagesChain key={key} {...props} source={{ kind: "page-media", handle, pageId: props.pageId, mediaKind: props.kind, capability: props.capability }} />
+}
+
+export interface GroupPostPagesProps extends PostPagesProps {
+  readonly groupId: string
+  readonly capability: AssociationGroupWallCapability
+  readonly moderator: boolean
+  readonly remove: GroupWallContext["remove"]
+}
+
+/**
+ * AS-08 : le mur du groupe d'une association reprend la chaîne du fil — mêmes cartes,
+ * réactions, commentaires et signalement (décision 5 du plan 07) — avec son épingle en
+ * tête, lue à part comme celle d'une page.
+ */
+export function GroupPostPages(props: GroupPostPagesProps) {
+  const source = useDataSource()
+  const key = JSON.stringify([source.kind, props.membership.personId, "group", props.groupId])
+  return <PinnedGroupPostPages key={key} {...props} />
+}
+
+function PinnedGroupPostPages(props: GroupPostPagesProps) {
+  const { t } = useDiasporaleT()
+  const pinned = props.capability.usePinned(props.groupId)
+  const ready = !pinned.isLoading && pinned.error === null && pinned.data !== undefined
+  // Une erreur ou une relecture ne conserve jamais la carte d'une ancienne lecture.
+  const post = ready ? pinned.data : null
+  const groupSource: GroupPostSource = {
+    kind: "group",
+    groupId: props.groupId,
+    capability: props.capability,
+    moderator: props.moderator,
+    remove: props.remove,
+    pinnedPostId: post?.id ?? null,
+    pinReady: ready,
+  }
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      {pinned.error !== null && !ACCESS_REFUSAL_CODES.has(pinned.error) ? (
+        <Card role="alert" className="flex min-w-0 flex-col items-start gap-3 p-4">
+          <div>
+            <h3 className="font-semibold">{t("associationActivities.group.pinnedErrorTitle")}</h3>
+            <p className="mt-1 text-sm text-muted-foreground">{t("pagePinning.errorBody")}</p>
+          </div>
+          <Button variant="outline" onClick={pinned.retry} disabled={pinned.isLoading} className="h-auto min-h-11 whitespace-normal py-2 focus-visible:shadow-focus">
+            {t("pagePinning.retry")}
+          </Button>
+        </Card>
+      ) : post ? (
+        <section aria-label={t("associationActivities.group.pinnedSection")} className="flex min-w-0 flex-col gap-2">
+          <h3 className="text-sm font-semibold text-muted-foreground">{t("associationActivities.group.pinnedSection")}</h3>
+          <PostEntry post={post} membership={props.membership} now={props.now} groupSource={groupSource} />
+        </section>
+      ) : null}
+      <PostPagesChain {...props} source={groupSource} />
+    </div>
+  )
 }
 
 function samePostIds(left: readonly string[] | undefined, right: readonly string[] | undefined) {
@@ -283,9 +355,11 @@ function PostPagesChain(props: PostPagesProps & { source: PostPagesSource }) {
             {...(props.source.tag === undefined ? {} : { tag: props.source.tag })}
           />
         ) : props.source.kind === "profile" ? <SubscribedProfilePostPage key={feedCursorKey(cursor)} {...pageProps} handle={props.source.handle} />
+          : props.source.kind === "group" ? <SubscribedGroupPostPage key={feedCursorKey(cursor)} {...pageProps} source={props.source} />
           : <SubscribedPagePostPage key={feedCursorKey(cursor)} {...pageProps} source={props.source} />
       })}
-      {empty && !(props.source.kind === "page" && props.source.pinContext?.ready && props.source.pinContext.pinnedPostId !== null) ? props.emptyFallback : null}
+      {empty && !(props.source.kind === "page" && props.source.pinContext?.ready && props.source.pinContext.pinnedPostId !== null)
+        && !(props.source.kind === "group" && props.source.pinReady && props.source.pinnedPostId !== null) ? props.emptyFallback : null}
       {showMore || loadingMore ? (
         <Button variant="outline" onClick={loadMore} disabled={loadingMore} className="self-center focus-visible:shadow-focus">
           {t(loadingMore ? "feed.pagination.loading" : "feed.pagination.loadMore")}
@@ -324,6 +398,11 @@ function SubscribedPagePostPage(props: SubscribedPageProps & { source: PagePostS
   return <SubscribedPostPage {...props} page={page} pageSource={props.source} />
 }
 
+function SubscribedGroupPostPage(props: SubscribedPageProps & { source: GroupPostSource }) {
+  const page = props.source.capability.useWall({ groupId: props.source.groupId, cursor: props.cursor })
+  return <SubscribedPostPage {...props} page={page} groupSource={props.source} />
+}
+
 function SubscribedPageMediaPage(props: SubscribedPageProps & { source: PageMediaWindow }) {
   const page = props.source.capability.useMedia({
     handle: props.source.handle,
@@ -335,14 +414,15 @@ function SubscribedPageMediaPage(props: SubscribedPageProps & { source: PageMedi
 }
 
 /** Les rapports gardent les fenêtres brutes ; le doublon épinglé est seulement masqué à l'écran. */
-function SubscribedPostPage(props: SubscribedPageProps & { page: FeedPageQuery; pageSource?: PagePostSource; mediaSource?: PageMediaWindow }) {
+function SubscribedPostPage(props: SubscribedPageProps & { page: FeedPageQuery; pageSource?: PagePostSource; groupSource?: GroupPostSource; mediaSource?: PageMediaWindow }) {
   const { t } = useDiasporaleT()
   const { page } = props
   const key = feedCursorKey(props.cursor)
   const { onReport, pageIndex, isTail } = props
   const mediaSource = props.mediaSource
   const isMediaSource = mediaSource !== undefined
-  const pinnedPostId = props.pageSource?.pinContext?.ready ? props.pageSource.pinContext.pinnedPostId : null
+  const pinnedPostId = props.pageSource?.pinContext?.ready ? props.pageSource.pinContext.pinnedPostId
+    : props.groupSource?.pinReady ? props.groupSource.pinnedPostId : null
   const visiblePosts = pinnedPostId === null ? page.data?.items : page.data?.items.filter((post) => post.id !== pinnedPostId)
   const mediaPostIds = useMemo(() => isMediaSource && page.data !== undefined && !page.isLoading && page.error === null
     ? page.data.items.map((post) => post.id) : undefined, [isMediaSource, page.data, page.isLoading, page.error])
@@ -407,6 +487,7 @@ function SubscribedPostPage(props: SubscribedPageProps & { page: FeedPageQuery; 
                 now={props.now}
                 {...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry })}
                 {...(props.pageSource === undefined ? {} : { pageSource: props.pageSource })}
+                {...(props.groupSource === undefined ? {} : { groupSource: props.groupSource })}
               />
             </li>
           ))}
@@ -437,10 +518,10 @@ function PageMediaCard(props: { post: PostView; kind: PageMediaKind }) {
 }
 
 /** La carte épinglée et les fenêtres partagent les mêmes gestes collectifs. */
-function PostEntry(props: { post: PostView; membership: MembershipView; now: number; hubCountry?: CountryCode; pageSource?: PagePostSource }) {
+function PostEntry(props: { post: PostView; membership: MembershipView; now: number; hubCountry?: CountryCode; pageSource?: PagePostSource; groupSource?: GroupPostSource }) {
   const { t } = useDiasporaleT()
   const actions = useActions()
-  const { post, pageSource } = props
+  const { post, pageSource, groupSource } = props
   return (
     <>
       <PostCard
@@ -474,6 +555,17 @@ function PostEntry(props: { post: PostView; membership: MembershipView; now: num
         </> : null}
         <PagePostRemoveButton capability={pageSource.capability} pageId={pageSource.pageId} postId={post.id} />
       </div> : null}
+      {groupSource?.moderator && props.membership.canPublish && post.moderation === "published" ? (
+        <GroupPostModeration
+          key={`${groupSource.groupId}:${post.id}`}
+          groupId={groupSource.groupId}
+          post={post}
+          pinnedPostId={groupSource.pinnedPostId}
+          pinReady={groupSource.pinReady}
+          wall={groupSource.capability}
+          remove={groupSource.remove}
+        />
+      ) : null}
     </>
   )
 }

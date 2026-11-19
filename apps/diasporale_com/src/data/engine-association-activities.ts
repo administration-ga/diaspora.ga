@@ -1,6 +1,8 @@
 "use client"
 
 /** Activités des associations (DG-010) : lectures réactives privées et écritures du moteur courant. */
+import { useAuthenticatedConvexQuery } from "@antsia/api/hooks"
+import { engineErrorCode } from "@antsia/social-contracts/errors"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import {
@@ -19,16 +21,23 @@ import {
   type AssociationEventView,
   type AssociationGroupsCapability,
   type AssociationGroupPostView,
+  type AssociationGroupWallCapability,
+  type FeedCursorView,
+  type FeedPageQuery,
+  type PagePinnedQuery,
+  type PostView,
   type AssociationGroupView,
   type CountryEventsPage,
   type CountryEventView,
   type Loadable,
   countryEventsPageSize,
 } from "@diasporale/features/data"
+import { useConvexAuth } from "convex/react"
 import type { FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
 
-import { attemptAction, failed, LOADING, memberReadError, ready, Refusal, resolveDiasporaleNetworkId, useEngineMember, useLoaded, type EngineSourceDeps, type Loaded } from "./engine-kit"
+import { engineActionErrorCode } from "./engine-errors"
+import { attemptAction, failed, LOADING, memberReadError, ready, Refusal, resolveDiasporaleNetworkId, useEngineMember, useLoaded, useReadablePostsQuery, type EngineSourceDeps, type Loaded } from "./engine-kit"
 import { toDeclaredMedia, toPostView } from "./engine-views"
 
 const GROUPS = api.modules.thematicGroups.thematicGroups
@@ -48,7 +57,7 @@ type AttendanceDto = NonNullable<FunctionReturnType<typeof ATTENDANCE.get>>
 type PresentDto = FunctionReturnType<typeof ATTENDANCE.listPresent>["items"][number]
 
 function groupView(row: GroupDto): AssociationGroupView {
-  return { groupId: row.groupId, pageId: row.pageId, name: row.name, state: row.state, role: row.role, isMember: row.isMember, canJoin: row.canJoin, canManage: row.canManage, canPublish: row.canPublish }
+  return { groupId: row.groupId, pageId: row.pageId, name: row.name, state: row.state, closedAt: row.closedAt, role: row.role, isMember: row.isMember, canJoin: row.canJoin, canManage: row.canManage, canPublish: row.canPublish }
 }
 function eventView(row: EventDto): AssociationEventView {
   return {
@@ -107,10 +116,79 @@ function eventInput(input: AssociationEventInput) {
   return { pageId: input.pageId as Id<"pages">, title: input.title, description: input.description, location: input.location, startAt: input.startAt, endAt: input.endAt, timeZone: input.timeZone, audience: input.audience, ...(input.capacity === undefined ? {} : { capacity: input.capacity }), ...(input.registrationClosesAt === undefined ? {} : { registrationClosesAt: input.registrationClosesAt }) }
 }
 
-export function createEngineAssociationActivities(deps: EngineSourceDeps): { readonly groups: AssociationGroupsCapability; readonly events: AssociationEventsCapability } {
+/** Une fenêtre du mur : la taille par défaut du fil du moteur. */
+export const ASSOCIATION_GROUP_WALL_PAGE_SIZE = 20
+
+/** Le lecteur du mur : session vivante, réseau résolu, droit de lire le réseau ; sinon rien n'est demandé. */
+function useWallReader() {
+  const member = useEngineMember()
+  // La perte effective de session ferme le mur, même pendant la stabilisation du garde.
+  const auth = useConvexAuth()
+  const id = member.networkId.state === "ready" ? member.networkId.value : null
+  const membership = member.membership.state === "ready" ? member.membership.value : null
+  const canRead = auth.isAuthenticated && !auth.isLoading && member.auth.isAuthenticated && id !== null && membership?.capabilities.includes("read_network") === true
+  return { member, id, canRead }
+}
+
+/**
+ * AS-08 : le mur du groupe au format du fil (`thematicGroups.groupWall`, garde d'association
+ * du moteur), l'épingle relue avec sa garde (`getGroup`), épingler et désépingler.
+ */
+function createEngineGroupWall(deps: EngineSourceDeps, networkOf: () => Promise<Id<"networks">>, onPosts: ((posts: readonly PostView[]) => void) | undefined): AssociationGroupWallCapability {
+  return {
+    useWall({ groupId, cursor }): FeedPageQuery {
+      const { member, id, canRead } = useWallReader()
+      const query = useAuthenticatedConvexQuery(
+        GROUPS.groupWall,
+        canRead && id
+          ? { networkId: id, groupId: groupId as Id<"thematicGroups">, limit: ASSOCIATION_GROUP_WALL_PAGE_SIZE, ...(cursor ? { cursor: engineCursorOf(cursor) } : {}) }
+          : "skip",
+      )
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const page = useReadablePostsQuery(query, JSON.stringify(["association-group-wall", id, groupId, cursor, canRead]), canRead, error)
+      const data = useMemo(() => {
+        if (page.data === undefined) return undefined
+        const items = page.data.items.map(toPostView)
+        onPosts?.(items)
+        return { items, nextCursor: page.data.nextCursor === null ? null : { publishedAt: page.data.nextCursor.publishedAt, postId: page.data.nextCursor.postId as string }, lacunar: false }
+      }, [page.data])
+      // Un refus retire aussi les cartes déjà lues : aucune publication d'un groupe quitté ne reste à l'écran.
+      return { ...page, data: page.error === null ? data : undefined }
+    },
+    usePinned(groupId): PagePinnedQuery {
+      const { member, id, canRead } = useWallReader()
+      const query = useAuthenticatedConvexQuery(GROUPS.getGroup, canRead && id ? { networkId: id, groupId: groupId as Id<"thematicGroups"> } : "skip")
+      const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
+      const readable = useReadablePostsQuery(query, JSON.stringify(["association-group-pinned", id, groupId, canRead]), canRead, error)
+      const data = useMemo(() => {
+        if (readable.data === undefined) return undefined
+        if (readable.data.pinned === null) return null
+        const post = toPostView(readable.data.pinned)
+        onPosts?.([post])
+        return post
+      }, [readable.data])
+      return { ...readable, data: readable.error === null ? data : undefined }
+    },
+    pin: ({ groupId, postId }) => attemptAction(async () => { await deps.convex.mutation(GROUPS.pinGroupPost, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, postId: postId as Id<"posts"> }); return null }),
+    unpin: (groupId) => attemptAction(async () => { await deps.convex.mutation(GROUPS.unpinGroupPost, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups"> }); return null }),
+  }
+}
+
+/** Le curseur du mur rendu au moteur : la publication et sa date, l'ordre du fil. */
+function engineCursorOf(cursor: FeedCursorView) {
+  return { publishedAt: cursor.publishedAt, postId: cursor.postId as Id<"posts"> }
+}
+
+export interface EngineAssociationActivitiesOptions {
+  /** Mémoire des réactions commune au fil, aux pages et au mur du groupe. */
+  readonly onPosts?: (posts: readonly PostView[]) => void
+}
+
+export function createEngineAssociationActivities(deps: EngineSourceDeps, options: EngineAssociationActivitiesOptions = {}): { readonly groups: AssociationGroupsCapability; readonly events: AssociationEventsCapability } {
   const networkOf = () => resolveDiasporaleNetworkId(deps.convex)
   return {
     groups: {
+      wall: createEngineGroupWall(deps, networkOf, options.onPosts),
       useGroup(pageId) {
         const reader = useReader()
         const loaded = useLoaded(ASSOCIATIONS.groupForPage, reader.networkId ? { networkId: reader.networkId, pageId: pageId as Id<"pages"> } : "skip")
@@ -130,9 +208,19 @@ export function createEngineAssociationActivities(deps: EngineSourceDeps): { rea
       join: (groupId) => attemptAction(async () => { await deps.convex.mutation(GROUPS.join, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups"> }); return null }),
       leave: (groupId) => attemptAction(async () => { await deps.convex.mutation(GROUPS.leave, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups"> }); return null }),
       close: (groupId) => attemptAction(async () => { await deps.convex.mutation(GROUPS.closeGroup, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups"> }); return null }),
-      publish: ({ groupId, body, idempotencyKey }) => attemptAction(async () => {
-        await deps.convex.mutation(api.modules.posts.posts.publish, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, body, idempotencyKey, audience: "group", reach: "diaspora", alsoOnRoot: false })
+      reopen: ({ groupId, expectedClosedAt }) => attemptAction(async () => {
+        try {
+          await deps.convex.mutation(ASSOCIATIONS.reopenGroupForPage, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, expectedClosedAt })
+        } catch (error) {
+          // Une autre fermeture que celle lue : le groupe a changé, l'écran le relit.
+          if (engineErrorCode(error) === "conflict") throw new Refusal("association_group_changed")
+          throw error
+        }
         return null
+      }),
+      publish: ({ groupId, body, idempotencyKey, media }) => attemptAction(async () => {
+        const row = await deps.convex.mutation(api.modules.posts.posts.publish, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, body, idempotencyKey, audience: "group", reach: "diaspora", alsoOnRoot: false, ...(media && media.length > 0 ? { media: media.map(toDeclaredMedia) } : {}) })
+        return { postId: row.postId as string, created: row.created }
       }),
       removePost: ({ postId, isMine }) => attemptAction(async () => {
         await deps.convex.mutation(isMine ? api.modules.posts.posts.remove : GROUPS.removeGroupPost, { networkId: await networkOf(), postId: postId as Id<"posts"> })

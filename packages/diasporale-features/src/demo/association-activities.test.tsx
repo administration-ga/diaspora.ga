@@ -151,12 +151,18 @@ describe("activités associatives — groupe privé de démonstration", () => {
     await as(context.store, "p-nadia")
     await context.groups.join(groupId)
     const posts = renderHook(() => context.groups.usePosts({ groupId, cursor: null }))
-    await act(async () => { expect(await context.groups.publish({ groupId, body: "  Bonjour au groupe.  ", idempotencyKey: "post-demo-key" })).toEqual({ ok: true, value: null }) })
+    let postId = ""
+    await act(async () => {
+      const result = await context.groups.publish({ groupId, body: "  Bonjour au groupe.  ", idempotencyKey: "post-demo-key" })
+      expect(result).toEqual({ ok: true, value: { postId: expect.any(String), created: true } })
+      if (result.ok) postId = result.value.postId
+    })
     expect(ready(posts.result.current).items[0]).toMatchObject({ body: "Bonjour au groupe.", isMine: true, moderation: "pending_review" })
     expect(ready(posts.result.current).items[0]?.author).not.toHaveProperty("personId")
     expect(ready(posts.result.current).items[0]?.author).not.toHaveProperty("handle")
     expect(context.store.getState().posts).toBe(initialPosts)
-    expect(await context.groups.publish({ groupId, body: "Autre corps rejoué.", idempotencyKey: "post-demo-key" })).toEqual({ ok: true, value: null })
+    // Rejouée, la même clé rend la même publication, sans en créer une autre.
+    expect(await context.groups.publish({ groupId, body: "Autre corps rejoué.", idempotencyKey: "post-demo-key" })).toEqual({ ok: true, value: { postId, created: false } })
     expect(stored(context).posts).toHaveLength(1)
     await as(context.store, "p-steeve")
     expect(ready(posts.result.current).items).toEqual([])
@@ -201,6 +207,24 @@ describe("activités associatives — groupe privé de démonstration", () => {
     expect(ready(renderHook(() => context.groups.useGroup(PAGE)).result.current)).toMatchObject({ isMember: false, canManage: true, canJoin: true })
     expect(renderHook(() => context.groups.usePosts({ groupId, cursor: null })).result.current).toEqual({ status: "error", code: "not_found" })
     expect(await context.groups.close(groupId)).toEqual({ ok: true, value: null })
+  })
+
+  it("AS-03 : l'administrateur rouvre le groupe fermé en citant la fermeture lue ; personne d'autre ne le rouvre", async () => {
+    const context = setup()
+    const groupId = await group(context)
+    const view = renderHook(() => context.groups.useGroup(PAGE))
+    clock = NOW + HOUR
+    await act(async () => { await context.groups.close(groupId) })
+    expect(ready(view.result.current)).toMatchObject({ state: "closed", closedAt: NOW + HOUR, canManage: true })
+    expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW })).toEqual({ ok: false, code: "association_group_changed" })
+    await as(context.store, "p-nadia")
+    expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW + HOUR })).toEqual({ ok: false, code: "not_found" })
+    await as(context.store, "p-steeve")
+    await act(async () => { expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW + HOUR })).toEqual({ ok: true, value: null }) })
+    expect(ready(view.result.current)).toMatchObject({ state: "active", closedAt: null, isMember: true, canPublish: true })
+    // Rejouée, la réouverture d'un groupe déjà actif ne change rien.
+    expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW + HOUR })).toEqual({ ok: true, value: null })
+    clock = NOW
   })
 
   it("une ligne d'adhésion non acceptée ferme aussi les pouvoirs de l'administrateur", async () => {
