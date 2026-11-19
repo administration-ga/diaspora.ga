@@ -49,7 +49,8 @@ const inviteSchema = z.object({
     const refusal = handleInputRefusal(raw)
     if (refusal) context.addIssue({ code: z.ZodIssueCode.custom, message: refusal })
   }),
-  role: z.enum(["admin", "signatory", "moderator"]),
+  // Les rôles du moteur, une seule source (`PAGE_TEAM_ROLES`).
+  role: z.enum(PAGE_TEAM_ROLES),
 })
 
 type InviteValues = z.infer<typeof inviteSchema>
@@ -213,7 +214,11 @@ function SignatoryRow(props: {
                   value={row.role}
                   disabled={busy}
                   aria-describedby={row.accepted ? `${id}-aussitot` : undefined}
-                  onChange={(event) => void changeRole(event.target.value as PageTeamRole)}
+                  onChange={(event) => {
+                    // Seule une valeur de la liste fermée part au serveur ; rien n'est transtypé.
+                    const role = PAGE_TEAM_ROLES.find((candidate) => candidate === event.target.value)
+                    if (role) void changeRole(role)
+                  }}
                 >
                   {PAGE_TEAM_ROLES.map((role) => (
                     <option key={role} value={role}>
@@ -327,7 +332,9 @@ function InviteForm(props: { readonly management: PageManagement; readonly pageI
  * « Transmettre la page » (AS-10), un parcours sur les gestes existants : nommer un
  * administrateur — un membre ACCEPTÉ est promu aussitôt, une autre personne est
  * invitée —, puis « Se retirer », ouvert seulement quand un second administrateur
- * a accepté. Le moteur rejuge tout et garde toujours un administrateur.
+ * a accepté. Accepté n'est pas actif : l'écran ne sait pas si cet administrateur est
+ * encore membre actif (suspendu, parti de DIASPORALE), il le dit et laisse le
+ * moteur trancher ; son refus (`page_last_admin`) s'affiche tel quel.
  */
 function TransferPanel(props: { readonly management: PageManagement; readonly pageId: string; readonly team: readonly PageSignatoryView[] }) {
   const { t } = useDiasporaleT()

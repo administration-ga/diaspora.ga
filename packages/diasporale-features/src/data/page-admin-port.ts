@@ -26,6 +26,7 @@ import {
   assertPageHandle,
   assertPageName,
   derivePageHandle,
+  isPageSignatoryRole,
   MEMBER_PAGE_OWNER_KINDS,
   normalizePageClaimNote,
   normalizePageDescription,
@@ -40,6 +41,8 @@ import {
   PAGE_ROLES,
   PAGE_SHORT_NAME_MAX_LENGTH,
   PAGE_SIGNATORIES_MAX,
+  PAGE_TEAM_ROLES,
+  type PageTeamRole,
 } from "@antsia/social-domain/pages"
 import { isMimeAllowedForUsage, normalizeMimeType, UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
 import { isDomainViolation } from "@antsia/social-domain/violation"
@@ -121,21 +124,15 @@ export type ManagedPageRole = "admin" | "signatory"
 export const MANAGED_PAGE_ROLES: readonly ManagedPageRole[] = PAGE_ROLES
 
 /**
- * AS-10 — le rôle dans l'ÉQUIPE de la page (contrat du moteur, `PAGE_TEAM_ROLES`) :
+ * AS-10 — le rôle dans l'ÉQUIPE de la page, CELUI du moteur (une seule source :
+ * `PAGE_TEAM_ROLES`, `PageTeamRole`, `isPageSignatoryRole`), dans son ordre :
  *   · `admin` publie et gère (identité, équipe, revendication, boutique, groupe) ;
- *   · `signatory`, affiché « Éditeur », publie au nom de la page sans la gérer ;
+ *   · `signatory`, affiché « Éditeur » dans DIASPORALE, publie sans gérer ;
  *   · `moderator` retire les commentaires sous les publications de la page, voit
- *     l'équipe et s'en retire ; il ne publie pas et ne parle jamais au nom de la page.
+ *     l'équipe et s'en retire ; il ne publie pas et ne parle jamais au nom de la page
+ *     (`isPageSignatoryRole` le dit).
  */
-export type PageTeamRole = ManagedPageRole | "moderator"
-
-/** Les trois rôles de l'équipe, dans l'ordre du moteur : administrateur, éditeur, modérateur. */
-export const PAGE_TEAM_ROLES: readonly PageTeamRole[] = [...PAGE_ROLES, "moderator"]
-
-/** Le rôle parle-t-il au nom de la page (le moteur : `isPageSignatoryRole`) ? Le modérateur, jamais. */
-export function isSpeakingPageRole(role: PageTeamRole): role is ManagedPageRole {
-  return role !== "moderator"
-}
+export { isPageSignatoryRole, PAGE_TEAM_ROLES, type PageTeamRole }
 
 /**
  * MON rôle VIVANT dans l'équipe d'une page lue. Un fournisseur antérieur à AS-10

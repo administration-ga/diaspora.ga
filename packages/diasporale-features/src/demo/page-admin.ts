@@ -41,7 +41,7 @@ import {
   pageHandleRefusal,
   pageNameRefusal,
   pageShortNameRefusal,
-  isSpeakingPageRole,
+  isPageSignatoryRole,
   PAGE_SIGNATORIES_MAX,
   type ManagedPageDetailView,
   type ManagedPageRole,
@@ -384,7 +384,7 @@ function liveTeamRole(state: DemoState, overlay: DemoPageAdminState, page: Resol
 /** Le rôle VIVANT qui PARLE au nom de la page (le moteur : `liveSignatoryRole`) ; un modérateur n'en a aucun. */
 function liveRole(state: DemoState, overlay: DemoPageAdminState, page: ResolvedPage, personId: string, now: number): ManagedPageRole | null {
   const role = liveTeamRole(state, overlay, page, personId, now)
-  return role !== null && isSpeakingPageRole(role) ? role : null
+  return role !== null && isPageSignatoryRole(role) ? role : null
 }
 
 /** L'ordre de l'équipe, comme le moteur : administrateurs, éditeurs, modérateurs. */
