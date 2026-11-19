@@ -350,13 +350,19 @@
         "title": "Votre fil « Pour vous » est vide.",
         "body": "Connectez-vous à des membres et suivez des pages pour le remplir."
       }
-    }
+    },
+    "registerLabel": "Inscrire votre organisation"
   },
   "rail": {
     "myHub": "Votre pays",
     "openHub": "Ouvrir le hub",
     "upcoming": "Prochains évènements",
-    "noEvents": "Aucun évènement prévu pour l'instant."
+    "noEvents": "Aucun évènement prévu pour l'instant.",
+    "pages": {
+      "title": "Pages · {{country}}",
+      "empty": "Aucune page inscrite dans ce pays pour l'instant.",
+      "directory": "Toutes les pages du pays"
+    }
   },
   "composer": {
     "open": "Publier",

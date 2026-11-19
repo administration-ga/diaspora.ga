@@ -350,13 +350,19 @@
         "title": "Your “For you” feed is empty.",
         "body": "Connect with members and follow pages to fill it."
       }
-    }
+    },
+    "registerLabel": "Register your organisation"
   },
   "rail": {
     "myHub": "Your country",
     "openHub": "Open the hub",
     "upcoming": "Upcoming events",
-    "noEvents": "No event planned yet."
+    "noEvents": "No event planned yet.",
+    "pages": {
+      "title": "Pages · {{country}}",
+      "empty": "No page registered in this country yet.",
+      "directory": "All pages in this country"
+    }
   },
   "composer": {
     "open": "Post",

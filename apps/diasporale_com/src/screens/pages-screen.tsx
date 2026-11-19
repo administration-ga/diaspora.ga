@@ -1,6 +1,6 @@
 "use client"
 
-import { parseResidenceCountry, type MembershipStatus } from "@diasporale/domain"
+import { parseResidenceCountry } from "@diasporale/domain"
 import { Button, FolderTabsNav, type FolderNavItem } from "@diasporale/features"
 import type { MembershipView } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
@@ -12,10 +12,8 @@ import { useCallback } from "react"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { PageDirectory, type PageDirectoryFilters } from "@/components/page-directory"
+import { canSeeRegistration } from "@/lib/page-registration"
 import { pageCategoryFiltersOf, routes } from "@/lib/routes"
-
-/** Les adhésions qui voient « Inscrire une association / une entreprise » (le serveur exige ensuite `verifiee`). */
-const REGISTERING_STATUSES: readonly MembershipStatus[] = ["en_attente", "declaree", "verifiee"]
 
 /** Annuaire et abonnements sont lisibles sans mandat de gestion d'une page. */
 export function PagesScreen() {
@@ -53,7 +51,7 @@ function PagesContent(props: { membership: MembershipView }) {
         </div>
         {/* Inscrire son organisation se voit de tout membre en règle (AS-05) ; un membre non vérifié lit, à
             l'écran d'inscription, comment le devenir. Une adhésion suspendue ou quittée n'inscrit rien. */}
-        {REGISTERING_STATUSES.includes(props.membership.status) ? <div className="flex flex-wrap gap-2">
+        {canSeeRegistration(props.membership.status) ? <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline"><NextLink href={routes.newPage("association")}><FilePlus2Icon aria-hidden />{t("pageAdmin.myPages.createAssociation")}</NextLink></Button>
           <Button asChild variant="outline"><NextLink href={routes.newPage("company")}><FilePlus2Icon aria-hidden />{t("pageAdmin.myPages.createCompany")}</NextLink></Button>
         </div> : null}

@@ -1,13 +1,14 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diasporale/domain"
 import type { FeedDiscoveryProps } from "@diasporale/features"
-import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryHubView, Loadable, MembershipView } from "@diasporale/features/data"
+import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryHubView, HubPagesView, Loadable, MembershipView, PagesCapability, PageView } from "@diasporale/features/data"
 import { I18nProvider } from "@diasporale/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { FeedPagesProps } from "@/components/feed-pages"
+import { routes } from "@/lib/routes"
 import { FeedRail, FeedScreen } from "./feed-screen"
 
 const mocks = vi.hoisted(() => ({
@@ -22,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   membership: null as MembershipView | null,
   hub: { status: "loading" } as Loadable<CountryHubView>,
   associationEvents: null as Pick<AssociationEventsCapability, "useCountryEvents"> | null,
+  pages: null as Pick<PagesCapability, "useHubPages"> | null,
+  canPublish: false,
 }))
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search), useRouter: () => ({ push: mocks.push }) }))
 // Un lien ordinaire : l'adresse rendue est celle de la table des routes, sans navigation réelle dans jsdom.
@@ -38,7 +41,7 @@ vi.mock("@/components/gate", () => ({
 }))
 vi.mock("@/components/app-shell", () => ({
   AppShell: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useComposer: () => ({ canPublish: false, open: vi.fn() }),
+  useComposer: () => ({ canPublish: mocks.canPublish, open: vi.fn() }),
 }))
 vi.mock("@/components/feed-pages", () => ({
   FeedPages: (props: FeedPagesProps) => {
@@ -74,7 +77,11 @@ vi.mock("@diasporale/features/data", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@diasporale/features/data")>()),
   useCountryHub: () => mocks.hub,
   // HB-02 : la capacité des évènements du pays, absente par défaut (fournisseur qui ne la sert pas).
-  useOptionalDataSource: () => (mocks.associationEvents ? { associationEvents: mocks.associationEvents } : null),
+  // AS-05 : l'annuaire des pages du pays, absent par défaut lui aussi.
+  useOptionalDataSource: () => {
+    const source = { ...(mocks.associationEvents ? { associationEvents: mocks.associationEvents } : {}), ...(mocks.pages ? { pages: mocks.pages } : {}) }
+    return Object.keys(source).length > 0 ? source : null
+  },
 }))
 
 const MEMBER: MembershipView = {
@@ -92,6 +99,8 @@ beforeEach(() => {
   mocks.showEmpty = false
   mocks.listPost = null
   mocks.associationEvents = null
+  mocks.pages = null
+  mocks.canPublish = false
   mocks.membership = { ...MEMBER }
   mocks.hub = { status: "loading" }
   vi.clearAllMocks()
@@ -371,5 +380,72 @@ describe("/fil — le rail lit les prochains évènements du pays par la capacit
     rail()
     expect(screen.queryByText("Aucun évènement à venir ouvert au réseau dans votre pays.")).toBeNull()
     expect(screen.queryByText("Les évènements de votre pays ne se lisent pas pour l'instant.")).toBeNull()
+  })
+})
+
+describe("/fil — la carte d'identité porte l'inscription d'une organisation (AS-05)", () => {
+  it("un membre qui publie voit « Inscrire une association » et « Inscrire une entreprise »", () => {
+    mocks.canPublish = true
+    mocks.membership = { ...MEMBER, status: "declaree", canPublish: true }
+    render(tree())
+    const group = screen.getByRole("group", { name: "Inscrire votre organisation" })
+    expect(group.querySelector(`a[href="${routes.newPage("association")}"]`)).not.toBeNull()
+    expect(group.querySelector(`a[href="${routes.newPage("company")}"]`)).not.toBeNull()
+  })
+
+  it("sans publication possible, la carte ne paraît pas", () => {
+    render(tree())
+    expect(screen.queryByRole("group", { name: "Inscrire votre organisation" })).toBeNull()
+  })
+})
+
+describe("/fil — le rail montre les pages du pays de résidence (AS-05)", () => {
+  const page = (id: string, name: string, ownerKind: PageView["ownerKind"]): PageView => ({
+    id, handle: id, name, ownerKind, trust: "community", badge: "community", country: "FR", city: null, description: "", followers: 0, claimable: false,
+  })
+  const LISTS: HubPagesView = {
+    country: "FR",
+    officialPages: [],
+    associations: [page("amicale-lyon", "Amicale de Lyon (fictive)", "association")],
+    companies: [page("saveurs-lille", "Saveurs de Lille (fictive)", "company")],
+    more: { officialPages: false, associations: false, companies: false },
+  }
+  const rail = () => render(<I18nProvider locale="fr"><FeedRail membership={MEMBER} /></I18nProvider>)
+
+  it("chaque page mène à sa fiche, puis l'annuaire du pays", () => {
+    mocks.pages = { useHubPages: () => ({ status: "ready", data: LISTS }) }
+    rail()
+    expect(screen.getByRole("heading", { name: "Pages · France" })).toBeTruthy()
+    expect(screen.getByRole("link", { name: /Amicale de Lyon \(fictive\)/ })).toHaveAttribute("href", routes.page("amicale-lyon"))
+    expect(screen.getByRole("link", { name: /Saveurs de Lille \(fictive\)/ })).toHaveAttribute("href", routes.page("saveurs-lille"))
+    expect(screen.getByRole("link", { name: "Toutes les pages du pays" })).toHaveAttribute("href", routes.pages({ country: "FR" }))
+  })
+
+  it("une fenêtre vide qui annonce une suite renvoie à l'annuaire, sans dire « aucune page »", () => {
+    mocks.pages = { useHubPages: () => ({ status: "ready", data: { ...LISTS, associations: [], companies: [], more: { officialPages: false, associations: true, companies: false } } }) }
+    rail()
+    expect(screen.getByText("D'autres pages de ce pays se trouvent dans l'annuaire des pages.")).toBeTruthy()
+    expect(screen.queryByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeNull()
+  })
+
+  it("une lecture refusée garde le chemin vers l'annuaire, sans liste ni « aucune page »", () => {
+    mocks.pages = { useHubPages: () => ({ status: "error", code: "network_unavailable" }) }
+    rail()
+    expect(screen.getByRole("link", { name: "Toutes les pages du pays" })).toHaveAttribute("href", routes.pages({ country: "FR" }))
+    expect(screen.queryByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeNull()
+  })
+
+  it("aucune page inscrite : le rail le dit ; avant la lecture ou sans annuaire, rien", () => {
+    mocks.pages = { useHubPages: () => ({ status: "ready", data: { ...LISTS, associations: [], companies: [] } }) }
+    rail()
+    expect(screen.getByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeTruthy()
+    cleanup()
+    mocks.pages = { useHubPages: () => ({ status: "loading" }) }
+    rail()
+    expect(screen.queryByRole("heading", { name: "Pages · France" })).toBeNull()
+    cleanup()
+    mocks.pages = null
+    rail()
+    expect(screen.queryByRole("heading", { name: "Pages · France" })).toBeNull()
   })
 })

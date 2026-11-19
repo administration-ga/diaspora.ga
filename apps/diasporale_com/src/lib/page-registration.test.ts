@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  canSeeRegistration,
   firstRegistrationStep,
   nearbyNameQuery,
   nearbyPageClaimable,
@@ -15,6 +16,16 @@ import {
   registrationStepOf,
 } from "./page-registration"
 import { routes } from "./routes"
+
+describe("inscription d'une organisation — qui la voit", () => {
+  it("tout membre en règle la voit ; ni une adhésion suspendue ni une adhésion quittée", () => {
+    expect(canSeeRegistration("en_attente")).toBe(true)
+    expect(canSeeRegistration("declaree")).toBe(true)
+    expect(canSeeRegistration("verifiee")).toBe(true)
+    expect(canSeeRegistration("suspendue")).toBe(false)
+    expect(canSeeRegistration("partie")).toBe(false)
+  })
+})
 
 describe("inscription d'une organisation — les étapes (AS-05)", () => {
   it("trois étapes, dans l'ordre : nature, identité, récapitulatif", () => {
