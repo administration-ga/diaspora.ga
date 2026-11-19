@@ -6,7 +6,7 @@
  * consommé par le catalogue des services.
  *
  * Fonctions du moteur EXISTANTES, bornées par le réseau `diasporale` :
- *   · `pages.pages` : `myPages`, `getPage`, `createPage` (adhésion `verifiee`) ;
+ *   · `pages.pages` : `myPages`, `myTeamPages` (AS-10), `getPage`, `createPage` (adhésion `verifiee`) ;
  *   · `pages.identity` : `updatePageIdentity`, `generatePageImageUploadUrl`, `setPageImage` ;
  *   · `pages.signatories` : `listPageSignatories`, `grantPageRole`, `revokePageRole`,
  *     `myPageInvitations`, `respondToPageInvitation` ;
@@ -22,6 +22,11 @@
  *
  * Les lectures sont réactives : un rôle retiré disparaît de `getPage`
  * (`viewer.role`) et `listPageSignatories` est aussitôt refusée (`pageRoleRequired`).
+ *
+ * AS-10 — l'équipe compte trois rôles (`admin`, `signatory` affiché « Éditeur »,
+ * `moderator`). `viewer.role` et `myPages` gardent leur sens, « parle au nom de la
+ * page », et ne rendent jamais un modérateur ; le modérateur se lit sous des noms
+ * neufs : `viewer.teamRole`, `myTeamPages`.
  */
 import { engineErrorCode, engineErrorRule, type EngineErrorCode } from "@antsia/social-contracts/errors"
 import { normalizePageAssociationType, normalizePageCity, normalizePageSector } from "@antsia/social-domain/pagePresentation"
@@ -55,6 +60,7 @@ import {
   type PageManagement,
   type PageRefView,
   type PageSignatoryView,
+  type TeamPageView,
 } from "@diasporale/features/data"
 import { fileForDeposit } from "@diasporale/features/data"
 import { useQueries, type RequestForQueries } from "convex/react"
@@ -220,6 +226,7 @@ function useProjected<T, R>(reader: Reader, loaded: Loaded<T>, project: (value: 
 }
 
 type PageCard = FunctionReturnType<typeof api.modules.pages.pages.myPages>[number]
+type TeamPageCard = FunctionReturnType<typeof api.modules.pages.pages.myTeamPages>[number]
 type PageDto = NonNullable<FunctionReturnType<typeof api.modules.pages.pages.getPage>>
 type ClaimDto = FunctionReturnType<typeof api.modules.pages.claims.paginateMyPageClaims>["page"][number]
 
@@ -240,6 +247,11 @@ function toManagedPages(rows: readonly PageCard[]): readonly ManagedPageView[] {
   return rows.map((row) => ({ ...toPageRef(row), role: row.role }))
 }
 
+/** AS-10 : mes pages d'équipe, modérateur compris ; le rôle d'équipe vient de `viewer.teamRole` (jamais nul ici). */
+function toTeamPages(rows: readonly TeamPageCard[]): readonly TeamPageView[] {
+  return rows.map((row) => ({ ...toPageRef(row), teamRole: row.viewer.teamRole }))
+}
+
 function toManagedPageDetail(page: PageDto | null): ManagedPageDetailView | null {
   if (page === null) return null
   return {
@@ -252,6 +264,7 @@ function toManagedPageDetail(page: PageDto | null): ManagedPageDetailView | null
     logoUrl: page.logoUrl,
     bannerUrl: page.bannerUrl,
     myRole: page.viewer.role,
+    myTeamRole: page.viewer.teamRole,
   }
 }
 
@@ -509,6 +522,11 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
       const reader = useReader()
       const rows = usePageQuery(api.modules.pages.pages.myPages, reader.networkId ? { networkId: reader.networkId } : "skip")
       return useProjected(reader, rows, toManagedPages)
+    },
+    useMyTeamPages(): Loadable<readonly TeamPageView[]> {
+      const reader = useReader()
+      const rows = usePageQuery(api.modules.pages.pages.myTeamPages, reader.networkId ? { networkId: reader.networkId } : "skip")
+      return useProjected(reader, rows, toTeamPages)
     },
     management,
   }

@@ -13,7 +13,8 @@
     },
     "role": {
       "admin": "Administrator",
-      "signatory": "Signatory"
+      "signatory": "Editor",
+      "moderator": "Moderator"
     },
     "claimStatus": {
       "pending": "Under review",
@@ -108,7 +109,7 @@
         },
         "team": {
           "title": "Invite your team",
-          "hint": "Signatories post on behalf of the page."
+          "hint": "Editors publish on behalf of the page; moderators remove inappropriate comments."
         },
         "members": {
           "title": "Welcome your members",
@@ -146,7 +147,7 @@
       },
       "officialPage": "An official page cannot be claimed: it belongs to the institution it represents.",
       "verifiedPage": "This page is already verified. To dispute its management, report it to moderation.",
-      "signatoryOnly": "You sign for this page: only an administrator can request its verification.",
+      "signatoryOnly": "You are an editor of this page: only an administrator can request its verification.",
       "evidence": "Supporting documents",
       "evidenceHint": "PDF, JPEG, PNG or WebP; {{max}} documents at most, {{size}} MB each. They leave your device only when you send.",
       "addEvidence": "Add documents",
@@ -184,7 +185,7 @@
       "metaTitle": "Manage the page",
       "title": "Manage {{name}}",
       "roleAdmin": "You administer this page: identity, team and verification.",
-      "roleSignatory": "You sign for this page: you publish on its behalf, its administrators manage it.",
+      "roleSignatory": "You are an editor of this page: you publish on its behalf, its administrators manage it.",
       "viewPage": "View the page",
       "tabs": "Page management",
       "tab": {
@@ -195,8 +196,15 @@
       },
       "notManager": {
         "title": "You do not manage this page",
-        "body": "Only its signatories have access. If your role was just removed, access closed immediately."
-      }
+        "body": "Only its team has access. If your role was just removed, access closed immediately."
+      },
+      "roleModerator": "You moderate this page: you remove inappropriate comments under its posts, without publishing on its behalf.",
+      "moderation": {
+        "title": "Moderate comments",
+        "body": "Open the comments of one of the page's posts: each one offers “Remove”, followed by a confirmation.",
+        "open": "See the page's posts"
+      },
+      "moderatorTitle": "{{name}}: team and moderation"
     },
     "identity": {
       "title": "Page identity",
@@ -228,9 +236,9 @@
     },
     "team": {
       "title": "Page team",
-      "lead": "Administrators publish and manage; signatories publish on behalf of the page. An appointment is an invitation: it only counts once accepted.",
+      "lead": "Each team member has one of these three roles. An appointment is an invitation: it only counts once accepted.",
       "empty": "Nobody is appointed yet.",
-      "readOnly": "Only administrators invite or remove signatories.",
+      "readOnly": "Only administrators invite, change a role or remove a team member.",
       "neutralName": "Withdrawn profile",
       "me": "(you)",
       "since": "Since {{date}}",
@@ -241,10 +249,10 @@
       "leave": "Leave the team",
       "lastAdmin": "You are the last administrator: appoint another one before leaving.",
       "removeConfirmTitle": "Remove {{name}} from the team?",
-      "removeConfirmBody": "This person will no longer publish or manage on behalf of the page. Access closes immediately.",
+      "removeConfirmBody": "This person immediately loses their role on the page: they will no longer publish on it, manage it or moderate its comments.",
       "leaveConfirmTitle": "Leave this page's team?",
-      "leaveConfirmBody": "You will no longer publish on behalf of the page. An administrator can invite you again.",
-      "removed": "Signatory removed.",
+      "leaveConfirmBody": "You immediately lose your role on the page. An administrator can invite you again.",
+      "removed": "Member removed from the team.",
       "left": "You left the team.",
       "roleChanged": "Role updated.",
       "inviteTitle": "Invite a member",
@@ -253,7 +261,34 @@
       "handleHint": "For example firstname.lastname, without the @.",
       "role": "Proposed role",
       "invite": "Send the invitation",
-      "invitedToast": "Invitation sent."
+      "invitedToast": "Invitation sent.",
+      "rolesTitle": "Team roles",
+      "roleImmediate": "This member has already accepted: a new role applies immediately, without a new invitation.",
+      "transfer": {
+        "title": "Hand over the page",
+        "lead": "Entrust the administration to someone else, then step down if you wish. The page always keeps at least one administrator.",
+        "stepName": "Name an administrator",
+        "stepLeave": "Step down",
+        "who": "Hand over to whom?",
+        "member": "A team member",
+        "memberHint": "They become an administrator immediately, with no invitation to accept.",
+        "newPerson": "Someone else",
+        "newPersonHint": "They receive an invitation: they only become an administrator once they accept it.",
+        "memberSelect": "Team member",
+        "memberPlaceholder": "Choose a member",
+        "memberOption": "{{name}} ({{role}})",
+        "noMember": "No team member can be named yet: they must have accepted their invitation and published their profile.",
+        "promote": "Name administrator now",
+        "invite": "Invite as administrator",
+        "promoted": "{{name}} is an administrator from now on.",
+        "invited": "Invitation sent: the person will become an administrator by accepting it.",
+        "leave": "Step down",
+        "leaveReady": "Another administrator has accepted their role: you can step down, the page stays managed.",
+        "leaveBlocked": "You can step down as soon as a second administrator has accepted their role.",
+        "leaveConfirmTitle": "Step down from the page?",
+        "leaveConfirmBody": "You immediately lose your role on the page; its other administrators keep managing it.",
+        "personHandle": "Person's handle"
+      }
     },
     "verification": {
       "title": "Page verification",
@@ -276,7 +311,7 @@
     },
     "myPages": {
       "title": "My pages",
-      "lead": "The pages on whose behalf you speak in DIASPORALE.",
+      "lead": "The pages whose team you belong to in DIASPORALE.",
       "emptyTitle": "You do not manage any page yet",
       "emptyBody": "Register your association or business, or claim its page if it already exists.",
       "createAssociation": "Register an association",
@@ -284,20 +319,27 @@
       "manage": "Manage",
       "manageLabel": "Manage {{name}}",
       "team": "Team",
-      "teamLabel": "Team of {{name}}"
+      "teamLabel": "Team of {{name}}",
+      "moderate": "Moderate comments",
+      "moderateLabel": "Moderate the comments of {{name}}"
     },
     "invitations": {
-      "title": "Invitations to sign",
-      "lead": "A page invites you to publish on its behalf. Nothing changes until you accept.",
+      "title": "Team invitations",
+      "lead": "A page invites you to join its team. Nothing changes until you accept.",
       "item": "Proposed role: {{role}}. Invited on {{date}}.",
       "accept": "Accept",
       "decline": "Decline",
-      "accepted": "Invitation accepted: you now sign for {{name}}.",
+      "accepted": "Invitation accepted: you are now part of the {{name}} team.",
       "declined": "Invitation declined."
     },
     "claims": {
       "title": "My claims",
       "sentOn": "Sent on {{date}}"
+    },
+    "roleHint": {
+      "admin": "Publishes on behalf of the page and manages it: identity, team, verification.",
+      "signatory": "Publishes on behalf of the page, without managing it.",
+      "moderator": "Removes inappropriate comments under the page's posts; does not publish on its behalf."
     }
   },
   "errors": {
@@ -314,7 +356,7 @@
     "page_post_country_required": "To publish locally, the page must first declare its country (Manage the page, Identity tab).",
     "page_role_required": "You do not have, or no longer have, the required role on this page.",
     "page_last_admin": "A page always keeps at least one administrator: appoint another one first.",
-    "page_signatories_full": "A page has 50 signatories at most.",
+    "page_signatories_full": "A page team has 50 members at most.",
     "page_signatory_identity_required": "Signing for an official page requires an IDN identity of level 2.",
     "page_signatory_self": "You cannot invite yourself.",
     "page_member_not_found": "No DIASPORALE member matches this handle.",
@@ -332,6 +374,7 @@
     "page_claim_consent_required": "Tick the statement to send your request.",
     "page_claim_closed": "This claim is no longer awaiting a decision: already decided, or its author is no longer an active member.",
     "page_image_type_invalid": "Accepted images: JPEG, PNG or WebP.",
-    "page_image_too_large": "Image too heavy: 5 MB at most for the logo, 10 MB for the banner."
+    "page_image_too_large": "Image too heavy: 5 MB at most for the logo, 10 MB for the banner.",
+    "page_team_member_required": "Choose the member to name as administrator."
   }
 }

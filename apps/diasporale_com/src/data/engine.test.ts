@@ -870,6 +870,17 @@ describe("commentaires par le moteur (PD4, lot 8 d'ANTSIA)", () => {
     })
   })
 
+  it("AS-10 : `canRemove: true` du moteur ouvre le retrait (l'équipe d'une page) ; absent ou faux, il n'est pas posé", () => {
+    const author = { personId: "p2", displayName: "Ada", handle: "ada", avatarUrl: null }
+    const reply = { commentId: "r1", author, body: "Merci", createdAt: 2, editedAt: null, isMine: false, canRemove: true }
+    const thread = { commentId: "c1", author, body: "Bonjour", createdAt: 1, editedAt: null, isMine: false, canRemove: true, replyCount: 2, replies: [reply, { ...reply, commentId: "r2", canRemove: false }] } as never
+    const view = toCommentThreadView(thread)
+    expect(view).toMatchObject({ id: "c1", isMine: false, canRemove: true })
+    expect(view.replies[0]).toMatchObject({ id: "r1", canRemove: true })
+    expect(view.replies[1]).not.toHaveProperty("canRemove")
+    expect(toCommentThreadView({ ...(thread as object), canRemove: undefined } as never)).not.toHaveProperty("canRemove")
+  })
+
   it("commenter, répondre et retirer partent vers l'engagement du moteur, bornés par le réseau ; un refus du domaine se traduit", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,

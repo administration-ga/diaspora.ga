@@ -422,6 +422,130 @@ describe("gérer une page — équipe", () => {
   })
 })
 
+describe("AS-10 — équipe à trois rôles et « Transmettre la page »", () => {
+  it("dit les trois rôles, chacun en une phrase, et invite un modérateur", async () => {
+    const manage = provide(management())!
+    const user = userEvent.setup()
+    wrap(<PageManageScreen handle="amicale-lyon" tab="equipe" />)
+    const guide = screen.getByRole("region", { name: text("pageAdmin.team.rolesTitle") })
+    for (const role of ["admin", "signatory", "moderator"] as const) {
+      expect(within(guide).getByText(text(`pageAdmin.role.${role}`))).toBeInTheDocument()
+      expect(within(guide).getByText(text(`pageAdmin.roleHint.${role}`))).toBeInTheDocument()
+    }
+    expect(text("pageAdmin.role.signatory")).toBe("Éditeur")
+    await user.type(screen.getByLabelText(text("pageAdmin.team.handle")), "prisca.abanga")
+    await user.selectOptions(screen.getByLabelText(text("pageAdmin.team.role")), "moderator")
+    await user.click(screen.getByRole("button", { name: text("pageAdmin.team.invite") }))
+    await waitFor(() => expect(manage.grantRole).toHaveBeenCalledExactlyOnceWith("page-1", "prisca.abanga", "moderator"))
+  })
+
+  it("changer le rôle d'un membre qui a déjà accepté vaut aussitôt, et l'écran le dit avant le geste", async () => {
+    const manage = provide(management({ grantRole: vi.fn(() => ok({ personId: "person-2", role: "moderator" as const, invited: false })) }))!
+    const user = userEvent.setup()
+    wrap(<PageManageScreen handle="amicale-lyon" tab="equipe" />)
+    const select = screen.getByLabelText(text("pageAdmin.team.changeRole", { name: "Steeve" }))
+    expect(select).toHaveAccessibleDescription(String(t("pageAdmin.team.roleImmediate")))
+    await user.selectOptions(select, "moderator")
+    await waitFor(() => expect(manage.grantRole).toHaveBeenCalledExactlyOnceWith("page-1", "steeve.demo", "moderator"))
+    expect(mocks.success).toHaveBeenCalledWith(t("pageAdmin.team.roleChanged"))
+  })
+
+  it("transmettre à un membre accepté : il est promu aussitôt, et l'écran le dit", async () => {
+    const manage = provide(management({ grantRole: vi.fn(() => ok({ personId: "person-2", role: "admin" as const, invited: false })) }))!
+    const user = userEvent.setup()
+    wrap(<PageManageScreen handle="amicale-lyon" tab="equipe" />)
+    const transfer = screen.getByRole("region", { name: text("pageAdmin.team.transfer.title") })
+    expect(within(transfer).getByRole("radio", { name: nameWith("pageAdmin.team.transfer.member") })).toBeChecked()
+    expect(within(transfer).getByText(text("pageAdmin.team.transfer.memberHint"))).toBeInTheDocument()
+    // Aucun membre choisi : refusé avant le serveur.
+    await user.click(within(transfer).getByRole("button", { name: text("pageAdmin.team.transfer.promote") }))
+    expect(await within(transfer).findByText(text("errors.page_team_member_required"))).toBeInTheDocument()
+    expect(manage.grantRole).not.toHaveBeenCalled()
+    await user.selectOptions(within(transfer).getByLabelText(text("pageAdmin.team.transfer.memberSelect")), "person-2")
+    await user.click(within(transfer).getByRole("button", { name: text("pageAdmin.team.transfer.promote") }))
+    await waitFor(() => expect(manage.grantRole).toHaveBeenCalledExactlyOnceWith("page-1", "steeve.demo", "admin"))
+    expect(mocks.success).toHaveBeenCalledWith(t("pageAdmin.team.transfer.promoted", { name: "Steeve" }))
+  })
+
+  it("transmettre à une autre personne : elle est invitée comme administrateur", async () => {
+    const manage = provide(management({ grantRole: vi.fn(() => ok({ personId: "person-9", role: "admin" as const, invited: true })) }))!
+    const user = userEvent.setup()
+    wrap(<PageManageScreen handle="amicale-lyon" tab="equipe" />)
+    const transfer = screen.getByRole("region", { name: text("pageAdmin.team.transfer.title") })
+    await user.click(within(transfer).getByRole("radio", { name: nameWith("pageAdmin.team.transfer.newPerson") }))
+    await user.type(within(transfer).getByLabelText(text("pageAdmin.team.transfer.personHandle")), "@Prisca.Abanga")
+    await user.click(within(transfer).getByRole("button", { name: text("pageAdmin.team.transfer.invite") }))
+    await waitFor(() => expect(manage.grantRole).toHaveBeenCalledExactlyOnceWith("page-1", "prisca.abanga", "admin"))
+    expect(mocks.success).toHaveBeenCalledWith(t("pageAdmin.team.transfer.invited"))
+  })
+
+  it("« Se retirer » ne s'ouvre qu'avec un second administrateur accepté ; le refus du dernier administrateur se dit", async () => {
+    const view = wrap(<></>)
+    provide(management())
+    view.rerender(<I18nProvider locale="fr"><PageManageScreen handle="amicale-lyon" tab="equipe" /></I18nProvider>)
+    const stepDown = () => within(screen.getByRole("region", { name: text("pageAdmin.team.transfer.title") })).getByRole("button", { name: text("pageAdmin.team.transfer.leave") })
+    expect(stepDown()).toBeDisabled()
+    expect(stepDown()).toHaveAccessibleDescription(String(t("pageAdmin.team.transfer.leaveBlocked")))
+    // Un second administrateur INVITÉ ne suffit pas : il doit avoir accepté.
+    provide(management({ useSignatories: () => ready([ME, { ...OTHER, role: "admin", accepted: false }]) }))
+    view.rerender(<I18nProvider locale="fr"><PageManageScreen handle="amicale-lyon" tab="equipe" /></I18nProvider>)
+    expect(stepDown()).toBeDisabled()
+    const manage = provide(management({
+      useSignatories: () => ready([ME, { ...OTHER, role: "admin" }]),
+      revokeRole: vi.fn(() => Promise.resolve({ ok: false as const, code: "page_last_admin" as const })),
+    }))!
+    view.rerender(<I18nProvider locale="fr"><PageManageScreen handle="amicale-lyon" tab="equipe" /></I18nProvider>)
+    expect(stepDown()).toBeEnabled()
+    expect(stepDown()).toHaveAccessibleDescription(String(t("pageAdmin.team.transfer.leaveReady")))
+    const user = userEvent.setup()
+    await user.click(stepDown())
+    const dialog = await screen.findByRole("dialog")
+    expect(dialog).toHaveTextContent(text("pageAdmin.team.transfer.leaveConfirmTitle"))
+    await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.team.transfer.leave") }))
+    await waitFor(() => expect(manage.revokeRole).toHaveBeenCalledExactlyOnceWith("page-1", "person-me"))
+    expect(await screen.findByText(text("errors.page_last_admin"))).toBeInTheDocument()
+  })
+
+  it("un modérateur voit l'équipe et la modération des commentaires — ni publication, ni gestion, ni transmission", () => {
+    provide(management({
+      useManagedPage: () => ready({ ...PAGE, myRole: null, myTeamRole: "moderator" }),
+      useSignatories: () => ready([{ ...ME, role: "moderator" }, { ...OTHER, role: "admin" }]),
+    }))
+    wrap(<PageManageScreen handle="amicale-lyon" tab="publications" />)
+    expect(screen.getByRole("heading", { level: 1, name: named("pageAdmin.manage.moderatorTitle", { name: "Amicale de Lyon" }) })).toBeInTheDocument()
+    expect(screen.getByText(text("pageAdmin.manage.roleModerator"))).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: text("pageAdmin.manage.moderation.open") })).toHaveAttribute("href", routes.page("amicale-lyon"))
+    expect(screen.getByText(text("pageAdmin.team.readOnly"))).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: text("pageAdmin.team.leave") })).toBeEnabled()
+    expect(screen.queryByRole("navigation", { name: text("pageAdmin.manage.tabs") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: text("pagePostManagement.tab") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: text("pageAdmin.team.invite") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("region", { name: text("pageAdmin.team.transfer.title") })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: text("pageAdmin.team.removeLabel", { name: "Steeve" }) })).not.toBeInTheDocument()
+  })
+
+  it("« Mes pages » : un modérateur trouve l'équipe et les commentaires de sa page, sans gestion ni publication", () => {
+    const manage = management()
+    mocks.capability = {
+      useMyPages: () => ready([]),
+      useMyTeamPages: () => ready([
+        { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", teamRole: "admin", badge: "community" },
+        { id: "page-2", handle: "saveurs", name: "Saveurs", ownerKind: "company", teamRole: "moderator", badge: "community" },
+      ]),
+      management: manage,
+    }
+    wrap(<MyPagesPanel />)
+    expect(screen.getByRole("link", { name: text("pageAdmin.myPages.manageLabel", { name: "Amicale de Lyon" }) })).toHaveAttribute("href", routes.pageManage("amicale-lyon"))
+    const moderated = screen.getByRole("link", { name: "Saveurs" }).closest("li")!
+    expect(within(moderated).getByText(text("pageAdmin.role.moderator"))).toBeInTheDocument()
+    expect(within(moderated).getByRole("link", { name: text("pageAdmin.myPages.moderateLabel", { name: "Saveurs" }) })).toHaveAttribute("href", routes.page("saveurs"))
+    expect(within(moderated).getByRole("link", { name: text("pageAdmin.myPages.teamLabel", { name: "Saveurs" }) })).toHaveAttribute("href", routes.pageManage("saveurs", "equipe"))
+    expect(within(moderated).queryByRole("link", { name: text("pageAdmin.myPages.manageLabel", { name: "Saveurs" }) })).not.toBeInTheDocument()
+    expect(within(moderated).queryByRole("link", { name: text("pagePostManagement.tab") })).not.toBeInTheDocument()
+    expect(screen.queryByText(text("pageAdmin.myPages.emptyTitle"))).not.toBeInTheDocument()
+  })
+})
+
 describe("gérer une page — emplois (DG-025)", () => {
   it("l'onglet n'existe qu'avec le fournisseur des emplois, et monte le recrutement de CETTE page", () => {
     provide(management())

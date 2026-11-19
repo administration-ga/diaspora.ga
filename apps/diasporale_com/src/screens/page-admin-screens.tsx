@@ -11,6 +11,8 @@
  *     page pour un signataire VIVANT (lecture réactive : un rôle retiré ferme
  *     l'écran aussitôt, le serveur refuse tout geste) ; `decisions` : les
  *     décisions de modération qui ont retiré un contenu de la page, et son recours.
+ *     AS-10 : un MODÉRATEUR de la page n'y voit que ce qu'il peut faire — l'équipe
+ *     (la lire, s'en retirer) et la modération des commentaires ; ni publication ni gestion.
  *
  * Chaque écran dit chargement, erreur, vide, succès, et « indisponible » quand
  * le fournisseur ne sert pas la capacité.
@@ -18,9 +20,9 @@
 import { Button, Card, EmptyState, FolderTabsNav, Skeleton, TrustBadge, type FolderNavItem } from "@diasporale/features"
 import { isJobEmployerOwnerKind, isServiceProviderOwnerKind } from "@diasporale/domain"
 import type { ManagedPageDetailView, MemberPageKind, MembershipView, PageClaimView, PageManagement } from "@diasporale/features/data"
-import { useJobs, usePageDecisions, useServiceReviews } from "@diasporale/features/data"
+import { myTeamRoleOf, useJobs, usePageDecisions, useServiceReviews } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowLeftIcon, BadgeCheckIcon, FlagIcon, ShieldOffIcon, UserRoundXIcon } from "lucide-react"
+import { ArrowLeftIcon, BadgeCheckIcon, FlagIcon, MessageSquareXIcon, ShieldOffIcon, UserRoundXIcon } from "lucide-react"
 import NextLink from "next/link"
 import type { ReactNode } from "react"
 
@@ -207,8 +209,9 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
   const decisions = usePageDecisions()
   const jobs = useJobs()
   const { page } = props
-  // Aucun rôle VIVANT (jamais eu, ou retiré à l'instant) : la gestion se ferme, sans rien montrer de l'équipe.
-  if (page.myRole === null) {
+  const teamRole = myTeamRoleOf(page)
+  // Aucun rôle VIVANT dans l'équipe (jamais eu, ou retiré à l'instant) : la gestion se ferme, sans rien montrer de l'équipe.
+  if (teamRole === null) {
     return (
       <EmptyState
         icon={<ShieldOffIcon />}
@@ -222,6 +225,9 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
       />
     )
   }
+  // AS-10 : le modérateur ne publie ni ne gère ; il lit l'équipe, s'en retire et modère les commentaires.
+  // Sans rôle qui parle au nom de la page (`myRole` nul), jamais d'onglet de publication ni de gestion.
+  if (teamRole === "moderator" || page.myRole === null) return <ModeratorView management={props.management} page={page} />
   const items: FolderNavItem[] = MANAGE_TABS.filter((tab) => {
     if (tab === "avis") return isServiceProviderOwnerKind(page.ownerKind) && !!reviews?.usePageReviews
     // P16 · G9 : toute page porte des contenus modérables (missions, offres, ressources, évènements).
@@ -269,6 +275,32 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
           <VerificationPanel management={props.management} page={page} />
         )}
       </Card>}
+    </>
+  )
+}
+
+/** AS-10 — ce que voit un modérateur : la modération des commentaires et l'équipe, rien d'autre. */
+function ModeratorView(props: { readonly management: PageManagement; readonly page: ManagedPageDetailView }) {
+  const { t } = useDiasporaleT()
+  const { page } = props
+  return (
+    <>
+      <PageHeading page={page} title={t("pageAdmin.manage.moderatorTitle", { name: page.name })} lead={t("pageAdmin.manage.roleModerator")} />
+      <Card className="p-5">
+        <section aria-labelledby="moderer-les-commentaires" className="flex flex-col items-start gap-3">
+          <h2 id="moderer-les-commentaires" className="flex items-center gap-2 font-display text-xl font-bold">
+            <MessageSquareXIcon aria-hidden className="size-5 shrink-0" />
+            {t("pageAdmin.manage.moderation.title")}
+          </h2>
+          <p className="text-[15px] leading-relaxed text-muted-foreground">{t("pageAdmin.manage.moderation.body")}</p>
+          <Button asChild variant="outline">
+            <NextLink href={routes.page(page.handle)}>{t("pageAdmin.manage.moderation.open")}</NextLink>
+          </Button>
+        </section>
+      </Card>
+      <Card className="p-5">
+        <PageTeamPanel management={props.management} page={page} />
+      </Card>
     </>
   )
 }

@@ -131,7 +131,7 @@ describe("gestion des pages — lectures du moteur", () => {
   })
 
   it("lit la page gérée et MON rôle vivant ; une page illisible rend le même null", () => {
-    results({ "modules/pages/pages:getPage": { ...CARD, description: "Accueil", bannerUrl: null, visibility: "network", followerCount: 3, postCount: 1, createdAt: 1, viewer: { following: false, role: "admin" } } })
+    results({ "modules/pages/pages:getPage": { ...CARD, description: "Accueil", bannerUrl: null, visibility: "network", followerCount: 3, postCount: 1, createdAt: 1, viewer: { following: false, role: "admin", teamRole: "admin" } } })
     const { management } = source()
     const { result } = renderHook(() => management.useManagedPage("amicale-lyon"))
     expect(mocks.loaded).toHaveBeenCalledWith("modules/pages/pages:getPage", { networkId: "network-diasporale", handle: "amicale-lyon" })
@@ -140,11 +140,50 @@ describe("gestion des pages — lectures du moteur", () => {
       // Présentation facultative (ville, type, secteur) : absente du moteur, elle se lit `null`, jamais inventée.
       data: {
         id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR", shortName: null, description: "Accueil",
-        city: null, associationType: null, sector: null, logoUrl: null, bannerUrl: null, myRole: "admin",
+        city: null, associationType: null, sector: null, logoUrl: null, bannerUrl: null, myRole: "admin", myTeamRole: "admin",
       },
     })
     results({ "modules/pages/pages:getPage": null })
     expect(renderHook(() => management.useManagedPage("inconnue")).result.current).toEqual({ status: "ready", data: null })
+  })
+
+  it("AS-10 : un modérateur lit sa page sans y parler (`viewer.role` nul, `viewer.teamRole` modérateur)", () => {
+    results({ "modules/pages/pages:getPage": { ...CARD, description: null, bannerUrl: null, visibility: "network", followerCount: 3, postCount: 1, createdAt: 1, viewer: { following: false, role: null, teamRole: "moderator" } } })
+    const { management } = source()
+    expect(renderHook(() => management.useManagedPage("amicale-lyon")).result.current).toMatchObject({ status: "ready", data: { myRole: null, myTeamRole: "moderator" } })
+  })
+
+  it("AS-10 : mes pages d'équipe, modérateur compris, bornées au réseau ; « mes pages » n'en change pas", () => {
+    results({
+      "modules/pages/pages:myTeamPages": [
+        { ...CARD, viewer: { role: "admin", teamRole: "admin" } },
+        { ...CARD, pageId: "page-2", handle: "saveurs", name: "Saveurs", ownerKind: "company", viewer: { role: null, teamRole: "moderator" } },
+      ],
+    })
+    const { capability } = source()
+    const { result } = renderHook(() => capability.useMyTeamPages!())
+    expect(mocks.loaded).toHaveBeenCalledWith("modules/pages/pages:myTeamPages", { networkId: "network-diasporale" })
+    expect(result.current).toEqual({
+      status: "ready",
+      data: [
+        { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR", teamRole: "admin" },
+        { id: "page-2", handle: "saveurs", name: "Saveurs", ownerKind: "company", badge: "community", country: "FR", teamRole: "moderator" },
+      ],
+    })
+    expect(mocks.loaded).not.toHaveBeenCalledWith("modules/pages/pages:myPages", expect.anything())
+  })
+
+  it("AS-10 : l'équipe porte les trois rôles, modérateurs compris, dans l'ordre du moteur", () => {
+    results({
+      "modules/pages/signatories:listPageSignatories": [
+        { personId: "person-2", handle: "steeve.demo", displayName: "Steeve", avatarUrl: null, role: "admin", accepted: true, since: 1 },
+        { personId: "person-3", handle: "nadia.demo", displayName: "Nadia", avatarUrl: null, role: "signatory", accepted: true, since: 2 },
+        { personId: "person-me", handle: "awa.demo", displayName: "Awa", avatarUrl: null, role: "moderator", accepted: true, since: 3 },
+      ],
+    })
+    const { management } = source()
+    const { result } = renderHook(() => management.useSignatories("page-1"))
+    expect(result.current.status === "ready" ? result.current.data.map((row) => [row.role, row.isMe]) : result.current).toEqual([["admin", false], ["signatory", false], ["moderator", true]])
   })
 
   it("ferme l'équipe dès que le rôle est retiré (refus réactif `pageRoleRequired`)", () => {
@@ -326,6 +365,28 @@ describe("gestion des pages — écritures du moteur", () => {
       const failing = source({ mutation: () => { throw error } })
       expect(await failing.management.grantRole("page-1", "awa.demo", "admin")).toEqual({ ok: false, code })
     }
+  })
+
+  it("AS-10 : nomme un modérateur ou un administrateur ; une promotion d'un membre accepté rend `invited: false`", async () => {
+    const moderator = source({ mutation: () => ({ personId: "person-2", role: "moderator", invited: true }) })
+    expect(await moderator.management.grantRole("page-1", "steeve.demo", "moderator")).toEqual({ ok: true, value: { personId: "person-2", role: "moderator", invited: true } })
+    expect(moderator.calls).toEqual([{ name: "modules/pages/signatories:grantPageRole", args: { networkId: "network-diasporale", pageId: "page-1", handle: "steeve.demo", role: "moderator" } }])
+    const promoted = source({ mutation: () => ({ personId: "person-2", role: "admin", invited: false }) })
+    expect(await promoted.management.grantRole("page-1", "steeve.demo", "admin")).toEqual({ ok: true, value: { personId: "person-2", role: "admin", invited: false } })
+    // Le dernier administrateur ne se rétrograde pas en modérateur : le refus du domaine se dit.
+    const last = source({ mutation: () => { throw new ConvexError({ code: "invalidArgument", rule: "PAGE_LAST_ADMIN" }) } })
+    expect(await last.management.grantRole("page-1", "steeve.demo", "moderator")).toEqual({ ok: false, code: "page_last_admin" })
+  })
+
+  it("AS-10 : une invitation de modérateur se lit et s'accepte", async () => {
+    results({ "modules/pages/signatories:myPageInvitations": [{ page: CARD, role: "moderator", invitedAt: 7 }] })
+    const { management } = source()
+    expect(renderHook(() => management.useMyInvitations()).result.current).toEqual({
+      status: "ready",
+      data: [{ page: { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR" }, role: "moderator", invitedAt: 7 }],
+    })
+    const accepted = source({ mutation: () => ({ role: "moderator" }) })
+    expect(await accepted.management.respondToInvitation("page-1", true)).toEqual({ ok: true, value: { role: "moderator" } })
   })
 
   it("le dernier administrateur ne part pas ; un rôle perdu ne retire plus personne", async () => {

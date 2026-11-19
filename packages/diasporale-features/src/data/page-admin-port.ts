@@ -89,6 +89,8 @@ export const PAGE_ADMIN_ERROR_CODES = [
   "page_member_not_found",
   "page_member_handle_required",
   "page_invitation_gone",
+  // AS-10 : « Transmettre la page » sans membre choisi.
+  "page_team_member_required",
   // Revendiquer une page (EXF-AN-17) : pièces privées, mandat, consentement.
   "page_not_claimable",
   "page_already_verified",
@@ -108,11 +110,40 @@ export const PAGE_ADMIN_ERROR_CODES = [
 
 export type PageAdminErrorCode = (typeof PAGE_ADMIN_ERROR_CODES)[number]
 
-/** Rôle VIVANT d'un signataire (`admin` publie et gère, `signatory` publie). */
+/**
+ * Rôle VIVANT de qui PARLE au nom de la page : `admin` publie et gère,
+ * `signatory` (affiché « Éditeur ») publie. Jamais un modérateur (AS-10) : ce nom
+ * garde le sens du moteur (`PageRole`, `viewer.role`, `myPages`).
+ */
 export type ManagedPageRole = "admin" | "signatory"
 
-/** Les rôles, dans l'ordre d'affichage (ceux du moteur). */
+/** Les rôles qui parlent au nom de la page, dans l'ordre d'affichage (ceux du moteur). */
 export const MANAGED_PAGE_ROLES: readonly ManagedPageRole[] = PAGE_ROLES
+
+/**
+ * AS-10 — le rôle dans l'ÉQUIPE de la page (contrat du moteur, `PAGE_TEAM_ROLES`) :
+ *   · `admin` publie et gère (identité, équipe, revendication, boutique, groupe) ;
+ *   · `signatory`, affiché « Éditeur », publie au nom de la page sans la gérer ;
+ *   · `moderator` retire les commentaires sous les publications de la page, voit
+ *     l'équipe et s'en retire ; il ne publie pas et ne parle jamais au nom de la page.
+ */
+export type PageTeamRole = ManagedPageRole | "moderator"
+
+/** Les trois rôles de l'équipe, dans l'ordre du moteur : administrateur, éditeur, modérateur. */
+export const PAGE_TEAM_ROLES: readonly PageTeamRole[] = [...PAGE_ROLES, "moderator"]
+
+/** Le rôle parle-t-il au nom de la page (le moteur : `isPageSignatoryRole`) ? Le modérateur, jamais. */
+export function isSpeakingPageRole(role: PageTeamRole): role is ManagedPageRole {
+  return role !== "moderator"
+}
+
+/**
+ * MON rôle VIVANT dans l'équipe d'une page lue. Un fournisseur antérieur à AS-10
+ * ne connaît que les rôles qui parlent : son `myRole` en tient lieu.
+ */
+export function myTeamRoleOf(page: Pick<ManagedPageDetailView, "myRole" | "myTeamRole">): PageTeamRole | null {
+  return page.myTeamRole === undefined ? page.myRole : page.myTeamRole
+}
 
 /** Une page au nom de laquelle la personne parle dans DIASPORALE (invitation acceptée, rôle vivant). */
 export interface ManagedPageView {
@@ -125,6 +156,14 @@ export interface ManagedPageView {
   readonly badge?: PageTrustLevel
   /** Pays de la page — ajout DG-008, facultatif. */
   readonly country?: CountryCode | null
+}
+
+/**
+ * AS-10 — une page dont la personne fait partie de l'ÉQUIPE vivante (invitation
+ * acceptée), modérateur compris : « Mes pages » y montre ce que chaque rôle peut faire.
+ */
+export interface TeamPageView extends Omit<ManagedPageView, "role"> {
+  readonly teamRole: PageTeamRole
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -191,27 +230,32 @@ export interface ManagedPageDetailView extends PageRefView {
   /** Images servies par la garde des fichiers ; `null` : aucune, ou retenue pendant l'analyse. */
   readonly logoUrl: string | null
   readonly bannerUrl: string | null
-  /** MON rôle VIVANT, relu à chaque lecture ; `null` : simple lecteur. */
+  /** MON rôle VIVANT qui parle au nom de la page, relu à chaque lecture ; `null` : lecteur, ou modérateur. */
   readonly myRole: ManagedPageRole | null
+  /**
+   * AS-10 : MON rôle VIVANT dans l'équipe, modérateur compris (`viewer.teamRole` du moteur) ;
+   * `undefined` : fournisseur antérieur, lire `myRole` (voir `myTeamRoleOf`).
+   */
+  readonly myTeamRole?: PageTeamRole | null
 }
 
-/** Un signataire (invitations comprises) ; ses signataires vivants seuls le voient. */
+/** Un membre de l'équipe (invitations comprises) ; l'équipe vivante seule le voit, modérateurs compris. */
 export interface PageSignatoryView {
   readonly personId: string
   /** Profil PUBLIÉ ; `null` : profil retiré (nom neutre). */
   readonly handle: string | null
   readonly displayName: string | null
-  readonly role: ManagedPageRole
+  readonly role: PageTeamRole
   /** Invitation acceptée ? Une invitation en attente ne donne aucun droit. */
   readonly accepted: boolean
   readonly since: number
   readonly isMe: boolean
 }
 
-/** Une invitation à signer pour une page, en attente de MA réponse. */
+/** Une invitation à rejoindre l'équipe d'une page, en attente de MA réponse. */
 export interface PageInvitationView {
   readonly page: PageRefView
-  readonly role: ManagedPageRole
+  readonly role: PageTeamRole
   readonly invitedAt: number
 }
 
@@ -281,7 +325,7 @@ export interface PageManagement {
   readonly supportsPresentation?: true
   /** Une page lisible d'ici et MON rôle vivant (`null` : introuvable ou illisible, même réponse). */
   useManagedPage(handle: string): Loadable<ManagedPageDetailView | null>
-  /** L'équipe d'une page ; refusée (`page_role_required`) dès que je n'y ai plus de rôle vivant. */
+  /** L'équipe d'une page, dans l'ordre administrateurs, éditeurs, modérateurs ; refusée (`page_role_required`) dès que je n'y ai plus de rôle vivant. */
   useSignatories(pageId: string | null): Loadable<readonly PageSignatoryView[]>
   useMyInvitations(): Loadable<readonly PageInvitationView[]>
   /** Mes revendications dans DIASPORALE, les plus récentes d'abord (cinquante au plus). */
@@ -291,19 +335,28 @@ export interface PageManagement {
   updateIdentity(pageId: string, input: PageIdentityInput): Promise<ActionResult<{ changed: boolean }>>
   /** Logo ou bannière (`null` : retirer) — facultatif : un fournisseur sans dépôt de fichier l'omet. */
   setImage?(pageId: string, slot: PageImageSlot, file: File | null): Promise<ActionResult<PageImageView>>
-  /** Habiliter (invitation) ou changer le rôle d'un signataire — un administrateur vivant. */
-  grantRole(pageId: string, handle: string, role: ManagedPageRole): Promise<ActionResult<{ personId: string; role: ManagedPageRole; invited: boolean }>>
-  /** Retirer un signataire (administrateur), ou se retirer soi-même ; le dernier administrateur reste. */
+  /**
+   * Habiliter (invitation) ou changer le rôle d'un membre de l'équipe — un administrateur
+   * vivant. Le rôle d'un membre déjà ACCEPTÉ change aussitôt, sans invitation
+   * (`invited: false`) ; le dernier administrateur ne se rétrograde pas.
+   */
+  grantRole(pageId: string, handle: string, role: PageTeamRole): Promise<ActionResult<{ personId: string; role: PageTeamRole; invited: boolean }>>
+  /** Retirer un membre (administrateur), ou se retirer soi-même, quel que soit son rôle ; le dernier administrateur reste. */
   revokeRole(pageId: string, personId: string): Promise<ActionResult<{ revoked: boolean }>>
-  respondToInvitation(pageId: string, accept: boolean): Promise<ActionResult<{ role: ManagedPageRole | null }>>
+  respondToInvitation(pageId: string, accept: boolean): Promise<ActionResult<{ role: PageTeamRole | null }>>
   requestClaim(input: PageClaimInput): Promise<ActionResult<{ claimId: string }>>
   /** Retirer MA revendication en attente ; ses pièces sont purgées. `withdrawn: false` : déjà tranchée. */
   withdrawClaim(claimId: string): Promise<ActionResult<{ withdrawn: boolean }>>
 }
 
 export interface PageAdminCapability {
-  /** Mes pages (rôle vivant seulement), dans le réseau DIASPORALE. */
+  /** Mes pages (rôle vivant qui parle au nom de la page), dans le réseau DIASPORALE ; jamais une page que je modère seulement. */
   useMyPages(): Loadable<readonly ManagedPageView[]>
+  /**
+   * AS-10 : les pages dont je fais partie de l'équipe vivante, modérateur compris
+   * (`myTeamPages` du moteur). Absent : fournisseur antérieur, « Mes pages » lit `useMyPages`.
+   */
+  useMyTeamPages?(): Loadable<readonly TeamPageView[]>
   /** Création, revendication et équipe (DG-008) ; l'instruction est au bureau de modération (AS-01). Absent : indisponible. */
   readonly management?: PageManagement
 }

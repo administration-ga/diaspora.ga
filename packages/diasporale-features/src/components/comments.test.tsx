@@ -323,3 +323,21 @@ describe("Commentaires — envoi, retrait et identité", () => {
     expect(mocks.edit).not.toHaveBeenCalled()
   })
 })
+
+describe("AS-10 — retirer un commentaire sous une publication de page", () => {
+  it("l'équipe de la page lit `canRemove` du fournisseur : « Retirer » s'offre, se confirme, puis se dit", async () => {
+    // La publication est celle d'une page (jamais « la mienne ») ; le commentaire est celui d'autrui.
+    setThreads([comment({ id: "comment-tiers", isMine: false, canRemove: true, author: { personId: "person-b", handle: "membre.b", displayName: "Membre B" } })])
+    mount({ postIsMine: false })
+    fireEvent.click(screen.getByRole("button", { name: t("comments.remove") }))
+    fireEvent.click(screen.getByRole("button", { name: t("comments.confirmRemove") }))
+    await waitFor(() => expect(mocks.remove).toHaveBeenCalledExactlyOnceWith("comment-tiers"))
+    expect(mocks.success).toHaveBeenCalledWith(t("comments.removed"))
+  })
+
+  it("sans `canRemove` (lecteur hors de l'équipe), aucun « Retirer » sur le commentaire d'autrui", () => {
+    setThreads([comment({ id: "comment-tiers", isMine: false, author: { personId: "person-b", handle: "membre.b", displayName: "Membre B" } })])
+    mount({ postIsMine: false })
+    expect(screen.queryByRole("button", { name: t("comments.remove") })).toBeNull()
+  })
+})

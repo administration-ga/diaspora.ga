@@ -6,7 +6,7 @@
  * relus par le fournisseur (moteur ou démonstration), jamais déduits ici.
  */
 import { Button, EmptyState, Sheet, SheetContent } from "@diasporale/features"
-import { usePageAdmin, type ActionErrorCode, type ManagedPageRole, type PageClaimStatus, type PageManagement } from "@diasporale/features/data"
+import { usePageAdmin, type ActionErrorCode, type PageClaimStatus, type PageManagement, type PageTeamRole } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { BadgeCheckIcon, CircleSlashIcon, ClockIcon, ShieldIcon, UndoIcon, UnplugIcon, type LucideIcon } from "lucide-react"
 import { useRef, useState, type ReactNode } from "react"
@@ -50,7 +50,8 @@ export function ClaimStatusChip(props: { readonly status: PageClaimStatus }) {
   )
 }
 
-export function RoleChip(props: { readonly role: ManagedPageRole }) {
+/** Le rôle dans l'équipe (AS-10 : administrateur, éditeur ou modérateur), dit en toutes lettres. */
+export function RoleChip(props: { readonly role: PageTeamRole }) {
   const { t } = useDiasporaleT()
   return (
     <span className="inline-flex h-6 shrink-0 items-center gap-1 rounded-[var(--radius-xs)] bg-[var(--esp-neutral-chip)] px-2 text-[11px] font-semibold">

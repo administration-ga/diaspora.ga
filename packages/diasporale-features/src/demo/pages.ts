@@ -216,6 +216,8 @@ function contextOf(store: DemoStore, follows: DemoPageFollows): DemoPageContext 
     follows: follows.current(),
     standing: standingFor(store),
     isSignatory: admin.isSignatory,
+    // AS-10 : l'équipe vivante, modérateurs compris (retrait d'un commentaire, notes aux abonnés).
+    isPageTeamMember: admin.isTeamMember,
     isFollowing: (pageId, personId) => follows.current().has(pageFollowKey(personId, pageId)),
   }
 }

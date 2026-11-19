@@ -1,8 +1,10 @@
 "use client"
 
 /**
- * Mes pages dans « Mon activité » (onglet « Pages ») : les pages que je gère,
- * mes invitations de signataire, mes revendications, « Créer une page ».
+ * Mes pages dans « Mon activité » (onglet « Pages ») : les pages dont je fais
+ * partie de l'équipe, mes invitations, mes revendications, « Créer une page ».
+ * AS-10 : chaque page n'offre que ce que mon rôle permet — un modérateur y trouve
+ * l'équipe et la modération des commentaires, ni publication ni gestion.
  * L'instruction des revendications est au bureau de modération, onglet
  * « Pages à vérifier » (AS-01).
  * PROPRIÉTAIRE : chantier « gestion des pages ». « Mon activité » (chantier
@@ -10,11 +12,22 @@
  */
 import { Avatar, Button, Card, EmptyState, Skeleton, TrustBadge, formatDate } from "@diasporale/features"
 import { isServiceProviderOwnerKind } from "@diasporale/domain"
-import { usePageAdmin, useServiceReviews, type ActionErrorCode, type ManagedPageView, type PageAdminCapability, type PageClaimView, type PageInvitationView, type PageManagement } from "@diasporale/features/data"
+import {
+  usePageAdmin,
+  useServiceReviews,
+  type ActionErrorCode,
+  type Loadable,
+  type ManagedPageView,
+  type PageAdminCapability,
+  type PageClaimView,
+  type PageInvitationView,
+  type PageManagement,
+  type TeamPageView,
+} from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { Building2Icon, CheckIcon, FilePlus2Icon, NewspaperIcon, Settings2Icon, UsersRoundIcon, XIcon } from "lucide-react"
+import { Building2Icon, CheckIcon, FilePlus2Icon, MessageSquareXIcon, NewspaperIcon, Settings2Icon, UsersRoundIcon, XIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useRef, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { routes } from "@/lib/routes"
@@ -28,8 +41,38 @@ export function MyPagesPanel() {
 }
 
 function Panel(props: { readonly capability: PageAdminCapability; readonly management: PageManagement | null }) {
-  const { t } = useDiasporaleT()
+  // AS-10 : l'équipe entière (modérateur compris) quand le fournisseur la sert ; sinon, les pages où je parle.
+  return props.capability.useMyTeamPages
+    ? <TeamPagesSource capability={props.capability} management={props.management} />
+    : <SpeakingPagesSource capability={props.capability} management={props.management} />
+}
+
+const LOADING_PAGES: Loadable<readonly TeamPageView[]> = { status: "loading" }
+
+/** Monté seulement quand le fournisseur sert `useMyTeamPages` : l'appel est stable d'un rendu à l'autre. */
+function TeamPagesSource(props: { readonly capability: PageAdminCapability; readonly management: PageManagement | null }) {
+  const pages = props.capability.useMyTeamPages?.() ?? LOADING_PAGES
+  return <PanelBody pages={pages} management={props.management} />
+}
+
+/** Un fournisseur antérieur à AS-10 : les pages où je parle, lues comme des pages d'équipe. */
+function SpeakingPagesSource(props: { readonly capability: PageAdminCapability; readonly management: PageManagement | null }) {
   const pages = props.capability.useMyPages()
+  const asTeam = useMemo<Loadable<readonly TeamPageView[]>>(
+    () => (pages.status === "ready" ? { status: "ready", data: pages.data.map(asTeamPage) } : pages),
+    [pages],
+  )
+  return <PanelBody pages={asTeam} management={props.management} />
+}
+
+function asTeamPage(page: ManagedPageView): TeamPageView {
+  const { role, ...rest } = page
+  return { ...rest, teamRole: role }
+}
+
+function PanelBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; readonly management: PageManagement | null }) {
+  const { t } = useDiasporaleT()
+  const { pages } = props
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="mes-pages" className="flex flex-col gap-3">
@@ -84,9 +127,8 @@ function CreateLinks() {
   )
 }
 
-function ManagedPageItem(props: { readonly page: ManagedPageView }) {
+function ManagedPageItem(props: { readonly page: TeamPageView }) {
   const { t } = useDiasporaleT()
-  const reviews = useServiceReviews()
   const { page } = props
   return (
     <li>
@@ -100,34 +142,66 @@ function ManagedPageItem(props: { readonly page: ManagedPageView }) {
             {page.badge ? <TrustBadge badge={page.badge} /> : null}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-            <RoleChip role={page.role} />
+            <RoleChip role={page.teamRole} />
             <span>{t(`pageAdmin.kind.${page.ownerKind}`)}</span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button asChild variant="ghost" size="sm" className="min-h-11">
-            <NextLink href={routes.pageManage(page.handle, "publications")}><NewspaperIcon aria-hidden />{t("pagePostManagement.tab")}</NextLink>
-          </Button>
-          {isServiceProviderOwnerKind(page.ownerKind) ? <>
-            <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "services")}>{t("pageServiceManagement.tabServices")}</NextLink></Button>
-            <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "demandes")}>{t("pageServiceManagement.tabRequests")}</NextLink></Button>
-            {reviews?.usePageReviews ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "avis")}>{t("pageReviews.tab")}</NextLink></Button> : null}
-          </> : null}
-          <Button asChild variant="outline" size="sm">
-            <NextLink href={routes.pageManage(page.handle)} aria-label={t("pageAdmin.myPages.manageLabel", { name: page.name })}>
-              <Settings2Icon aria-hidden />
-              {t("pageAdmin.myPages.manage")}
-            </NextLink>
-          </Button>
-          <Button asChild variant="ghost" size="sm">
-            <NextLink href={routes.pageManage(page.handle, "equipe")} aria-label={t("pageAdmin.myPages.teamLabel", { name: page.name })}>
-              <UsersRoundIcon aria-hidden />
-              {t("pageAdmin.myPages.team")}
-            </NextLink>
-          </Button>
-        </div>
+        {page.teamRole === "moderator" ? <ModeratorLinks page={page} /> : <SpeakerLinks page={page} />}
       </Card>
     </li>
+  )
+}
+
+/** AS-10 : un modérateur ne publie ni ne gère — l'équipe, et les commentaires sous les publications de la page. */
+function ModeratorLinks(props: { readonly page: TeamPageView }) {
+  const { t } = useDiasporaleT()
+  const { page } = props
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button asChild variant="outline" size="sm" className="min-h-11">
+        <NextLink href={routes.page(page.handle)} aria-label={t("pageAdmin.myPages.moderateLabel", { name: page.name })}>
+          <MessageSquareXIcon aria-hidden />
+          {t("pageAdmin.myPages.moderate")}
+        </NextLink>
+      </Button>
+      <Button asChild variant="ghost" size="sm" className="min-h-11">
+        <NextLink href={routes.pageManage(page.handle, "equipe")} aria-label={t("pageAdmin.myPages.teamLabel", { name: page.name })}>
+          <UsersRoundIcon aria-hidden />
+          {t("pageAdmin.myPages.team")}
+        </NextLink>
+      </Button>
+    </div>
+  )
+}
+
+/** L'administrateur et l'éditeur : publications, services, gestion et équipe. */
+function SpeakerLinks(props: { readonly page: TeamPageView }) {
+  const { t } = useDiasporaleT()
+  const reviews = useServiceReviews()
+  const { page } = props
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button asChild variant="ghost" size="sm" className="min-h-11">
+        <NextLink href={routes.pageManage(page.handle, "publications")}><NewspaperIcon aria-hidden />{t("pagePostManagement.tab")}</NextLink>
+      </Button>
+      {isServiceProviderOwnerKind(page.ownerKind) ? <>
+        <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "services")}>{t("pageServiceManagement.tabServices")}</NextLink></Button>
+        <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "demandes")}>{t("pageServiceManagement.tabRequests")}</NextLink></Button>
+        {reviews?.usePageReviews ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "avis")}>{t("pageReviews.tab")}</NextLink></Button> : null}
+      </> : null}
+      <Button asChild variant="outline" size="sm">
+        <NextLink href={routes.pageManage(page.handle)} aria-label={t("pageAdmin.myPages.manageLabel", { name: page.name })}>
+          <Settings2Icon aria-hidden />
+          {t("pageAdmin.myPages.manage")}
+        </NextLink>
+      </Button>
+      <Button asChild variant="ghost" size="sm">
+        <NextLink href={routes.pageManage(page.handle, "equipe")} aria-label={t("pageAdmin.myPages.teamLabel", { name: page.name })}>
+          <UsersRoundIcon aria-hidden />
+          {t("pageAdmin.myPages.team")}
+        </NextLink>
+      </Button>
+    </div>
   )
 }
 
