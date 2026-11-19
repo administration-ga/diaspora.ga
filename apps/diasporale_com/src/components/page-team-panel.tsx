@@ -319,9 +319,9 @@ function InviteForm(props: { readonly management: PageManagement; readonly pageI
           )}
         </Field>
         {refusal ? <ErrorNotice code={refusal} /> : null}
-        <Button type="submit" className="self-start" disabled={busy}>
+        <Button type="submit" className="h-auto min-h-11 max-w-full self-start whitespace-normal py-2 text-left" disabled={busy}>
           <UserPlusIcon aria-hidden />
-          {busy ? t("common.pleaseWait") : t("pageAdmin.team.invite")}
+          <span className="min-w-0 break-words">{busy ? t("common.pleaseWait") : t("pageAdmin.team.invite")}</span>
         </Button>
       </form>
     </Card>
@@ -465,9 +465,10 @@ function TransferPanel(props: { readonly management: PageManagement; readonly pa
               )}
               {refusal ? <ErrorNotice code={refusal} /> : null}
               {mode === "person" || candidates.length > 0 ? (
-                <Button type="submit" className="self-start" disabled={busy}>
+                <Button type="submit" className="h-auto min-h-11 max-w-full self-start whitespace-normal py-2 text-left" disabled={busy}>
                   <CrownIcon aria-hidden />
-                  {busy ? t("common.pleaseWait") : t(mode === "member" ? "pageAdmin.team.transfer.promote" : "pageAdmin.team.transfer.invite")}
+                  {/* À 375 px, le libellé long passe à la ligne au lieu de sortir de la carte. */}
+                  <span className="min-w-0 break-words">{busy ? t("common.pleaseWait") : t(mode === "member" ? "pageAdmin.team.transfer.promote" : "pageAdmin.team.transfer.invite")}</span>
                 </Button>
               ) : null}
             </form>
