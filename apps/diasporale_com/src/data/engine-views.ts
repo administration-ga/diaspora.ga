@@ -666,8 +666,9 @@ function toEnginePageView(card: EnginePageCard, extra: { readonly description: s
 /**
  * La fiche d'une page : la projection de `getPage` (compteurs de l'agrégat,
  * bannière par la garde des fichiers, rôle VIVANT et abonnement du lecteur), la
- * première fenêtre du mur projetée comme le fil, et la revendicabilité jugée par
- * la tranche. Le moteur n'a pas d'organisateur « page » : aucun évènement inventé.
+ * première fenêtre du mur projetée comme le fil, la revendicabilité jugée par la
+ * tranche et (AS-11a) l'absence de responsable, un booléen seulement. Le moteur n'a
+ * pas d'organisateur « page » : aucun évènement inventé.
  */
 export function toPageDetailView(page: EnginePage, wall: EnginePageWall, standing: EnginePageStanding): PageDetailView {
   return {
@@ -676,6 +677,8 @@ export function toPageDetailView(page: EnginePage, wall: EnginePageWall, standin
     postCount: page.postCount,
     posts: wall.items.map(toPostView),
     morePosts: wall.nextCursor !== null,
+    // Sans réponse de la tranche, rien n'est affirmé : la page n'est pas dite sans responsable.
+    orphan: standing?.orphan === true,
     events: [],
     viewer: { role: page.viewer.role, following: page.viewer.following },
   }

@@ -12,7 +12,10 @@
  *     `myPageInvitations`, `respondToPageInvitation` ;
  *   · `pages.claims` : `generateClaimEvidenceUploadUrl`, `requestPageClaim`,
  *     `withdrawPageClaim`, `paginateMyPageClaims`. L'instruction (fiche, pièces,
- *     décision) est au bureau de modération (AS-01, `engine-moderation-desk.ts`).
+ *     décision) est au bureau de modération (AS-01, `engine-moderation-desk.ts`) ;
+ *   · `pages.sleep` (AS-11a) : `putPageToSleep`, `wakePage`, `mySleepingPages`. Une page
+ *     en sommeil disparaît de toutes les autres lectures, comme une page retirée ; elle
+ *     ne se lit plus que dans `mySleepingPages`, pour son équipe.
  *
  * Garde des fichiers (pièces, logo, bannière) : URL de dépôt d'un usage nommé,
  * dépôt NEUF au moment de l'envoi, rattachement par la mutation qui admet le
@@ -60,6 +63,7 @@ import {
   type PageManagement,
   type PageRefView,
   type PageSignatoryView,
+  type SleepingPageView,
   type TeamPageView,
 } from "@diasporale/features/data"
 import { fileForDeposit } from "@diasporale/features/data"
@@ -158,6 +162,8 @@ const GRANT_CONTEXT: RefusalContext = {
   fields: { handle: "page_signatory_self" },
 }
 const INVITATION_CONTEXT: RefusalContext = { codes: { notFound: "page_invitation_gone" } }
+/** AS-11a : une page tenue par une mesure de la modération ne se réveille pas depuis la page (`conflict`). */
+const WAKE_CONTEXT: RefusalContext = { codes: { conflict: "not_allowed" } }
 const CLAIM_CONTEXT: RefusalContext = {
   codes: { conflict: "media_upload_failed" },
   rules: { UPLOAD_TYPE_NOT_ALLOWED: "page_claim_evidence_type", UPLOAD_SIZE_OUT_OF_RANGE: "page_claim_evidence_too_large" },
@@ -229,6 +235,7 @@ type PageCard = FunctionReturnType<typeof api.modules.pages.pages.myPages>[numbe
 type TeamPageCard = FunctionReturnType<typeof api.modules.pages.pages.myTeamPages>[number]
 type PageDto = NonNullable<FunctionReturnType<typeof api.modules.pages.pages.getPage>>
 type ClaimDto = FunctionReturnType<typeof api.modules.pages.claims.paginateMyPageClaims>["page"][number]
+type SleepingPageCard = FunctionReturnType<typeof api.modules.pages.sleep.mySleepingPages>[number]
 
 /** Le badge d'une PAGE est sa confiance ; tout autre badge n'a pas de sens ici (lu « Communauté »). */
 function toPageBadge(badge: string): PageTrustLevel {
@@ -250,6 +257,11 @@ function toManagedPages(rows: readonly PageCard[]): readonly ManagedPageView[] {
 /** AS-10 : mes pages d'équipe, modérateur compris ; le rôle d'équipe vient de `viewer.teamRole` (jamais nul ici). */
 function toTeamPages(rows: readonly TeamPageCard[]): readonly TeamPageView[] {
   return rows.map((row) => ({ ...toPageRef(row), teamRole: row.viewer.teamRole }))
+}
+
+/** AS-11a : mes pages en sommeil ; l'état, l'échéance et `canWake` sont ceux du serveur, jamais recalculés ici. */
+function toSleepingPages(rows: readonly SleepingPageCard[]): readonly SleepingPageView[] {
+  return rows.map((row) => ({ ...toPageRef(row), teamRole: row.teamRole, sleepEndsAt: row.sleepEndsAt, state: row.state, canWake: row.canWake }))
 }
 
 function toManagedPageDetail(page: PageDto | null): ManagedPageDetailView | null {
@@ -515,6 +527,23 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
 
     withdrawClaim: (claimId) => attempt(async () =>
       await deps.convex.mutation(api.modules.pages.claims.withdrawPageClaim, { networkId: await diasporale(), claimId: claimId as Id<"pageClaims"> })),
+
+    // AS-11a : le serveur rejuge tout (administrateur vivant, nature, échéance, mesure) ; l'écran ne promet rien de plus.
+    putToSleep: (pageId) => attempt(async () => {
+      const slept = await deps.convex.mutation(api.modules.pages.sleep.putPageToSleep, { networkId: await diasporale(), pageId: pageId as Id<"pages"> })
+      return { sleepEndsAt: slept.sleepEndsAt }
+    }),
+
+    wake: (pageId) => attempt(async () => {
+      const woken = await deps.convex.mutation(api.modules.pages.sleep.wakePage, { networkId: await diasporale(), pageId: pageId as Id<"pages"> })
+      return { status: woken.status }
+    }, WAKE_CONTEXT),
+
+    useMySleepingPages(): Loadable<readonly SleepingPageView[]> {
+      const reader = useReader()
+      const rows = usePageQuery(api.modules.pages.sleep.mySleepingPages, reader.networkId ? { networkId: reader.networkId } : "skip")
+      return useProjected(reader, rows, toSleepingPages)
+    },
   }
 
   return {

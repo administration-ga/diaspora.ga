@@ -74,6 +74,8 @@ const ENGINE_RULES: Readonly<Record<string, ActionErrorCode>> = {
   PAGE_CLAIM_PENDING: "page_claim_pending",
   PAGE_CLAIM_EVIDENCE_COUNT: "page_claim_evidence_count",
   PAGE_CLAIM_NOTE_TOO_LONG: "page_claim_note_too_long",
+  // AS-11a : le sommeil d'une page a passé son échéance ; la réactivation n'est plus ouverte depuis la page.
+  PAGE_SLEEP_EXPIRED: "page_sleep_expired",
   // Conversations de mise en relation (CC-6) : refus explicites d'une ouverture, dits à une partie seulement.
   CONTEXT_NOT_OPEN: "context_not_open",
   CONTEXT_CLOSED: "context_closed",

@@ -30,6 +30,7 @@ import { AssociationEventsSection } from "@/components/association-events"
 import { Gate } from "@/components/gate"
 import { PagePostPages } from "@/components/feed-pages"
 import { PageAdminEntry } from "@/components/page-admin-entry"
+import { PageOrphanNotice } from "@/components/page-orphan-notice"
 import { PageAbout } from "@/components/page-about"
 import { PageContentViews } from "@/components/page-content-views"
 import { PageJobsSection } from "@/components/page-jobs-section"
@@ -161,6 +162,8 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
   const publications = source?.pagePublications
   const { view } = props
   const { page, posts, events } = view
+  // AS-11a : une page sans responsable le dit à tout lecteur ; sa revendication passe alors par le bandeau.
+  const orphan = view.orphan === true
   const serviceProvider = isServiceProviderOwnerKind(page.ownerKind)
   const hasPageReviews = serviceProvider && !!source?.serviceReviews?.usePageReviews
   const now = Date.now()
@@ -189,6 +192,7 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
               </p>
             </div>
           </div>
+          {orphan ? <PageOrphanNotice pageId={page.id} handle={page.handle} claimable={page.claimable} /> : null}
           {!serviceProvider && page.description ? <p className="whitespace-pre-line break-words text-[15px] leading-relaxed">{page.description}</p> : null}
           <div className="flex flex-wrap items-center gap-3">
             {props.capability ? (
@@ -208,7 +212,7 @@ function PageFiche(props: { view: PageDetailView; membership: MembershipView; ca
               * communauté n'offre aucun contact pour l'instant.
               */}
             {serviceProvider && view.viewer.role === null ? <PageServiceContactEntry pageHandle={page.handle} variant={props.capability && !view.viewer.following ? "outline" : "commerce"} /> : null}
-            <PageAdminEntry pageId={page.id} handle={page.handle} viewerRole={view.viewer.role} claimable={page.claimable} />
+            <PageAdminEntry pageId={page.id} handle={page.handle} viewerRole={view.viewer.role} claimable={page.claimable && !orphan} />
             <AssociationMembershipEntry pageId={page.id} handle={page.handle} ownerKind={page.ownerKind} />
             <PagePublishButton page={page} membership={props.membership} role={view.viewer.role} />
             <PageShareButton handle={page.handle} name={page.name} />

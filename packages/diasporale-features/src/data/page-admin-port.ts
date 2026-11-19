@@ -41,7 +41,10 @@ import {
   PAGE_ROLES,
   PAGE_SHORT_NAME_MAX_LENGTH,
   PAGE_SIGNATORIES_MAX,
+  PAGE_SLEEP_DAYS,
+  PAGE_SLEEP_MS,
   PAGE_TEAM_ROLES,
+  type PageSleepState,
   type PageTeamRole,
 } from "@antsia/social-domain/pages"
 import { isMimeAllowedForUsage, normalizeMimeType, UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
@@ -63,6 +66,9 @@ export {
   PAGE_NAME_MAX_LENGTH,
   PAGE_SHORT_NAME_MAX_LENGTH,
   PAGE_SIGNATORIES_MAX,
+  // AS-11a : la durée du sommeil, celle du moteur (trente jours), dite à la confirmation.
+  PAGE_SLEEP_DAYS,
+  PAGE_SLEEP_MS,
 }
 
 /** Codes de refus propres à la gestion des pages (fragment `page-admin.json`). */
@@ -109,6 +115,8 @@ export const PAGE_ADMIN_ERROR_CODES = [
   // Logo et bannière (garde des fichiers du moteur).
   "page_image_type_invalid",
   "page_image_too_large",
+  // AS-11a : la page dort depuis plus de trente jours ; seule l'équipe de modération peut agir.
+  "page_sleep_expired",
 ] as const
 
 export type PageAdminErrorCode = (typeof PAGE_ADMIN_ERROR_CODES)[number]
@@ -272,6 +280,25 @@ export interface PageClaimView {
   readonly decidedAt: number | null
 }
 
+/**
+ * AS-11a — une page EN SOMMEIL dont je fais partie de l'équipe (`mySleepingPages`
+ * du moteur). Absente partout comme une page retirée, elle ne se lit plus qu'ici :
+ *   · `asleep` : tout administrateur de la page la réactive jusqu'à `sleepEndsAt` ;
+ *   · `expired` : le délai est passé, la réactivation est refusée
+ *     (`page_sleep_expired`) et rien n'est effacé : seule l'équipe de modération agit.
+ * `canWake` est jugé par le serveur (administrateur, délai, aucune mesure de la
+ * modération) ; l'écran ne le déduit jamais du rôle.
+ */
+export interface SleepingPageView extends PageRefView {
+  readonly teamRole: PageTeamRole
+  readonly sleepEndsAt: number
+  readonly state: SleepingPageState
+  readonly canWake: boolean
+}
+
+/** Les états d'une page en sommeil vus de « Mes pages » : ceux du moteur (`PageSleepState`), hors `none`. */
+export type SleepingPageState = Exclude<PageSleepState, "none">
+
 export type PageImageSlot = "logo" | "banner"
 
 export interface PageImageView {
@@ -344,6 +371,22 @@ export interface PageManagement {
   requestClaim(input: PageClaimInput): Promise<ActionResult<{ claimId: string }>>
   /** Retirer MA revendication en attente ; ses pièces sont purgées. `withdrawn: false` : déjà tranchée. */
   withdrawClaim(claimId: string): Promise<ActionResult<{ withdrawn: boolean }>>
+
+  /**
+   * AS-11a — mettre la page en sommeil : un administrateur VIVANT d'une page de nature
+   * créable par un membre (jamais une institution). Page, offres, emplois, évènements
+   * et publications disparaissent pour tout le monde ; rien n'est écrit sur ces objets
+   * et personne n'est prévenu. Rend l'échéance de la réactivation. Facultatif :
+   * absent, l'écran ne propose pas le geste.
+   */
+  putToSleep?(pageId: string): Promise<ActionResult<{ sleepEndsAt: number }>>
+  /**
+   * AS-11a — réactiver une page en sommeil : tout administrateur de la page, tant que le
+   * délai court ; échu, `page_sleep_expired`. Le réveil rend tout ce que le sommeil masquait.
+   */
+  wake?(pageId: string): Promise<ActionResult<{ status: "active" }>>
+  /** AS-11a — les pages en sommeil dont je fais partie de l'équipe, bornées par le moteur. */
+  useMySleepingPages?(): Loadable<readonly SleepingPageView[]>
 }
 
 export interface PageAdminCapability {

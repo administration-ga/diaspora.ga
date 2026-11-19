@@ -123,7 +123,7 @@ const MEMBER: MembershipView = {
   directoryVisibility: "hidden",
 }
 
-function view(overrides: { following?: boolean; role?: "admin" | "signatory" | null; claimable?: boolean } = {}): PageDetailView {
+function view(overrides: { following?: boolean; role?: "admin" | "signatory" | null; claimable?: boolean; orphan?: boolean } = {}): PageDetailView {
   return {
     page: {
       id: "page-lyon",
@@ -146,6 +146,7 @@ function view(overrides: { following?: boolean; role?: "admin" | "signatory" | n
     morePosts: true,
     events: [],
     viewer: { role: overrides.role ?? null, following: overrides.following ?? false },
+    ...(overrides.orphan !== undefined ? { orphan: overrides.orphan } : {}),
   }
 }
 
@@ -245,6 +246,22 @@ describe("PageScreen — états de la fiche (DG-007)", () => {
     expect(mocks.contact).not.toHaveBeenCalled()
     expect(screen.queryByText("Revendiquer cette page")).not.toBeInTheDocument()
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+
+  it("AS-11a : une page sans responsable le dit à tout lecteur ; la revendication passe par le bandeau, jamais deux fois", () => {
+    mocks.detail = { status: "ready", data: view({ claimable: true, orphan: true }) }
+    render(tree())
+    const note = screen.getByRole("note", { name: "Cette page n'a plus de responsable" })
+    // Ce fournisseur ne sert pas la gestion des pages : le bandeau mène au contact du site.
+    expect(within(note).getByRole("link", { name: "Écrire à l'équipe" })).toHaveAttribute("href", routes.contact())
+    expect(mocks.admin).toHaveBeenLastCalledWith({ pageId: "page-lyon", handle: "collectif-lyon", viewerRole: null, claimable: false })
+  })
+
+  it("AS-11a : une page qui a son responsable ne porte aucun bandeau", () => {
+    mocks.detail = { status: "ready", data: view({ claimable: true, orphan: false }) }
+    render(tree())
+    expect(screen.queryByRole("note", { name: "Cette page n'a plus de responsable" })).not.toBeInTheDocument()
+    expect(mocks.admin).toHaveBeenLastCalledWith({ pageId: "page-lyon", handle: "collectif-lyon", viewerRole: null, claimable: true })
   })
 
   it("monte les publications de la première fenêtre", () => {

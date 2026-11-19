@@ -437,6 +437,56 @@ describe("gestion des pages — écritures du moteur", () => {
   })
 })
 
+describe("AS-11a — mettre la page en sommeil, la réactiver", () => {
+  it("lit mes pages en sommeil, bornées au réseau ; état, échéance et `canWake` sont ceux du serveur", () => {
+    results({
+      "modules/pages/sleep:mySleepingPages": [
+        { ...CARD, teamRole: "admin", sleepEndsAt: 1_000, state: "asleep", canWake: true },
+        { ...CARD, pageId: "page-2", handle: "amicale-nice", teamRole: "signatory", sleepEndsAt: 2_000, state: "expired", canWake: false },
+      ],
+    })
+    const { management } = source()
+    const { result } = renderHook(() => management.useMySleepingPages!())
+    expect(mocks.loaded).toHaveBeenCalledWith("modules/pages/sleep:mySleepingPages", { networkId: "network-diasporale" })
+    expect(result.current).toEqual({
+      status: "ready",
+      data: [
+        { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR", teamRole: "admin", sleepEndsAt: 1_000, state: "asleep", canWake: true },
+        { id: "page-2", handle: "amicale-nice", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR", teamRole: "signatory", sleepEndsAt: 2_000, state: "expired", canWake: false },
+      ],
+    })
+  })
+
+  it("sans adhésion, refuse sans interroger le sommeil des pages", () => {
+    results({ "modules/diaspora/membership:myMembership": null })
+    const { management } = source()
+    expect(renderHook(() => management.useMySleepingPages!()).result.current).toEqual({ status: "error", code: "not_member" })
+    expect(mocks.loaded).not.toHaveBeenCalledWith("modules/pages/sleep:mySleepingPages", expect.anything())
+  })
+
+  it("endort la page dans le réseau diasporale et rend l'échéance ; un éditeur reçoit le refus du rôle", async () => {
+    const asleep = source({ mutation: () => ({ sleepEndsAt: 42 }) })
+    expect(await asleep.management.putToSleep!("page-1")).toEqual({ ok: true, value: { sleepEndsAt: 42 } })
+    expect(asleep.calls).toEqual([{ name: "modules/pages/sleep:putPageToSleep", args: { networkId: "network-diasporale", pageId: "page-1" } }])
+    const editor = source({ mutation: () => { throw new ConvexError({ code: "pageRoleRequired" }) } })
+    expect(await editor.management.putToSleep!("page-1")).toEqual({ ok: false, code: "page_role_required" })
+    const gone = source({ mutation: () => { throw new ConvexError({ code: "notFound" }) } })
+    expect(await gone.management.putToSleep!("page-1")).toEqual({ ok: false, code: "not_found" })
+  })
+
+  it("réactive la page ; une échéance passée, une mesure de la modération et un rôle insuffisant se disent", async () => {
+    const woken = source({ mutation: () => ({ status: "active" }) })
+    expect(await woken.management.wake!("page-1")).toEqual({ ok: true, value: { status: "active" } })
+    expect(woken.calls).toEqual([{ name: "modules/pages/sleep:wakePage", args: { networkId: "network-diasporale", pageId: "page-1" } }])
+    const expired = source({ mutation: () => { throw new ConvexError({ code: "invalidArgument", rule: "PAGE_SLEEP_EXPIRED", params: { days: 30 } }) } })
+    expect(await expired.management.wake!("page-1")).toEqual({ ok: false, code: "page_sleep_expired" })
+    const held = source({ mutation: () => { throw new ConvexError({ code: "conflict" }) } })
+    expect(await held.management.wake!("page-1")).toEqual({ ok: false, code: "not_allowed" })
+    const editor = source({ mutation: () => { throw new ConvexError({ code: "pageRoleRequired" }) } })
+    expect(await editor.management.wake!("page-1")).toEqual({ ok: false, code: "page_role_required" })
+  })
+})
+
 describe("gestion des pages — refus lus dans leur contexte", () => {
   it("une règle connue du contexte l'emporte, sinon la table commune", () => {
     const upload = new ConvexError({ code: "invalidArgument", rule: "UPLOAD_TYPE_NOT_ALLOWED" })

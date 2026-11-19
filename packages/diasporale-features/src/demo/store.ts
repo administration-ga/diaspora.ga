@@ -146,6 +146,15 @@ export class DemoStore {
     return this.pageReadingProjection?.(this.state) ?? this.state
   }
 
+  /**
+   * Le jeu fictif SANS surcouche de lecture. Réservé à la démonstration du sommeil
+   * des pages (AS-11a) : la projection masque une page en sommeil partout, et seule
+   * son équipe la relit, pour la réactiver.
+   */
+  getBaseState(): DemoState {
+    return this.state
+  }
+
   /** Surcouches de lecture locales : jamais sérialisées dans le jeu fictif. */
   setPageReadingProjection(project: (state: DemoState) => DemoState): void {
     this.pageReadingProjection = project
