@@ -215,6 +215,9 @@ describe("gestion des pages — écritures du moteur", () => {
   it("refuse avant le moteur une nature réservée ou un nom vide", async () => {
     const { management, mutation } = source()
     expect(await management.createPage({ ownerKind: "institution" as never, name: "Ministère", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
+    // AS-05 : le moteur accepterait un média ou une communauté ; DIASPORALE ne les inscrit pas.
+    expect(await management.createPage({ ownerKind: "media", name: "Radio Diaspora", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
+    expect(await management.createPage({ ownerKind: "community", name: "Cercle de Nantes", country: "FR" })).toEqual({ ok: false, code: "page_kind_reserved" })
     expect(await management.createPage({ ownerKind: "association", name: "   ", country: "FR" })).toEqual({ ok: false, code: "page_name_invalid" })
     expect(mutation).not.toHaveBeenCalled()
   })

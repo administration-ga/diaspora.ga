@@ -43,7 +43,7 @@ import {
 } from "@antsia/social-domain/pages"
 import { isMimeAllowedForUsage, normalizeMimeType, UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
 import { isDomainViolation } from "@antsia/social-domain/violation"
-import type { CountryCode, PageOwnerKind, PageTrustLevel } from "@diasporale/domain"
+import { canMemberCreatePageKind, type CountryCode, type PageOwnerKind, type PageTrustLevel } from "@diasporale/domain"
 
 import type { ActionErrorCode } from "./errors"
 import type { ActionResult } from "./port"
@@ -137,6 +137,17 @@ export type MemberPageKind = (typeof MEMBER_PAGE_KINDS)[number]
 
 export function isMemberPageKind(value: string | null | undefined): value is MemberPageKind {
   return value !== null && value !== undefined && (MEMBER_PAGE_KINDS as readonly string[]).includes(value)
+}
+
+/**
+ * Les natures qu'un membre INSCRIT dans DIASPORALE (AS-05, décision 2 du plan 07) :
+ * association et entreprise au pilote. Le moteur en accepte davantage ; l'écran les
+ * propose seules, et chaque adaptateur refuse les autres (`page_kind_reserved`).
+ */
+export const REGISTRABLE_PAGE_KINDS: readonly MemberPageKind[] = Object.freeze(MEMBER_PAGE_KINDS.filter((kind) => canMemberCreatePageKind(kind)))
+
+export function isRegistrablePageKind(value: string | null | undefined): value is MemberPageKind {
+  return isMemberPageKind(value) && canMemberCreatePageKind(value)
 }
 
 /** États d'une revendication (ceux du moteur) ; seule `pending` se tranche ou se retire. */

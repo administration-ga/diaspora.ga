@@ -4,7 +4,7 @@
  * Les écrans de gestion des pages (DG-008). PROPRIÉTAIRE : chantier « gestion
  * des pages ».
  *
- *   · `/nouvelle-page?type=association|company` — créer une page (membre vérifié) ;
+ *   · `/nouvelle-page?type=association|company` — inscrire une organisation (membre vérifié) ;
  *   · `/pages/<handle>/revendiquer` — revendiquer une page, ou en demander la
  *     vérification, pièces privées à l'appui ;
  *   · `/pages/<handle>/gerer?onglet=publications|services|demandes|avis|identite|equipe|revendications|decisions` — gérer une
@@ -67,7 +67,7 @@ function MemberScreen(props: { readonly children: (membership: MembershipView) =
 // Créer une page
 // ═══════════════════════════════════════════════════════════════
 
-/** `/nouvelle-page` — créer la page d'une association, d'une entreprise, d'un média ou d'une communauté. */
+/** `/nouvelle-page` — inscrire une association ou une entreprise (AS-05), en trois étapes. */
 export function NewPageScreen(props: { readonly kind: MemberPageKind | null }) {
   return <MemberScreen>{(membership) => <NewPage membership={membership} kind={props.kind} />}</MemberScreen>
 }

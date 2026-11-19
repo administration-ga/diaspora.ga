@@ -22,15 +22,13 @@
       "withdrawn": "Withdrawn"
     },
     "create": {
-      "metaTitle": "Create a page",
-      "title": "Create a page",
-      "lead": "A page presents an association, a business, a media outlet or a diaspora community. It speaks through its signatories, never on behalf of the State.",
-      "kindLegend": "Kind of page",
+      "metaTitle": "Register an organisation",
+      "title": "Register an organisation",
+      "lead": "Your association or business gets its page on DIASPORALE: it posts, recruits, welcomes its members or offers its services. It speaks through its signatories, never on behalf of the State.",
+      "kindLegend": "What would you like to register?",
       "kindHint": {
         "association": "A registered association, or one being registered.",
-        "company": "A business, a shop or an independent professional.",
-        "media": "A media outlet, a radio, a channel or a news blog.",
-        "community": "An informal collective, a mutual-aid group or a friendly society."
+        "company": "A business, a shop or an independent professional."
       },
       "name": "Page name",
       "nameHint": "The full name, as your members know it ({{max}} characters at most).",
@@ -44,14 +42,90 @@
       "country": "Country of the page",
       "countryHint": "Where it operates: the page appears in that country's hub.",
       "countryPlaceholder": "Choose a country",
-      "trustNote": "A page created by a member carries the “Community” badge. The “Verified” badge comes from a claim approved by moderation; “Official” is reserved for institutions.",
-      "submit": "Create the page",
-      "created": "Page created: you are its administrator.",
+      "trustNote": "A page registered by a member carries the “Community” badge. The “Verified” badge comes from a claim approved by moderation; “Official” is reserved for institutions.",
+      "submit": "Register the page",
+      "created": "Page registered: you are its administrator.",
       "verifiedOnly": {
-        "title": "Creating a page is reserved for verified members",
+        "title": "Registering an organisation is reserved for verified members",
         "body": "Your membership is currently: {{status}}. It becomes verified once your consular registration is verified, or with an IDN identity of level 2 and a sponsorship.",
         "attestation": "Verify my consular registration",
         "sponsor": "Get a sponsorship"
+      }
+    },
+    "register": {
+      "steps": "Registration steps",
+      "stepOf": "Step {{current}} of {{total}}: {{step}}",
+      "step": {
+        "nature": "Kind",
+        "identity": "Identity",
+        "review": "Review"
+      },
+      "next": "Continue",
+      "back": "Back",
+      "natureClosed": "During the pilot, DIASPORALE registers associations and businesses. An informal collective meets in a group; media outlets await their label.",
+      "natureOffer": {
+        "association": "Members, a private group, events, job offers and services.",
+        "company": "Job offers, services by appointment and customer reviews."
+      },
+      "identityTitle": "Page identity",
+      "identityLead": "What members will read on the page and in the directory. The logo and banner are added right after registration.",
+      "reviewTitle": "Check before registering",
+      "reviewLead": "The page appears in the directory and in its country's hub as soon as it is registered.",
+      "edit": "Edit",
+      "editLabel": "Edit: {{field}}",
+      "notProvided": "Not provided",
+      "review": {
+        "kind": "Kind",
+        "name": "Name",
+        "shortName": "Acronym",
+        "handle": "Address",
+        "country": "Country",
+        "city": "City",
+        "category": "Activity",
+        "description": "Description"
+      },
+      "nearby": {
+        "title": "Your organisation may already be registered",
+        "lead": "These pages have a similar name. If one of them is yours, claim it rather than registering a second one.",
+        "claim": "Claim",
+        "claimLabel": "Claim {{name}}",
+        "see": "View",
+        "seeLabel": "View {{name}}",
+        "continue": "None of them is mine: continue"
+      },
+      "done": {
+        "title": "{{name}} is registered",
+        "lead": "You are its administrator. The page carries the “Community” badge: here are the first steps that will bring it to life.",
+        "stepsLabel": "First steps",
+        "seePage": "View the page",
+        "identity": {
+          "title": "Add the logo and banner",
+          "hint": "A recognisable page inspires trust."
+        },
+        "verification": {
+          "title": "Request the “Verified” badge",
+          "hint": "Articles, registration receipt or company extract: moderation reviews your request."
+        },
+        "team": {
+          "title": "Invite your team",
+          "hint": "Signatories post on behalf of the page."
+        },
+        "members": {
+          "title": "Welcome your members",
+          "hint": "Membership requests arrive here; joining is not following."
+        },
+        "jobs": {
+          "title": "Post a job offer",
+          "hint": "It appears in DIASPORALE jobs, on behalf of the page."
+        },
+        "services": {
+          "title": "Offer your services",
+          "hint": "By appointment, with your customers' reviews."
+        },
+        "publication": {
+          "title": "Publish a first announcement",
+          "hint": "It appears on the page and in its followers' feed."
+        }
       }
     },
     "claim": {
@@ -204,10 +278,9 @@
       "title": "My pages",
       "lead": "The pages on whose behalf you speak in DIASPORALE.",
       "emptyTitle": "You do not manage any page yet",
-      "emptyBody": "Create your association's or business's page, or claim the one that already exists.",
-      "createAssociation": "Create an association page",
-      "createCompany": "Create a business page",
-      "createOther": "Another kind of page",
+      "emptyBody": "Register your association or business, or claim its page if it already exists.",
+      "createAssociation": "Register an association",
+      "createCompany": "Register a business",
       "manage": "Manage",
       "manageLabel": "Manage {{name}}",
       "team": "Team",
@@ -228,8 +301,8 @@
     }
   },
   "errors": {
-    "page_verified_required": "Creating a page is reserved for verified members: have your consular registration verified, or link an IDN identity of level 2 with a sponsorship.",
-    "page_kind_reserved": "An institution page is not created here: it results from a platform decision.",
+    "page_verified_required": "Registering an organisation is reserved for verified members: have your consular registration verified, or link an IDN identity of level 2 with a sponsorship.",
+    "page_kind_reserved": "This kind of page is not registered here: a member registers an association or a business, and an institution page results from a platform decision.",
     "page_name_invalid": "The page name has 1 to 120 characters.",
     "page_short_name_too_long": "The acronym has 30 characters at most.",
     "page_description_too_long": "The description has 1,000 characters at most.",

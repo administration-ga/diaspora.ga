@@ -208,7 +208,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 | AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
 | AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
-| AS-05 | Créer une page sans faux pas : natures servies, pages au nom proche | P1 | S | S2 | aucune | nouveau | à faire |
+| AS-05 | Créer une page sans faux pas : natures servies, pages au nom proche | P1 | S | S2 | aucune | nouveau | en cours (inscription en trois étapes, natures association et entreprise selon la décision 2, pages au nom proche ; non vérifié : disque sous 6 Go le 19/11) ; restent le recadrage du logo et le mobile |
 | AS-06 | Cloches de la vie d'une page et d'un groupe | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-07 | « Écrire » à une page | P1 | M | S2 | ouverture de la politique de conversation (plan 04) | nouveau | à faire |
 | DS-09 | Groupes thématiques ouverts par pays | P1 | M | S2 | ouverture au pilote après MC-01 du moteur | plan 15 | à faire |

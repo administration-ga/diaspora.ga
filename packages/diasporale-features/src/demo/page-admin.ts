@@ -28,7 +28,7 @@ import { useMemo, useSyncExternalStore } from "react"
 import type { ActionErrorCode } from "../data/errors"
 import type { DeskClaimDecision, DeskClaimDetailView, DeskClaimParty, DeskClaimView } from "../data/moderation-desk-port"
 import {
-  isMemberPageKind,
+  isRegistrablePageKind,
   pageClaimNoteRefusal,
   pageDescriptionRefusal,
   pageEvidenceSetRefusal,
@@ -538,7 +538,7 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
       const now = store.now()
       const writer = writerOf(state, now, "verifiee")
       if (typeof writer === "string") return fail(writer === "status_insufficient" ? "page_verified_required" : writer)
-      if (!isMemberPageKind(input.ownerKind)) return fail("page_kind_reserved")
+      if (!isRegistrablePageKind(input.ownerKind)) return fail("page_kind_reserved")
       const refusal = pageNameRefusal(input.name) ?? pageHandleRefusal(input)
         ?? (input.shortName ? pageShortNameRefusal(input.shortName) : null)
         ?? (input.description ? pageDescriptionRefusal(input.description) : null)

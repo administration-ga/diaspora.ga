@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("pageAdmin.create.metaTitle") }
 }
 
-/** `?type=association|company` (ou `media`, `community`) présélectionne la nature ; toute autre valeur est ignorée. */
+/** `?type=association|company` présélectionne la nature (AS-05) ; toute autre valeur est ignorée et l'inscription commence par la nature. */
 function kindOf(raw: string | string[] | undefined): MemberPageKind | null {
   const value = Array.isArray(raw) ? raw[0] : raw
   return value !== undefined && (MEMBER_CREATABLE_PAGE_KINDS as readonly string[]).includes(value) ? (value as MemberPageKind) : null

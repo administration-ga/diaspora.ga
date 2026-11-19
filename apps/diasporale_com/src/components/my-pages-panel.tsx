@@ -80,9 +80,6 @@ function CreateLinks() {
           {t("pageAdmin.myPages.createCompany")}
         </NextLink>
       </Button>
-      <Button asChild variant="ghost">
-        <NextLink href={routes.newPage()}>{t("pageAdmin.myPages.createOther")}</NextLink>
-      </Button>
     </div>
   )
 }
