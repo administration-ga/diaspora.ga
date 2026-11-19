@@ -215,7 +215,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 | AS-08 | Groupe d'association : médias, réactions, commentaires, épingle | P1 | M | S2 | compléments génériques demandés au moteur (antsia#182) | nouveau | fusionné en mode moteur (antsia#181, #87 ; couple vérifié 47a2ccf / 5b2817d) ; la démonstration garde son mur en texte, mur prouvé par les tests seulement |
 | AS-09 | Annonce aux adhérents | P1 | M | S2 | genre d'avis et seau de débit demandés au moteur (antsia#179) ; suit AS-08 | nouveau | à faire |
 | AS-10 | Équipe : éditeur, modérateur, transfert guidé, commentaires | P1 | M | S2 | PG-08 du moteur fait dans le même couple ; avis de changement de rôle demandé (antsia#184) | nouveau | fusionné (antsia#183, #89 ; couple vérifié 4016ec5 / d7ebc11, recette en démonstration) ; reste le transfert à deux comptes en mode moteur |
-| AS-11 | Fermer sa page ; page sans responsable | P1 | M | S2 | décision 8 | nouveau | à faire |
+| AS-11 | Fermer sa page ; page sans responsable | P1 | M | S2 | décision 8 (recommandation appliquée) ; AS-11b : juriste (délai de trente jours, effacement des adhésions) | nouveau | AS-11a fusionné (antsia#185, #91 ; couple vérifié 70edfb3 / 0785f6a, recette en démonstration) : sommeil réversible trente jours, page sans responsable ; reste AS-11b (retrait définitif au bureau, effacement) |
 | AS-12 | Groupes : règles, adhésion sur demande, validation des publications | P2 | M | S2 | aucune | nouveau | à faire |
 | AS-13 | Statistiques honnêtes et publications programmées | P2 | M | S2 | aucune | nouveau | à faire |
 | AS-14 | Adhésion mieux tenue : bureau affiché, recherche, questions, effectif | P2 | M | S2 | décision 12 | nouveau | à faire |
