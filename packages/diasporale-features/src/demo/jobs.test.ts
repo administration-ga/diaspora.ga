@@ -123,6 +123,21 @@ describe("démonstration de l'emploi — offres fictives", () => {
     expect(data(renderHook(() => steeve.jobs.useOffer("job-demo-livraison")).result.current)).toMatchObject({ myApplication: { id: "application-demo-steeve", status: "sent" } })
   })
 
+  it("la rubrique « Emplois » d'une page (EM-04) : ses seules offres ouvertes ; une page inconnue ou non employeuse rend null", () => {
+    const { jobs } = setup("p-rodrigue")
+    const read = (pageId: string, cursor: string | null = null) => renderHook(() => jobs.usePageOpenOffers({ pageId, cursor })).result.current
+    expect(data(read("page-saveurs"))?.items.map((item) => item.id)).toEqual(["job-demo-livraison", "job-demo-cuisine"])
+    // Le brouillon de Lyon et l'offre suspendue de Bruxelles n'y paraissent pas, même projection que la recherche.
+    expect(data(read("page-asso-lyon"))?.items.map((item) => item.id)).toEqual(["job-demo-stage-lyon"])
+    expect(data(read("page-valise"))?.items.map((item) => item.id)).toEqual(["job-demo-logistique"])
+    expect(data(read("page-valise"))?.items[0]).not.toHaveProperty("status")
+    expect(data(read("page-poste-fr"))).toBeNull()
+    expect(data(read("inconnue"))).toBeNull()
+    expect(read("page-saveurs", "ailleurs")).toEqual({ status: "error", code: "unknown" })
+    const anonymous = setup(null)
+    expect(renderHook(() => anonymous.jobs.usePageOpenOffers({ pageId: "page-saveurs", cursor: null })).result.current).toEqual({ status: "error", code: "not_signed_in" })
+  })
+
   it("l'équipe crée, modifie à la version lue, suspend et clôt ; close est terminale", async () => {
     const { jobs } = setup("p-mireille")
     const created = await jobs.createOffer({ ...INPUT, pageId: "page-saveurs", publish: false })

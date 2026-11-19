@@ -61,6 +61,9 @@
       "place": "{{city}}, {{country}}",
       "closesAt": "Applications until {{date}}"
     },
+    "pageSection": {
+      "title": "Jobs"
+    },
     "talentCard": {
       "skills": "Declared skills",
       "languages": "Languages: {{languages}}"
@@ -98,6 +101,7 @@
       "unavailableBody": "It may have been suspended or closed, or its deadline has passed.",
       "employer": "The hiring page",
       "badgeNote": "The badge says who the page is; it does not vouch for the offer.",
+      "pageOffers": "See this page's job offers",
       "place": "Location",
       "languages": "Working languages",
       "pay": "Advertised pay",

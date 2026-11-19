@@ -141,6 +141,17 @@ describe("emploi — lectures du moteur", () => {
     expect(result.current).toMatchObject({ status: "ready", data: { items: [{ id: "job-1", viewerCanManage: true, myApplication: null }] } })
   })
 
+  it("EM-04 : les offres ouvertes d'une page, par fenêtres de six ; une page illisible rend null", () => {
+    mocks.results.set("modules/diaspora/jobs:pageOpenJobOffers", { page: [CARD], isDone: false, continueCursor: "suite" })
+    const data = source()
+    const { result, rerender } = renderHook(() => data.usePageOpenOffers({ pageId: "page-1", cursor: null }))
+    expect(mocks.loaded).toHaveBeenCalledWith("modules/diaspora/jobs:pageOpenJobOffers", { networkId: "network-diasporale", pageId: "page-1", paginationOpts: { numItems: 6, cursor: null } })
+    expect(result.current).toMatchObject({ status: "ready", data: { items: [{ id: "job-1", employer: { id: "page-1" } }], isDone: false, continueCursor: "suite" } })
+    mocks.results.set("modules/diaspora/jobs:pageOpenJobOffers", null)
+    rerender()
+    expect(result.current).toEqual({ status: "ready", data: null })
+  })
+
   it("mes candidatures et les candidatures reçues : jamais le motif côté personne, le nom consenti côté page", () => {
     mocks.results.set("modules/diaspora/jobs:myJobApplications", { page: [MINE], isDone: true, continueCursor: "" })
     mocks.results.set("modules/diaspora/jobs:jobOfferApplications", { page: [RECEIVED], isDone: true, continueCursor: "" })

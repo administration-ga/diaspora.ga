@@ -141,6 +141,7 @@ function capability(): JobsCapability {
       return (mocks.searchPages.get(request.cursor ?? "first") ?? LOADING) as Page<JobOfferCardView>
     },
     useOffer: () => mocks.offer as Loadable<JobOfferDetailView | null>,
+    usePageOpenOffers: () => LOADING,
     usePageOffers: ({ cursor }) => (mocks.pageOffers.get(cursor ?? "first") ?? LOADING) as Page<JobOfferDetailView>,
     useMyApplications: ({ cursor }) => (mocks.mine.get(cursor ?? "first") ?? LOADING) as Page<MyJobApplicationView>,
     useOfferApplications: ({ cursor }) => (mocks.received.get(cursor ?? "first") ?? LOADING) as Page<ReceivedJobApplicationView>,
@@ -280,6 +281,8 @@ describe("/emploi/<id> — la fiche et la candidature", () => {
     expect(screen.getByText(/Aucune coordonnée/)).toBeTruthy()
     expect(screen.getByText("Sans date limite")).toBeTruthy()
     expect(screen.getByRole("button", { name: "Candidater" })).toBeTruthy()
+    // EM-04 : depuis une offre, les autres offres ouvertes de la page, sur sa fiche.
+    expect(screen.getByRole("link", { name: "Voir les offres de cette page" }).getAttribute("href")).toBe("/pages/traiteur-paris#emplois-de-la-page")
   })
 
   it("au gestionnaire : l'état et le lien de gestion ; à qui a candidaté : l'état de sa candidature, jamais un second envoi", () => {
@@ -288,6 +291,8 @@ describe("/emploi/<id> — la fiche et la candidature", () => {
     expect(screen.getByText("Suspendue")).toBeTruthy()
     // L'onglet « Emplois » de la gestion de SA page : jamais la première page d'un sélecteur (docs/32 §10).
     expect(screen.getByRole("link", { name: "Gérer les emplois de la page" }).getAttribute("href")).toBe("/pages/traiteur-paris/gerer?onglet=emplois")
+    // L'équipe gère ses offres : le renvoi vers la rubrique publique ne lui est pas proposé.
+    expect(screen.queryByRole("link", { name: "Voir les offres de cette page" })).toBeNull()
     expect(screen.queryByRole("button", { name: "Candidater" })).toBeNull()
     view.unmount()
     mocks.offer = { status: "ready", data: detail("job-1", { myApplication: { id: "app-1", status: "shortlisted" } }) }

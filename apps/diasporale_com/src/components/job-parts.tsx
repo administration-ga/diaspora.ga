@@ -189,8 +189,12 @@ export function JobsUnavailable() {
   return <EmptyState icon={<BriefcaseBusinessIcon />} title={t("jobs.unavailable.title")} description={t("jobs.unavailable.body")} />
 }
 
-/** Une offre dans une liste : contrat, mode, page qui recrute (badge calculé), lieu, rémunération annoncée, date limite. */
-export function JobOfferCard(props: { readonly offer: JobOfferCardView }) {
+/**
+ * Une offre dans une liste : contrat, mode, page qui recrute (badge calculé), lieu,
+ * rémunération annoncée, date limite. Sur la fiche de la page elle-même, la page qui
+ * recrute ne se répète pas (`showEmployer={false}`).
+ */
+export function JobOfferCard(props: { readonly offer: JobOfferCardView; readonly showEmployer?: boolean }) {
   const { t, locale } = useDiasporaleT()
   const { offer } = props
   return (
@@ -202,10 +206,12 @@ export function JobOfferCard(props: { readonly offer: JobOfferCardView }) {
       <h3 className="min-w-0 break-words text-[15px] font-semibold leading-snug">
         <NextLink href={routes.jobOffer(offer.id)} className="rounded-sm hover:underline focus-visible:shadow-focus">{offer.title}</NextLink>
       </h3>
-      <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px]">
-        <span className="min-w-0 break-words font-medium">{t("jobs.card.by", { name: offer.employer.name })}</span>
-        <TrustBadge badge={offer.employer.badge} />
-      </p>
+      {props.showEmployer === false ? null : (
+        <p className="flex min-w-0 flex-wrap items-center gap-1.5 text-[13px]">
+          <span className="min-w-0 break-words font-medium">{t("jobs.card.by", { name: offer.employer.name })}</span>
+          <TrustBadge badge={offer.employer.badge} />
+        </p>
+      )}
       <p className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-muted-foreground">
         <span className="inline-flex min-w-0 items-center gap-1 break-words">
           <MapPinIcon className="size-3.5 shrink-0" aria-hidden />

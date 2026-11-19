@@ -61,6 +61,9 @@
       "place": "{{city}}, {{country}}",
       "closesAt": "Candidatures jusqu'au {{date}}"
     },
+    "pageSection": {
+      "title": "Emplois"
+    },
     "talentCard": {
       "skills": "Compétences déclarées",
       "languages": "Langues : {{languages}}"
@@ -98,6 +101,7 @@
       "unavailableBody": "Elle a peut-être été suspendue ou close, ou sa date limite est passée.",
       "employer": "La page qui recrute",
       "badgeNote": "Le badge dit qui est la page ; il ne garantit pas l'offre.",
+      "pageOffers": "Voir les offres de cette page",
       "place": "Lieu",
       "languages": "Langues de travail",
       "pay": "Rémunération annoncée",

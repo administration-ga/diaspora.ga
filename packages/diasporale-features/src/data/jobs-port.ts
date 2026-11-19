@@ -63,6 +63,8 @@ export const JOB_RESULTS_PAGE_SIZE = 12
 export const JOB_APPLICATIONS_PAGE_SIZE = 20
 /** Taille d'une fenêtre d'offres gérées. */
 export const MANAGED_JOBS_PAGE_SIZE = 20
+/** Taille d'une fenêtre de la rubrique « Emplois » d'une page (EM-04) : un aperçu, on poursuit à la demande. */
+export const PAGE_OPEN_JOBS_PAGE_SIZE = 6
 /** Taille d'une fenêtre de talents (le moteur plafonne à douze : on affine, on ne parcourt pas). */
 export const TALENT_RESULTS_PAGE_SIZE = 12
 
@@ -248,6 +250,12 @@ export interface JobsCapability {
   useSearch(request: JobSearchRequest): Loadable<JobsPage<JobOfferCardView>>
   /** Une offre ; `null` : indisponible pour ce lecteur (inconnue, suspendue, close, échue — même réponse). */
   useOffer(jobId: string): Loadable<JobOfferDetailView | null>
+  /**
+   * EM-04 : les offres OUVERTES d'une page, pour la rubrique « Emplois » de sa fiche —
+   * la projection de la recherche. `null` : page illisible pour ce lecteur (inconnue,
+   * d'ailleurs, fermée ou de nature non employeuse : même réponse).
+   */
+  usePageOpenOffers(request: { readonly pageId: string; readonly cursor: string | null }): Loadable<JobsPage<JobOfferCardView> | null>
   /** Les offres d'une page que je gère, dans tous leurs états. */
   usePageOffers(request: { readonly pageId: string; readonly status?: JobOfferStatus; readonly cursor: string | null }): Loadable<JobsPage<JobOfferDetailView>>
   createOffer(input: JobOfferInputView & { readonly pageId: string; readonly publish: boolean }): Promise<ActionResult<{ jobId: string; version: number; status: JobOfferStatus }>>
