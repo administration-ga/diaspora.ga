@@ -17,8 +17,8 @@ import { routes } from "./routes"
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Les adhésions qui voient « Inscrire une association / une entreprise » (annuaire, fil) :
- * tout membre en règle. Le serveur exige ensuite `verifiee`, et l'écran d'inscription dit à
+ * Les adhésions qui voient « Inscrire une association / une entreprise » dans l'annuaire des
+ * pages : tout membre en règle (dans le fil, la carte d'identité ne paraît qu'à qui publie). Le serveur exige ensuite `verifiee`, et l'écran d'inscription dit à
  * un membre non vérifié comment le devenir. Une adhésion suspendue ou quittée n'inscrit rien.
  */
 export const REGISTERING_STATUSES: readonly MembershipStatus[] = ["en_attente", "declaree", "verifiee"]

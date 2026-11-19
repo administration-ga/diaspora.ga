@@ -1,7 +1,7 @@
 import type { PageView } from "@diasporale/features/data"
 import { describe, expect, it } from "vitest"
 
-import { countryPagesPreview, RAIL_PAGES_MAX } from "./country-pages"
+import { countryPagesPreview, RAIL_OFFICIAL_PAGES_MAX, RAIL_PAGES_MAX } from "./country-pages"
 
 const page = (id: string, ownerKind: PageView["ownerKind"]): PageView => ({
   id,
@@ -32,6 +32,16 @@ describe("pages d'un pays dans le rail du fil", () => {
     const shared = page("double", "association")
     expect(countryPagesPreview({ officialPages: [], associations: [shared], companies: [shared] }).map((item) => item.id)).toEqual(["double"])
     expect(countryPagesPreview({ officialPages: [], associations: [shared], companies: [] }, 0)).toEqual([])
+  })
+
+  it("deux pages officielles au plus : associations et entreprises gardent leur place", () => {
+    const preview = countryPagesPreview({
+      officialPages: [page("o1", "institution"), page("o2", "institution"), page("o3", "institution")],
+      associations: [page("a1", "association")],
+      companies: [page("e1", "company")],
+    })
+    expect(preview.map((item) => item.id)).toEqual(["o1", "o2", "a1", "e1"])
+    expect(preview.filter((item) => item.ownerKind === "institution")).toHaveLength(RAIL_OFFICIAL_PAGES_MAX)
   })
 
   it("aucune page inscrite : un aperçu vide", () => {

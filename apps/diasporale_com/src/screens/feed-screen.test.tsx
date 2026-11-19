@@ -421,6 +421,20 @@ describe("/fil — le rail montre les pages du pays de résidence (AS-05)", () =
     expect(screen.getByRole("link", { name: "Toutes les pages du pays" })).toHaveAttribute("href", routes.pages({ country: "FR" }))
   })
 
+  it("une fenêtre vide qui annonce une suite renvoie à l'annuaire, sans dire « aucune page »", () => {
+    mocks.pages = { useHubPages: () => ({ status: "ready", data: { ...LISTS, associations: [], companies: [], more: { officialPages: false, associations: true, companies: false } } }) }
+    rail()
+    expect(screen.getByText("D'autres pages de ce pays se trouvent dans l'annuaire des pages.")).toBeTruthy()
+    expect(screen.queryByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeNull()
+  })
+
+  it("une lecture refusée garde le chemin vers l'annuaire, sans liste ni « aucune page »", () => {
+    mocks.pages = { useHubPages: () => ({ status: "error", code: "network_unavailable" }) }
+    rail()
+    expect(screen.getByRole("link", { name: "Toutes les pages du pays" })).toHaveAttribute("href", routes.pages({ country: "FR" }))
+    expect(screen.queryByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeNull()
+  })
+
   it("aucune page inscrite : le rail le dit ; avant la lecture ou sans annuaire, rien", () => {
     mocks.pages = { useHubPages: () => ({ status: "ready", data: { ...LISTS, associations: [], companies: [] } }) }
     rail()

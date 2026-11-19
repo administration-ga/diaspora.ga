@@ -16,7 +16,6 @@ import { FeedStories } from "@/components/feed-stories"
 import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
 import { StatusBanner } from "@/components/status-banner"
 import { countryPagesPreview } from "@/lib/country-pages"
-import { canSeeRegistration } from "@/lib/page-registration"
 import { normalizeFeedTag, routes } from "@/lib/routes"
 
 /** `/fil` — le fil et ses quatre portées (EXF-DG-13), « Mon pays » par défaut. */
@@ -186,8 +185,9 @@ function Feed(props: { membership: MembershipView }) {
                   {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
                 </button>
               </div>
-              {canSeeRegistration(props.membership.status) ? (
-                <div role="group" aria-label={t("feed.registerLabel")} className="flex flex-wrap gap-2 border-t border-border pt-3">
+              {/* Qui publie est en règle (`declaree` ou `verifiee`) : l'inscription lui est proposée ici ; un membre en
+                  attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. */}
+              <div role="group" aria-label={t("feed.registerLabel")} className="flex flex-wrap gap-2 border-t border-border pt-3">
                   <Button asChild size="sm" variant="ghost">
                     <NextLink href={routes.newPage("association")}>
                       <UsersRoundIcon aria-hidden />
@@ -200,8 +200,7 @@ function Feed(props: { membership: MembershipView }) {
                       {t("pageAdmin.myPages.createCompany")}
                     </NextLink>
                   </Button>
-                </div>
-              ) : null}
+              </div>
             </Card>
           ) : null}
 
@@ -263,8 +262,8 @@ function ListReturn(props: { postId: string | null; fallback: RefObject<HTMLAnch
 }
 
 /**
- * Rail droit (≥ 1 280 px) : le hub de mon pays et ses prochains évènements, lus
- * par la capacité des évènements du pays (HB-02). Leur nombre ne s'affiche que
+ * Rail droit (≥ 1 280 px) : le hub de mon pays, les pages du pays (AS-05) et ses
+ * prochains évènements, lus par la capacité des évènements du pays (HB-02). Leur nombre ne s'affiche que
  * mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit pas les
  * évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
  */
@@ -341,15 +340,18 @@ function RailCountryPages(props: { country: CountryCode }) {
 function RailCountryPagesRead(props: { capability: PagesCapability; country: CountryCode }) {
   const { t, locale } = useDiasporaleT()
   const result = props.capability.useHubPages(props.country)
-  if (result.status !== "ready") return null
-  const preview = countryPagesPreview(result.data)
+  if (result.status === "loading") return null
+  // Une lecture refusée ne dit ni liste ni « aucune page » : le chemin vers l'annuaire reste.
+  const preview = result.status === "ready" ? countryPagesPreview(result.data) : null
+  const more = result.status === "ready" && (result.data.more.officialPages || result.data.more.associations || result.data.more.companies)
   return (
     <section aria-labelledby="rail-pages" className="flex flex-col gap-3">
       <h2 id="rail-pages" className="font-display text-lg font-bold">
         {t("rail.pages.title", { country: countryName(props.country, locale) })}
       </h2>
-      {preview.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground">{t("rail.pages.empty")}</p>
+      {preview === null ? null : preview.length === 0 ? (
+        // Une fenêtre bornée peut ne rien garder d'un pays qui a des pages : on ne dit « aucune » que sans suite.
+        <p className="text-[13px] text-muted-foreground">{t(more ? "hub.pagesElsewhere" : "rail.pages.empty")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {preview.map((page) => (
@@ -358,7 +360,7 @@ function RailCountryPagesRead(props: { capability: PagesCapability; country: Cou
                 <Avatar id={page.id} name={page.name} shape="square" size="sm" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{page.name}</span>
-                  <span className="block truncate text-[13px] text-muted-foreground">{t(`pageAdmin.kind.${page.ownerKind}`)}</span>
+                  <span className="block truncate text-[13px] text-muted-foreground">{t(`page.kind.${page.ownerKind}`)}</span>
                 </span>
                 {page.badge !== "community" ? <TrustBadge badge={page.badge} /> : null}
               </NextLink>
