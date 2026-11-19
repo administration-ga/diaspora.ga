@@ -109,7 +109,11 @@ describe("rubrique « Emplois » de la fiche d'une page (EM-04)", () => {
     expect(render(tree()).container).toBeEmptyDOMElement()
     cleanup()
     mocks.jobs = { usePageOpenOffers: () => windowOf([offer("job-1", "Cuisinier (démo)")]) }
-    mocks.session = { status: "ready", data: { status: "signed_out" } } as Loadable<SessionView>
+    mocks.session = { status: "ready", data: { status: "anonymous" } }
+    expect(render(tree()).container).toBeEmptyDOMElement()
+    cleanup()
+    // Un compte sans adhésion à DIASPORALE ne lit pas la rubrique non plus.
+    mocks.session = { status: "ready", data: { status: "signed_in", account: { id: "account-me", idn: null, local: null, nameHints: {} }, membership: null } }
     expect(render(tree()).container).toBeEmptyDOMElement()
   })
 
