@@ -23,7 +23,7 @@
       "leaveDescription": "Vous perdrez l’accès aux échanges du groupe. Ce geste ne quitte pas l’association.",
       "close": "Fermer le groupe",
       "closeTitle": "Fermer le groupe de l’association",
-      "closeDescription": "Les échanges et les nouvelles adhésions s’arrêtent pour tous. Rien n’est supprimé : un administrateur de la page peut rouvrir le groupe.",
+      "closeDescription": "Plus personne ne lit ni ne publie dans le groupe, et personne ne peut le rejoindre. Rien n’est supprimé : un administrateur de la page peut le rouvrir.",
       "wall": "Échanges du groupe",
       "empty": "Aucune publication accessible pour le moment.",
       "authorUnavailable": "Membre indisponible",
@@ -49,7 +49,12 @@
       "unpinned": "La publication n’est plus épinglée.",
       "pinnedSection": "Épinglée par le groupe",
       "pinnedErrorTitle": "L’épingle du groupe n’a pas pu être lue",
-      "removed": "Publication retirée du groupe."
+      "removed": "Publication retirée du groupe.",
+      "removeOtherDescription": "La publication ne sera plus lisible dans le groupe. Son auteur la voit encore, marquée comme retirée.",
+      "pinPostOf": "Épingler en tête du groupe la publication de {{name}}",
+      "unpinPostOf": "Désépingler la publication de {{name}}",
+      "removePostOf": "Retirer cette publication de {{name}}",
+      "someone": "un membre"
     },
     "event": {
       "metaTitle": "Événement de l’association — DIASPORALE",

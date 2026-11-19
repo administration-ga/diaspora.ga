@@ -57,7 +57,7 @@ type AttendanceDto = NonNullable<FunctionReturnType<typeof ATTENDANCE.get>>
 type PresentDto = FunctionReturnType<typeof ATTENDANCE.listPresent>["items"][number]
 
 function groupView(row: GroupDto): AssociationGroupView {
-  return { groupId: row.groupId, pageId: row.pageId, name: row.name, state: row.state, closedAt: row.closedAt, role: row.role, isMember: row.isMember, canJoin: row.canJoin, canManage: row.canManage, canPublish: row.canPublish }
+  return { groupId: row.groupId, pageId: row.pageId, name: row.name, state: row.state, closedAt: row.closedAt, canReopen: row.canReopen, role: row.role, isMember: row.isMember, canJoin: row.canJoin, canManage: row.canManage, canPublish: row.canPublish }
 }
 function eventView(row: EventDto): AssociationEventView {
   return {
@@ -146,12 +146,13 @@ function createEngineGroupWall(deps: EngineSourceDeps, networkOf: () => Promise<
       )
       const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
       const page = useReadablePostsQuery(query, JSON.stringify(["association-group-wall", id, groupId, cursor, canRead]), canRead, error)
-      const data = useMemo(() => {
-        if (page.data === undefined) return undefined
-        const items = page.data.items.map(toPostView)
-        onPosts?.(items)
-        return { items, nextCursor: page.data.nextCursor === null ? null : { publishedAt: page.data.nextCursor.publishedAt, postId: page.data.nextCursor.postId as string }, lacunar: false }
+      const data = useMemo(() => page.data === undefined ? undefined : {
+        items: page.data.items.map(toPostView),
+        nextCursor: page.data.nextCursor === null ? null : { publishedAt: page.data.nextCursor.publishedAt, postId: page.data.nextCursor.postId as string },
+        lacunar: false,
       }, [page.data])
+      // La mémoire des réactions se nourrit au rendu, comme le mur d'une page.
+      if (data !== undefined) onPosts?.(data.items)
       // Un refus retire aussi les cartes déjà lues : aucune publication d'un groupe quitté ne reste à l'écran.
       return { ...page, data: page.error === null ? data : undefined }
     },
@@ -160,13 +161,8 @@ function createEngineGroupWall(deps: EngineSourceDeps, networkOf: () => Promise<
       const query = useAuthenticatedConvexQuery(GROUPS.getGroup, canRead && id ? { networkId: id, groupId: groupId as Id<"thematicGroups"> } : "skip")
       const error = memberReadError(member) ?? (query.isError ? engineActionErrorCode(query.error) : null)
       const readable = useReadablePostsQuery(query, JSON.stringify(["association-group-pinned", id, groupId, canRead]), canRead, error)
-      const data = useMemo(() => {
-        if (readable.data === undefined) return undefined
-        if (readable.data.pinned === null) return null
-        const post = toPostView(readable.data.pinned)
-        onPosts?.([post])
-        return post
-      }, [readable.data])
+      const data = useMemo(() => readable.data === undefined ? undefined : readable.data.pinned === null ? null : toPostView(readable.data.pinned), [readable.data])
+      if (data) onPosts?.([data])
       return { ...readable, data: readable.error === null ? data : undefined }
     },
     pin: ({ groupId, postId }) => attemptAction(async () => { await deps.convex.mutation(GROUPS.pinGroupPost, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, postId: postId as Id<"posts"> }); return null }),
@@ -220,7 +216,7 @@ export function createEngineAssociationActivities(deps: EngineSourceDeps, option
       }),
       publish: ({ groupId, body, idempotencyKey, media }) => attemptAction(async () => {
         const row = await deps.convex.mutation(api.modules.posts.posts.publish, { networkId: await networkOf(), groupId: groupId as Id<"thematicGroups">, body, idempotencyKey, audience: "group", reach: "diaspora", alsoOnRoot: false, ...(media && media.length > 0 ? { media: media.map(toDeclaredMedia) } : {}) })
-        return { postId: row.postId as string, created: row.created }
+        return { postId: row.postId as string, created: row.created, moderation: row.moderation }
       }),
       removePost: ({ postId, isMine }) => attemptAction(async () => {
         await deps.convex.mutation(isMine ? api.modules.posts.posts.remove : GROUPS.removeGroupPost, { networkId: await networkOf(), postId: postId as Id<"posts"> })

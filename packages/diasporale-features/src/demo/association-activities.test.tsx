@@ -154,7 +154,7 @@ describe("activités associatives — groupe privé de démonstration", () => {
     let postId = ""
     await act(async () => {
       const result = await context.groups.publish({ groupId, body: "  Bonjour au groupe.  ", idempotencyKey: "post-demo-key" })
-      expect(result).toEqual({ ok: true, value: { postId: expect.any(String), created: true } })
+      expect(result).toEqual({ ok: true, value: { postId: expect.any(String), created: true, moderation: "pending_review" } })
       if (result.ok) postId = result.value.postId
     })
     expect(ready(posts.result.current).items[0]).toMatchObject({ body: "Bonjour au groupe.", isMine: true, moderation: "pending_review" })
@@ -162,7 +162,7 @@ describe("activités associatives — groupe privé de démonstration", () => {
     expect(ready(posts.result.current).items[0]?.author).not.toHaveProperty("handle")
     expect(context.store.getState().posts).toBe(initialPosts)
     // Rejouée, la même clé rend la même publication, sans en créer une autre.
-    expect(await context.groups.publish({ groupId, body: "Autre corps rejoué.", idempotencyKey: "post-demo-key" })).toEqual({ ok: true, value: { postId, created: false } })
+    expect(await context.groups.publish({ groupId, body: "Autre corps rejoué.", idempotencyKey: "post-demo-key" })).toEqual({ ok: true, value: { postId, created: false, moderation: "pending_review" } })
     expect(stored(context).posts).toHaveLength(1)
     await as(context.store, "p-steeve")
     expect(ready(posts.result.current).items).toEqual([])
@@ -215,9 +215,10 @@ describe("activités associatives — groupe privé de démonstration", () => {
     const view = renderHook(() => context.groups.useGroup(PAGE))
     clock = NOW + HOUR
     await act(async () => { await context.groups.close(groupId) })
-    expect(ready(view.result.current)).toMatchObject({ state: "closed", closedAt: NOW + HOUR, canManage: true })
+    expect(ready(view.result.current)).toMatchObject({ state: "closed", closedAt: NOW + HOUR, canReopen: true, canManage: true })
     expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW })).toEqual({ ok: false, code: "association_group_changed" })
     await as(context.store, "p-nadia")
+    expect(ready(view.result.current)).toMatchObject({ state: "closed", closedAt: null, canReopen: false })
     expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW + HOUR })).toEqual({ ok: false, code: "not_found" })
     await as(context.store, "p-steeve")
     await act(async () => { expect(await context.groups.reopen({ groupId, expectedClosedAt: NOW + HOUR })).toEqual({ ok: true, value: null }) })

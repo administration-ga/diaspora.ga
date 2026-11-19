@@ -129,8 +129,12 @@ describe("groupe d'une association — mur au format du fil (AS-08)", () => {
     renderHook(() => wall.useWall({ groupId: "group-1", cursor: null }))
     expect(lastArgs(WALL)).toBe("skip")
     mocks.convexAuth = { isAuthenticated: true, isLoading: false }
+    mocks.queries.set(WALL, ok({ items: [POST], nextCursor: null }))
+    const { result, rerender } = renderHook(() => wall.useWall({ groupId: "group-1", cursor: null }))
+    expect(result.current.data?.items.map((post) => post.id)).toEqual(["post-groupe-1"])
+    // Le membre quitte le groupe : le refus retire les cartes déjà lues.
     mocks.queries.set(WALL, refused("notFound"))
-    const { result } = renderHook(() => wall.useWall({ groupId: "group-1", cursor: null }))
+    rerender()
     expect(result.current.data).toBeUndefined()
     expect(result.current.error).toBe("not_found")
   })
@@ -153,7 +157,7 @@ describe("groupe d'une association — gestes au moteur (AS-03, AS-08)", () => {
     mutation.mockResolvedValueOnce({ state: "active" })
     expect(await groups.reopen({ groupId: "group-1", expectedClosedAt: 42 })).toEqual({ ok: true, value: null })
     mutation.mockResolvedValueOnce({ postId: "post-groupe-2", created: true, moderation: "published" })
-    expect(await groups.publish({ groupId: "group-1", body: "Photos de samedi.", idempotencyKey: "cle-media", media: [MEDIA] })).toEqual({ ok: true, value: { postId: "post-groupe-2", created: true } })
+    expect(await groups.publish({ groupId: "group-1", body: "Photos de samedi.", idempotencyKey: "cle-media", media: [MEDIA] })).toEqual({ ok: true, value: { postId: "post-groupe-2", created: true, moderation: "published" } })
     expect(await wall.pin({ groupId: "group-1", postId: "post-groupe-2" })).toEqual({ ok: true, value: null })
     expect(await wall.unpin("group-1")).toEqual({ ok: true, value: null })
     expect(mutation.mock.calls.map(([ref, args]) => [getFunctionName(ref as never), args])).toEqual([

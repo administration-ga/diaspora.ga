@@ -15,6 +15,8 @@ const publish = vi.fn<(input: PublishInput) => Promise<ActionResult<{ moderation
 const uploadMedia = vi.fn<(file: File) => Promise<ActionResult<UploadedMedia>>>()
 const onClose = vi.fn()
 const pagePublish = vi.fn<PagePublicationsCapability["publish"]>()
+const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
+vi.mock("sonner", () => ({ toast: toasts }))
 const source = { kind: "engine", actions: { publish, uploadMedia } } as unknown as DiasporaleDataSource
 
 function deferred<T>() {
@@ -303,5 +305,49 @@ describe("Composeur — portée fixe de galerie, sans changer les pages ordinair
     expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "page-1", body: "Un texte ordinaire de la page", reach: "local", audience: "followers" })
     expect(pagePublish.mock.calls[0]?.[0].media).toBeUndefined()
     expect(uploadMedia).not.toHaveBeenCalled()
+  })
+})
+
+describe("Composeur — le groupe d'une association parle sous ses propres mots (AS-08)", () => {
+  const WORDS = {
+    title: "Publier dans le groupe de recette",
+    identity: "Vous publiez en votre nom dans Groupe de recette",
+    placeholder: "Que voulez-vous partager avec le groupe de recette ?",
+    sentNotice: "Publication envoyée dans le groupe de recette.",
+  }
+  function GroupComposer() {
+    const [open, setOpen] = useState(true)
+    return <I18nProvider locale="fr"><DataSourceProvider source={source}>
+      <button onClick={() => setOpen(true)}>Reprendre</button>
+      <PostComposerSheet open={open} onOpenChange={setOpen} memberCountry="FR" openCountries={["FR"]} draftKey="recette:groupe" page={{ id: "group-1", name: "Groupe de recette", country: null, publish: pagePublish, fixedScope: { description: "Votre publication reste dans le groupe de recette.", audienceLabel: "Membres du groupe de recette", requireMedia: false, ...WORDS } }} />
+    </DataSourceProvider></I18nProvider>
+  }
+
+  beforeEach(() => {
+    pagePublish.mockReset()
+    toasts.success.mockReset()
+  })
+
+  it("titre, identité et invite du groupe, sans la voix de la page ; l'avis dit l'envoi, ou la relecture quand elle retient la publication", async () => {
+    const user = userEvent.setup()
+    render(<GroupComposer />)
+    expect(screen.getByRole("dialog", { name: WORDS.title })).toBeVisible()
+    expect(screen.getByText(WORDS.identity)).toBeVisible()
+    expect(screen.queryByText(t("pagePublications.networkNotice"))).not.toBeInTheDocument()
+    expect(screen.getByText("Membres du groupe de recette")).toBeVisible()
+    const body = screen.getByRole("textbox", { name: t("composer.bodyLabel") })
+    expect(body).toHaveAttribute("placeholder", WORDS.placeholder)
+
+    pagePublish.mockResolvedValueOnce({ ok: true, value: { postId: "post-1", created: true, moderation: "published" } })
+    await user.type(body, "Rendez-vous samedi.")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledWith(WORDS.sentNotice))
+    expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "group-1", body: "Rendez-vous samedi.", reach: "diaspora" })
+
+    pagePublish.mockResolvedValueOnce({ ok: true, value: { postId: "post-2", created: true, moderation: "pending_review" } })
+    await user.click(screen.getByRole("button", { name: "Reprendre" }))
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Un second message.")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(toasts.success).toHaveBeenLastCalledWith(t("composer.sentForReview")))
   })
 })

@@ -73,6 +73,10 @@ vi.mock("@diasporale/features/i18n/client", () => ({
 }))
 
 vi.mock("sonner", () => ({ toast: { error: mocks.error, success: mocks.success } }))
+// La feuille de confirmation a ses propres tests ; ici, confirmer exécute le geste.
+vi.mock("./service-request-sheets", () => ({
+  ConfirmSheet: (props: { title: string; onConfirm: () => Promise<unknown> }) => <button type="button" onClick={() => void props.onConfirm()}>confirmer : {props.title}</button>,
+}))
 
 // Les vraies règles de chaîne du moteur restent actives ; seules les cartes,
 // leurs propres dialogues et les lectures réseau sont remplacés.
@@ -591,28 +595,35 @@ describe("GroupPostPages — AS-08 : le mur du groupe d'une association au forma
     expect(screen.getAllByRole("article").map((article) => article.getAttribute("aria-label"))).toEqual(["épinglée", "courante"])
     expect(within(screen.getByRole("region", { name: "associationActivities.group.pinnedSection" })).getByRole("article", { name: "épinglée" })).toBeInTheDocument()
     // Sans rôle d'animation, aucun geste collectif sous les cartes.
-    expect(screen.queryByRole("button", { name: "associationActivities.group.pin" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "associationActivities.group.removePost" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.pinPostOf" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.removePostOf" })).not.toBeInTheDocument()
   })
 
-  it("qui anime le groupe épingle, désépingle et voit « Retirer » sous chaque publication publiée", async () => {
+  it("qui anime le groupe épingle, désépingle et retire la publication d'autrui ; la sienne se retire par le menu de la carte", async () => {
     mocks.groupPinned = { data: post("épinglée"), isLoading: false, error: null, retry: vi.fn() }
-    setGroupPage(null, [post("courante"), { ...post("en relecture"), moderation: "pending_review" }], null)
+    setGroupPage(null, [post("courante"), { ...post("la mienne"), isMine: true }, { ...post("en relecture"), moderation: "pending_review" }], null)
     render(groupTree({ moderator: true }))
-    expect(screen.getAllByRole("button", { name: "associationActivities.group.removePost" })).toHaveLength(2)
-    fireEvent.click(screen.getByRole("button", { name: "associationActivities.group.pin" }))
+    // Épingler : chaque publication publiée ; retirer : celle d'autrui seulement (épinglée et courante).
+    expect(screen.getAllByRole("button", { name: "associationActivities.group.pinPostOf" })).toHaveLength(2)
+    expect(screen.getAllByRole("button", { name: "associationActivities.group.removePostOf" })).toHaveLength(2)
+    const pins = screen.getAllByRole("button", { name: "associationActivities.group.pinPostOf" })
+    fireEvent.click(pins[0]!)
     await vi.waitFor(() => expect(mocks.pin).toHaveBeenCalledWith({ groupId: "group-1", postId: "courante" }))
     await vi.waitFor(() => expect(mocks.success).toHaveBeenCalledWith("associationActivities.group.pinned"))
-    fireEvent.click(screen.getByRole("button", { name: "associationActivities.group.unpin" }))
+    fireEvent.click(screen.getByRole("button", { name: "associationActivities.group.unpinPostOf" }))
     await vi.waitFor(() => expect(mocks.unpin).toHaveBeenCalledWith("group-1"))
+    // Retirer la publication d'autrui passe par le geste d'animation du groupe, jamais par la suppression d'auteur.
+    fireEvent.click(screen.getAllByRole("button", { name: "associationActivities.group.removePostOf" })[1]!)
+    fireEvent.click(screen.getByRole("button", { name: /^confirmer/ }))
+    await vi.waitFor(() => expect(mocks.removeGroupPost).toHaveBeenCalledWith({ groupId: "group-1", postId: "courante", isMine: false }))
   })
 
   it("un membre en attente n'a pas de geste d'animation, même responsable ; seule l'épinglée n'est pas un mur vide", () => {
     mocks.groupPinned = { data: post("épinglée"), isLoading: false, error: null, retry: vi.fn() }
     setGroupPage(null, [post("épinglée")], null)
     render(groupTree({ moderator: true, membership: { ...membership, status: "en_attente", canPublish: false } }))
-    expect(screen.queryByRole("button", { name: "associationActivities.group.pin" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "associationActivities.group.unpin" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.pinPostOf" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "associationActivities.group.unpinPostOf" })).not.toBeInTheDocument()
     expect(screen.queryByText("Groupe vide confirmé")).not.toBeInTheDocument()
   })
 

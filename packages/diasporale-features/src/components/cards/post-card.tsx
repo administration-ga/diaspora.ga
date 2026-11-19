@@ -92,7 +92,8 @@ export function PostCard(props: {
                 </time>
               </Link>
               {post.edited ? <span>· {t("post.edited")}</span> : null}
-              <ContentScopeTag scope={post.scope} {...(props.hubCountry ? { hubCountry: props.hubCountry } : {})} />
+              {/* AS-08 : une publication de groupe reste dans le groupe ; « Diaspora » la dirait visible de toute la diaspora. */}
+              {post.audience === "group" ? null : <ContentScopeTag scope={post.scope} {...(props.hubCountry ? { hubCountry: props.hubCountry } : {})} />}
             </div>
           </div>
           <PostMenu post={post} />

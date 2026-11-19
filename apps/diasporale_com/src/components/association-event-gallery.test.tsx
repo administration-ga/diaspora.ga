@@ -222,7 +222,7 @@ describe("DG-023 — publication et retrait collectifs de galerie", () => {
     await act(async () => { vi.advanceTimersByTime(400) })
     await act(async () => { pending.finish({ ok: true, value: { postId: "old-created", created: true } }); await pending.promise })
     expect(screen.getByRole("textbox", { name: t("composer.bodyLabel") })).toHaveValue("Nouveau brouillon à conserver")
-    expect(JSON.parse(window.localStorage.getItem(`diasporale:event-gallery:${MEMBER.personId}:${EVENT.pageId}:${EVENT.eventId}`) ?? "null").body).toBe("Nouveau brouillon à conserver")
+    expect(JSON.parse(window.localStorage.getItem(`diasporale:brouillon:${MEMBER.personId}:event-gallery:${EVENT.pageId}:${EVENT.eventId}`) ?? "null").body).toBe("Nouveau brouillon à conserver")
     expect(mocks.success).not.toHaveBeenCalled()
   })
 

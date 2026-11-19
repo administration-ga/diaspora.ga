@@ -86,7 +86,7 @@ const MEMBER: MembershipView = {
   root: { network: "antsia", status: "declaree", derivedFrom: "diasporale" }, canPublish: true, rateTier: "standard", directoryVisibility: "hidden",
 }
 const GROUP: AssociationGroupView = {
-  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, role: "member",
+  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, canReopen: false, role: "member",
   isMember: true, canJoin: false, canManage: false, canPublish: true,
 }
 const POST: AssociationGroupPostView = {
@@ -742,7 +742,7 @@ describe("DG-023 — clôture et rappel personnel", () => {
 // ── AS-03 et AS-08 : rouvrir le groupe ; le mur au format du fil ─────────────
 
 describe("groupe d'une association — rouvrir (AS-03) et mur au format du fil (AS-08)", () => {
-  const CLOSED: AssociationGroupView = { ...GROUP, state: "closed", closedAt: NOW - 60_000, role: "owner", canManage: true, canPublish: false }
+  const CLOSED: AssociationGroupView = { ...GROUP, state: "closed", closedAt: NOW - 60_000, canReopen: true, role: "owner", canManage: true, canPublish: false }
 
   it("l'administrateur rouvre le groupe fermé en citant la fermeture lue", async () => {
     mocks.group = { status: "ready", data: CLOSED }
@@ -754,8 +754,14 @@ describe("groupe d'une association — rouvrir (AS-03) et mur au format du fil (
     expect(mocks.success).toHaveBeenCalledWith(t("associationActivities.group.reopened"))
   })
 
+  it("un responsable que le fournisseur ne laisse pas rouvrir (groupe archivé, retiré) ne voit pas « Rouvrir »", () => {
+    mocks.group = { status: "ready", data: { ...CLOSED, closedAt: null, canReopen: false } }
+    render(groupTree())
+    expect(screen.queryByRole("button", { name: t("associationActivities.group.reopen") })).not.toBeInTheDocument()
+  })
+
   it("un membre sans gestion lit que le groupe est fermé, sans « Rouvrir »", () => {
-    mocks.group = { status: "ready", data: { ...CLOSED, role: "member", canManage: false } }
+    mocks.group = { status: "ready", data: { ...CLOSED, closedAt: null, canReopen: false, role: "member", canManage: false } }
     render(groupTree())
     expect(screen.getByText(t("associationActivities.group.closed"))).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: t("associationActivities.group.reopen") })).not.toBeInTheDocument()
@@ -776,7 +782,9 @@ describe("groupe d'une association — rouvrir (AS-03) et mur au format du fil (
     expect(mocks.readPosts).not.toHaveBeenCalled()
     expect(screen.getByText(t("associationActivities.group.empty"))).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: t("associationActivities.group.compose") }))
-    const props = mocks.composer.mock.lastCall?.[0] as { page: { id: string; name: string; publish: (input: unknown) => Promise<unknown>; fixedScope: Record<string, unknown> } }
+    const props = mocks.composer.mock.lastCall?.[0] as { draftKey: string; page: { id: string; name: string; publish: (input: unknown) => Promise<unknown>; fixedScope: Record<string, unknown> } }
+    // Le brouillon d'un message privé au groupe s'efface à la déconnexion, comme tous les brouillons.
+    expect(props.draftKey).toBe(`diasporale:brouillon:${MEMBER.personId}:association-group:group-1`)
     expect(props.page).toMatchObject({ id: "group-1", name: "Groupe privé de recette" })
     expect(props.page.fixedScope).toMatchObject({
       requireMedia: false,

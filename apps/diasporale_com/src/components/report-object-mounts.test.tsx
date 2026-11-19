@@ -126,7 +126,7 @@ afterEach(() => {
 // ── AS-02 : les publications du mur d'un groupe d'association ─────────────
 
 const GROUP: AssociationGroupView = {
-  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, role: "member",
+  groupId: "group-1", pageId: "page-1", name: "Groupe privé de recette", state: "active", closedAt: null, canReopen: false, role: "member",
   isMember: true, canJoin: false, canManage: false, canPublish: true,
 }
 const THEIRS: AssociationGroupPostView = {

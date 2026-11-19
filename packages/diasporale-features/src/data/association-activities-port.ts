@@ -4,7 +4,7 @@ import { isPageEventCancellationReason, PAGE_EVENT_CANCELLATION_REASONS, type Pa
 import type { PagePinnedQuery } from "./page-publications-port"
 import type { ActionResult, PublishMediaInput } from "./port"
 import type { FeedCursorView, FeedPageQuery, Loadable } from "./types"
-import type { AssociationEventReminderState, CountryCode } from "@diasporale/domain"
+import type { AssociationEventReminderState, ContentModerationState, CountryCode } from "@diasporale/domain"
 import type { AssociationEventAttendanceCapability } from "./association-attendance-port"
 import type { AssociationEventGalleryCapability } from "./association-event-gallery-port"
 import type { AssociationEventCalendarCapability } from "./association-event-calendar-port"
@@ -47,8 +47,10 @@ export interface AssociationGroupView {
   readonly pageId: string
   readonly name: string
   readonly state: "active" | "closed"
-  /** AS-03 : la fermeture en vigueur, que cite une réouverture ; `null` pour un groupe actif. */
+  /** AS-03 : la fermeture en vigueur, que cite la réouverture ; servie au seul responsable qui peut rouvrir. */
   readonly closedAt: number | null
+  /** AS-03 : la réouverture serait admise pour ce lecteur (mêmes gardes que le fournisseur). */
+  readonly canReopen: boolean
   readonly role: "owner" | "moderator" | "member" | null
   readonly isMember: boolean
   readonly canJoin: boolean
@@ -94,7 +96,7 @@ export interface AssociationGroupsCapability {
   /** AS-03 : rouvrir, en citant la fermeture lue ; l'administrateur de la page seul. */
   reopen(input: { readonly groupId: string; readonly expectedClosedAt: number }): Promise<ActionResult>
   /** Dans le groupe seulement ; aucune audience publique ni publication racine. Photos ou vidéo jointes (AS-08). */
-  publish(input: { readonly groupId: string; readonly body: string; readonly idempotencyKey: string; readonly media?: readonly PublishMediaInput[] }): Promise<ActionResult<{ readonly postId: string; readonly created: boolean }>>
+  publish(input: { readonly groupId: string; readonly body: string; readonly idempotencyKey: string; readonly media?: readonly PublishMediaInput[] }): Promise<ActionResult<{ readonly postId: string; readonly created: boolean; readonly moderation?: ContentModerationState }>>
   removePost(input: { readonly groupId: string; readonly postId: string; readonly isMine: boolean }): Promise<ActionResult>
 }
 

@@ -3,8 +3,10 @@
 /**
  * DG-010 : entrée volontaire et mur privé du groupe thématique lié à l'association.
  * AS-02 : chaque publication d'autrui du mur se signale (nature « post ») et se masque
- * aussitôt pour qui l'a signalée ; jamais la sienne, ni par qui anime le groupe (il la
- * retire lui-même). Le groupe en tant que tel attend sa cible au moteur (MC-01).
+ * aussitôt pour qui l'a signalée ; dans le mur en texte, jamais la sienne, ni par qui
+ * anime le groupe (il la retire lui-même). Dans le mur au format du fil (AS-08), le menu
+ * de la carte propose « Signaler » à tout membre, animateur compris : signaler porte la
+ * publication au guichet du réseau, retirer ne l'écarte que du groupe.
  * AS-03 : l'administrateur de la page rouvre le groupe qu'il a fermé.
  * AS-08 : quand le fournisseur sert le mur au format du fil, le groupe prend les cartes du
  * fil (réactions, commentaires, signalement, profil de l'auteur) et le composeur à médias ;
@@ -97,13 +99,13 @@ function GroupContent(props: { readonly pageId: string; readonly capability: Ass
         <h1 className="font-display text-2xl font-bold">{group.name}</h1>
         <p className="text-sm text-muted-foreground">{t("associationActivities.group.lead")}</p>
         {group.state === "closed" ? <p role="status">{t("associationActivities.group.closed")}</p> : null}
-        {group.state === "closed" && group.canManage && group.closedAt !== null ? <p className="text-sm text-muted-foreground">{t("associationActivities.group.closedManage")}</p> : null}
+        {group.state === "closed" && group.canReopen && group.closedAt !== null ? <p className="text-sm text-muted-foreground">{t("associationActivities.group.closedManage")}</p> : null}
         {!group.isMember && !group.canJoin && group.state === "active" ? <p>{t("associationActivities.group.eligibility")}</p> : null}
         <div className="flex flex-wrap gap-2">
           {group.canJoin ? <Button variant="social" disabled={task.busy} aria-busy={task.busy} onClick={() => void task.run(() => props.capability.join(group.groupId), () => toast.success(t("associationActivities.group.joined")))}>{t("associationActivities.group.join")}</Button> : null}
           {group.isMember ? <Button variant="outline" onClick={() => setConfirmation("leave")}>{t("associationActivities.group.leave")}</Button> : null}
           {group.canManage && group.state === "active" ? <Button variant="ghost" onClick={() => setConfirmation("close")}>{t("associationActivities.group.close")}</Button> : null}
-          {group.canManage && group.state === "closed" && group.closedAt !== null ? (
+          {group.state === "closed" && group.canReopen && group.closedAt !== null ? (
             <Button
               variant="outline"
               disabled={task.busy}
@@ -164,7 +166,7 @@ function GroupFeedWall(props: { readonly group: AssociationGroupView; readonly c
           onOpenChange={setCompose}
           memberCountry={props.membership.facet.countryOfResidence}
           openCountries={[]}
-          draftKey={`diasporale:association-group:${props.membership.personId}:${group.groupId}`}
+          draftKey={`diasporale:brouillon:${props.membership.personId}:association-group:${group.groupId}`}
           page={{
             id: group.groupId,
             name: group.name,

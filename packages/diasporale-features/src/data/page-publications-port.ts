@@ -4,7 +4,7 @@
  * L'audience publique reste dans le réseau suivant la règle collective de la
  * page ; aucun choix individuel de diffusion sur ANTSIA n'est proposé ici.
  */
-import type { Reach } from "@diasporale/domain"
+import type { ContentModerationState, Reach } from "@diasporale/domain"
 
 import type { ActionErrorCode } from "./errors"
 import type { ActionResult, PublishMediaInput } from "./port"
@@ -69,7 +69,8 @@ export interface PagePublicationsCapability {
   /** Chaque fenêtre repasse la garde du mur de la page et du lecteur courant. */
   useWall(args: PageWallRequest): FeedPageQuery
   /** Le pays local est celui de la page, jamais celui du signataire. */
-  publish(input: PagePublicationInput): Promise<ActionResult<{ readonly postId: string; readonly created: boolean }>>
+  /** `moderation` : l'état rendu par le fournisseur ; une publication retenue en relecture se dit comme telle. */
+  publish(input: PagePublicationInput): Promise<ActionResult<{ readonly postId: string; readonly created: boolean; readonly moderation?: ContentModerationState }>>
   /** Tous les signataires vivants peuvent retirer une publication de leur page. */
   remove(input: { readonly pageId: string; readonly postId: string }): Promise<ActionResult>
   /** Modifier le texte sous mandat vivant ; les médias et l'audience restent ceux du post. */

@@ -355,8 +355,9 @@ export function PostComposerSheet(props: {
       return
     }
     setPublishKey(newPublishKey())
-    if (page) toast.success(fixedScope?.sentNotice ?? t("pagePublications.sent", { name: page.name }))
-    else toast.success(t(publishNoticeKey("moderation" in result.value ? result.value.moderation : null, share !== null)))
+    // Une publication retenue en relecture le dit, même dans une page ou un groupe : l'auteur sait pourquoi elle n'apparaît pas encore.
+    if (page) toast.success("moderation" in result.value && result.value.moderation === "pending_review" ? t("composer.sentForReview") : (fixedScope?.sentNotice ?? t("pagePublications.sent", { name: page.name })))
+    else toast.success(t(publishNoticeKey("moderation" in result.value ? (result.value.moderation ?? null) : null, share !== null)))
     if (draftKey) writeDraft(draftKey, { body: "", reach: hasFixedScope ? "diaspora" : DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
     form.reset(defaults)

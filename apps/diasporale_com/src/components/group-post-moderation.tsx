@@ -4,7 +4,8 @@
  * AS-08 : les gestes de qui anime le groupe d'une association (responsable, animateur),
  * sous une carte du mur : épingler en tête ou désépingler, retirer du groupe. Le moteur
  * relit l'autorité vivante à chaque geste ; l'auteur retire sa propre publication par le
- * menu de la carte, comme dans le fil.
+ * menu de la carte, comme dans le fil : « Retirer » ne s'offre ici que pour celle d'autrui.
+ * Chaque bouton nomme l'auteur de sa carte, pour qui parcourt la liste des boutons.
  */
 import { Button } from "@diasporale/features"
 import type { ActionErrorCode, ActionResult, AssociationGroupWallCapability, PostView } from "@diasporale/features/data"
@@ -37,6 +38,7 @@ export function GroupPostModeration(props: GroupPostModerationProps) {
   }, [])
   const pinned = props.pinnedPostId === props.post.id
   const PinGlyph = pinned ? PinOffIcon : PinIcon
+  const name = props.post.author.displayName ?? t("associationActivities.group.someone")
 
   const togglePin = async () => {
     if (locked.current) return
@@ -56,7 +58,7 @@ export function GroupPostModeration(props: GroupPostModerationProps) {
   }
 
   const confirmRemove = async (): Promise<ActionErrorCode | null> => {
-    const result = await props.remove({ groupId: props.groupId, postId: props.post.id, isMine: props.post.isMine })
+    const result = await props.remove({ groupId: props.groupId, postId: props.post.id, isMine: false })
     if (!result.ok) return result.code
     toast.success(t("associationActivities.group.removed"))
     return null
@@ -64,20 +66,29 @@ export function GroupPostModeration(props: GroupPostModerationProps) {
 
   return (
     <div className="flex flex-wrap justify-end gap-2">
-      <Button variant="ghost" disabled={busy || !props.pinReady} aria-busy={busy} onClick={() => void togglePin()} className="h-auto min-h-11 max-w-full whitespace-normal py-2 text-left">
+      <Button
+        variant="ghost"
+        disabled={busy || !props.pinReady}
+        aria-busy={busy}
+        aria-label={t(pinned ? "associationActivities.group.unpinPostOf" : "associationActivities.group.pinPostOf", { name })}
+        onClick={() => void togglePin()}
+        className="h-auto min-h-11 max-w-full whitespace-normal py-2 text-left"
+      >
         <PinGlyph aria-hidden />
         <span className="min-w-0 break-words">{t(pinned ? "associationActivities.group.unpin" : "associationActivities.group.pin")}</span>
       </Button>
-      <Button variant="ghost" onClick={() => setRemoving(true)} className="h-auto min-h-11 max-w-full whitespace-normal py-2 text-left">
-        <Trash2Icon aria-hidden />
-        <span className="min-w-0 break-words">{t("associationActivities.group.removePost")}</span>
-      </Button>
+      {props.post.isMine ? null : (
+        <Button variant="ghost" aria-label={t("associationActivities.group.removePostOf", { name })} onClick={() => setRemoving(true)} className="h-auto min-h-11 max-w-full whitespace-normal py-2 text-left">
+          <Trash2Icon aria-hidden />
+          <span className="min-w-0 break-words">{t("associationActivities.group.removePost")}</span>
+        </Button>
+      )}
       {removing ? (
         <ConfirmSheet
           open
           onOpenChange={(open) => { if (!open) setRemoving(false) }}
           title={t("associationActivities.group.removePost")}
-          description={t("associationActivities.group.removeDescription")}
+          description={t("associationActivities.group.removeOtherDescription")}
           confirmLabel={t("associationActivities.group.removePost")}
           destructive
           onConfirm={confirmRemove}

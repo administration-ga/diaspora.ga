@@ -23,7 +23,7 @@
       "leaveDescription": "You will lose access to group discussions. This does not end your association membership.",
       "close": "Close the group",
       "closeTitle": "Close the association group",
-      "closeDescription": "Posts and new members stop for everyone. Nothing is deleted: a page administrator can reopen the group.",
+      "closeDescription": "Nobody can read or post in the group any more, and nobody can join it. Nothing is deleted: a page administrator can reopen it.",
       "wall": "Group discussions",
       "empty": "No accessible posts yet.",
       "authorUnavailable": "Member unavailable",
@@ -49,7 +49,12 @@
       "unpinned": "The post is no longer pinned.",
       "pinnedSection": "Pinned by the group",
       "pinnedErrorTitle": "The group’s pinned post could not be loaded",
-      "removed": "Post removed from the group."
+      "removed": "Post removed from the group.",
+      "removeOtherDescription": "The post will no longer be readable in the group. Its author still sees it, marked as removed.",
+      "pinPostOf": "Pin to the top of the group the post by {{name}}",
+      "unpinPostOf": "Unpin the post by {{name}}",
+      "removePostOf": "Remove this post by {{name}}",
+      "someone": "a member"
     },
     "event": {
       "metaTitle": "Association event — DIASPORALE",

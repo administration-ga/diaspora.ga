@@ -72,7 +72,7 @@ function GalleryBody(props: GalleryProps & { readonly member: MembershipView; re
     <p className="text-sm font-medium">{props.audienceLabel}</p>
     {props.canPublish ? <>
       <Button className="self-start" onClick={() => { if (isAssociationEventGalleryOpen(props.event, Date.now())) setCompose(true) }}><ImagePlus aria-hidden className="size-4" />{t("eventGallery.add")}</Button>
-      {compose ? <PostComposerSheet open onOpenChange={setCompose} memberCountry={props.member.facet.countryOfResidence} openCountries={[]} draftKey={`diasporale:event-gallery:${props.member.personId}:${props.event.pageId}:${props.event.eventId}`} page={{ id: props.event.pageId, name: props.event.organizer.name, country: null, publish, fixedScope: { description: t("eventGallery.composeDescription", { title: props.event.title }), audienceLabel: props.audienceLabel, requireMedia: true } }} /> : null}
+      {compose ? <PostComposerSheet open onOpenChange={setCompose} memberCountry={props.member.facet.countryOfResidence} openCountries={[]} draftKey={`diasporale:brouillon:${props.member.personId}:event-gallery:${props.event.pageId}:${props.event.eventId}`} page={{ id: props.event.pageId, name: props.event.organizer.name, country: null, publish, fixedScope: { description: t("eventGallery.composeDescription", { title: props.event.title }), audienceLabel: props.audienceLabel, requireMedia: true } }} /> : null}
     </> : null}
     <ServicePager clearOnError read={(cursor) => props.capability.useItems({ eventId: props.event.eventId, cursor })} keyOf={(item) => item.post.id} empty={<p>{t("eventGallery.empty")}</p>}>
       {(items) => <GalleryItems {...props} items={items} />}
