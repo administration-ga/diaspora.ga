@@ -206,13 +206,13 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 |---|---|---|---|---|---|---|---|
 | AS-01 | Trancher une revendication en production, par pays | P0 | M | S2 | durée de conservation des pièces (juriste) | nouveau | fusionné (#67, antsia#147) pour « Pages à vérifier » par pays ; équipe de modération admise et échéance de purge servies par le moteur (antsia#155, lot 10, demande antsia#148), suivies par la file de la tranche (antsia#160) et par l'onglet (#72), lot 6 ; restent : équipes par pays (pas encore au moteur), revendications tranchées avant PG-01 (décision du propriétaire), durée de conservation des pièces (juriste) |
 | AS-02 | Signaler une page, un groupe et ses publications | P0 | S | S2 | aucune | nouveau | fusionné (#48) |
-| AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | à faire |
+| AS-03 | Rouvrir le groupe d'une association | P1 | S | S2 | aucune | nouveau | fusionné (antsia#181, #87 ; couple vérifié 47a2ccf / 5b2817d, recette en démonstration) |
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-05 | Créer une page sans faux pas : natures servies, pages au nom proche | P1 | S | S2 | aucune | nouveau | fusionné (#80, #81 ; couple vérifié c118807 / 16f4391, recette en démonstration) ; restent le recadrage du logo et le mobile |
 | AS-06 | Cloches de la vie d'une page et d'un groupe | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-07 | « Écrire » à une page | P1 | M | S2 | ouverture de la politique de conversation (plan 04) ; nature « prise de contact » demandée au moteur (IM-06, antsia#178) | nouveau | étape 1 fusionnée (#85 : plus de « Écrire » grisé) ; étape 2 en attente d'antsia#178 |
 | DS-09 | Groupes thématiques ouverts par pays | P1 | M | S2 | ouverture au pilote après MC-01 du moteur ; création réservée aux vérifiés au pilote (décision 3 du plan 07), demandée au moteur par antsia#177 | plan 15 | à faire |
-| AS-08 | Groupe d'association : médias, réactions, commentaires, épingle | P1 | M | S2 | aucune | nouveau | à faire |
+| AS-08 | Groupe d'association : médias, réactions, commentaires, épingle | P1 | M | S2 | compléments génériques demandés au moteur (antsia#182) | nouveau | fusionné en mode moteur (antsia#181, #87 ; couple vérifié 47a2ccf / 5b2817d) ; la démonstration garde son mur en texte, mur prouvé par les tests seulement |
 | AS-09 | Annonce aux adhérents | P1 | M | S2 | genre d'avis et seau de débit demandés au moteur (antsia#179) ; suit AS-08 | nouveau | à faire |
 | AS-10 | Équipe : éditeur, modérateur, transfert guidé, commentaires | P1 | M | S2 | aucune | nouveau | à faire |
 | AS-11 | Fermer sa page ; page sans responsable | P1 | M | S2 | décision 8 | nouveau | à faire |
