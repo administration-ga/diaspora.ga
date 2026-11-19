@@ -14,7 +14,7 @@
       "notCreated": "The association has not created its group yet.",
       "create": "Create the association group",
       "created": "The group is ready. No association member was added automatically.",
-      "closed": "This group is closed. New discussions and memberships are stopped.",
+      "closed": "This group is closed: no one can read or post in it, and no one can join it.",
       "eligibility": "To enter this group, your association membership must be accepted and your account must be allowed to publish.",
       "join": "Choose to join the group",
       "joined": "You have joined the group.",

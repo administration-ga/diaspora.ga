@@ -399,8 +399,25 @@ export function canRead(state: DemoState, post: DemoPost, viewerId: string, now:
   if (!capabilitiesOf(status, { suspensionReadAccess: readAccess }).has("read_network")) return false
   if (isMine || isPageSignatory) return true
   if (post.audience === "connections") return post.author.kind === "person" && isConnected(state, post.author.id, viewerId)
-  if (post.audience === "page") return post.author.kind === "page" && (pageContext?.isFollowing?.(post.author.id, viewerId) ?? false)
+  // AS-10 : la note aux abonnés se lit aussi par toute l'équipe vivante, modérateurs compris (comme le moteur).
+  if (post.audience === "page") return post.author.kind === "page" && ((pageContext?.isFollowing?.(post.author.id, viewerId) ?? false) || isDemoPageTeamMember(state, post.author.id, viewerId))
   return post.audience === "public"
+}
+
+/** AS-10 : la personne est-elle membre VIVANT de l'équipe de la page (modérateur compris) ? Sans contexte de pages, non. */
+export function isDemoPageTeamMember(state: DemoState, pageId: string, personId: string): boolean {
+  return PAGE_READING_CONTEXTS.get(state)?.isPageTeamMember?.(pageId, personId) ?? false
+}
+
+/**
+ * Qui retire un commentaire, comme le moteur (`commentRemovalRight`, AS-10) : son
+ * auteur ; l'auteur d'une publication PERSONNELLE ; sous une publication de PAGE,
+ * tout membre vivant de son équipe (le rôle vivant compte, jamais l'auteur historique).
+ */
+export function canRemoveDemoComment(state: DemoState, post: DemoPost, comment: DemoComment, viewerId: string): boolean {
+  if (comment.authorId === viewerId) return true
+  if (post.author.kind === "person") return post.author.id === viewerId
+  return isDemoPageTeamMember(state, post.author.id, viewerId)
 }
 
 function mediaViews(post: DemoPost): PostMediaView[] {
@@ -518,7 +535,7 @@ function liveComments(state: DemoState, postId: string, viewerId: string): DemoC
   return live.filter((item) => item.parentId === null || liveRoots.has(item.parentId))
 }
 
-function commentView(state: DemoState, item: DemoComment, viewerId: string): CommentView {
+function commentView(state: DemoState, post: DemoPost, item: DemoComment, viewerId: string): CommentView {
   const profile = publishedProfile(state, item.authorId)
   return {
     id: item.id,
@@ -527,6 +544,8 @@ function commentView(state: DemoState, item: DemoComment, viewerId: string): Com
     createdAt: item.createdAt,
     edited: item.editedAt !== undefined,
     isMine: item.authorId === viewerId,
+    // AS-10 : posé seulement quand le lecteur peut le retirer, omis sinon (comme le moteur).
+    ...(canRemoveDemoComment(state, post, item, viewerId) ? { canRemove: true } : {}),
   }
 }
 
@@ -581,9 +600,9 @@ export function commentsPageView(state: DemoState, postId: string, viewerId: str
     items: page.window.map((root) => {
       const replies = live.filter((item) => item.parentId === root.id).sort(byAge)
       return {
-        ...commentView(state, root, viewerId),
+        ...commentView(state, post, root, viewerId),
         replyCount: replies.length,
-        replies: replies.slice(0, COMMENT_REPLIES_PREVIEW).map((reply) => commentView(state, reply, viewerId)),
+        replies: replies.slice(0, COMMENT_REPLIES_PREVIEW).map((reply) => commentView(state, post, reply, viewerId)),
       }
     }),
     continueCursor: page.continueCursor,
@@ -598,7 +617,7 @@ export function repliesPageView(state: DemoState, postId: string, commentId: str
   const live = liveComments(state, postId, viewerId)
   if (!live.some((item) => item.id === commentId && item.parentId === null)) return null
   const page = commentWindow(demoRepliesList(postId, commentId), live.filter((item) => item.parentId === commentId), after, COMMENT_REPLIES_PAGE)
-  return { items: page.window.map((reply) => commentView(state, reply, viewerId)), continueCursor: page.continueCursor, isDone: page.isDone }
+  return { items: page.window.map((reply) => commentView(state, post, reply, viewerId)), continueCursor: page.continueCursor, isDone: page.isDone }
 }
 
 export function feedView(
@@ -883,7 +902,10 @@ export interface DemoPageContext {
   readonly standing?: DemoPageStanding
   /** Identités de la gestion des pages, y compris celles créées dans ce navigateur. */
   readonly pages?: Readonly<Record<string, DemoPage>>
+  /** Parle au nom de la page (administrateur ou éditeur vivant) ; jamais un modérateur. */
   readonly isSignatory?: (pageId: string, personId: string) => boolean
+  /** AS-10 : membre VIVANT de l'équipe, modérateur compris (retirer un commentaire, lire les notes aux abonnés). */
+  readonly isPageTeamMember?: (pageId: string, personId: string) => boolean
   readonly isFollowing?: (pageId: string, personId: string) => boolean
 }
 

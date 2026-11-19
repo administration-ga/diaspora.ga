@@ -14,6 +14,11 @@
  * (rôle VIVANT relu à chaque geste). Aucune pièce n'est gardée : la
  * démonstration ne conserve que le type et le poids des fichiers choisis.
  *
+ * AS-10 : l'équipe compte trois rôles, la matrice du moteur. Le modérateur voit
+ * l'équipe, s'en retire et retire les commentaires sous les publications de la
+ * page ; il ne publie pas, ne parle pas au nom de la page (`liveRole` le tait) et
+ * ne compte pas dans la fermeture par blocages (RP-03, `signatoriesOf`).
+ *
  * AS-01 : l'instruction des revendications vit au bureau de modération de
  * démonstration, qui porte la compétence (son rôle fictif) ; ce module lui
  * prête l'état et les règles des pages (`demoPageClaimsDesk`) : file en
@@ -36,6 +41,7 @@ import {
   pageHandleRefusal,
   pageNameRefusal,
   pageShortNameRefusal,
+  isPageSignatoryRole,
   PAGE_SIGNATORIES_MAX,
   type ManagedPageDetailView,
   type ManagedPageRole,
@@ -48,6 +54,8 @@ import {
   type PageManagement,
   type PageRefView,
   type PageSignatoryView,
+  type PageTeamRole,
+  type TeamPageView,
 } from "../data/page-admin-port"
 import { pageAssociationTypeRefusal, pageCityRefusal, pageSectorRefusal } from "../data/page-presentation"
 import type { ActionResult } from "../data/port"
@@ -68,7 +76,8 @@ type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">
 interface DemoSignatory {
   readonly pageId: string
   readonly personId: string
-  readonly role: ManagedPageRole
+  /** AS-10 : administrateur, éditeur (`signatory`) ou modérateur — la même ligne, comme le moteur. */
+  readonly role: PageTeamRole
   /** `null` : invitation en attente, qui ne donne aucun droit. */
   readonly acceptedAt: number | null
   readonly createdAt: number
@@ -363,14 +372,23 @@ function rowOf(overlay: DemoPageAdminState, pageId: string, personId: string): D
   return overlay.signatories.find((row) => row.pageId === pageId && row.personId === personId)
 }
 
-/** Le rôle VIVANT : invitation acceptée, membre actif, identité forte pour une page officielle. */
-function liveRole(state: DemoState, overlay: DemoPageAdminState, page: ResolvedPage, personId: string, now: number): ManagedPageRole | null {
+/** Le rôle VIVANT dans l'équipe : invitation acceptée, membre actif, identité forte pour une page officielle. */
+function liveTeamRole(state: DemoState, overlay: DemoPageAdminState, page: ResolvedPage, personId: string, now: number): PageTeamRole | null {
   const row = rowOf(overlay, page.id, personId)
   if (!row || row.acceptedAt === null) return null
   if (!isActiveMember(state, personId, now)) return null
   if (page.badge === "official" && !hasStrongIdentity(state, personId)) return null
   return row.role
 }
+
+/** Le rôle VIVANT qui PARLE au nom de la page (le moteur : `liveSignatoryRole`) ; un modérateur n'en a aucun. */
+function liveRole(state: DemoState, overlay: DemoPageAdminState, page: ResolvedPage, personId: string, now: number): ManagedPageRole | null {
+  const role = liveTeamRole(state, overlay, page, personId, now)
+  return role !== null && isPageSignatoryRole(role) ? role : null
+}
+
+/** L'ordre de l'équipe, comme le moteur : administrateurs, éditeurs, modérateurs. */
+const TEAM_ROLE_RANK: Readonly<Record<PageTeamRole, number>> = { admin: 0, signatory: 1, moderator: 2 }
 
 function liveAdminCount(state: DemoState, overlay: DemoPageAdminState, pageId: string, now: number): number {
   return overlay.signatories.filter((row) => row.pageId === pageId && row.role === "admin" && row.acceptedAt !== null && isActiveMember(state, row.personId, now)).length
@@ -422,6 +440,20 @@ export function myPagesView(state: DemoState, overlay: DemoPageAdminState, now: 
   return { status: "ready", data: pages }
 }
 
+/** AS-10 : les pages dont le lecteur fait partie de l'équipe vivante, modérateur compris (`myTeamPages`). */
+export function myTeamPagesView(state: DemoState, overlay: DemoPageAdminState, now: number): Loadable<readonly TeamPageView[]> {
+  const viewer = readerOf(state, now)
+  if (typeof viewer === "string") return { status: "error", code: viewer }
+  const pages: TeamPageView[] = []
+  for (const row of overlay.signatories) {
+    if (row.personId !== viewer.id || row.acceptedAt === null) continue
+    const page = pageById(state, overlay, row.pageId)
+    const teamRole = page ? liveTeamRole(state, overlay, page, viewer.id, now) : null
+    if (page && teamRole) pages.push({ id: page.id, handle: page.handle, name: page.name, ownerKind: page.ownerKind, teamRole, badge: page.badge, country: page.country })
+  }
+  return { status: "ready", data: pages }
+}
+
 export function managedPageView(state: DemoState, overlay: DemoPageAdminState, handle: string, now: number): Loadable<ManagedPageDetailView | null> {
   const viewer = readerOf(state, now)
   if (typeof viewer === "string") return { status: "error", code: viewer }
@@ -439,6 +471,7 @@ export function managedPageView(state: DemoState, overlay: DemoPageAdminState, h
       logoUrl: null,
       bannerUrl: null,
       myRole: liveRole(state, overlay, page, viewer.id, now),
+      myTeamRole: liveTeamRole(state, overlay, page, viewer.id, now),
     },
   }
 }
@@ -448,11 +481,11 @@ export function signatoriesView(state: DemoState, overlay: DemoPageAdminState, p
   if (typeof viewer === "string") return { status: "error", code: viewer }
   const page = pageById(state, overlay, pageId)
   if (!page) return { status: "error", code: "not_found" }
-  // Ses signataires VIVANTS seuls voient l'équipe ; un rôle retiré perd l'accès aussitôt.
-  if (liveRole(state, overlay, page, viewer.id, now) === null) return { status: "error", code: "page_role_required" }
+  // Son équipe VIVANTE seule la voit, modérateurs compris ; un rôle retiré perd l'accès aussitôt.
+  if (liveTeamRole(state, overlay, page, viewer.id, now) === null) return { status: "error", code: "page_role_required" }
   const rows = overlay.signatories
     .filter((row) => row.pageId === pageId)
-    .sort((left, right) => (left.role === right.role ? 0 : left.role === "admin" ? -1 : 1) || left.createdAt - right.createdAt)
+    .sort((left, right) => TEAM_ROLE_RANK[left.role] - TEAM_ROLE_RANK[right.role] || left.createdAt - right.createdAt)
   return {
     status: "ready",
     data: rows.map((row) => ({
@@ -628,7 +661,9 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
       const existing = rowOf(current, pageId, target.id)
       if (existing && existing.role === role) return ok({ personId: target.id, role, invited: existing.acceptedAt === null })
       if (existing) {
+        // Le dernier administrateur ne se rétrograde pas, ni en éditeur ni en modérateur.
         if (existing.role === "admin" && existing.acceptedAt !== null && role !== "admin" && liveAdminCount(state, current, pageId, now) <= 1) return fail("page_last_admin")
+        // Un membre déjà ACCEPTÉ change de rôle aussitôt, sans invitation (comme le moteur) ; l'écran le dit.
         overlay.commit({ ...current, signatories: current.signatories.map((row) => (row === existing ? { ...row, role } : row)) })
         return ok({ personId: target.id, role, invited: existing.acceptedAt === null })
       }
@@ -648,7 +683,8 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
       const page = pageById(state, current, pageId)
       if (!page) return fail("not_found")
       const self = personId === writer.id
-      const role = liveRole(state, current, page, writer.id, now)
+      // Chacun se retire, quel que soit son rôle (modérateur compris) ; l'administrateur retire les autres.
+      const role = liveTeamRole(state, current, page, writer.id, now)
       if (role === null || (!self && role !== "admin")) return fail("page_role_required")
       const row = rowOf(current, pageId, personId)
       if (!row) return ok({ revoked: false })
@@ -727,6 +763,10 @@ export function createDemoPageAdmin(store: DemoStore, options: { readonly storag
     useMyPages() {
       const version = useVersions()
       return useMemo(() => (version === null ? LOADING : myPagesView(store.getState(), overlay.current(), store.now())), [version])
+    },
+    useMyTeamPages() {
+      const version = useVersions()
+      return useMemo(() => (version === null ? LOADING : myTeamPagesView(store.getState(), overlay.current(), store.now())), [version])
     },
     management,
   }
@@ -840,15 +880,24 @@ export function demoPageAdminContext(store: DemoStore) {
       }
       return pages
     },
+    /** Parle au nom de la page (administrateur ou éditeur vivant) ; jamais un modérateur. */
     isSignatory(pageId: string, personId: string): boolean {
       const state = store.getState()
       const current = overlay.current()
       const page = pageById(state, current, pageId)
       return page !== null && liveRole(state, current, page, personId, store.now()) !== null
     },
+    /** AS-10 : membre vivant de l'équipe, modérateur compris (retirer un commentaire, lire les notes aux abonnés). */
+    isTeamMember(pageId: string, personId: string): boolean {
+      const state = store.getState()
+      const current = overlay.current()
+      const page = pageById(state, current, pageId)
+      return page !== null && liveTeamRole(state, current, page, personId, store.now()) !== null
+    },
     hasLiveAdmin(pageId: string): boolean {
       return liveAdminCount(store.getState(), overlay.current(), pageId, store.now()) > 0
     },
+    /** Les personnes qui PARLENT au nom de la page ; RP-03 n'y compte pas les modérateurs. */
     signatoriesOf(pageId: string): readonly string[] {
       const state = store.getState()
       const current = overlay.current()

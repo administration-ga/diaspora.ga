@@ -763,7 +763,8 @@ describe("groupe d'une association — rouvrir (AS-03) et mur au format du fil (
   it("un membre sans gestion lit que le groupe est fermé, sans « Rouvrir »", () => {
     mocks.group = { status: "ready", data: { ...CLOSED, closedAt: null, canReopen: false, role: "member", canManage: false } }
     render(groupTree())
-    expect(screen.getByText(t("associationActivities.group.closed"))).toBeInTheDocument()
+    // Le texte porte une espace insécable avant « : » ; le comparateur la lit comme une espace.
+    expect(screen.getByText(plain(t("associationActivities.group.closed")))).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: t("associationActivities.group.reopen") })).not.toBeInTheDocument()
     expect(screen.queryByText(plain(t("associationActivities.group.closedManage")))).not.toBeInTheDocument()
   })

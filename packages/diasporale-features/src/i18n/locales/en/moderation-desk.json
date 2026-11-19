@@ -25,7 +25,7 @@
       },
       "teams": "Your teams: {{names}}.",
       "noTeam": "You are not part of any team.",
-      "decisions": "A party to a case (author, reporter, signatory of the page concerned, owner or moderator of the group concerned, previous decision-maker) does not decide it."
+      "decisions": "A party to a case (author, reporter, team member of the page concerned, owner or moderator of the group concerned, previous decision-maker) does not decide it."
     },
     "filters": {
       "label": "Queue filters",
@@ -118,7 +118,7 @@
       "title": "You do not decide this case",
       "author": "You are the author of the content concerned.",
       "reporter": "You reported this content.",
-      "page": "You sign for the page this content belongs to.",
+      "page": "You are part of the team of the page this content belongs to.",
       "decider": "You took the contested decision.",
       "group": "You own or moderate the group concerned.",
       "handOver": "Another team member must decide it."

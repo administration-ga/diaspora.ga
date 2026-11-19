@@ -14,6 +14,8 @@ quelque réseau que ce soit (`isBlockedBetween` du moteur).
   blocage pour que la page reste ouverte.
 - « Vivant » : habilitation acceptée, page active, adhésion active au réseau de la page
   (`liveSignatoryRole`). Une invitation en attente ou un signataire parti ne comptent pas.
+- Un **modérateur** de la page (AS-10, 19/11/2026) ne compte pas : il ne parle pas au nom de la
+  page (`liveSignatoryRole` le tait) ; seuls les administrateurs et les éditeurs ferment la page.
 - Une page sans signataire vivant n'est pas fermée par cette règle (d'autres gardes s'en chargent).
 - La personne elle-même signataire vivante n'est jamais fermée.
 - Refus **indistinct** : le même `notFound` qu'une page retirée, jamais « vous êtes bloqué » ;

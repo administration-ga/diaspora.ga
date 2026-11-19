@@ -204,7 +204,8 @@ function PageFailure(props: { code: ActionErrorCode; onRetry: () => void; classN
  * aux plus récents, un seul niveau de réponse, trois réponses en aperçu puis
  * « voir les réponses ». Tous se lisent, page après page (FD-03), et ce qu'on
  * vient d'envoyer paraît aussitôt. On retire son commentaire, ou n'importe
- * lequel sous sa propre publication — en deux gestes. On signale celui d'autrui,
+ * lequel sous sa propre publication ou, membre de l'équipe d'une page, sous une
+ * publication de cette page (AS-10) — en deux gestes. On signale celui d'autrui,
  * jamais le sien (FD-05) : il se masque aussitôt pour soi. Aucune coordonnée : le
  * contact passe par la messagerie.
  */
@@ -399,7 +400,12 @@ function Comment(props: CommentHandlers & {
   const operation = useCommentOperation()
   const neutral = !comment.author.handle?.trim()
   const name = neutral ? t("comments.someone") : comment.author.displayName ?? t("comments.someone")
-  const canRemove = comment.isMine || props.postIsMine
+  // AS-10 : sous une publication de page, le fournisseur dit si l'équipe vivante du lecteur le permet.
+  const canRemove = comment.isMine || props.postIsMine || comment.canRemove === true
+  // AS-10 : l'équipe d'une page voit un « Retirer » par commentaire ; chacun dit lequel, par le nom publié de son auteur.
+  const named = !neutral && Boolean(comment.author.displayName?.trim())
+  const removeLabel = named ? t("comments.removeLabel", { name }) : t("comments.removeLabelNeutral")
+  const confirmRemoveLabel = named ? t("comments.confirmRemoveLabel", { name }) : t("comments.confirmRemoveLabelNeutral")
   const editComment = comment.isMine && props.canComment ? actions.editComment : undefined
   // Jamais sur son propre commentaire : le moteur le refuserait, l'écran ne l'offre pas.
   const reportCapability = comment.isMine ? null : reports
@@ -468,13 +474,13 @@ function Comment(props: CommentHandlers & {
               setEditing(true)
             }}>{t("comments.edit")}</Button> : null}
             {canRemove && !confirming ? (
-              <Button variant="ghost" size="sm" onClick={() => { if (!editingRef.current) setConfirming(true) }}>
+              <Button variant="ghost" size="sm" aria-label={removeLabel} onClick={() => { if (!editingRef.current) setConfirming(true) }}>
                 {t("comments.remove")}
               </Button>
             ) : null}
             {canRemove && confirming ? (
               <>
-                <Button variant="destructive" size="sm" disabled={operation.busy} onClick={remove}>
+                <Button variant="destructive" size="sm" disabled={operation.busy} aria-label={confirmRemoveLabel} onClick={remove}>
                   {t("comments.confirmRemove")}
                 </Button>
                 <Button variant="ghost" size="sm" disabled={operation.busy} onClick={() => { if (!operation.isBusy()) setConfirming(false) }}>

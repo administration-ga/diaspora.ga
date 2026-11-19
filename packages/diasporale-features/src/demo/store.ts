@@ -49,7 +49,7 @@ import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
 import { contentPreferencesRefusal, hasContentPreference, withContentPreferenceIdentities } from "./content-preferences"
 import { demoManagedPage } from "./page-admin"
-import { canRead, isConnected, sponsorFacts, statusOf } from "./selectors"
+import { canRead, canRemoveDemoComment, isConnected, sponsorFacts, statusOf } from "./selectors"
 import {
   DEMO_STATE_VERSION,
   SEED_DISPLAY_NAMES,
@@ -772,15 +772,18 @@ export class DemoStore {
     return OK
   }
 
-  /** Retiré, pas supprimé ; par son auteur, ou par l'auteur de la publication (chez soi). Idempotent. */
+  /**
+   * Retiré, pas supprimé ; par son auteur, par l'auteur de la publication (chez soi), ou,
+   * sous une publication de page, par tout membre VIVANT de son équipe (AS-10, rôle relu
+   * à l'acte). Idempotent ; refus indistinct.
+   */
   async removeComment(commentId: string): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer) return fail("not_signed_in")
     const target = this.state.comments.find((item) => item.id === commentId)
     const post = target ? this.state.posts.find((candidate) => candidate.id === target.postId) : undefined
-    const postAuthorId = post?.author.kind === "person" ? post.author.id : null
-    if (!target || (target.authorId !== viewer.person.id && postAuthorId !== viewer.person.id)) return fail("not_found")
+    if (!target || !post || !canRemoveDemoComment(this.getState(), post, target, viewer.person.id)) return fail("not_found")
     if (target.removedAt !== null) return OK
     const now = this.clock()
     this.commit({ ...this.state, comments: this.state.comments.map((item) => (item.id === commentId ? { ...item, removedAt: now } : item)) })

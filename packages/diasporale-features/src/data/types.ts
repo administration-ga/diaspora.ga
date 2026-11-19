@@ -191,6 +191,12 @@ export interface CommentView {
   readonly createdAt: number
   readonly edited: boolean
   readonly isMine: boolean
+  /**
+   * AS-10 : le lecteur peut retirer ce commentaire, dit par le fournisseur (le sien,
+   * l'auteur d'une publication personnelle, un membre VIVANT de l'équipe pour une
+   * publication de page). Absent : seuls `isMine` et l'auteur de la publication valent.
+   */
+  readonly canRemove?: boolean
 }
 
 /** Un commentaire racine et ses premières réponses ; la suite se lit à la demande (un seul niveau). */

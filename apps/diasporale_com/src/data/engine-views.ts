@@ -571,6 +571,15 @@ export function toNotificationView(item: EngineNotification): NotificationView {
 type EngineComment = FunctionReturnType<typeof api.modules.engagement.engagement.paginateComments>["page"][number]
 type EngineReply = EngineComment["replies"][number]
 
+/**
+ * AS-10 : le moteur pose `canRemove: true` quand le lecteur peut retirer ce commentaire
+ * (le sien, l'auteur d'une publication personnelle, l'équipe vivante d'une page) et
+ * l'omet sinon ; seule la valeur `true` ouvre le geste.
+ */
+function removableByReader(item: { readonly commentId: string; readonly canRemove?: boolean | undefined }): boolean {
+  return item.canRemove === true
+}
+
 /** Un commentaire du moteur : l'auteur par son profil publié (nom neutre s'il est retiré), jamais un corps relu ailleurs. */
 export function toCommentView(item: EngineReply): CommentView {
   return {
@@ -580,6 +589,7 @@ export function toCommentView(item: EngineReply): CommentView {
     createdAt: item.createdAt,
     edited: item.editedAt !== null,
     isMine: item.isMine,
+    ...(removableByReader(item) ? { canRemove: true } : {}),
   }
 }
 

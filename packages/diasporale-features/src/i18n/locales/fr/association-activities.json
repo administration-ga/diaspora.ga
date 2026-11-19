@@ -14,7 +14,7 @@
       "notCreated": "L’association n’a pas encore créé son groupe.",
       "create": "Créer le groupe de l’association",
       "created": "Le groupe est prêt. Aucun adhérent n’a été ajouté automatiquement.",
-      "closed": "Ce groupe est fermé. Les nouveaux échanges et adhésions sont arrêtés.",
+      "closed": "Ce groupe est fermé : personne n’y lit ni n’y publie, et personne ne peut le rejoindre.",
       "eligibility": "Pour entrer dans ce groupe, votre adhésion à l’association doit être acceptée et votre compte doit pouvoir publier.",
       "join": "Rejoindre volontairement le groupe",
       "joined": "Vous avez rejoint le groupe.",
