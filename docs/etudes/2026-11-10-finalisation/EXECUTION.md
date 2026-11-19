@@ -210,10 +210,10 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 | AS-04 | Renommage d'une page vérifiée au grand jour | P1 | S | S2 | aucune | nouveau | à faire |
 | AS-05 | Créer une page sans faux pas : natures servies, pages au nom proche | P1 | S | S2 | aucune | nouveau | fusionné (#80, #81 ; couple vérifié c118807 / 16f4391, recette en démonstration) ; restent le recadrage du logo et le mobile |
 | AS-06 | Cloches de la vie d'une page et d'un groupe | P1 | S | S2 | aucune | nouveau | à faire |
-| AS-07 | « Écrire » à une page | P1 | M | S2 | ouverture de la politique de conversation (plan 04) | nouveau | à faire |
+| AS-07 | « Écrire » à une page | P1 | M | S2 | ouverture de la politique de conversation (plan 04) ; nature « prise de contact » demandée au moteur (IM-06, antsia#178) | nouveau | étape 1 fusionnée (#85 : plus de « Écrire » grisé) ; étape 2 en attente d'antsia#178 |
 | DS-09 | Groupes thématiques ouverts par pays | P1 | M | S2 | ouverture au pilote après MC-01 du moteur ; création réservée aux vérifiés au pilote (décision 3 du plan 07), demandée au moteur par antsia#177 | plan 15 | à faire |
 | AS-08 | Groupe d'association : médias, réactions, commentaires, épingle | P1 | M | S2 | aucune | nouveau | à faire |
-| AS-09 | Annonce aux adhérents | P1 | M | S2 | aucune | nouveau | à faire |
+| AS-09 | Annonce aux adhérents | P1 | M | S2 | genre d'avis et seau de débit demandés au moteur (antsia#179) ; suit AS-08 | nouveau | à faire |
 | AS-10 | Équipe : éditeur, modérateur, transfert guidé, commentaires | P1 | M | S2 | aucune | nouveau | à faire |
 | AS-11 | Fermer sa page ; page sans responsable | P1 | M | S2 | décision 8 | nouveau | à faire |
 | AS-12 | Groupes : règles, adhésion sur demande, validation des publications | P2 | M | S2 | aucune | nouveau | à faire |
@@ -291,7 +291,7 @@ Plan : [`10_EMPLOI_TALENTS.md`](10_EMPLOI_TALENTS.md)
 | EM-01 | Fiche et candidature protégées contre les fausses offres | P0 | S | S2 | relecture du texte par le propriétaire | nouveau | fusionné (#45) ; motifs dédiés « frais demandés au candidat » et « usurpation d'une entreprise » au lot 8 (#77, antsia#168) ; textes à relire par le propriétaire |
 | EM-02 | Conservation des candidatures : durées décidées et purge | P0 | S | S2 | juriste (durées, note de refus et droit d'accès) | nouveau | à faire |
 | EM-03 | Durée de vie d'une offre et relance de l'équipe | P1 | S | S2 | décision 7 | nouveau | à faire |
-| EM-04 | Rubrique « Emplois » sur la fiche d'une page | P1 | S | S2 | aucune | nouveau | à faire |
+| EM-04 | Rubrique « Emplois » sur la fiche d'une page | P1 | S | S2 | aucune | nouveau | fusionné (antsia#180, #85 ; couple vérifié 2d9e22a / 28fd3fe, recette en démonstration) |
 | EM-05 | Recherche d'offres : filtres dans l'adresse, langue, ancienneté | P1 | M | S2 | aucune | nouveau | à faire |
 | EM-06 | Offre plus précise : secteur, niveau, alternance, prise de poste | P1 | M | S2 | décision 8 (listes) | nouveau | à faire |
 | EM-07 | Postes au Gabon : le « retour au pays » | P1 | M | S2 | décision 2 : le code refuse aujourd'hui le Gabon exprès | nouveau | à faire |
