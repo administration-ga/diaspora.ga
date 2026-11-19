@@ -115,7 +115,7 @@ export const PAGE_ADMIN_ERROR_CODES = [
   // Logo et bannière (garde des fichiers du moteur).
   "page_image_type_invalid",
   "page_image_too_large",
-  // AS-11a : la page dort depuis plus de trente jours ; seule l'équipe de modération peut agir.
+  // AS-11a : la page dort depuis plus de trente jours ; seule l'équipe de la plateforme ANTSIA (sa console) peut agir.
   "page_sleep_expired",
 ] as const
 
@@ -285,7 +285,8 @@ export interface PageClaimView {
  * du moteur). Absente partout comme une page retirée, elle ne se lit plus qu'ici :
  *   · `asleep` : tout administrateur de la page la réactive jusqu'à `sleepEndsAt` ;
  *   · `expired` : le délai est passé, la réactivation est refusée
- *     (`page_sleep_expired`) et rien n'est effacé : seule l'équipe de modération agit.
+ *     (`page_sleep_expired`) et rien n'est effacé : seule l'équipe de la plateforme ANTSIA
+ *     agit, par sa console.
  * `canWake` est jugé par le serveur (administrateur, délai, aucune mesure de la
  * modération) ; l'écran ne le déduit jamais du rôle.
  */
@@ -375,14 +376,18 @@ export interface PageManagement {
   /**
    * AS-11a — mettre la page en sommeil : un administrateur VIVANT d'une page de nature
    * créable par un membre (jamais une institution). Page, offres, emplois, évènements
-   * et publications disparaissent pour tout le monde ; rien n'est écrit sur ces objets
-   * et personne n'est prévenu. Rend l'échéance de la réactivation. Facultatif :
-   * absent, l'écran ne propose pas le geste.
+   * et publications disparaissent pour tout le monde ; le geste n'écrit rien sur ces
+   * objets et ne prévient personne, mais leurs DÉLAIS courent : une demande sans réponse
+   * expire (son auteur en est averti), une offre d'emploi échue se clôt, un direct en
+   * cours s'arrête. Rend l'échéance de la réactivation. Facultatif : absent, l'écran ne
+   * propose pas le geste.
    */
   putToSleep?(pageId: string): Promise<ActionResult<{ sleepEndsAt: number }>>
   /**
    * AS-11a — réactiver une page en sommeil : tout administrateur de la page, tant que le
-   * délai court ; échu, `page_sleep_expired`. Le réveil rend tout ce que le sommeil masquait.
+   * délai court ; échu, `page_sleep_expired`. Le réveil rend ce que le sommeil masquait et
+   * qui n'a pas expiré entre-temps (une demande expirée, une offre close, un direct arrêté
+   * ne reviennent pas).
    */
   wake?(pageId: string): Promise<ActionResult<{ status: "active" }>>
   /** AS-11a — les pages en sommeil dont je fais partie de l'équipe, bornées par le moteur. */

@@ -90,6 +90,8 @@ export const MODERATION_DESK_ERROR_CODES = [
   "moderation_desk_measure_refused",
   // Le dossier, le contenu ou le recours a changé entre-temps (déjà tranché).
   "moderation_desk_conflict",
+  // AS-11a : la page revendiquée est en sommeil, son équipe est figée : la revendication se refuse seulement (règle PAGE_ASLEEP du moteur).
+  "moderation_desk_page_asleep",
   // Une limite du moteur est atteinte (équipes, sanctions d'un dossier).
   "moderation_desk_limit",
   // La personne est partie au dossier : un autre membre de l'équipe tranche.

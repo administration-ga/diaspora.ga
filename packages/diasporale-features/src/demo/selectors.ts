@@ -692,8 +692,9 @@ export function hubCounters(state: DemoState, country: CountryCode, now: number)
     members,
     associations: pages.filter((page) => page.ownerKind === "association").length,
     companies: pages.filter((page) => page.ownerKind === "company").length,
+    // AS-11a : compté comme la liste du hub — l'évènement d'une page qui n'est plus lisible (en sommeil) se tait avec elle.
     upcomingEvents: state.events.filter(
-      (event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country),
+      (event) => event.startsAt > now && event.moderation === "published" && isShownInHub(event.scope, country) && state.pages[event.organizerPageId] !== undefined,
     ).length,
   })
 }

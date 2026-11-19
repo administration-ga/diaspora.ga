@@ -73,6 +73,8 @@ function visibility(demo: Demo, viewerId: string) {
     hubPages: hubPages.associations.some((page) => page.id === LYON),
     hubAssociations: hub.associations.some((page) => page.id === LYON),
     hubEvent: hub.events.some((event) => event.id === LYON_EVENT),
+    // Le compteur du hub compte ce que sa liste montre, jamais l'évènement d'une page endormie.
+    hubCount: hub.counters.upcomingEvents.kind === "value" && hub.counters.upcomingEvents.value === hub.events.length,
     feed: feed.some((post) => post.id === LYON_POST),
     offers: offers.items.some((item) => item.id === LYON_OFFER),
     offer: offer !== null,
@@ -81,8 +83,8 @@ function visibility(demo: Demo, viewerId: string) {
   }
 }
 
-const EVERYWHERE = { sheet: true, directory: true, hubPages: true, hubAssociations: true, hubEvent: true, feed: true, offers: true, offer: true, jobs: true, job: true }
-const NOWHERE = { sheet: false, directory: false, hubPages: false, hubAssociations: false, hubEvent: false, feed: false, offers: false, offer: false, jobs: false, job: false }
+const EVERYWHERE = { sheet: true, directory: true, hubPages: true, hubAssociations: true, hubEvent: true, hubCount: true, feed: true, offers: true, offer: true, jobs: true, job: true }
+const NOWHERE = { sheet: false, directory: false, hubPages: false, hubAssociations: false, hubEvent: false, hubCount: true, feed: false, offers: false, offer: false, jobs: false, job: false }
 
 function sendInput(offerVersion: number) {
   return {
@@ -116,11 +118,18 @@ describe("AS-11a — démonstration : mettre une page en sommeil", () => {
     await demo.as("p-prisca")
     expect(visibility(demo, "p-prisca")).toEqual(EVERYWHERE)
     const before = demo.store.getBaseState()
+    const upcoming = () => {
+      const counter = countryHubView(demo.store.getState(), "FR", NOW).counters.upcomingEvents
+      return counter.kind === "value" ? counter.value : null
+    }
+    const upcomingBefore = upcoming()
 
     await demo.as("p-steeve")
     expect(await demo.management.putToSleep!(LYON)).toMatchObject({ ok: true })
     await demo.as("p-prisca")
     expect(visibility(demo, "p-prisca")).toEqual(NOWHERE)
+    // L'évènement de la page endormie sort aussi du compteur du hub.
+    expect(upcoming()).toBe((upcomingBefore ?? 0) - 1)
     // Aucune offre de la page ne se contacte, aucun emploi ne reçoit de candidature.
     expect(await demo.source.serviceRequests!.send(sendInput(1))).toEqual({ ok: false, code: "not_found" })
     expect(await demo.source.jobs!.apply({ jobId: LYON_JOB, offerVersion: 1, ...APPLY })).toEqual({ ok: false, code: "not_found" })
@@ -199,7 +208,7 @@ describe("AS-11a — démonstration : une revendication sur une page endormie", 
     expect(await demo.management.putToSleep!("page-valise")).toMatchObject({ ok: true })
     expect(data(renderHook(() => demo.management.useMyClaims()).result.current).map((claim) => [claim.id, claim.page.id, claim.status])).toEqual([[claimId, "page-valise", "pending"]])
     expect(desk.pending("p-rodrigue").map((claim) => claim.claimId)).toEqual([claimId])
-    expect(desk.decide({ deciderId: "p-rodrigue", claimId, decision: "approved", reason: "Pièces conformes (recette)." })).toEqual({ ok: false, code: "moderation_desk_conflict" })
+    expect(desk.decide({ deciderId: "p-rodrigue", claimId, decision: "approved", reason: "Pièces conformes (recette)." })).toEqual({ ok: false, code: "moderation_desk_page_asleep" })
     expect(desk.decide({ deciderId: "p-rodrigue", claimId, decision: "rejected", reason: "Page en sommeil (recette)." })).toEqual({ ok: true, value: { status: "rejected" } })
   })
 })

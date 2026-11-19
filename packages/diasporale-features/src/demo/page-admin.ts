@@ -30,7 +30,8 @@
  * projection de lecture du magasin (`pagesOf`) aussi : fiche, annuaire, hub, fil,
  * offres, emplois, évènements et groupes la taisent comme une page retirée, et son
  * équipe est figée. Seule son équipe la relit, sur le jeu fictif SANS projection
- * (`getBaseState`), pour la réactiver ; retirer l'échéance rend tout.
+ * (`getBaseState`), pour la réactiver ; retirer l'échéance rend ce qui n'a pas expiré
+ * entre-temps (les délais des demandes et des emplois courent pendant le sommeil, lus à l'heure).
  */
 import { isProfilePublished } from "@antsia/social-domain/content"
 import { pageSleepState } from "@antsia/social-domain/pages"
@@ -951,8 +952,8 @@ export function demoPageClaimsDesk(store: DemoStore) {
       let verified = current.verified
       if (input.decision === "approved") {
         if (page.badge === "official") return fail("page_not_claimable")
-        // AS-11a : l'équipe d'une page en sommeil est figée — la revendication se refuse, elle ne s'accorde pas.
-        if (sleepOf(current, page.id) !== null) return fail("moderation_desk_conflict")
+        // AS-11a : l'équipe d'une page en sommeil est figée — la revendication se refuse, elle ne s'accorde pas (`PAGE_ASLEEP`).
+        if (sleepOf(current, page.id) !== null) return fail("moderation_desk_page_asleep")
         if (!isActiveMember(state, claim.claimantId, now)) return fail("moderation_desk_conflict")
         const row = rowOf(current, page.id, claim.claimantId)
         signatories = row

@@ -83,7 +83,7 @@ import {
 import type { FunctionArgs, FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
 
-import { engineActionErrorCode } from "./engine-errors"
+import { engineActionErrorCode, engineRuleActionCode } from "./engine-errors"
 import {
   failed,
   LOADING,
@@ -137,7 +137,8 @@ export function moderationDeskErrorCode(error: unknown): ActionErrorCode {
   if (error instanceof Refusal) return error.code
   if (engineErrorRule(error)?.rule === "DECISION_REASON_LENGTH") return "moderation_desk_reason_length"
   const code = engineErrorCode(error)
-  if (code === "conflict") return "moderation_desk_conflict"
+  // Une règle que DIASPORALE sait dire l'emporte sur le conflit générique (AS-11a : `PAGE_ASLEEP`, page en sommeil).
+  if (code === "conflict") return engineRuleActionCode(error) ?? "moderation_desk_conflict"
   if (code === "policyRefused") return "moderation_desk_limit"
   const field = invalidField(error)
   if (field === "sanctions" || field === "until") return "moderation_desk_measure_refused"

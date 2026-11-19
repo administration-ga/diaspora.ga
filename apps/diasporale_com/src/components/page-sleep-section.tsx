@@ -8,13 +8,15 @@
  *     gestion, pour un administrateur VIVANT d'une page de nature créable par un membre ;
  *     la confirmation dit chaque effet en clair, l'échéance comprise ;
  *   · `MySleepingPages` : la section « En sommeil » de « Mes pages », l'échéance et
- *     « Réactiver » (ou le délai passé) ;
+ *     « Réactiver » (ou le délai passé, et l'adresse de contact) ;
  *   · `ManagedPageUnavailable` : la gestion d'une page endormie ouverte par son équipe dit
  *     « en sommeil » au lieu d'un « introuvable » générique ; pour tout autre lecteur, le même
  *     refus indistinct.
  *
  * Présentation seulement : le fournisseur (moteur ou démonstration) rejuge chaque geste, et
- * `canWake` vient du serveur. Aucun avis n'est envoyé : la confirmation le dit.
+ * `canWake` vient du serveur. Une lecture du serveur ne bascule pas d'elle-même à l'échéance :
+ * l'écran cesse de proposer « Réactiver » dès qu'elle est passée (`useSleepState`). Les délais
+ * des objets de la page continuent de courir pendant le sommeil : la confirmation le dit.
  */
 import { Avatar, Button, Card, EmptyState, Skeleton, TrustBadge, formatDate } from "@diasporale/features"
 import {
@@ -24,12 +26,13 @@ import {
   type ActionErrorCode,
   type ManagedPageDetailView,
   type PageManagement,
+  type SleepingPageState,
   type SleepingPageView,
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { AlarmClockIcon, MoonIcon, SunIcon, UserRoundXIcon } from "lucide-react"
+import { AlarmClockIcon, MailIcon, MoonIcon, SunIcon, UserRoundXIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { routes } from "@/lib/routes"
@@ -47,6 +50,9 @@ import { ConfirmSheet, ErrorNotice, RoleChip } from "./page-admin-parts"
 export function canOfferPageSleep(management: PageManagement, page: ManagedPageDetailView): boolean {
   return management.putToSleep !== undefined && page.myRole === "admin" && isMemberPageKind(page.ownerKind)
 }
+
+/** Les effets dits à la confirmation, dans l'ordre de lecture ; `silent` en gras. */
+const CONFIRM_EFFECTS = ["pageSleep.confirm.hidden", "pageSleep.confirm.deadlines", "pageSleep.confirm.live", "pageSleep.confirm.kept"] as const
 
 export function PageSleepSection(props: { readonly management: PageManagement; readonly page: ManagedPageDetailView }) {
   const { t, locale } = useDiasporaleT()
@@ -94,9 +100,7 @@ export function PageSleepSection(props: { readonly management: PageManagement; r
         onConfirm={confirm}
       >
         <ul className="flex list-disc flex-col gap-2 pl-5 text-[15px] leading-relaxed">
-          <li>{t("pageSleep.confirm.hidden")}</li>
-          <li>{t("pageSleep.confirm.frozen")}</li>
-          <li>{t("pageSleep.confirm.kept")}</li>
+          {CONFIRM_EFFECTS.map((effect) => <li key={effect}>{t(effect)}</li>)}
           <li className="font-semibold">{t("pageSleep.confirm.silent")}</li>
           <li>{t("pageSleep.confirm.reversible", { date: formatDate(announcedEnd ?? Date.now() + PAGE_SLEEP_MS, locale) })}</li>
           <li>{t("pageSleep.confirm.after")}</li>
@@ -105,6 +109,30 @@ export function PageSleepSection(props: { readonly management: PageManagement; r
       </ConfirmSheet>
     </section>
   )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// L'échéance, vue de l'écran
+// ═══════════════════════════════════════════════════════════════
+
+/** Le plus long délai qu'un minuteur du navigateur tient (au-delà, il partirait aussitôt). */
+const MAX_TIMER_MS = 2_147_483_647
+
+/**
+ * L'état d'une page en sommeil À L'ÉCRAN : celui du serveur, mais échu dès que l'heure passe
+ * `sleepEndsAt` (la lecture du serveur ne bascule pas d'elle-même). `canWake` suit : jamais
+ * « Réactiver » sur une échéance passée, le serveur le refuserait (`page_sleep_expired`).
+ */
+function useSleepState(page: SleepingPageView): { readonly state: SleepingPageState; readonly canWake: boolean } {
+  const [now, setNow] = useState(() => Date.now())
+  const remaining = page.state === "asleep" ? page.sleepEndsAt - now : 0
+  useEffect(() => {
+    if (remaining <= 0) return
+    const timer = setTimeout(() => setNow(Date.now()), Math.min(remaining, MAX_TIMER_MS))
+    return () => clearTimeout(timer)
+  }, [remaining])
+  const state: SleepingPageState = page.state === "expired" || remaining <= 0 ? "expired" : "asleep"
+  return { state, canWake: page.canWake && state === "asleep" }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -151,14 +179,27 @@ function WakeButton(props: { readonly management: PageManagement; readonly page:
   )
 }
 
+/** Échue, la page ne se réactive plus d'ici : la sortie passe par l'équipe de la plateforme, par la route de contact du site. */
+function PlatformContactLink(props: { readonly page: SleepingPageView }) {
+  const { t } = useDiasporaleT()
+  return (
+    <Button asChild variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal">
+      <NextLink href={routes.contact()} aria-label={t("pageSleep.expired.contactLabel", { name: props.page.name })}>
+        <MailIcon aria-hidden />
+        {t("pageSleep.expired.contact")}
+      </NextLink>
+    </Button>
+  )
+}
+
 /** L'échéance, ou le délai passé : une icône ET des mots, jamais la seule couleur. */
-function SleepDeadline(props: { readonly page: SleepingPageView }) {
+function SleepDeadline(props: { readonly page: SleepingPageView; readonly state: SleepingPageState }) {
   const { t, locale } = useDiasporaleT()
   const date = formatDate(props.page.sleepEndsAt, locale)
   return (
     <p className="flex min-w-0 items-start gap-1.5 break-words text-[13px] text-muted-foreground">
       <AlarmClockIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
-      <span className="min-w-0">{props.page.state === "expired" ? t("pageSleep.myPages.expired", { date }) : t("pageSleep.myPages.until", { date })}</span>
+      <span className="min-w-0">{props.state === "expired" ? t("pageSleep.myPages.expired", { date }) : t("pageSleep.myPages.until", { date })}</span>
     </p>
   )
 }
@@ -185,35 +226,44 @@ function SleepingPagesList(props: { readonly management: PageManagement }) {
         <ErrorNotice code={pages.code} />
       ) : (
         <ul className="flex flex-col gap-2">
-          {pages.data.map((page) => (
-            <li key={page.id}>
-              <Card className="flex flex-wrap items-center gap-3 p-4">
-                <Avatar id={page.id} name={page.name} size="md" shape="square" />
-                <div className="min-w-0 flex-1">
-                  {/* Aucun lien vers la fiche : elle ne se lit plus, pour personne. */}
-                  <p className="flex flex-wrap items-center gap-2 font-semibold">
-                    <span className="min-w-0 break-words">{page.name}</span>
-                    <TrustBadge badge={page.badge} />
-                  </p>
-                  <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
-                    <RoleChip role={page.teamRole} />
-                    <span>{t(`pageAdmin.kind.${page.ownerKind}`)}</span>
-                  </div>
-                  <div className="mt-1">
-                    <SleepDeadline page={page} />
-                  </div>
-                </div>
-                {page.canWake ? (
-                  <WakeButton management={props.management} page={page} />
-                ) : page.state === "asleep" ? (
-                  <p className="text-[13px] text-muted-foreground">{t("pageSleep.myPages.adminOnly")}</p>
-                ) : null}
-              </Card>
-            </li>
-          ))}
+          {pages.data.map((page) => <SleepingPageItem key={page.id} management={props.management} page={page} />)}
         </ul>
       )}
     </section>
+  )
+}
+
+function SleepingPageItem(props: { readonly management: PageManagement; readonly page: SleepingPageView }) {
+  const { t } = useDiasporaleT()
+  const { page } = props
+  const { state, canWake } = useSleepState(page)
+  return (
+    <li>
+      <Card className="flex flex-wrap items-center gap-3 p-4">
+        <Avatar id={page.id} name={page.name} size="md" shape="square" />
+        <div className="min-w-0 flex-1">
+          {/* Aucun lien vers la fiche : elle ne se lit plus, pour personne. */}
+          <p className="flex flex-wrap items-center gap-2 font-semibold">
+            <span className="min-w-0 break-words">{page.name}</span>
+            <TrustBadge badge={page.badge} />
+          </p>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
+            <RoleChip role={page.teamRole} />
+            <span>{t(`pageAdmin.kind.${page.ownerKind}`)}</span>
+          </div>
+          <div className="mt-1">
+            <SleepDeadline page={page} state={state} />
+          </div>
+        </div>
+        {canWake ? (
+          <WakeButton management={props.management} page={page} />
+        ) : state === "expired" ? (
+          <PlatformContactLink page={page} />
+        ) : (
+          <p className="text-[13px] text-muted-foreground">{t("pageSleep.myPages.adminOnly")}</p>
+        )}
+      </Card>
+    </li>
   )
 }
 
@@ -235,7 +285,7 @@ export function ManagedPageUnavailable(props: { readonly management: PageManagem
 }
 
 function SleepingLookup(props: { readonly management: PageManagement; readonly handle: string }) {
-  const { t, locale } = useDiasporaleT()
+  const { t } = useDiasporaleT()
   const pages = props.management.useMySleepingPages?.() ?? null
   if (pages?.status === "loading") {
     return (
@@ -247,7 +297,13 @@ function SleepingLookup(props: { readonly management: PageManagement; readonly h
   }
   const handle = props.handle.trim().replace(/^@/, "").toLowerCase()
   const page = pages?.status === "ready" ? pages.data.find((candidate) => candidate.handle === handle) ?? null : null
-  if (page === null) return <Unavailable />
+  return page === null ? <Unavailable /> : <SleepingPageState management={props.management} page={page} />
+}
+
+function SleepingPageState(props: { readonly management: PageManagement; readonly page: SleepingPageView }) {
+  const { t, locale } = useDiasporaleT()
+  const { page } = props
+  const { state, canWake } = useSleepState(page)
   const date = formatDate(page.sleepEndsAt, locale)
   return (
     <EmptyState
@@ -256,14 +312,15 @@ function SleepingLookup(props: { readonly management: PageManagement; readonly h
       description={
         <span className="flex flex-col items-center gap-2">
           <span className="break-words">
-            {page.state === "expired" ? t("pageSleep.manage.expiredBody", { name: page.name, days: PAGE_SLEEP_DAYS }) : t("pageSleep.manage.asleepBody", { name: page.name, date })}
+            {state === "expired" ? t("pageSleep.manage.expiredBody", { name: page.name, days: PAGE_SLEEP_DAYS }) : t("pageSleep.manage.asleepBody", { name: page.name, date })}
           </span>
-          {page.state === "asleep" && !page.canWake ? <span>{t("pageSleep.myPages.adminOnly")}</span> : null}
+          {state === "asleep" && !canWake ? <span>{t("pageSleep.myPages.adminOnly")}</span> : null}
         </span>
       }
       action={
         <div className="flex flex-wrap items-start justify-center gap-2">
-          {page.canWake ? <WakeButton management={props.management} page={page} filled /> : null}
+          {canWake ? <WakeButton management={props.management} page={page} filled /> : null}
+          {state === "expired" ? <PlatformContactLink page={page} /> : null}
           <Button asChild variant="outline" className="h-auto min-h-11 max-w-full whitespace-normal">
             <NextLink href={routes.myActivity("pages")}>{t("pageSleep.manage.myPages")}</NextLink>
           </Button>

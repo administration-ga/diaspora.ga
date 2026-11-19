@@ -15,7 +15,7 @@ import {
 } from "@diasporale/features/data"
 import { getFixedT } from "@diasporale/features/i18n"
 import { I18nProvider } from "@diasporale/features/i18n/client"
-import { cleanup, getDefaultNormalizer, render, screen, waitFor, within } from "@testing-library/react"
+import { act, cleanup, getDefaultNormalizer, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -89,7 +89,8 @@ const PAGE: ManagedPageDetailView = {
   myRole: "admin",
 }
 
-const ENDS_AT = Date.UTC(2026, 11, 19, 12)
+/** Une échéance à venir à l'heure réelle du test (dix jours) : le test ne vieillit pas. */
+const ENDS_AT = Date.now() + 10 * 24 * 60 * 60 * 1000
 const ASLEEP: SleepingPageView = { id: "page-1", handle: "amicale-lyon", name: "Amicale de Lyon", ownerKind: "association", badge: "community", country: "FR", teamRole: "admin", sleepEndsAt: ENDS_AT, state: "asleep", canWake: true }
 
 const ok = <T,>(value: T): Promise<ActionResult<T>> => Promise.resolve({ ok: true, value })
@@ -142,7 +143,7 @@ describe("AS-11a — « Mettre la page en sommeil » dans l'identité", () => {
     await user.click(screen.getByRole("button", { name: named("pageSleep.section.actionLabel", { name: "Amicale de Lyon" }) }))
     const dialog = await screen.findByRole("dialog")
     expect(dialog).toHaveTextContent(text("pageSleep.confirm.title", { name: "Amicale de Lyon" }))
-    for (const effect of ["hidden", "frozen", "kept", "silent", "after"]) expect(within(dialog).getByText(text(`pageSleep.confirm.${effect}`))).toBeInTheDocument()
+    for (const effect of ["hidden", "deadlines", "live", "kept", "silent", "after"]) expect(within(dialog).getByText(text(`pageSleep.confirm.${effect}`))).toBeInTheDocument()
     // L'échéance annoncée : trente jours après l'ouverture de la confirmation.
     expect(within(dialog).getByText(text("pageSleep.confirm.reversible", { date: formatDate(before + PAGE_SLEEP_MS, "fr") }))).toBeInTheDocument()
     expect(manage.putToSleep).not.toHaveBeenCalled()
@@ -196,11 +197,27 @@ describe("AS-11a — la gestion d'une page endormie", () => {
     expect(mocks.success).toHaveBeenCalledWith(t("pageSleep.myPages.woken", { name: "Amicale de Lyon" }))
   })
 
-  it("échue, elle ne se réactive plus d'ici et le dit", () => {
+  it("échue, elle ne se réactive plus d'ici, le dit et mène au contact de la plateforme", () => {
     provide(management({ useManagedPage: () => ready(null), useMySleepingPages: () => ready([{ ...ASLEEP, state: "expired" as const, canWake: false }]) }))
     wrap(<PageManageScreen handle="amicale-lyon" tab="identite" />)
     expect(screen.getByText(text("pageSleep.manage.expiredBody", { name: "Amicale de Lyon", days: PAGE_SLEEP_DAYS }))).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: named("pageSleep.myPages.wakeLabel", { name: "Amicale de Lyon" }) })).not.toBeInTheDocument()
+    expect(screen.getByRole("link", { name: named("pageSleep.expired.contactLabel", { name: "Amicale de Lyon" }) })).toHaveAttribute("href", routes.contact())
+  })
+
+  it("l'échéance passée pendant la lecture retire « Réactiver » sans attendre le serveur", () => {
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] })
+    try {
+      vi.setSystemTime(ENDS_AT - 1_000)
+      provide(management({ useManagedPage: () => ready(null), useMySleepingPages: () => ready([ASLEEP]) }))
+      wrap(<PageManageScreen handle="amicale-lyon" tab="identite" />)
+      expect(screen.getByRole("button", { name: named("pageSleep.myPages.wakeLabel", { name: "Amicale de Lyon" }) })).toBeInTheDocument()
+      act(() => { vi.advanceTimersByTime(1_000) })
+      expect(screen.queryByRole("button", { name: named("pageSleep.myPages.wakeLabel", { name: "Amicale de Lyon" }) })).not.toBeInTheDocument()
+      expect(screen.getByText(text("pageSleep.manage.expiredBody", { name: "Amicale de Lyon", days: PAGE_SLEEP_DAYS }))).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("une page qui n'est pas l'une des miennes en sommeil rend le refus indistinct habituel", () => {
@@ -225,14 +242,32 @@ describe("AS-11a — « Mes pages », section « En sommeil »", () => {
     const section = screen.getByRole("region", { name: named("pageSleep.myPages.title") })
     expect(within(section).getAllByText(text("pageSleep.myPages.until", { date: formatDate(ENDS_AT, "fr") }))).toHaveLength(2)
     expect(within(section).getByText(text("pageSleep.myPages.expired", { date: formatDate(ENDS_AT, "fr") }))).toBeInTheDocument()
-    // Un éditeur voit la page endormie sans pouvoir la réactiver ; une page échue n'a plus de bouton.
+    // Un éditeur voit la page endormie sans pouvoir la réactiver ; une page échue n'a plus de bouton, mais le contact de la plateforme.
     expect(within(section).getByText(text("pageSleep.myPages.adminOnly"))).toBeInTheDocument()
     expect(within(section).getAllByRole("button")).toHaveLength(1)
-    // Aucun lien vers la fiche : elle ne se lit plus.
-    expect(within(section).queryByRole("link")).not.toBeInTheDocument()
+    // Aucun lien vers la fiche, qui ne se lit plus : le seul lien est celui du contact, sur la page échue.
+    expect(within(section).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.contact()])
+    expect(within(section).getByRole("link", { name: named("pageSleep.expired.contactLabel", { name: "Amicale de Lille" }) })).toBeInTheDocument()
     await user.click(within(section).getByRole("button", { name: named("pageSleep.myPages.wakeLabel", { name: "Amicale de Lyon" }) }))
     await waitFor(() => expect(manage.wake).toHaveBeenCalledExactlyOnceWith("page-1"))
     expect(mocks.success).toHaveBeenCalledWith(t("pageSleep.myPages.woken", { name: "Amicale de Lyon" }))
+  })
+
+  it("une échéance déjà passée à l'heure de l'écran se lit échue, même si la lecture du serveur dit encore « en sommeil »", () => {
+    vi.useFakeTimers({ toFake: ["Date", "setTimeout", "clearTimeout"] })
+    try {
+      vi.setSystemTime(ENDS_AT - 5_000)
+      provide(management({ useMySleepingPages: () => ready([ASLEEP]) }))
+      wrap(<MyPagesPanel />)
+      const section = screen.getByRole("region", { name: named("pageSleep.myPages.title") })
+      expect(within(section).getByText(text("pageSleep.myPages.until", { date: formatDate(ENDS_AT, "fr") }))).toBeInTheDocument()
+      act(() => { vi.advanceTimersByTime(5_000) })
+      expect(within(section).queryByRole("button")).not.toBeInTheDocument()
+      expect(within(section).getByText(text("pageSleep.myPages.expired", { date: formatDate(ENDS_AT, "fr") }))).toBeInTheDocument()
+      expect(within(section).getByRole("link", { name: named("pageSleep.expired.contactLabel", { name: "Amicale de Lyon" }) })).toHaveAttribute("href", routes.contact())
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("un refus de réactivation se dit tel quel, sans succès", async () => {
@@ -241,6 +276,9 @@ describe("AS-11a — « Mes pages », section « En sommeil »", () => {
     wrap(<MyPagesPanel />)
     await user.click(screen.getByRole("button", { name: named("pageSleep.myPages.wakeLabel", { name: "Amicale de Lyon" }) }))
     expect(await screen.findByRole("alert")).toHaveTextContent(text("errors.page_sleep_expired"))
+    // La durée vient du moteur, par les variables par défaut de l'instance : jamais écrite dans la phrase.
+    expect(screen.getByRole("alert")).toHaveTextContent(`${PAGE_SLEEP_DAYS}`)
+    expect(screen.getByRole("alert")).not.toHaveTextContent("{{")
     expect(mocks.success).not.toHaveBeenCalled()
   })
 
