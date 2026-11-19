@@ -1,10 +1,10 @@
 "use client"
 
 import { FEED_SCOPES, parseFeedScope, parseResidenceCountry, type CountryCode, type FeedScope } from "@diasporale/domain"
-import { Avatar, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, countryName } from "@diasporale/features"
-import { useCountryHub, useOptionalDataSource, type MembershipView } from "@diasporale/features/data"
+import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diasporale/features"
+import { useCountryHub, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
-import { ArrowRightIcon, GalleryVerticalEndIcon, ListIcon, NewspaperIcon } from "lucide-react"
+import { ArrowRightIcon, Building2Icon, GalleryVerticalEndIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
@@ -15,6 +15,8 @@ import { FeedPages } from "@/components/feed-pages"
 import { FeedStories } from "@/components/feed-stories"
 import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
 import { StatusBanner } from "@/components/status-banner"
+import { countryPagesPreview } from "@/lib/country-pages"
+import { canSeeRegistration } from "@/lib/page-registration"
 import { normalizeFeedTag, routes } from "@/lib/routes"
 
 /** `/fil` — le fil et ses quatre portées (EXF-DG-13), « Mon pays » par défaut. */
@@ -170,16 +172,36 @@ function Feed(props: { membership: MembershipView }) {
 
           <FeedStories now={now} />
 
+          {/* La carte d'identité du fil, comme celle du réseau de l'administration : elle porte les gestes
+              de création — publier, et inscrire son organisation (AS-05) — à la même place sur chaque visite. */}
           {composer.canPublish ? (
-            <Card className="flex items-center gap-3 p-3">
-              <Avatar id={props.membership.personId} name={props.membership.displayName} />
-              <button
-                type="button"
-                onClick={composer.open}
-                className="flex min-h-11 flex-1 items-center rounded-[var(--esp-r-chrome)] bg-muted px-4 text-left text-[15px] text-muted-foreground transition-colors hover:bg-[var(--ink-150)] focus-visible:shadow-focus"
-              >
-                {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
-              </button>
+            <Card className="flex flex-col gap-3 p-3">
+              <div className="flex items-center gap-3">
+                <Avatar id={props.membership.personId} name={props.membership.displayName} />
+                <button
+                  type="button"
+                  onClick={composer.open}
+                  className="flex min-h-11 flex-1 items-center rounded-[var(--esp-r-chrome)] bg-muted px-4 text-left text-[15px] text-muted-foreground transition-colors hover:bg-[var(--ink-150)] focus-visible:shadow-focus"
+                >
+                  {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
+                </button>
+              </div>
+              {canSeeRegistration(props.membership.status) ? (
+                <div role="group" aria-label={t("feed.registerLabel")} className="flex flex-wrap gap-2 border-t border-border pt-3">
+                  <Button asChild size="sm" variant="ghost">
+                    <NextLink href={routes.newPage("association")}>
+                      <UsersRoundIcon aria-hidden />
+                      {t("pageAdmin.myPages.createAssociation")}
+                    </NextLink>
+                  </Button>
+                  <Button asChild size="sm" variant="ghost">
+                    <NextLink href={routes.newPage("company")}>
+                      <Building2Icon aria-hidden />
+                      {t("pageAdmin.myPages.createCompany")}
+                    </NextLink>
+                  </Button>
+                </div>
+              ) : null}
             </Card>
           ) : null}
 
@@ -273,6 +295,7 @@ export function FeedRail(props: { membership: MembershipView }) {
         </NextLink>
       </Card>
       <MemberSuggestions headingId="rail-suggestions" />
+      <RailCountryPages country={country} />
       <section aria-labelledby="rail-evenements" className="flex flex-col gap-3">
         <h2 id="rail-evenements" className="font-display text-lg font-bold">
           {t("rail.upcoming")}
@@ -301,5 +324,55 @@ export function FeedRail(props: { membership: MembershipView }) {
         )}
       </section>
     </>
+  )
+}
+
+/**
+ * Les pages du pays de résidence dans le rail, comme le rail des pages du réseau de
+ * l'administration : les officielles d'abord, puis associations et entreprises. Sans
+ * annuaire servi, rien ; avant la lecture, rien n'est affirmé (ni liste, ni « aucune »).
+ */
+function RailCountryPages(props: { country: CountryCode }) {
+  const pages = useOptionalDataSource()?.pages ?? null
+  if (pages === null) return null
+  return <RailCountryPagesRead capability={pages} country={props.country} />
+}
+
+function RailCountryPagesRead(props: { capability: PagesCapability; country: CountryCode }) {
+  const { t, locale } = useDiasporaleT()
+  const result = props.capability.useHubPages(props.country)
+  if (result.status !== "ready") return null
+  const preview = countryPagesPreview(result.data)
+  return (
+    <section aria-labelledby="rail-pages" className="flex flex-col gap-3">
+      <h2 id="rail-pages" className="font-display text-lg font-bold">
+        {t("rail.pages.title", { country: countryName(props.country, locale) })}
+      </h2>
+      {preview.length === 0 ? (
+        <p className="text-[13px] text-muted-foreground">{t("rail.pages.empty")}</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {preview.map((page) => (
+            <li key={page.id}>
+              <NextLink href={routes.page(page.handle)} className="flex min-h-12 items-center gap-3 rounded-xl p-2 transition-colors hover:bg-muted focus-visible:shadow-focus">
+                <Avatar id={page.id} name={page.name} shape="square" size="sm" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{page.name}</span>
+                  <span className="block truncate text-[13px] text-muted-foreground">{t(`pageAdmin.kind.${page.ownerKind}`)}</span>
+                </span>
+                {page.badge !== "community" ? <TrustBadge badge={page.badge} /> : null}
+              </NextLink>
+            </li>
+          ))}
+        </ul>
+      )}
+      <NextLink
+        href={routes.pages({ country: props.country })}
+        className="inline-flex min-h-10 items-center gap-1 self-start text-sm font-semibold text-primary hover:underline focus-visible:shadow-focus"
+      >
+        {t("rail.pages.directory")}
+        <ArrowRightIcon className="size-4" aria-hidden />
+      </NextLink>
+    </section>
   )
 }
