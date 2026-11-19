@@ -214,7 +214,7 @@ Plan : [`07_PAGES_ASSOCIATIONS_GROUPES.md`](07_PAGES_ASSOCIATIONS_GROUPES.md)
 | DS-09 | Groupes thématiques ouverts par pays | P1 | M | S2 | ouverture au pilote après MC-01 du moteur ; création réservée aux vérifiés au pilote (décision 3 du plan 07), demandée au moteur par antsia#177 | plan 15 | à faire |
 | AS-08 | Groupe d'association : médias, réactions, commentaires, épingle | P1 | M | S2 | compléments génériques demandés au moteur (antsia#182) | nouveau | fusionné en mode moteur (antsia#181, #87 ; couple vérifié 47a2ccf / 5b2817d) ; la démonstration garde son mur en texte, mur prouvé par les tests seulement |
 | AS-09 | Annonce aux adhérents | P1 | M | S2 | genre d'avis et seau de débit demandés au moteur (antsia#179) ; suit AS-08 | nouveau | à faire |
-| AS-10 | Équipe : éditeur, modérateur, transfert guidé, commentaires | P1 | M | S2 | aucune | nouveau | à faire |
+| AS-10 | Équipe : éditeur, modérateur, transfert guidé, commentaires | P1 | M | S2 | PG-08 du moteur fait dans le même couple ; avis de changement de rôle demandé (antsia#184) | nouveau | fusionné (antsia#183, #89 ; couple vérifié 4016ec5 / d7ebc11, recette en démonstration) ; reste le transfert à deux comptes en mode moteur |
 | AS-11 | Fermer sa page ; page sans responsable | P1 | M | S2 | décision 8 | nouveau | à faire |
 | AS-12 | Groupes : règles, adhésion sur demande, validation des publications | P2 | M | S2 | aucune | nouveau | à faire |
 | AS-13 | Statistiques honnêtes et publications programmées | P2 | M | S2 | aucune | nouveau | à faire |
