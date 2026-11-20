@@ -105,7 +105,7 @@
       "allowReadmission": "Autoriser une nouvelle demande"
     },
     "rejectSheet": {
-      "title": "Refuser la demande de {{name}} ?",
+      "title": "Refuser la demande {{name, de}} ?",
       "description": "La personne verra que sa demande n'est pas retenue, avec votre motif si vous en donnez un. Elle pourra redemander dans {{days}} jours.",
       "reason": "Motif (facultatif)",
       "reasonHint": "{{max}} caractères au plus.",

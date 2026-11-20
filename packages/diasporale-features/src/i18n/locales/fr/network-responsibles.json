@@ -11,7 +11,7 @@
       "more": "D'autres responsables existent ; seuls les premiers sont montrés.",
       "change": "Changer le rôle",
       "remove": "Retirer le rôle",
-      "changeTitle": "Changer le rôle de {{name}}",
+      "changeTitle": "Changer le rôle {{name, de}}",
       "changeBody": "{{name}} passera de « {{from}} » à « {{to}} » dès son prochain geste. Le changement est motivé et inscrit au journal des décisions du moteur.",
       "changeConfirm": "Confirmer le changement",
       "removeTitle": "Retirer {{name}} des responsables du réseau",

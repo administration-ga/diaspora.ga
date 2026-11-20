@@ -51,9 +51,9 @@
       "pinnedErrorTitle": "L’épingle du groupe n’a pas pu être lue",
       "removed": "Publication retirée du groupe.",
       "removeOtherDescription": "La publication ne sera plus lisible dans le groupe. Son auteur la voit encore, marquée comme retirée.",
-      "pinPostOf": "Épingler en tête du groupe la publication de {{name}}",
-      "unpinPostOf": "Désépingler la publication de {{name}}",
-      "removePostOf": "Retirer cette publication de {{name}}",
+      "pinPostOf": "Épingler en tête du groupe la publication {{name, de}}",
+      "unpinPostOf": "Désépingler la publication {{name, de}}",
+      "removePostOf": "Retirer cette publication {{name, de}}",
       "someone": "un membre"
     },
     "event": {

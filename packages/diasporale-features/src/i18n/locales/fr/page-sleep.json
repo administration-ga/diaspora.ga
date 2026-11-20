@@ -37,7 +37,7 @@
     },
     "expired": {
       "contact": "Écrire à l'équipe de la plateforme",
-      "contactLabel": "Écrire à l'équipe de la plateforme au sujet de {{name}}"
+      "contactLabel": "Écrire à l'équipe de la plateforme au sujet {{name, de}}"
     },
     "orphan": {
       "title": "Cette page n'a plus de responsable",

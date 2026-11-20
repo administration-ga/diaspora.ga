@@ -227,9 +227,9 @@
     },
     "signup": {
       "title": "Participer",
-      "consent": "J'accepte que l'équipe de {{page}} voie mon nom publié pour organiser cette mission.",
+      "consent": "J'accepte que l'équipe {{page, de}} voie mon nom publié pour organiser cette mission.",
       "submit": "M'inscrire",
-      "registered": "Votre inscription est confirmée. L'équipe de {{page}} voit votre nom publié.",
+      "registered": "Votre inscription est confirmée. L'équipe {{page, de}} voit votre nom publié.",
       "withdraw": "Me retirer",
       "withdrawConfirm": {
         "title": "Vous retirer de la mission ?",

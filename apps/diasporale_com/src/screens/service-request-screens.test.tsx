@@ -231,7 +231,7 @@ describe("/mon-activite/demandes/<id> — côté page", () => {
   it("propose des conditions complètes, lues dans le fuseau choisi", async () => {
     const { capability } = fake({ request: { status: "ready", data: sent() } })
     render(tree(<ActivityRequestScreen requestId="request-1" />))
-    expect(screen.getByText("Demande de Awa OGOOUÉ")).toBeTruthy()
+    expect(screen.getByText("Demande d’Awa OGOOUÉ")).toBeTruthy()
     fireEvent.click(screen.getByRole("button", { name: "Faire une proposition" }))
     fireEvent.change(screen.getByLabelText("Montant"), { target: { value: "45,50" } })
     fireEvent.change(screen.getByLabelText("Date du rendez-vous"), { target: { value: "2026-10-20" } })

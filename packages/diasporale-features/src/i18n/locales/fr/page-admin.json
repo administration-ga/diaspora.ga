@@ -243,7 +243,7 @@
       "me": "(vous)",
       "since": "Depuis le {{date}}",
       "invited": "Invitation en attente depuis le {{date}}",
-      "changeRole": "Rôle de {{name}}",
+      "changeRole": "Rôle {{name, de}}",
       "remove": "Retirer",
       "removeLabel": "Retirer {{name}} de l'équipe",
       "leave": "Quitter l'équipe",
@@ -319,9 +319,9 @@
       "manage": "Gérer",
       "manageLabel": "Gérer {{name}}",
       "team": "Équipe",
-      "teamLabel": "Équipe de {{name}}",
+      "teamLabel": "Équipe {{name, de}}",
       "moderate": "Modérer les commentaires",
-      "moderateLabel": "Modérer les commentaires de {{name}}"
+      "moderateLabel": "Modérer les commentaires {{name, de}}"
     },
     "invitations": {
       "title": "Invitations dans une équipe",
@@ -329,7 +329,7 @@
       "item": "Rôle proposé : {{role}}. Invitation du {{date}}.",
       "accept": "Accepter",
       "decline": "Décliner",
-      "accepted": "Invitation acceptée : vous faites désormais partie de l'équipe de {{name}}.",
+      "accepted": "Invitation acceptée : vous faites désormais partie de l'équipe {{name, de}}.",
       "declined": "Invitation déclinée."
     },
     "claims": {

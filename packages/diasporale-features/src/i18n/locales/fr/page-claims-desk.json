@@ -16,7 +16,7 @@
       "evidenceCount_other": "{{count}} pièces",
       "open": "Instruire",
       "view": "Consulter",
-      "sheetTitle": "Vérification de {{page}}",
+      "sheetTitle": "Vérification {{page, de}}",
       "sheetDescription": "Lisez la note et les pièces, puis tranchez par une décision motivée.",
       "page": "Page",
       "received": "Reçue le",

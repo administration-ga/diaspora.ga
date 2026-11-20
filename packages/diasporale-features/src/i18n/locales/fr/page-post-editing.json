@@ -1,8 +1,8 @@
 {
   "pagePostEditing": {
     "open": "Modifier le texte",
-    "title": "Modifier le texte de {{name}}",
-    "description": "Vous modifiez une publication au nom de {{name}}. Ses médias, son audience et sa portée restent inchangés.",
+    "title": "Modifier le texte {{name, de}}",
+    "description": "Vous modifiez une publication au nom {{name, de}}. Ses médias, son audience et sa portée restent inchangés.",
     "body": "Texte de la publication",
     "textHint": "{{max}} caractères maximum. Cette publication doit conserver un texte.",
     "mediaHint": "{{max}} caractères maximum. Vous pouvez laisser le texte vide : les photos ou la vidéo restent jointes, y compris si leur analyse est en cours.",

@@ -24,7 +24,11 @@ function flatten(tree: Tree, prefix = ""): Map<string, string> {
   return out
 }
 
-const variables = (text: string) => [...text.matchAll(/\{\{\s*(\w+)\s*\}\}/g)].map((match) => match[1]).sort()
+/** Les variables d'une phrase, format compris (`{{name, de}}` porte la variable `name`). */
+const variables = (text: string) => [...text.matchAll(/\{\{\s*(\w+)\s*(?:,[^}]*)?\}\}/g)].map((match) => match[1]).sort()
+
+/** Les variables qui portent le nom d'une page ou d'une personne. */
+const NAME_VARIABLES = "name|page"
 
 const FR = flatten(fr)
 const EN = flatten(en)
@@ -76,6 +80,19 @@ describe("locales fr / en", () => {
 
   it("français : une espace insécable avant « : ; ? ! », dans les guillemets et devant le tiret", () => {
     const faults = [...FR].filter(([, text]) => / [:;?!»]|« | — /.test(text))
+    expect(faults.map(([key]) => key)).toEqual([])
+  })
+
+  it("français : « de » s'élide devant un nom inséré, par le format `de` (« au nom d’Amicale »)", () => {
+    const unelided = new RegExp(`(^|[^\\p{L}])[dD]e \\{\\{\\s*(?:${NAME_VARIABLES})\\s*\\}\\}`, "u")
+    const faults = [...FR].filter(([, text]) => unelided.test(text))
+    expect(faults.map(([key]) => key)).toEqual([])
+    expect(variables("Publier au nom {{name, de}}")).toEqual(["name"])
+    expect(unelided.test("Publier au nom de {{name}}")).toBe(true)
+  })
+
+  it("le format `de` n'existe qu'en français", () => {
+    const faults = [...EN].filter(([, text]) => /\{\{[^}]*,\s*de\b/.test(text))
     expect(faults.map(([key]) => key)).toEqual([])
   })
 
