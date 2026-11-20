@@ -1,9 +1,10 @@
 "use client"
 
 import type { CountryCode, FeedScope } from "@diaspora-ga/domain"
-import { createContext, useContext, type ReactNode } from "react"
+import { createContext, useContext, useMemo, type ReactNode } from "react"
 
 import { type EntryDoorsView, UNREAD_ENTRY_DOORS } from "./entry-doors-port"
+import { type FeatureGate, featureGateOf, gateSource, knownFeatures } from "./network-features-port"
 import type { DiasporaGaDataSource } from "./port"
 import type { BookmarksPageRequest, CommentsPageRequest, FeedPageRequest, Loadable, NotificationsPageRequest, ProfilePostsPageRequest, RepliesPageRequest } from "./types"
 
@@ -17,6 +18,29 @@ const DataSourceContext = createContext<DiasporaGaDataSource | null>(null)
  */
 export function DataSourceProvider(props: { source: DiasporaGaDataSource; children: ReactNode }) {
   return <DataSourceContext.Provider value={props.source}>{props.children}</DataSourceContext.Provider>
+}
+
+const NO_FEATURES_OPEN: Loadable<readonly string[]> = { status: "ready", data: [] }
+
+/**
+ * Le fournisseur de l'APPLICATION (démonstration comme moteur, ADR-0041) : il lit les
+ * fonctionnalités ouvertes du réseau, puis monte la source GARDÉE (`gateSource`) — les
+ * capacités des modules fermés en sont absentes. La coque suppose une source stable : un
+ * changement des clés ouvertes remonte l'arbre (`key`), jamais un changement de capacités
+ * sous des hooks déjà appelés. Sans capacité, rien n'est ouvert.
+ */
+export function GatedDataSourceProvider(props: { source: DiasporaGaDataSource; children: ReactNode }) {
+  const loaded = props.source.networkFeatures?.useOpen() ?? NO_FEATURES_OPEN
+  const ready = loaded.status !== "loading"
+  // Une lecture refusée (hors adhésion, réseau indisponible) n'ouvre rien.
+  const signature = loaded.status === "ready" ? knownFeatures(loaded.data).join(",") : ""
+  const { source } = props
+  const gated = useMemo(() => gateSource(source, signature === "" ? [] : knownFeatures(signature.split(",")), ready), [source, signature, ready])
+  return (
+    <DataSourceProvider key={signature} source={gated}>
+      {props.children}
+    </DataSourceProvider>
+  )
 }
 
 export function useDataSource(): DiasporaGaDataSource {
@@ -80,3 +104,13 @@ export const usePageDecisions = () => useDataSource().pageDecisions ?? null
 export const useConversations = () => useDataSource().conversations ?? null
 export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
 export const useCallSettings = () => useDataSource().callSettings ?? null
+/** Les fonctionnalités activables du réseau (clés ouvertes ; état et bascule pour l'administration). */
+export const useNetworkFeatures = () => useDataSource().networkFeatures ?? null
+
+/**
+ * Les modules ouverts, pour la navigation et les adresses. Hors fournisseur, ou sur une
+ * source non gardée (tests d'un écran), tout ce que la source porte est servi.
+ */
+export function useFeatureGate(): FeatureGate {
+  return featureGateOf(useContext(DataSourceContext))
+}

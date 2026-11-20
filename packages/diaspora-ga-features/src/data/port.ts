@@ -82,6 +82,7 @@ import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
+import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -393,6 +394,17 @@ export interface DiasporaGaDataSource {
   readonly demoAccounts?: DemoAccountsCapability
   /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
   readonly callSettings?: CallSettingsCapability
+  /**
+   * Les fonctionnalités activables du réseau (ADR-0041 du moteur, `network-features-port.ts`) :
+   * les clés ouvertes, et pour l'administration du réseau, leur état et la bascule.
+   */
+  readonly networkFeatures?: NetworkFeaturesCapability
+  /**
+   * Posés par `gateSource` seulement : les fonctionnalités ouvertes de la source montée, et
+   * si leur lecture a répondu. Absents : la source n'est pas gardée (elle sert tout ce qu'elle porte).
+   */
+  readonly openFeatures?: readonly NetworkFeature[]
+  readonly featuresReady?: boolean
   useSession(): Loadable<SessionView>
   /**
    * Les portes d'entrée que ce déploiement sait vraiment servir (EA-02, `entry-doors-port.ts`).

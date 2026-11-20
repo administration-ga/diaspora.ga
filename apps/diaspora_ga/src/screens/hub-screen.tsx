@@ -22,6 +22,7 @@ import {
 } from "@diaspora-ga/features"
 import {
   useCountryHub,
+  useFeatureGate,
   useOpenCountries,
   useOptionalDataSource,
   type CountryHubView,
@@ -40,7 +41,7 @@ import { type ReactNode, useLayoutEffect, useRef, useState } from "react"
 
 import { HubMutualAidBlock } from "@/components/aid-on-the-way"
 import { AppShell, useComposer } from "@/components/app-shell"
-import { CommunityShortcuts } from "@/components/community-shortcuts"
+import { CommunityShortcuts, communityShortcutsOffered } from "@/components/community-shortcuts"
 import { FeedPages } from "@/components/feed-pages"
 import { Gate } from "@/components/gate"
 import { HubAbout, HubCountersNote, hubCountersMeasured } from "@/components/hub-about"
@@ -149,6 +150,11 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
   const name = countryName(props.country, props.locale)
   const isHome = props.country === props.membership.facet.countryOfResidence
   const now = Date.now()
+  // ADR-0041 du moteur : les compteurs des modules fermés sur le réseau ne s'affichent pas.
+  const features = useFeatureGate()
+  const pagesOpen = features.isOpen("pages")
+  const eventsCounted = hub.status === "ready" && hub.data.eventsSource !== "unmeasured" && features.isOpen("groupsAndEvents")
+  const counterColumns = 1 + (pagesOpen ? 2 : 0) + (eventsCounted ? 1 : 0)
 
   return (
     <>
@@ -172,22 +178,25 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
         </div>
         {/* HB-05 : un compteur du moteur sans date de passage n'est pas mesuré ; il ne s'affiche pas. */}
         {hub.status === "ready" && !hub.data.counters.dormant && hubCountersMeasured(hub.data) ? (
-          <div className={cn("grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 md:px-6", hub.data.eventsSource === "unmeasured" ? "sm:grid-cols-3" : "sm:grid-cols-4")}>
+          <div className={cn("grid grid-cols-2 gap-4 border-t border-border bg-[var(--ink-50)] px-5 py-4 md:px-6", counterColumns === 4 ? "sm:grid-cols-4" : counterColumns === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
             <StatCounter value={hub.data.counters.members} label={t("hub.counters.members")} />
-            <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
-            <StatCounter value={hub.data.counters.companies} label={t("hub.counters.companies")} />
+            {pagesOpen ? <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} /> : null}
+            {pagesOpen ? <StatCounter value={hub.data.counters.companies} label={t("hub.counters.companies")} /> : null}
             {/* Non mesurés (EV-02), les évènements n'ont pas de nombre : jamais un zéro de façade. */}
-            {hub.data.eventsSource === "unmeasured" ? null : <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} />}
+            {eventsCounted ? <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} /> : null}
             {hub.data.countersSource === "demo" ? (
               <p className="col-span-full text-[11px] text-muted-foreground">{t("hub.countersDemo")}</p>
             ) : null}
             <HubCountersNote computedAt={hub.data.countersComputedAt} />
           </div>
         ) : null}
-        {/* HB-04 : les rubriques du pays du hub, le pays consulté compris ; la résidence ne change pas. */}
-        <div className="border-t border-border px-2 py-1 md:px-3">
-          <CommunityShortcuts country={props.country} />
-        </div>
+        {/* HB-04 : les rubriques du pays du hub, le pays consulté compris ; la résidence ne change pas.
+            ADR-0041 du moteur : seulement celles des modules ouverts ; aucune, aucun bandeau. */}
+        {communityShortcutsOffered(features) ? (
+          <div className="border-t border-border px-2 py-1 md:px-3">
+            <CommunityShortcuts country={props.country} />
+          </div>
+        ) : null}
       </header>
 
       {hub.status === "ready" ? <HubAbout open={hub.data.open} countryLabel={name} /> : null}
@@ -259,9 +268,19 @@ function HubSections(props: {
   const jobs = source?.jobs ?? null
   // HB-02 : les évènements du pays se lisent par la capacité des évènements d'association, quand le fournisseur la sert.
   const countryEvents = countryEventsReader(source?.associationEvents ?? null)
+  // ADR-0041 du moteur : les onglets des modules fermés sur le réseau ne s'offrent pas ; les actus restent.
+  const features = useFeatureGate()
+  const pagesOpen = features.isOpen("pages")
+  const eventsOpen = features.isOpen("groupsAndEvents")
+  const tabs = [
+    "actus" as const,
+    ...(eventsOpen ? (["evenements"] as const) : []),
+    ...(pagesOpen ? (["associations", "entreprises"] as const) : []),
+    ...(jobs ? (["emploi"] as const) : []),
+  ]
   return (
     <>
-      {pages.status === "ready" && pages.data.officialPages.length > 0 ? (
+      {pagesOpen && pages.status === "ready" && pages.data.officialPages.length > 0 ? (
         <section aria-labelledby="hub-officiel" className="flex flex-col gap-3">
           <h2 id="hub-officiel" className="font-display text-xl font-bold">
             {t("hub.official")}
@@ -274,10 +293,8 @@ function HubSections(props: {
       ) : null}
 
       <FolderTabs defaultValue="actus">
-        <CommunityTabSwitcher
-          tabs={jobs ? ["actus", "evenements", "associations", "entreprises", "emploi"] : ["actus", "evenements", "associations", "entreprises"]}
-          label={t("hub.tabsLabel", { country: name })}
-        />
+        {/* Les actus seules : pas d'onglet unique à choisir. */}
+        {tabs.length > 1 ? <CommunityTabSwitcher tabs={tabs} label={t("hub.tabsLabel", { country: name })} /> : null}
         <FolderTabsContent value="actus" className="flex flex-col gap-4">
           <FeedPages
             membership={props.membership}
@@ -296,6 +313,7 @@ function HubSections(props: {
             )}
           />
         </FolderTabsContent>
+        {eventsOpen ? (
         <FolderTabsContent value="evenements" className="flex flex-col gap-3">
           {/* La démonstration joint au hub ses évènements fictifs, d'un autre modèle (catégorie, ville, portée) que EV-05 réunira. */}
           {hub.eventsSource === "demo" ? (
@@ -312,6 +330,9 @@ function HubSections(props: {
             <HubEventsUnlisted country={props.country} />
           )}
         </FolderTabsContent>
+        ) : null}
+        {pagesOpen ? (
+        <>
         <FolderTabsContent value="associations" className="grid gap-3 sm:grid-cols-2">
           <HubPageList
             pages={pages}
@@ -344,6 +365,8 @@ function HubSections(props: {
             }
           />
         </FolderTabsContent>
+        </>
+        ) : null}
         {jobs ? (
           <FolderTabsContent value="emploi" className="flex flex-col gap-3">
             <HubJobsTab jobs={jobs} country={props.country} countryLabel={name} />

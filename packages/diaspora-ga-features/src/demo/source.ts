@@ -77,6 +77,7 @@ import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPilotMetrics } from "./pilot-metrics"
 import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
+import { createDemoNetworkFeatures } from "./network-features"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -178,6 +179,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
     pageDecisions: createDemoPageDecisions(store, demoPageTeams),
     // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
     callSettings: createDemoCallSettings(store),
+    // ADR-0041 : les fonctionnalités activables du réseau fictif, fermées tant que rien n'est décidé.
+    networkFeatures: createDemoNetworkFeatures(store),
 
     useSession() {
       const version = useVersion()

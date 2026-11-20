@@ -29,7 +29,7 @@ import {
   TrustBadges,
   formatDate,
 } from "@diaspora-ga/features"
-import { useActions, useMyConsents, useOpenCountries, type MembershipView } from "@diaspora-ga/features/data"
+import { useActions, useFeatureGate, useMyConsents, useOpenCountries, type MembershipView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { CopyIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -353,6 +353,9 @@ function ConsentsSection() {
   const { t, locale } = useDiasporaGaT()
   const actions = useActions()
   const consents = useMyConsents()
+  // ADR-0041 du moteur : l'emploi fermé sur le réseau, le profil de talent ne se gère plus depuis sa page ;
+  // un accord déjà donné reste RETIRABLE ici, et seulement retirable.
+  const jobsOpen = useFeatureGate().isOpen("jobs")
   const [leaveOpen, setLeaveOpen] = useState(false)
   const router = useRouter()
   const active = useRef(false)
@@ -368,10 +371,13 @@ function ConsentsSection() {
           const view = consents.data.find((item) => item.purpose === row.purpose)
           const granted = view?.granted ?? false
           const switchId = `consentement-${row.purpose}`
+          const revokeOnly = row.purpose === "talents" && !jobsOpen
+          if (revokeOnly && !granted) return null
+          const elsewhere = revokeOnly ? undefined : row.elsewhere
           return (
             <li key={row.purpose} className="flex items-start gap-4 py-3">
               <div className="min-w-0 flex-1">
-                {row.elsewhere ? (
+                {elsewhere ? (
                   <p className="text-[15px] font-semibold">{t(`consentPurpose.${row.purpose}.title`)}</p>
                 ) : (
                   <Label htmlFor={switchId} className="text-[15px] font-semibold">
@@ -379,24 +385,24 @@ function ConsentsSection() {
                   </Label>
                 )}
                 <p className="mt-0.5 text-[13px] leading-snug text-muted-foreground">{t(`consentPurpose.${row.purpose}.body`)}</p>
-                {!row.elsewhere && view?.recordedAt ? (
+                {!elsewhere && view?.recordedAt ? (
                   <p className="mt-1 font-mono text-[11px] text-muted-foreground">
                     {t("settings.consentRecorded", { date: formatDate(view.recordedAt, locale), version: view.textVersion })}
                   </p>
                 ) : null}
               </div>
-              {row.elsewhere ? (
+              {elsewhere ? (
                 <NextLink
-                  href={row.elsewhere.href()}
+                  href={elsewhere.href()}
                   className="inline-flex min-h-11 shrink-0 items-center rounded-sm text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
                 >
-                  {t(row.elsewhere.label)}
+                  {t(elsewhere.label)}
                 </NextLink>
               ) : (
                 <Switch
                   id={switchId}
                   checked={granted}
-                  disabled={row.locked || (row.purpose === "consular_attestation" && !granted)}
+                  disabled={row.locked || ((row.purpose === "consular_attestation" || revokeOnly) && !granted)}
                   onCheckedChange={async (checked) => {
                     const result = await actions.setConsent(row.purpose, checked)
                     if (!active.current) return

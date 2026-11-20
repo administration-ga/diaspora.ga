@@ -85,6 +85,7 @@ import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.js
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
 import enNetworkResponsibles from "./locales/en/network-responsibles.json"
 import enModerationSettings from "./locales/en/moderation-settings.json"
+import enNetworkFeatures from "./locales/en/network-features.json"
 import enPageClaimsDesk from "./locales/en/page-claims-desk.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
@@ -166,6 +167,7 @@ import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.js
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
 import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
 import frModerationSettings from "./locales/fr/moderation-settings.json"
+import frNetworkFeatures from "./locales/fr/network-features.json"
 import frPageClaimsDesk from "./locales/fr/page-claims-desk.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
@@ -255,6 +257,7 @@ export const LOCALE_PARTS = {
     "event-outcome-notices": frEventOutcomeNotices,
     "network-responsibles": frNetworkResponsibles,
     "moderation-settings": frModerationSettings,
+    "network-features": frNetworkFeatures,
     "page-claims-desk": frPageClaimsDesk,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
@@ -338,6 +341,7 @@ export const LOCALE_PARTS = {
     "event-outcome-notices": enEventOutcomeNotices,
     "network-responsibles": enNetworkResponsibles,
     "moderation-settings": enModerationSettings,
+    "network-features": enNetworkFeatures,
     "page-claims-desk": enPageClaimsDesk,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,

@@ -349,3 +349,26 @@ describe("HubScreen — ET-09 : l'entraide du pays", () => {
     expect(screen.queryByRole("region", { name: /Entraide.*Canada/ })).not.toBeInTheDocument()
   })
 })
+
+describe("HubScreen — réseau simple (ADR-0041 du moteur)", () => {
+  /** Une source gardée sans module ouvert, comme l'application la monte par défaut. */
+  const closed = { kind: "demo", openFeatures: [], featuresReady: true } as unknown as DiasporaGaDataSource
+  const counted: CountryHubView = { ...hub, counters: { ...hub.counters, members: { kind: "value", value: 12 } } }
+
+  it("tout fermé : les actus seules, sans onglet, sans compteur des associations ni bandeau des rubriques", () => {
+    mocks.hub = { status: "ready", data: counted }
+    render(<DataSourceProvider source={closed}>{tree()}</DataSourceProvider>)
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Publications paginées du hub" })).toBeInTheDocument()
+    expect(screen.getByText("Membres visibles")).toBeInTheDocument()
+    expect(screen.queryByText("Associations")).not.toBeInTheDocument()
+    expect(screen.queryByRole("navigation", { name: "Vie communautaire du pays" })).not.toBeInTheDocument()
+  })
+
+  it("les pages ouvertes, leurs onglets et leurs compteurs reviennent ; les évènements restent fermés", () => {
+    mocks.hub = { status: "ready", data: counted }
+    render(<DataSourceProvider source={{ ...closed, openFeatures: ["pages"] }}>{tree()}</DataSourceProvider>)
+    const tabs = within(screen.getByRole("tablist"))
+    expect(tabs.getAllByRole("tab").map((tab) => tab.textContent)).toEqual(["Actualités", "Associations", "Entreprises"])
+  })
+})

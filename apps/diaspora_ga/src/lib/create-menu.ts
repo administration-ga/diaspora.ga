@@ -25,11 +25,13 @@ export interface CreateMenuInput {
   /** Les actus sont servies : le moteur est branché et iCom ouvert pour ce membre. */
   readonly stories: boolean
   readonly status: MembershipStatus
+  /** ADR-0041 du moteur : les associations et entreprises sont ouvertes sur le réseau. */
+  readonly pages: boolean
 }
 
 /**
  * Les formats offerts, dans l'ordre : une actu, puis l'inscription d'une association et
- * d'une entreprise (AS-05). Les groupes thématiques n'y sont pas : leur création attend la
+ * d'une entreprise (AS-05), quand les pages sont ouvertes sur le réseau (ADR-0041 du moteur). Les groupes thématiques n'y sont pas : leur création attend la
  * règle du pilote (décision 3 du plan 07), et les directs restent fermés.
  */
 export function createFormats(input: CreateMenuInput): readonly CreateFormat[] {
@@ -37,7 +39,7 @@ export function createFormats(input: CreateMenuInput): readonly CreateFormat[] {
   if (input.canPublish && input.stories) {
     formats.push({ id: "story", href: routes.newStory(), labelKey: "nav.create.story", hintKey: "nav.create.storyHint" })
   }
-  if (canSeeRegistration(input.status)) {
+  if (input.pages && canSeeRegistration(input.status)) {
     formats.push(
       { id: "association", href: routes.newPage("association"), labelKey: "nav.create.association", hintKey: "nav.create.associationHint" },
       { id: "company", href: routes.newPage("company"), labelKey: "nav.create.company", hintKey: "nav.create.companyHint" },

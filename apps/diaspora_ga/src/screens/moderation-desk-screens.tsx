@@ -23,7 +23,7 @@
  * PROPRIÉTAIRE : chantier « modération par pays ».
  */
 import { Card, EmptyState, FolderTabsNav, Skeleton } from "@diaspora-ga/features"
-import { useModerationDesk, type MembershipView, type ModerationDeskCapability, type ModerationDeskView } from "@diaspora-ga/features/data"
+import { useFeatureGate, useModerationDesk, type MembershipView, type ModerationDeskCapability, type ModerationDeskView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { FlaskConicalIcon, ShieldOffIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -56,9 +56,12 @@ const TAB_LABELS: Readonly<Record<DeskTab, string>> = {
   reglages: "moderationDesk.tab.settings",
 }
 
-/** Un onglet offert à ce rôle : les recours et les réglages à l'administration du réseau, les pages à vérifier à qui les instruit selon le moteur (rôle de réseau ou équipe compétente pour les pages). */
-function offersTab(tab: DeskTab, view: ModerationDeskView): boolean {
-  if (tab === "pages") return view.canReviewClaims
+/**
+ * Un onglet offert à ce rôle : les recours et les réglages à l'administration du réseau, les pages à vérifier à qui les instruit selon le moteur (rôle de réseau ou équipe compétente pour les pages).
+ * ADR-0041 du moteur : les pages fermées sur le réseau, il n'y a pas de page à vérifier.
+ */
+function offersTab(tab: DeskTab, view: ModerationDeskView, pagesOpen: boolean): boolean {
+  if (tab === "pages") return pagesOpen && view.canReviewClaims
   if (tab === "recours") return view.canReviewAppeals
   if (tab === "reglages") return view.canManagePolicy
   return true
@@ -125,7 +128,8 @@ function DeskGate(props: { readonly desk: ModerationDeskCapability; readonly per
 function DeskBody(props: { readonly desk: ModerationDeskCapability; readonly view: ModerationDeskView; readonly personId: string; readonly tab: DeskTab }) {
   const { t } = useDiasporaGaT()
   const { view } = props
-  const tabs = DESK_TABS.filter((tab) => offersTab(tab, view))
+  const pagesOpen = useFeatureGate().isOpen("pages")
+  const tabs = DESK_TABS.filter((tab) => offersTab(tab, view, pagesOpen))
   return (
     <>
       {props.desk.demonstration ? (
@@ -143,7 +147,7 @@ function DeskBody(props: { readonly desk: ModerationDeskCapability; readonly vie
         )}
       />
       {props.tab === "pages" ? (
-        view.canReviewClaims
+        pagesOpen && view.canReviewClaims
           ? <ModerationDeskClaims desk={props.desk} personId={props.personId} />
           : <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">{t("moderationDesk.claims.restricted")}</p>
       ) : props.tab === "recours" ? (

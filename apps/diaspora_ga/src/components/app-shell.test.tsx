@@ -3,11 +3,13 @@ import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspora-ga/features"
 import {
   DataSourceProvider,
+  gateSource,
   type DiasporaGaActions,
   type DiasporaGaDataSource,
   type Loadable,
   type MembershipView,
   type ModerationDeskView,
+  type NetworkFeature,
   type PilotMetricsAccessView,
 } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
@@ -156,13 +158,16 @@ function renderShell(
     responsible?: boolean
     locale?: "fr" | "en"
     actions?: Partial<DiasporaGaActions>
+    /** ADR-0041 du moteur : la source gardée comme l'application la monte (clés ouvertes, ou lecture en cours). */
+    features?: readonly NetworkFeature[] | "loading"
   } = {},
 ) {
   mocks.pathname = options.pathname ?? "/fil"
   mocks.icom = options.icom ? NETWORK : null
   mocks.network = options.network ?? options.icom ? NETWORK : null
   const demo = createDemoDataSource(new DemoStore(null, () => NOW, 0))
-  const source = options.responsible ? withResponsibleAccess(demo) : demo
+  const responsible = options.responsible ? withResponsibleAccess(demo) : demo
+  const source = options.features === undefined ? responsible : gateSource(responsible, options.features === "loading" ? [] : options.features, options.features !== "loading")
   return render(
     <I18nProvider locale={options.locale ?? "fr"}>
       <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
@@ -847,5 +852,56 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
     cleanup()
     renderShell({ membership: { ...MEMBER, status: "suspendue", canPublish: false } })
     expect(screen.queryByRole("button", { name: "Créer" })).toBeNull()
+  })
+})
+
+describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les modules ouverts", () => {
+  const MODULE_HREFS = [routes.services(), routes.myServiceRequests(), routes.myActivity(), routes.myAssociations(), routes.myApplications(), routes.myMentoring(), routes.pilotDashboard()]
+
+  it("tout fermé : la barre est Fil, Explorer, Communautés, Messages ; « Mon espace » garde le socle", () => {
+    renderShell({ icom: true, responsible: true, features: [] })
+    const { bar } = mainNavigations()
+    expect(within(bar).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.feed(), routes.explore(), routes.communities(), routes.messages()])
+    const hrefs = within(screen.getByRole("navigation", { name: "Mon espace" })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    for (const href of MODULE_HREFS) expect(hrefs, href).not.toContain(href)
+    for (const href of [routes.bookmarks(), routes.sponsor(), routes.moderationDesk()]) expect(hrefs, href).toContain(href)
+  })
+
+  it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation", async () => {
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: [] })
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory()])
+  })
+
+  it("un module ouvert retrouve ses entrées, les autres restent fermés", () => {
+    renderShell({ icom: true, features: ["pages", "services"] })
+    const { bar } = mainNavigations()
+    expect(within(bar).getAllByRole("link").map((link) => link.getAttribute("href"))).toContain(routes.services())
+    const hrefs = within(screen.getByRole("navigation", { name: "Mon espace" })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    expect(hrefs).toEqual(expect.arrayContaining([routes.myServiceRequests(), routes.myActivity(), routes.myAssociations()]))
+    expect(hrefs).not.toContain(routes.myApplications())
+    expect(hrefs).not.toContain(routes.myMentoring())
+  })
+
+  it("l'adresse d'un module fermé dit « introuvable » dans la coque, comme une page qui n'existe pas", () => {
+    renderShell({ pathname: routes.jobs(), features: [] })
+    expect(screen.getByRole("heading", { level: 1, name: t("notFound.title") })).toBeTruthy()
+    expect(screen.queryByRole("button", { name: "Quoi de neuf ?" })).toBeNull()
+    expect(screen.getByRole("link", { name: t("appError.backToFeed") }).getAttribute("href")).toBe(routes.feed())
+    cleanup()
+    renderShell({ pathname: routes.jobs(), features: ["pages", "jobs"] })
+    expect(screen.queryByRole("heading", { level: 1, name: t("notFound.title") })).toBeNull()
+    expect(screen.getByRole("button", { name: "Quoi de neuf ?" })).toBeTruthy()
+  })
+
+  it("le socle reste servi ; pendant la lecture des modules, l'adresse d'un module attend sans rien affirmer", () => {
+    renderShell({ pathname: routes.feed(), features: [] })
+    expect(screen.getByRole("button", { name: "Quoi de neuf ?" })).toBeTruthy()
+    cleanup()
+    renderShell({ pathname: routes.mentoring(), features: "loading" })
+    expect(screen.queryByRole("heading", { level: 1, name: t("notFound.title") })).toBeNull()
+    expect(screen.queryByRole("button", { name: "Quoi de neuf ?" })).toBeNull()
   })
 })

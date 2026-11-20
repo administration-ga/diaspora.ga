@@ -9,6 +9,7 @@
  * pour que la démonstration reste vivante.
  */
 import { normalizeCivilName } from "@antsia/social-domain/civilName"
+import type { NetworkFeature } from "@antsia/social-domain/networkFeatures"
 import {
   DEFAULT_FACET_VISIBILITY,
   LIGHT_ACCOUNT_GROUNDS,
@@ -264,6 +265,11 @@ export interface DemoState {
   readonly countryModerators: Readonly<Partial<Record<CountryCode, number>>>
   readonly networkModerators: number
   readonly session: { readonly personId: string | null }
+  /**
+   * Les décisions de l'administration du réseau sur ses fonctionnalités activables (ADR-0041 du
+   * moteur) : absentes du jeu de départ, comme au moteur — tout est fermé tant que rien n'est décidé.
+   */
+  readonly networkFeatures?: Readonly<Partial<Record<NetworkFeature, { readonly enabled: boolean; readonly updatedAt: number }>>>
   readonly pendingCode: {
     readonly kind: "email" | "phone"
     readonly value: string

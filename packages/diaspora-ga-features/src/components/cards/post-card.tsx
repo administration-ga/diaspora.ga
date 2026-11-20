@@ -5,6 +5,7 @@ import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, 
 import { DropdownMenu } from "radix-ui"
 import { useState } from "react"
 
+import { useFeatureGate } from "../../data/context"
 import type { PostView, ReactionKind } from "../../data/types"
 import { useDiasporaGaT } from "../../i18n/client"
 import { cn } from "../../lib/cn"
@@ -53,7 +54,9 @@ export function PostCard(props: {
     ? { ...props.post, author: { ...props.post.author, handle: "", displayName: t("bell.someone"), badges: [] } }
     : props.post
   const [commentsOpen, setCommentsOpen] = useState(false)
-  const authorHref = neutralAuthor ? null : post.author.kind === "page" ? routes.page(post.author.handle) : routes.profile(post.author.handle)
+  // ADR-0041 : pages fermées sur le réseau, la publication d'une page garde son nom, sans lien vers une fiche refusée.
+  const pagesOpen = useFeatureGate().isOpen("pages")
+  const authorHref = neutralAuthor ? null : post.author.kind === "page" ? (pagesOpen ? routes.page(post.author.handle) : null) : routes.profile(post.author.handle)
   const mine = post.myReaction
   const MineIcon = mine ? REACTIONS[mine].icon : HeartIcon
 

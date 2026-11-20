@@ -2,7 +2,7 @@
 
 import { FEED_SCOPES, parseFeedScope, parseResidenceCountry, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
 import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
-import { useCountryHub, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
+import { useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ArrowRightIcon, Building2Icon, GalleryVerticalEndIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -65,6 +65,8 @@ function Feed(props: { membership: MembershipView }) {
   const hubCountry = parsedCountry.ok ? parsedCountry.value : undefined
   const discovery = isDiscoveryView(searchParams)
   const composer = useComposer()
+  // ADR-0041 du moteur : l'inscription d'une organisation n'est proposée que pages ouvertes.
+  const pagesOpen = useFeatureGate().isOpen("pages")
   const country = hubCountry ?? props.membership.facet.countryOfResidence
   const now = Date.now()
   // Changer de portée ou retirer le filtre garde le mode d'affichage choisi.
@@ -186,7 +188,9 @@ function Feed(props: { membership: MembershipView }) {
                 </button>
               </div>
               {/* Qui publie est en règle (`declaree` ou `verifiee`) : l'inscription lui est proposée ici ; un membre en
-                  attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. */}
+                  attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. Pages fermées
+                  sur le réseau (ADR-0041 du moteur) : aucune inscription proposée. */}
+              {pagesOpen ? (
               <div role="group" aria-label={t("feed.registerLabel")} className="flex flex-wrap gap-2 border-t border-border pt-3">
                   <Button asChild size="sm" variant="ghost">
                     <NextLink href={routes.newPage("association")}>
@@ -201,6 +205,7 @@ function Feed(props: { membership: MembershipView }) {
                     </NextLink>
                   </Button>
               </div>
+              ) : null}
             </Card>
           ) : null}
 
@@ -273,15 +278,20 @@ export function FeedRail(props: { membership: MembershipView }) {
   const hub = useCountryHub(country)
   const countryEvents = countryEventsReader(useOptionalDataSource()?.associationEvents)
   const now = Date.now()
-  const eventsMeasured = hub.status === "ready" && hub.data.eventsSource !== "unmeasured"
+  // ADR-0041 du moteur : le rail ne dit rien des modules fermés sur le réseau (associations, évènements).
+  const features = useFeatureGate()
+  const pagesOpen = features.isOpen("pages")
+  const eventsOpen = features.isOpen("groupsAndEvents")
+  const eventsMeasured = eventsOpen && hub.status === "ready" && hub.data.eventsSource !== "unmeasured"
+  const counters = pagesOpen || eventsMeasured
   return (
     <>
       <Card className="p-4">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{t("rail.myHub")}</p>
         <p className="mt-1 font-display text-xl font-bold">{countryName(country, locale)}</p>
-        {hub.status === "ready" && !hub.data.counters.dormant ? (
-          <div className={eventsMeasured ? "mt-3 grid grid-cols-2 gap-3" : "mt-3"}>
-            <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} />
+        {counters && hub.status === "ready" && !hub.data.counters.dormant ? (
+          <div className={pagesOpen && eventsMeasured ? "mt-3 grid grid-cols-2 gap-3" : "mt-3"}>
+            {pagesOpen ? <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} /> : null}
             {eventsMeasured ? <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} /> : null}
           </div>
         ) : null}
@@ -295,6 +305,7 @@ export function FeedRail(props: { membership: MembershipView }) {
       </Card>
       <MemberSuggestions headingId="rail-suggestions" />
       <RailCountryPages country={country} />
+      {eventsOpen ? (
       <section aria-labelledby="rail-evenements" className="flex flex-col gap-3">
         <h2 id="rail-evenements" className="font-display text-lg font-bold">
           {t("rail.upcoming")}
@@ -322,6 +333,7 @@ export function FeedRail(props: { membership: MembershipView }) {
           </>
         )}
       </section>
+      ) : null}
     </>
   )
 }

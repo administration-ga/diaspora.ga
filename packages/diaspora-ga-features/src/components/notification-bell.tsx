@@ -60,7 +60,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 
 import type { ActionResult } from "../data/port"
-import { useActions, useNotifications, useUnreadCount } from "../data/context"
+import { useActions, useFeatureGate, useNotifications, useUnreadCount } from "../data/context"
 import {
   ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   COMMUNITY_NOTIFICATION_KINDS,
@@ -330,14 +330,20 @@ function NotificationList(props: { onNavigate: () => void }) {
 function NoticeSentence(props: { item: NotificationView; onNavigate: () => void }) {
   const { t } = useDiasporaGaT()
   const { routes, Link } = useRouting()
+  const pagesOpen = useFeatureGate().isOpen("pages")
   const { item } = props
   // NP-04 : la page suivie qui a publié se nomme par sa carte publique ; sans elle, la phrase du système.
+  // ADR-0041 : pages fermées sur le réseau, son nom reste, sans lien vers une fiche refusée.
   if (item.kind === "page_post" && item.page) {
     return (
       <>
-        <Link href={routes.page(item.page.handle)} onClick={props.onNavigate} className="font-semibold hover:underline focus-visible:shadow-focus">
-          {item.page.name}
-        </Link>{" "}
+        {pagesOpen ? (
+          <Link href={routes.page(item.page.handle)} onClick={props.onNavigate} className="font-semibold hover:underline focus-visible:shadow-focus">
+            {item.page.name}
+          </Link>
+        ) : (
+          <span className="font-semibold">{item.page.name}</span>
+        )}{" "}
         {t("bell.kind.page_post")}
       </>
     )
