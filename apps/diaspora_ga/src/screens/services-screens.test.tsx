@@ -236,7 +236,7 @@ describe("/services/<id> — la fiche", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Offre o1" })).toBeTruthy()
     expect(screen.getByRole("link", { name: "Coiffure Paris (fictif)" }).getAttribute("href")).toBe("/pages/coiffure-paris")
     expect(screen.getByText("Tarif annoncé par le professionnel")).toBeTruthy()
-    expect(screen.getByText(/Aucun paiement sur DIASPORA_GA/)).toBeTruthy()
+    expect(screen.getByText(/Aucun paiement sur DIASPORA\.GA/)).toBeTruthy()
     expect(screen.getByText(/ne garantit pas la qualité/)).toBeTruthy()
     expect(screen.getByText("1 h 30")).toBeTruthy()
     expect(mocks.requestEntry).toHaveBeenCalledWith({ offerId: "o1", offerVersion: 1, offerTitle: "Offre o1", pageName: "Coiffure Paris (fictif)" })

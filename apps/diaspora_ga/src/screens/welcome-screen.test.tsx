@@ -137,12 +137,12 @@ describe("/bienvenue — l'onboarding en trois écrans", () => {
     for (const box of boxes) expect(box).not.toBeChecked()
 
     // Sans le profil social, pas d'adhésion.
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
     expect(await screen.findByText("Ce consentement est nécessaire pour devenir membre.")).toBeInTheDocument()
     expect(navigation.push).not.toHaveBeenCalled()
 
     await user.click(screen.getByRole("checkbox", { name: /Créer mon profil social/ }))
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
 
     const me = store.getState().session.personId ?? ""
@@ -170,7 +170,7 @@ async function completeNewAccount(user: ReturnType<typeof userEvent.setup>, disp
   await user.type(screen.getByRole("textbox", { name: t("welcome.handleOtherLabel") }), handle)
   await user.click(screen.getByRole("button", { name: /Continuer/ }))
   await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
-  await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+  await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
 }
 
 describe("/bienvenue — la page demandée avant la connexion (UX-02, MO-03)", () => {
@@ -205,7 +205,7 @@ describe("/bienvenue — la page demandée avant la connexion (UX-02, MO-03)", (
     await user.click(screen.getByRole("button", { name: /Continuer/ }))
     await user.click(await screen.findByRole("button", { name: /Continuer/ }))
     await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
 
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledExactlyOnceWith(EVENT))
   })
@@ -232,7 +232,7 @@ describe("/bienvenue — un profil commun déjà là (EA-04)", () => {
 
     expect(await screen.findByRole("heading", { name: "Vos choix" })).toBeInTheDocument()
     await user.click(screen.getByRole("checkbox", { name: /Créer mon profil social/ }))
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
 
     expect(store.getState().persons["p-exterieur"]?.profile).toEqual(before)
@@ -271,7 +271,7 @@ describe("/bienvenue — un profil commun déjà là (EA-04)", () => {
     expect(await screen.findByRole("heading", { name: t("welcomeProfile.keptTitle") })).toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: /Continuer/ }))
     await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
 
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
     expect(store.getState().persons["p-mireille"]?.profile).toEqual(before)
@@ -349,7 +349,7 @@ describe("/bienvenue — porte fiable (EA-08)", () => {
     await user.click(screen.getByRole("radio", { name: "@awa.ogooue" }))
     await user.click(screen.getByRole("button", { name: /Continuer/ }))
     await user.click(await screen.findByRole("checkbox", { name: /Créer mon profil social/ }))
-    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA_GA/ }))
+    await user.click(screen.getByRole("button", { name: /Entrer dans DIASPORA\.GA/ }))
 
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalled())
     const me = store.getState().session.personId ?? ""
