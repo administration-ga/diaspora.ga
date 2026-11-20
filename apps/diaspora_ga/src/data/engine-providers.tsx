@@ -9,7 +9,7 @@
 import type { RefreshableCrossDomainAuthClient } from "@antsia/api/cross-domain-session-bootstrap"
 import { EngineConvexProvider } from "@antsia/api/next-provider"
 import { api } from "@convex/_generated/api"
-import { DataSourceProvider } from "@diaspora-ga/features/data"
+import { GatedDataSourceProvider } from "@diaspora-ga/features/data"
 import { DEFAULT_LOCALE, isSupportedLocale } from "@diaspora-ga/features/i18n"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { useConvex } from "convex/react"
@@ -21,7 +21,7 @@ import { publicEnv } from "@/lib/env"
 
 import { createEngineDataSource } from "./engine-source"
 
-/** La source « moteur », créée une fois, sous le client Convex du moteur. */
+/** La source « moteur », créée une fois, sous le client Convex du moteur, gardée par les fonctionnalités ouvertes. */
 function EngineSource(props: { children: ReactNode }) {
   const convex = useConvex()
   // La langue affichée, tenue à jour à chaque rendu : la source, créée une fois, la relit à
@@ -39,7 +39,8 @@ function EngineSource(props: { children: ReactNode }) {
       locale: () => (isSupportedLocale(displayed.current) ? displayed.current : DEFAULT_LOCALE),
     }),
   )
-  return <DataSourceProvider source={source}>{props.children}</DataSourceProvider>
+  // ADR-0041 du moteur : les fonctionnalités ouvertes lues avant la coque ; les modules fermés n'y sont pas montés.
+  return <GatedDataSourceProvider source={source}>{props.children}</GatedDataSourceProvider>
 }
 
 export function EngineDataProviders(props: { children: ReactNode }) {

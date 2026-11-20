@@ -1,0 +1,52 @@
+{
+  "networkFeatures": {
+    "names": {
+      "pages": "Associations and businesses",
+      "groupsAndEvents": "Groups and events",
+      "services": "Services",
+      "jobs": "Jobs and talent",
+      "mutualAid": "Mutual aid",
+      "mentoring": "Mentoring",
+      "arrivalKit": "Arrival kit",
+      "pilotMetrics": "Pilot metrics"
+    },
+    "descriptions": {
+      "pages": "Association and business pages: directory, profiles, registration, memberships, posts on behalf of a page.",
+      "groupsAndEvents": "Association member groups, their events and the calendar.",
+      "services": "The business services catalogue, requests, appointments and reviews.",
+      "jobs": "Job offers from pages, applications and talent profiles.",
+      "mutualAid": "Mutual aid questions between members and volunteer missions.",
+      "mentoring": "The network's mentors and mentoring requests.",
+      "arrivalKit": "Practical guides for settling in a country.",
+      "pilotMetrics": "The pilot metrics dashboard, for the network's leads."
+    },
+    "settings": {
+      "title": "Network features",
+      "lead": "The network serves the essentials from day one: post, comment, react, share, talk in iCom. The modules below stay closed until the network administration opens them. Each opening and each closing is justified and recorded in the engine's decision log; closing deletes no data.",
+      "loading": "Loading features…",
+      "restricted": "Network features are reserved for the network administration.",
+      "open": "Open",
+      "closed": "Closed",
+      "requires": "Requires: {{feature}}",
+      "since": "Decided on {{date}}",
+      "openAction": "Open",
+      "closeAction": "Close",
+      "sheet": {
+        "openTitle": "Open: {{feature}}",
+        "closeTitle": "Close: {{feature}}",
+        "openDescription": "The feature will appear for every member of the network, and the engine will serve its pages.",
+        "closeDescription": "The feature will disappear for every member of the network, and the engine will refuse its pages. The data stays: reopening brings it back.",
+        "confirmOpen": "Open the feature",
+        "confirmClose": "Close the feature",
+        "opened": "{{feature}}: feature opened.",
+        "closedDone": "{{feature}}: feature closed.",
+        "unchanged": "{{feature}}: nothing changed."
+      }
+    }
+  },
+  "errors": {
+    "network_feature_requires_parent": "This feature lives on pages: open associations and businesses first.",
+    "network_feature_has_open_children": "A feature that lives on pages is still open (groups and events, services or jobs): close it first.",
+    "network_feature_reason_length": "The reason must be between {{min}} and {{max}} characters long."
+  }
+}

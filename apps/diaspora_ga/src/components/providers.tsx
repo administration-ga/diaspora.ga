@@ -2,7 +2,7 @@
 
 import { AppearanceProvider } from "@antsia/social-features/shell/appearance"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspora-ga/features"
-import { DataSourceProvider } from "@diaspora-ga/features/data"
+import { GatedDataSourceProvider } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { I18nProvider, useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import type { Locale } from "@diaspora-ga/features/i18n"
@@ -68,10 +68,13 @@ const AppLink: LinkComponent = ({ href, children, ...rest }) => (
   </NextLink>
 )
 
-/** Le fournisseur de DÉMONSTRATION : données fictives, dans ce navigateur seulement. */
+/**
+ * Le fournisseur de DÉMONSTRATION : données fictives, dans ce navigateur seulement. Comme le
+ * moteur (ADR-0041), il ne monte que les modules ouverts par l'administration du réseau fictif.
+ */
 function DemoDataProvider(props: { children: ReactNode }) {
   const [source] = useState(() => createDemoDataSource(new DemoStore(typeof window === "undefined" ? null : window.localStorage)))
-  return <DataSourceProvider source={source}>{props.children}</DataSourceProvider>
+  return <GatedDataSourceProvider source={source}>{props.children}</GatedDataSourceProvider>
 }
 
 /**

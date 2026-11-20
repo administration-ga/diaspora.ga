@@ -190,16 +190,17 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
 }
 
 interface Row {
+  readonly key: RouteKey
   readonly segments: readonly string[]
   /** Les segments écrits en toutes lettres : à longueur égale, le gabarit le plus précis l'emporte. */
   readonly literals: number
   readonly home: Exclude<RouteHome, { readonly kind: "outside" }>
 }
 
-const ROWS: readonly Row[] = Object.values(ROUTE_DESTINATIONS).flatMap((home): Row[] => {
+const ROWS: readonly Row[] = (Object.entries(ROUTE_DESTINATIONS) as [RouteKey, RouteHome][]).flatMap(([key, home]): Row[] => {
   if (home.kind === "outside") return []
   const segments = segmentsOf(home.path)
-  return [{ segments, literals: segments.filter((segment) => !segment.includes(SEGMENT)).length, home }]
+  return [{ key, segments, literals: segments.filter((segment) => !segment.includes(SEGMENT)).length, home }]
 })
 
 /** Un segment du gabarit : en toutes lettres, ou variable (avec son préfixe, comme `@` d'un profil). */
@@ -216,13 +217,8 @@ function covers(row: Row, segments: readonly string[]): boolean {
   return row.segments.length <= segments.length && row.segments.every((expected, index) => segmentMatches(expected, segments[index] ?? ""))
 }
 
-/**
- * L'entrée de navigation dont relève ce chemin, ou `null` (hors de la coque, ou inconnu). Le
- * gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer` relève de « Mon activité »,
- * `/pages/<page>` d'Explorer, `/messages/<conversation>` de Messages ; `/servicesx` d'aucune.
- */
-export function navDestinationOf(pathname: string, ownHandle: string | null): NavDestination | null {
-  const segments = segmentsOf(pathname)
+/** La ligne de la coque qui couvre ce chemin : le gabarit le plus long, puis le plus précis. */
+function bestRowOf(segments: readonly string[]): Row | null {
   let best: Row | null = null
   for (const row of ROWS) {
     if (!covers(row, segments)) continue
@@ -230,6 +226,26 @@ export function navDestinationOf(pathname: string, ownHandle: string | null): Na
       best = row
     }
   }
+  return best
+}
+
+/**
+ * L'adresse de la table dont relève ce chemin de membre, ou `null` (hors de la coque, ou
+ * inconnu) : même résolution que l'entrée de navigation. `/pages/<page>/gerer` relève de
+ * `pageManage`, `/pages/<page>` de `page`.
+ */
+export function routeKeyOf(pathname: string): RouteKey | null {
+  return bestRowOf(segmentsOf(pathname))?.key ?? null
+}
+
+/**
+ * L'entrée de navigation dont relève ce chemin, ou `null` (hors de la coque, ou inconnu). Le
+ * gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer` relève de « Mon activité »,
+ * `/pages/<page>` d'Explorer, `/messages/<conversation>` de Messages ; `/servicesx` d'aucune.
+ */
+export function navDestinationOf(pathname: string, ownHandle: string | null): NavDestination | null {
+  const segments = segmentsOf(pathname)
+  const best = bestRowOf(segments)
   if (best === null) return null
   if (best.home.kind === "member") return best.home.destination
   const own = ownHandle === null ? undefined : segmentsOf(routes.profile(ownHandle))[0]

@@ -2,7 +2,7 @@
 
 import type { CountryCode } from "@diaspora-ga/domain"
 import { Button, Card, CountryTag, EmptyState, Skeleton, countryName } from "@diaspora-ga/features"
-import { useOpenCountries, type MembershipView, type OpenCountryView } from "@diaspora-ga/features/data"
+import { useFeatureGate, useOpenCountries, type MembershipView, type OpenCountryView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ArrowRightIcon, BriefcaseIcon, GlobeIcon, GraduationCapIcon, HandHeartIcon, MapIcon, SearchIcon, StoreIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -11,6 +11,7 @@ import { useId, type ReactNode } from "react"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { PageDirectory } from "@/components/page-directory"
+import { hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 // ═══════════════════════════════════════════════════════════════
@@ -40,6 +41,9 @@ export function ExploreScreen() {
 function Explore(props: { membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const ids = useId()
+  // ADR-0041 du moteur : seuls les modules ouverts sur le réseau ont leur raccourci.
+  const gate = useFeatureGate()
+  const pagesOpen = gate.isOpen("pages")
   return (
     <>
       <div>
@@ -56,58 +60,70 @@ function Explore(props: { membership: MembershipView }) {
           href={routes.members()}
           action={t("explore.membersAction")}
         />
-        <Shortcut
-          headingId={`${ids}-services`}
-          icon={<StoreIcon />}
-          title={t("nav.services")}
-          body={t("explore.servicesBody")}
-          href={routes.services()}
-          action={t("explore.servicesAction")}
-        />
+        {hrefServed(gate, routes.services()) ? (
+          <Shortcut
+            headingId={`${ids}-services`}
+            icon={<StoreIcon />}
+            title={t("nav.services")}
+            body={t("explore.servicesBody")}
+            href={routes.services()}
+            action={t("explore.servicesAction")}
+          />
+        ) : null}
         {/* Vague H du plan global : les rubriques communautaires, filtrées au départ par le pays de résidence. */}
-        <Shortcut
-          headingId={`${ids}-entraide`}
-          icon={<HandHeartIcon />}
-          title={t("nav.community.mutualAid")}
-          body={t("explore.mutualAidBody")}
-          href={routes.mutualAid(props.membership.facet.countryOfResidence)}
-          action={t("explore.mutualAidAction")}
-        />
-        <Shortcut
-          headingId={`${ids}-kit`}
-          icon={<MapIcon />}
-          title={t("nav.community.arrivalKit")}
-          body={t("explore.arrivalKitBody")}
-          href={routes.arrivalKit(props.membership.facet.countryOfResidence)}
-          action={t("explore.arrivalKitAction")}
-        />
-        <Shortcut
-          headingId={`${ids}-mentorat`}
-          icon={<GraduationCapIcon />}
-          title={t("nav.community.mentoring")}
-          body={t("explore.mentoringBody")}
-          href={routes.mentoring(props.membership.facet.countryOfResidence)}
-          action={t("explore.mentoringAction")}
-        />
-        <Shortcut
-          headingId={`${ids}-emploi`}
-          icon={<BriefcaseIcon />}
-          title={t("nav.community.jobs")}
-          body={t("explore.jobsBody")}
-          href={routes.jobs(props.membership.facet.countryOfResidence)}
-          action={t("explore.jobsAction")}
-        />
+        {hrefServed(gate, routes.mutualAid(props.membership.facet.countryOfResidence)) ? (
+          <Shortcut
+            headingId={`${ids}-entraide`}
+            icon={<HandHeartIcon />}
+            title={t("nav.community.mutualAid")}
+            body={t("explore.mutualAidBody")}
+            href={routes.mutualAid(props.membership.facet.countryOfResidence)}
+            action={t("explore.mutualAidAction")}
+          />
+        ) : null}
+        {hrefServed(gate, routes.arrivalKit(props.membership.facet.countryOfResidence)) ? (
+          <Shortcut
+            headingId={`${ids}-kit`}
+            icon={<MapIcon />}
+            title={t("nav.community.arrivalKit")}
+            body={t("explore.arrivalKitBody")}
+            href={routes.arrivalKit(props.membership.facet.countryOfResidence)}
+            action={t("explore.arrivalKitAction")}
+          />
+        ) : null}
+        {hrefServed(gate, routes.mentoring(props.membership.facet.countryOfResidence)) ? (
+          <Shortcut
+            headingId={`${ids}-mentorat`}
+            icon={<GraduationCapIcon />}
+            title={t("nav.community.mentoring")}
+            body={t("explore.mentoringBody")}
+            href={routes.mentoring(props.membership.facet.countryOfResidence)}
+            action={t("explore.mentoringAction")}
+          />
+        ) : null}
+        {hrefServed(gate, routes.jobs(props.membership.facet.countryOfResidence)) ? (
+          <Shortcut
+            headingId={`${ids}-emploi`}
+            icon={<BriefcaseIcon />}
+            title={t("nav.community.jobs")}
+            body={t("explore.jobsBody")}
+            href={routes.jobs(props.membership.facet.countryOfResidence)}
+            action={t("explore.jobsAction")}
+          />
+        ) : null}
       </div>
 
+      {pagesOpen ? (
       <nav aria-label={t("pageBrowsing.views")} className="flex flex-wrap gap-2">
         <Button asChild variant="outline"><NextLink href={routes.pages({ ownerKind: "association", country: props.membership.facet.countryOfResidence })}>{t("pageBrowsing.associations")}</NextLink></Button>
         <Button asChild variant="outline"><NextLink href={routes.pages({ ownerKind: "company", country: props.membership.facet.countryOfResidence })}>{t("pageBrowsing.companies")}</NextLink></Button>
         <Button asChild variant="ghost"><NextLink href={routes.pages({ followed: true })}>{t("pageBrowsing.followedTitle")}</NextLink></Button>
       </nav>
+      ) : null}
 
       {/* L'annuaire des pages (surface du chantier « pages ») part du pays de résidence, filtre visible
           qu'on ôte ou qu'on change : le contexte pays est gardé, la résidence n'est jamais réécrite. */}
-      <PageDirectory country={props.membership.facet.countryOfResidence} />
+      {pagesOpen ? <PageDirectory country={props.membership.facet.countryOfResidence} /> : null}
 
       <OpenCountries home={props.membership.facet.countryOfResidence} headingId={`${ids}-pays`} />
     </>

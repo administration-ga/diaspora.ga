@@ -118,6 +118,7 @@ import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
+import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
 import {
   toAccountView,
@@ -229,6 +230,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     demoAccounts: createEngineDemoAccounts(deps),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
+    // ADR-0041 du moteur : les fonctionnalités activables du réseau (clés ouvertes, réglages de l'administration).
+    networkFeatures: createEngineNetworkFeatures(deps),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()

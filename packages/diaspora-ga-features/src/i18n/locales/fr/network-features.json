@@ -1,0 +1,52 @@
+{
+  "networkFeatures": {
+    "names": {
+      "pages": "Associations et entreprises",
+      "groupsAndEvents": "Groupes et évènements",
+      "services": "Services",
+      "jobs": "Emploi et talents",
+      "mutualAid": "Entraide",
+      "mentoring": "Mentorat",
+      "arrivalKit": "Kit d'arrivée",
+      "pilotMetrics": "Mesure du pilote"
+    },
+    "descriptions": {
+      "pages": "Les pages des associations et des entreprises : annuaire, fiches, inscription, adhésions, publications au nom d'une page.",
+      "groupsAndEvents": "Les groupes d'adhérents des associations, leurs évènements et l'agenda.",
+      "services": "Le catalogue des services des entreprises, les demandes, les rendez-vous et les avis.",
+      "jobs": "Les offres d'emploi des pages, les candidatures et les profils de talent.",
+      "mutualAid": "Les questions d'entraide entre membres et les missions bénévoles.",
+      "mentoring": "Les mentors du réseau et les demandes de mentorat.",
+      "arrivalKit": "Les fiches pratiques pour s'installer dans un pays.",
+      "pilotMetrics": "Le tableau de mesure du pilote, pour les responsables du réseau."
+    },
+    "settings": {
+      "title": "Fonctionnalités du réseau",
+      "lead": "Le réseau sert d'emblée l'essentiel : publier, commenter, réagir, partager, échanger dans iCom. Les modules ci-dessous restent fermés tant que l'administration du réseau ne les ouvre pas. Chaque ouverture et chaque fermeture est motivée et inscrite au journal des décisions du moteur ; fermer ne supprime aucune donnée.",
+      "loading": "Chargement des fonctionnalités…",
+      "restricted": "Les fonctionnalités du réseau sont réservées à l'administration du réseau.",
+      "open": "Ouverte",
+      "closed": "Fermée",
+      "requires": "Exige : {{feature}}",
+      "since": "Décision du {{date}}",
+      "openAction": "Ouvrir",
+      "closeAction": "Fermer",
+      "sheet": {
+        "openTitle": "Ouvrir : {{feature}}",
+        "closeTitle": "Fermer : {{feature}}",
+        "openDescription": "La fonctionnalité apparaîtra pour tous les membres du réseau, et le moteur servira ses pages.",
+        "closeDescription": "La fonctionnalité disparaîtra pour tous les membres du réseau, et le moteur refusera ses pages. Les données restent : une réouverture les rend.",
+        "confirmOpen": "Ouvrir la fonctionnalité",
+        "confirmClose": "Fermer la fonctionnalité",
+        "opened": "{{feature}} : fonctionnalité ouverte.",
+        "closedDone": "{{feature}} : fonctionnalité fermée.",
+        "unchanged": "{{feature}} : rien n'a changé."
+      }
+    }
+  },
+  "errors": {
+    "network_feature_requires_parent": "Cette fonctionnalité vit sur les pages : ouvrez d'abord les associations et entreprises.",
+    "network_feature_has_open_children": "Une fonctionnalité qui vit sur les pages est encore ouverte (groupes et évènements, services ou emploi) : fermez-la d'abord.",
+    "network_feature_reason_length": "Le motif doit compter entre {{min}} et {{max}} caractères."
+  }
+}

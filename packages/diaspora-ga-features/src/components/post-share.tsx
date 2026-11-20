@@ -4,6 +4,7 @@ import { CopyIcon, Repeat2Icon, Share2Icon } from "lucide-react"
 import { createContext, useContext, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { useFeatureGate } from "../data/context"
 import type { PostView, SharedPostView } from "../data/types"
 import { useDiasporaGaT } from "../i18n/client"
 import { cn } from "../lib/cn"
@@ -127,6 +128,7 @@ export function sharedPreviewOf(post: PostView): SharedPostView {
 export function SharedPostEmbed(props: { share: SharedPostView; now: number; className?: string; interactiveMedia?: boolean }) {
   const { t, locale } = useDiasporaGaT()
   const { routes, Link } = useRouting()
+  const pagesOpen = useFeatureGate().isOpen("pages")
   const { share } = props
   if (!share.available) {
     return (
@@ -136,7 +138,8 @@ export function SharedPostEmbed(props: { share: SharedPostView; now: number; cla
     )
   }
   const author = share.author
-  const authorHref = author.handle ? (author.kind === "page" ? routes.page(author.handle) : routes.profile(author.handle)) : null
+  // ADR-0041 : pages fermées, le nom d'une page citée reste, sans lien.
+  const authorHref = author.handle ? (author.kind === "page" ? (pagesOpen ? routes.page(author.handle) : null) : routes.profile(author.handle)) : null
   return (
     // Une figure, pas une région : un fil de partages ne multiplie pas les repères de navigation.
     <figure aria-label={t("post.sharedLabel")} className={cn("rounded-md border border-border px-3 py-2.5", props.className)}>

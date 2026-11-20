@@ -1,11 +1,21 @@
 "use client"
 
 import type { CountryCode } from "@diaspora-ga/domain"
+import { type FeatureGate, useFeatureGate } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { BriefcaseIcon, Building2Icon, CalendarDays, GraduationCapIcon, HandHeartIcon, MapIcon, StoreIcon, type LucideIcon } from "lucide-react"
 import NextLink from "next/link"
 
+import { hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
+
+/** Les modules des rubriques (kit, entraide, mentorat, emploi, services, pages, agenda). */
+const SHORTCUT_FEATURES = ["arrivalKit", "mutualAid", "mentoring", "jobs", "services", "pages", "groupsAndEvents"] as const
+
+/** Une rubrique au moins est-elle ouverte sur le réseau ? Sinon, le hub ne pose pas leur bandeau. */
+export function communityShortcutsOffered(gate: FeatureGate): boolean {
+  return SHORTCUT_FEATURES.some((feature) => gate.isOpen(feature))
+}
 
 interface Shortcut {
   readonly id: string
@@ -22,11 +32,13 @@ interface Shortcut {
  * garde ses propres gardes ; le pays sert de filtre de départ, jamais de
  * réécriture de la résidence. L'agenda est personnel : il ne suit pas le pays
  * consulté. L'annuaire des membres ne se filtre pas encore par un pays donné
- * dans l'adresse (plan 05) : il n'a pas de raccourci ici.
+ * dans l'adresse (plan 05) : il n'a pas de raccourci ici. Seules les rubriques ouvertes sur
+ * le réseau s'offrent (ADR-0041 du moteur).
  */
 export function CommunityShortcuts(props: { readonly country: CountryCode }) {
   const { t } = useDiasporaGaT()
-  const items: readonly Shortcut[] = [
+  const gate = useFeatureGate()
+  const all: readonly Shortcut[] = [
     { id: "arrivalKit", href: routes.arrivalKit(props.country), icon: MapIcon, label: t("nav.community.arrivalKit") },
     { id: "mutualAid", href: routes.mutualAid(props.country), icon: HandHeartIcon, label: t("nav.community.mutualAid") },
     { id: "mentoring", href: routes.mentoring(props.country), icon: GraduationCapIcon, label: t("nav.community.mentoring") },
@@ -35,6 +47,9 @@ export function CommunityShortcuts(props: { readonly country: CountryCode }) {
     { id: "pages", href: routes.pages({ country: props.country }), icon: Building2Icon, label: t("hubShortcuts.pages") },
     { id: "agenda", href: routes.agenda(), icon: CalendarDays, label: t("eventCalendar.agendaTitle") },
   ]
+  // ADR-0041 du moteur : seules les rubriques ouvertes sur le réseau ; aucune, aucun bandeau vide.
+  const items = all.filter((item) => hrefServed(gate, item.href))
+  if (items.length === 0) return null
   return (
     <nav aria-label={t("nav.community.label")} className="flex flex-wrap gap-1">
       {items.map((item) => {

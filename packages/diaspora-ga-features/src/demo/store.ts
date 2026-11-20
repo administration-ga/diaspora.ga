@@ -9,6 +9,7 @@
  * l'interface (`DiasporaGaDataSource`) reste.
  */
 import { normalizeCivilName } from "@antsia/social-domain/civilName"
+import type { NetworkFeature } from "@antsia/social-domain/networkFeatures"
 import { assertPostContent, DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH, isProfileDiscoverable, isProfilePublished } from "@antsia/social-domain/content"
 import { isDomainViolation } from "@antsia/social-domain/violation"
 import {
@@ -832,6 +833,20 @@ export class DemoStore {
     if (person.theme === theme) return OK
     this.commit({ ...this.state, persons: { ...this.state.persons, [personId]: { ...person, theme } } })
     return OK
+  }
+
+  /**
+   * ADR-0041 : la décision de l'administration du réseau fictif sur une fonctionnalité. La règle
+   * (motif, dépendance) est jugée par la capacité avant l'appel ; ici, l'écriture seule.
+   * `false` : rien à décider (l'état demandé est déjà en place).
+   */
+  async setNetworkFeature(feature: NetworkFeature, enabled: boolean): Promise<ActionResult<{ readonly changed: boolean }>> {
+    await this.pause()
+    if (this.state.session.personId === null) return fail("not_signed_in")
+    const current = this.state.networkFeatures?.[feature]?.enabled === true
+    if (current === enabled) return { ok: true, value: { changed: false } }
+    this.commit({ ...this.state, networkFeatures: { ...this.state.networkFeatures, [feature]: { enabled, updatedAt: this.clock() } } })
+    return { ok: true, value: { changed: true } }
   }
 
   /** La langue du compte fictif (`fr`, `en`), enregistrée pour la personne en session. */

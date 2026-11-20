@@ -9,6 +9,7 @@ import {
   Button,
   CountryTag,
   NotificationBell,
+  Skeleton,
   PostComposerSheet,
   PostShareProvider,
   Sheet,
@@ -20,9 +21,11 @@ import {
 } from "@diaspora-ga/features"
 import {
   useDataSource,
+  useFeatureGate,
   useModerationDesk,
   useOpenCountries,
   usePilotMetrics,
+  type FeatureGate,
   type MembershipView,
   type ModerationDeskCapability,
   type PilotMetricsCapability,
@@ -73,6 +76,7 @@ import { toast } from "sonner"
 
 import { createFormats, type CreateFormat, type CreateFormatId } from "@/lib/create-menu"
 import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
+import { featureOfPath, hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
@@ -161,6 +165,14 @@ function withinAny(pathname: string, hrefs: readonly string[]): boolean {
     const section = sectionOf(href)
     return pathname === section || pathname.startsWith(`${section}/`)
   })
+}
+
+/**
+ * ADR-0041 du moteur : une entrée qui mène à un module fermé sur le réseau n'est pas offerte
+ * (sa fonctionnalité se lit dans la table des adresses, comme pour la garde des pages).
+ */
+function served(gate: FeatureGate): (entry: NavEntry) => boolean {
+  return (entry) => hrefServed(gate, entry.href)
 }
 
 /**
@@ -337,7 +349,10 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
   // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
   const current = navDestinationOf(pathname, membership.handle)
-  const primary = primaryEntries(current, icom !== null, icom === null ? 0 : messagesUnread)
+  // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et « Mon espace » n'offrent que ceux-là.
+  const features = useFeatureGate()
+  const offered = served(features)
+  const primary = primaryEntries(current, icom !== null, icom === null ? 0 : messagesUnread).filter(offered)
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const personal = [
@@ -346,11 +361,14 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
       moderation: desk.status === "ready" && desk.data !== null,
       pilot: pilot.status === "ready" && pilot.data.allowed,
     }),
-  ]
+  ].filter(offered)
   const account = accountEntries(membership, current, personal)
   const information = informationEntries(pathname)
   // Le menu « Créer » (modèle du réseau de l'administration) : les actus suivent iCom, l'inscription la règle partagée.
-  const create = createFormats({ canPublish, stories: icom !== null, status: membership.status })
+  const create = createFormats({ canPublish, stories: icom !== null, status: membership.status, pages: features.isOpen("pages") })
+  // La garde des adresses : un module fermé dit « introuvable », comme une page qui n'existe pas.
+  const feature = featureOfPath(pathname)
+  const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
   const openComposer = () => setComposerOpen(true)
 
   const startShare = (post: PostView) => {
@@ -376,7 +394,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
                   {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
                   <NetworkStatusNotice />
                   <ZoneNotice pathname={pathname} membership={membership} />
-                  {props.children}
+                  {content}
                 </div>
               </ComposerContext.Provider>
               {/* Le rail droit (dès 1 280 px). Sa première place revient à la carte iCom ; montée dès 960 px,
@@ -428,6 +446,33 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
         ) : null}
       </div>
     </PostShareProvider>
+  )
+}
+
+/**
+ * L'adresse d'un module fermé sur le réseau (ADR-0041 du moteur) : la même réponse qu'une page
+ * qui n'existe pas — le refus reste indistinct —, dans la coque, avec le chemin du retour au fil.
+ */
+function FeatureNotFound() {
+  const { t } = useDiasporaGaT()
+  return (
+    <section className="flex flex-col items-start gap-3 py-6">
+      <h1 className="font-display text-3xl font-bold">{t("notFound.title")}</h1>
+      <p className="text-muted-foreground">{t("notFound.body")}</p>
+      <NextLink href={routes.feed()} className="inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4 focus-visible:shadow-focus">
+        {t("appError.backToFeed")}
+      </NextLink>
+    </section>
+  )
+}
+
+/** Tant que les modules ouverts ne sont pas lus, l'adresse d'un module attend, sans rien affirmer. */
+function FeatureLoading() {
+  return (
+    <div className="flex flex-col gap-4" aria-busy="true">
+      <Skeleton className="h-28 w-full rounded-xl" />
+      <Skeleton className="h-40 w-full rounded-xl" />
+    </div>
   )
 }
 

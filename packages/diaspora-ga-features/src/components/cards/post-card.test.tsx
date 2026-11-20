@@ -3,12 +3,16 @@ import userEvent from "@testing-library/user-event"
 import { act, type ComponentProps } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { DataSourceProvider } from "../../data/context"
+import { gateSource } from "../../data/network-features-port"
 import type { PostView } from "../../data/types"
 import { getFixedT } from "../../i18n"
 import { RoutingProvider, type FeatureRoutes } from "../../routing"
 import { renderWithI18n } from "../../test-utils"
 import { PostCard } from "./post-card"
 import { PostShareProvider } from "../post-share"
+import { createDemoDataSource } from "../../demo/source"
+import { DemoStore } from "../../demo/store"
 
 const mocks = vi.hoisted(() => ({ menu: vi.fn(), copied: vi.fn() }))
 
@@ -231,5 +235,30 @@ describe("PostCard — l'auteur sait où en est sa publication (FD-04)", () => {
     const en = getFixedT("en")
     mount({ ...mine, moderation: "pending_review" }, "en")
     expect(document.querySelector('[data-slot="moderation-banner"]')).toHaveTextContent(en("moderation.pending"))
+  })
+})
+
+describe("PostCard — publication d'une page, pages fermées sur le réseau (ADR-0041 du moteur)", () => {
+  const pagePost: PostView = { ...post, author: { kind: "page", id: "page-saveurs", handle: "saveurs", displayName: "Saveurs du Gabon", badges: [] } }
+
+  function mountIn(openFeatures: readonly ("pages" | "jobs")[]) {
+    const source = gateSource(createDemoDataSource(new DemoStore(null, () => now, 0)), openFeatures)
+    return renderWithI18n(
+      <DataSourceProvider source={source}>
+        <RoutingProvider routes={routes} Link={Link}><PostCard post={pagePost} now={now} canReact={false} /></RoutingProvider>
+      </DataSourceProvider>,
+    )
+  }
+
+  it("pages fermées : le nom de la page reste, sans lien vers sa fiche", () => {
+    mountIn([])
+    expect(screen.getByText("Saveurs du Gabon")).toBeInTheDocument()
+    expect(screen.queryByRole("link", { name: "Saveurs du Gabon" })).not.toBeInTheDocument()
+    expect(routes.page).not.toHaveBeenCalled()
+  })
+
+  it("pages ouvertes : le lien vers la fiche de la page", () => {
+    mountIn(["pages"])
+    expect(screen.getByRole("link", { name: "Saveurs du Gabon" })).toHaveAttribute("href", "/pages/saveurs")
   })
 })
