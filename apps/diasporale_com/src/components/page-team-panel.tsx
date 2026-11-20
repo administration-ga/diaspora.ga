@@ -246,7 +246,8 @@ function SignatoryRow(props: {
               aria-label={pendingInvite ? t("pageAdmin.team.withdrawInviteLabel", { name }) : t("pageAdmin.team.removeLabel", { name })}
             >
               <UserMinusIcon aria-hidden />
-              {t("pageAdmin.team.remove")}
+              {/* WCAG 2.5.3 : le libellé visible est contenu dans le nom accessible, en français comme en anglais. */}
+              {pendingInvite ? t("pageAdmin.team.withdrawInvite") : t("pageAdmin.team.remove")}
             </Button>
           </div>
         ) : null}
