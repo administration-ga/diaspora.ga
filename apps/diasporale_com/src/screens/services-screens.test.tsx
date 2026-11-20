@@ -426,4 +426,36 @@ describe("la fiche d'une page — ses services", () => {
     const hidden = render(tree(<PageServicesSection pageId="page-1" pageHandle="poste-demo" />))
     expect(hidden.container.textContent).toBe("")
   })
+
+  it("sans service actif ni filtre posé : l'état vide seul, sans filtres ; un filtre sans résultat garde les filtres pour les effacer", async () => {
+    // Le fournisseur filtre : une offre de beauté, aucune de traduction.
+    const filtering: ServicesCapability = {
+      ...capability(),
+      supportsPageOfferFilters: true,
+      usePageOffers: (request) => (mocks.pageOffers.get(request.category ?? "first") ?? LOADING) as Page<ServiceOfferCardView>,
+    }
+    mocks.services = filtering
+    mocks.pageOffers.set("first", ready<ServiceOfferCardView>([]))
+    const empty = render(tree(<PageServicesSection pageId="page-1" pageHandle="coiffure-paris" showEmpty />))
+    expect(screen.getByRole("heading", { name: "Services proposés" })).toBeTruthy()
+    expect(screen.getByText("Aucun service actif proposé")).toBeTruthy()
+    expect(screen.queryByText(/Affinez les services proposés/)).toBeNull()
+    expect(screen.queryByLabelText("Catégorie")).toBeNull()
+    expect(screen.queryByRole("button", { name: "Effacer les filtres" })).toBeNull()
+    empty.unmount()
+
+    mocks.pageOffers.set("first", ready([card("o1")]))
+    mocks.pageOffers.set("translation", ready<ServiceOfferCardView>([]))
+    render(tree(<PageServicesSection pageId="page-1" pageHandle="coiffure-paris" showEmpty />))
+    expect(screen.getByText(/Affinez les services proposés/)).toBeTruthy()
+    const category = screen.getByLabelText("Catégorie")
+    await act(async () => { fireEvent.change(category, { target: { value: "translation" } }) })
+    expect(await screen.findByText("Aucun service ne correspond à ces filtres")).toBeTruthy()
+    // Les filtres restent, et ce sont les mêmes champs : on peut les effacer.
+    expect(screen.getByLabelText("Catégorie")).toBe(category)
+    expect(screen.getAllByRole("button", { name: "Effacer les filtres" }).length).toBeGreaterThan(0)
+    await act(async () => { fireEvent.click(screen.getAllByRole("button", { name: "Effacer les filtres" })[0]!) })
+    expect(screen.getByLabelText("Catégorie")).toBe(category)
+    expect(await screen.findByText("Offre o1")).toBeTruthy()
+  })
 })

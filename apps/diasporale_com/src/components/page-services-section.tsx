@@ -23,7 +23,10 @@ const selectClass = "h-11 w-full rounded-md border border-input bg-card px-3 tex
  * Discret : rien pendant le chargement, rien pour une page sans offre active
  * ou illisible (une institution, un média ne proposent pas de services) ; une
  * offre en pause, en brouillon ou retirée n'y paraît jamais. Les associations
- * et entreprises peuvent garder une section vide explicite avec `showEmpty`.
+ * et entreprises peuvent garder une section vide explicite avec `showEmpty` :
+ * sans filtre posé et sans offre active, elle ne montre que l'état vide (des
+ * filtres au-dessus de rien ne servent à rien) ; un filtre posé sans résultat
+ * garde les filtres, pour les effacer.
  */
 export function PageServicesSection(props: {
   readonly pageId: string
@@ -56,12 +59,15 @@ function PageServicesList(props: {
   const id = useId()
   const [category, setCategory] = useState<ServiceCategory | null>(null)
   const [delivery, setDelivery] = useState<ServiceDeliveryFilter | null>(null)
+  // La liste SANS filtre a-t-elle des offres ? Inconnu tant qu'aucune lecture sans filtre n'est close ;
+  // la dernière issue connue reste pendant qu'un filtre se pose ou s'efface (les champs ne se démontent pas).
+  const [unfilteredHasOffers, setUnfilteredHasOffers] = useState<boolean | null>(null)
   const { services, pageHandle } = props
   const supportsFilters = services.supportsPageOfferFilters === true
   const filtered = supportsFilters && (category !== null || delivery !== null)
   const keepSection = props.showEmpty === true || props.canManage === true || filtered
   const reset = () => { setCategory(null); setDelivery(null) }
-  const filters = supportsFilters ? (
+  const filterFields = supportsFilters ? (
     <div className="flex min-w-0 flex-col gap-3">
       <p className="text-sm text-muted-foreground">{t("pageServiceFilters.lead")}</p>
       <div className="grid min-w-0 gap-3 sm:grid-cols-2">
@@ -97,6 +103,8 @@ function PageServicesList(props: {
       <Button variant="ghost" className="h-auto min-h-11 self-start whitespace-normal text-left" disabled={!filtered} onClick={reset}>{t("pageServiceFilters.reset")}</Button>
     </div>
   ) : null
+  // Des filtres au-dessus d'une page sans offre active ne servent à rien : seulement s'il y a des offres, ou un filtre à effacer.
+  const filters = filtered || unfilteredHasOffers === true ? filterFields : null
   const pager = (
     <ServicePager
       key={JSON.stringify([supportsFilters ? category : null, supportsFilters ? delivery : null])}
@@ -109,6 +117,7 @@ function PageServicesList(props: {
         ...(delivery !== null ? { delivery } : {}),
       } : { pageHandle, cursor })}
       keyOf={(offer) => offer.id}
+      {...(filtered ? {} : { onSettled: setUnfilteredHasOffers })}
       empty={filtered ? (
         <EmptyState
           icon={<BriefcaseBusinessIcon />}
@@ -126,7 +135,7 @@ function PageServicesList(props: {
     >
       {(offers) => keepSection ? <PageServicesGrid offers={offers} /> : (
         <PageServicesFrame pageHandle={pageHandle}>
-          {filters}
+          {filterFields}
           <PageServicesGrid offers={offers} />
         </PageServicesFrame>
       )}
