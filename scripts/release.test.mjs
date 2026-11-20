@@ -8,34 +8,34 @@ import { PUBLIC_RELEASE_VARIABLES, renderCommand } from "./release-lib.mjs"
 
 /** Valeurs FICTIVES (domaines réservés à la documentation, RFC 2606) : aucune ressource réelle. */
 const DEMO_ENV = Object.freeze({
-  DIASPORALE_DEMO_SITE_URL: "https://site-demo.example.org",
-  DIASPORALE_DEMO_CONVEX_URL: "https://moteur-demo.example.net",
-  DIASPORALE_DEMO_CONVEX_SITE_URL: "https://actions-demo.example.net",
-  DIASPORALE_DEMO_VERCEL_PROJECT_ID: "projet_fictif_demo",
-  DIASPORALE_VERCEL_ORG_ID: "equipe_fictive",
-  DIASPORALE_VERCEL_SCOPE: "portee-fictive",
+  DIASPORA_GA_DEMO_SITE_URL: "https://site-demo.example.org",
+  DIASPORA_GA_DEMO_CONVEX_URL: "https://moteur-demo.example.net",
+  DIASPORA_GA_DEMO_CONVEX_SITE_URL: "https://actions-demo.example.net",
+  DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: "projet_fictif_demo",
+  DIASPORA_GA_VERCEL_ORG_ID: "equipe_fictive",
+  DIASPORA_GA_VERCEL_SCOPE: "portee-fictive",
 })
 const ANTSIA = Object.freeze({ commit: "a".repeat(40), tree: "b".repeat(40) })
-const DIASPORALE = Object.freeze({ commit: "d".repeat(40), tree: "e".repeat(40) })
-const VERSION = "diasporale-dddddddddddd-antsia-aaaaaaaaaaaa-demo"
-const OLD_VERSION = "diasporale-111111111111-antsia-222222222222-demo"
+const DIASPORA_GA = Object.freeze({ commit: "d".repeat(40), tree: "e".repeat(40) })
+const VERSION = "diaspora-ga-dddddddddddd-antsia-aaaaaaaaaaaa-demo"
+const OLD_VERSION = "diaspora-ga-111111111111-antsia-222222222222-demo"
 const NEW_DEPLOYMENT = "https://nouveau-deploiement.example.org"
 const OLD_DEPLOYMENT = "https://ancien-deploiement.example.org"
 const CSP = "default-src 'self'; connect-src 'self' https://moteur-demo.example.net wss://moteur-demo.example.net https://moteur-demo.example.site; object-src 'none'"
 
-const plan = () => buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporale: DIASPORALE })
-const report = (version) => ({ status: "ok", application: "diasporale-com", version, backend: "configured", dataSource: "engine", engine: "reachable" })
+const plan = () => buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporaGa: DIASPORA_GA })
+const report = (version) => ({ status: "ok", application: "diaspora-ga", version, backend: "configured", dataSource: "engine", engine: "reachable" })
 
 describe("ligne de commande", () => {
   test("cible, deux commits, et --execute seulement en drapeau", () => {
-    expect(parseReleaseArgs(["--target", "demo", "--antsia", "origin/main", "--diasporale", "abc1234"])).toEqual({
+    expect(parseReleaseArgs(["--target", "demo", "--antsia", "origin/main", "--diaspora-ga", "abc1234"])).toEqual({
       target: "demo",
       antsia: "origin/main",
-      diasporale: "abc1234",
+      diasporaGa: "abc1234",
       execute: false,
       problems: [],
     })
-    expect(parseReleaseArgs(["--target", "production", "--antsia", "x", "--diasporale", "y", "--execute"]).execute).toBe(true)
+    expect(parseReleaseArgs(["--target", "production", "--antsia", "x", "--diaspora-ga", "y", "--execute"]).execute).toBe(true)
   })
 
   test("aucune option ne saute la confirmation : --yes ou --force sont des arguments inconnus", () => {
@@ -45,7 +45,7 @@ describe("ligne de commande", () => {
       "argument inconnu : --force",
       "--target doit valoir demo ou production",
       "--antsia <commit> manque",
-      "--diasporale <commit> manque",
+      "--diaspora-ga <commit> manque",
     ])
   })
 })
@@ -79,11 +79,11 @@ describe("plan de publication", () => {
     const [deploy] = plan().steps.find((step) => step.id === "deploy").commands
     const text = renderCommand(deploy)
     for (const flag of ["--prod", "--skip-domain", "--archive=tgz", "--yes"]) expect(deploy).toContain(flag)
-    expect(text).toContain(`--meta diasporaleReleaseCommit=${DIASPORALE.commit}`)
+    expect(text).toContain(`--meta diasporaGaReleaseCommit=${DIASPORA_GA.commit}`)
     expect(text).toContain(`--meta antsiaReleaseCommit=${ANTSIA.commit}`)
-    expect(text).toContain("--build-env NEXT_PUBLIC_DIASPORALE_DATA_SOURCE=engine --env NEXT_PUBLIC_DIASPORALE_DATA_SOURCE=engine")
+    expect(text).toContain("--build-env NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE=engine --env NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE=engine")
     expect(text).toContain(`--build-env NEXT_PUBLIC_BUILD_SHA=${VERSION}`)
-    expect(text).toContain("--build-env NEXT_PUBLIC_CONVEX_URL=<DIASPORALE_DEMO_CONVEX_URL>")
+    expect(text).toContain("--build-env NEXT_PUBLIC_CONVEX_URL=<DIASPORA_GA_DEMO_CONVEX_URL>")
     const passed = deploy.filter((_, index) => deploy[index - 1] === "--build-env").map((arg) => arg[0].slice(0, -1))
     expect(passed.every((name) => PUBLIC_RELEASE_VARIABLES.includes(name))).toBe(true)
     expect(passed).not.toContain("NEXT_PUBLIC_IDN_PORTAL_URL")
@@ -98,30 +98,30 @@ describe("plan de publication", () => {
   })
 
   test("les liens d'élévation ne passent que s'ils sont posés sur la machine", () => {
-    const withLinks = buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporale: DIASPORALE, values: { idnPortalUrl: "x", consulateUrl: "y" } })
+    const withLinks = buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporaGa: DIASPORA_GA, values: { idnPortalUrl: "x", consulateUrl: "y" } })
     expect(withLinks.variables.map(([name]) => name)).toContain("NEXT_PUBLIC_IDN_PORTAL_URL")
     expect(withLinks.variables.map(([name]) => name)).toContain("NEXT_PUBLIC_CONSULATE_URL")
   })
 
   test("la production a ses propres variables et sa propre étiquette", () => {
-    const production = buildReleasePlan({ target: "production", antsia: ANTSIA, diasporale: DIASPORALE })
+    const production = buildReleasePlan({ target: "production", antsia: ANTSIA, diasporaGa: DIASPORA_GA })
     const rendered = renderReleasePlan(production)
-    expect(production.version).toBe("diasporale-dddddddddddd-antsia-aaaaaaaaaaaa-production")
-    expect(rendered).toContain("<DIASPORALE_PRODUCTION_SITE_URL>")
-    expect(rendered).not.toContain("DIASPORALE_DEMO_")
+    expect(production.version).toBe("diaspora-ga-dddddddddddd-antsia-aaaaaaaaaaaa-production")
+    expect(rendered).toContain("<DIASPORA_GA_PRODUCTION_SITE_URL>")
+    expect(rendered).not.toContain("DIASPORA_GA_DEMO_")
   })
 
   test("le plan rendu nomme les variables et ne recopie aucune valeur de la machine", () => {
-    const rendered = renderReleasePlan(buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporale: DIASPORALE, values: { siteUrl: DEMO_ENV.DIASPORALE_DEMO_SITE_URL } }), {
-      published: { antsia: true, diasporale: false },
-      problems: ["DIASPORALE_VERCEL_SCOPE manque"],
+    const rendered = renderReleasePlan(buildReleasePlan({ target: "demo", antsia: ANTSIA, diasporaGa: DIASPORA_GA, values: { siteUrl: DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL } }), {
+      published: { antsia: true, diasporaGa: false },
+      problems: ["DIASPORA_GA_VERCEL_SCOPE manque"],
     })
     expect(rendered).toContain(`version : ${VERSION}`)
     expect(rendered).toContain(`ANTSIA ${ANTSIA.commit} (arbre ${ANTSIA.tree})`)
-    expect(rendered).toContain("ANTSIA oui, DIASPORALE NON")
+    expect(rendered).toContain("ANTSIA oui, DIASPORA_GA NON")
     expect(rendered).toContain("phrase à taper : PUBLIER demo")
-    expect(rendered).toContain("avec VERCEL_ORG_ID=<DIASPORALE_VERCEL_ORG_ID>, VERCEL_PROJECT_ID=<DIASPORALE_DEMO_VERCEL_PROJECT_ID>")
-    expect(rendered).toContain("  - DIASPORALE_VERCEL_SCOPE manque")
+    expect(rendered).toContain("avec VERCEL_ORG_ID=<DIASPORA_GA_VERCEL_ORG_ID>, VERCEL_PROJECT_ID=<DIASPORA_GA_DEMO_VERCEL_PROJECT_ID>")
+    expect(rendered).toContain("  - DIASPORA_GA_VERCEL_SCOPE manque")
     for (const value of Object.values(DEMO_ENV)) expect(rendered).not.toContain(value)
   })
 
@@ -129,7 +129,7 @@ describe("plan de publication", () => {
     const points = releaseAgreementPoints(plan())
     expect(points.map((point) => point.split(" : ")[0])).toEqual(["commits", "cible", "ordre", "retour arrière"])
     expect(points[0]).toContain(ANTSIA.commit)
-    expect(points[0]).toContain(DIASPORALE.commit)
+    expect(points[0]).toContain(DIASPORA_GA.commit)
   })
 })
 
@@ -145,7 +145,7 @@ function fakeDeps({ answers = [true, true], published = true, deploy = `${NEW_DE
     const [tool, verb] = argv
     if (tool === "git" && argv.includes("merge-base")) return { status: published === true || argv.includes(published) ? 0 : 1, stdout: "" }
     if (tool === "git") return { status: 0, stdout: "" }
-    if (verb === "inspect" && argv[2] === DEMO_ENV.DIASPORALE_DEMO_SITE_URL) {
+    if (verb === "inspect" && argv[2] === DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL) {
       return servedFails ? { status: 1, stdout: "" } : { status: 0, stdout: JSON.stringify({ id: "ancien", url: OLD_DEPLOYMENT.replace("https://", ""), readyState: "READY" }) }
     }
     if (verb === "deploy") return { status: deploy ? 0 : 1, stdout: deploy ?? "" }
@@ -158,7 +158,7 @@ function fakeDeps({ answers = [true, true], published = true, deploy = `${NEW_DE
     throw new Error(`commande inattendue : ${argv.join(" ")}`)
   }
   const fetch = async (url) => {
-    expect(String(url)).toBe(`${DEMO_ENV.DIASPORALE_DEMO_SITE_URL}/api/sante-fonctionnelle`)
+    expect(String(url)).toBe(`${DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL}/api/sante-fonctionnelle`)
     return new Response(JSON.stringify(report(promoted ? publicVersion : OLD_VERSION)), { status: 200, headers: { "content-security-policy": CSP } })
   }
   const deps = {
@@ -167,11 +167,11 @@ function fakeDeps({ answers = [true, true], published = true, deploy = `${NEW_DE
     confirm: async () => confirmations.shift() ?? false,
     log: (line) => logs.push(line),
     env: DEMO_ENV,
-    repos: { ANTSIA: "/depots/ANTSIA", DIASPORALE: "/depots/DIASPORALE" },
-    makeWorkdir: () => mkdtempSync(join(tmpdir(), "diasporale-essai-publication-")),
+    repos: { ANTSIA: "/depots/ANTSIA", DIASPORA_GA: "/depots/DIASPORA_GA" },
+    makeWorkdir: () => mkdtempSync(join(tmpdir(), "diaspora-ga-essai-publication-")),
     freeze: ({ workdir, commits }) => {
       if (freezeError) throw new Error(freezeError)
-      expect(commits).toEqual({ ANTSIA: ANTSIA.commit, DIASPORALE: DIASPORALE.commit })
+      expect(commits).toEqual({ ANTSIA: ANTSIA.commit, DIASPORA_GA: DIASPORA_GA.commit })
       return { context: join(workdir, "ECOSYSTEMES"), fingerprint: "f".repeat(64), files: 42 }
     },
     record: (_workdir, record) => records.push(structuredClone(record)),
@@ -197,7 +197,7 @@ describe("exécution", () => {
     expect(fake.commands()).toEqual(["git -C", "git -C", "git -C", "git -C", "vercel inspect", "vercel deploy", "vercel inspect", "vercel curl", "vercel promote"])
     const deploy = fake.calls.find((call) => call.argv[1] === "deploy")
     expect(deploy.argv).toContain("--skip-domain")
-    expect(deploy.argv).toContain(`NEXT_PUBLIC_SITE_URL=${DEMO_ENV.DIASPORALE_DEMO_SITE_URL}`)
+    expect(deploy.argv).toContain(`NEXT_PUBLIC_SITE_URL=${DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL}`)
     expect(deploy.argv).toContain(`sourceFingerprint=${"f".repeat(64)}`)
     expect(deploy.env).toEqual({ VERCEL_ORG_ID: "equipe_fictive", VERCEL_PROJECT_ID: "projet_fictif_demo" })
     expect(fake.calls.find((call) => call.argv[1] === "promote").argv).toEqual(["vercel", "promote", NEW_DEPLOYMENT, "--scope", "portee-fictive", "--yes"])
@@ -215,7 +215,7 @@ describe("exécution", () => {
   test("un commit absent d'origin/main arrête tout avant le gel", async () => {
     const fake = fakeDeps({ published: ANTSIA.commit })
     const result = await executeRelease(plan(), fake.deps)
-    expect(result).toMatchObject({ ok: false, stage: "published", reason: "le commit de DIASPORALE n'est pas sur origin/main" })
+    expect(result).toMatchObject({ ok: false, stage: "published", reason: "le commit de DIASPORA_GA n'est pas sur origin/main" })
     expect(fake.calls.some((call) => call.argv[0] === "vercel")).toBe(false)
   })
 

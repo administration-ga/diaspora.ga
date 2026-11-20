@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Retour arrière du site diasporale.com (LX-02) — procédure : docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
+ * Retour arrière du site diaspora.ga (LX-02) — procédure : docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
  *
  *   node scripts/rollback.mjs --target demo --to <déploiement> --version <étiquette>
  *       affiche le plan (par défaut) : RIEN ne part
@@ -63,7 +63,7 @@ export function parseRollbackArgs(argv) {
   if (target === null) problems.push("--target doit valoir demo ou production")
   if (!isDeploymentReference(options.to)) problems.push("--to doit désigner un déploiement (adresse https ou identifiant)")
   const label = parseVersionLabel(options.version)
-  if (!label) problems.push("--version doit être une étiquette diasporale-<12>-antsia-<12>-<cible>")
+  if (!label) problems.push("--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>")
   else if (target !== null && label.target !== target) problems.push("--version désigne une autre cible que --target")
   return { target, to: options.to, version: options.version, execute: options.execute === true, problems }
 }
@@ -107,7 +107,7 @@ export function buildRollbackPlan({ target, to, version }) {
 
 /** Le plan rendu en texte, sans aucune valeur de la machine. */
 export function renderRollbackPlan(plan, { problems = [] } = {}) {
-  const lines = [`Plan de retour arrière de diasporale.com — cible ${plan.target}`, `  version attendue après le retour : ${plan.version}`]
+  const lines = [`Plan de retour arrière de diaspora.ga — cible ${plan.target}`, `  version attendue après le retour : ${plan.version}`]
   plan.steps.forEach((step, index) => {
     lines.push("", `${index + 1}. ${step.title}`)
     if (step.gate) lines.push(`   phrase à taper : ${step.gate}`)

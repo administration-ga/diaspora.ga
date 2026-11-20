@@ -1,0 +1,118 @@
+/* ════════════════════════════════════════════════════════════════════════
+   DIASPORA.GA — rôles PROPRES à l'application (étiquette pays, badges de
+   confiance, tons des cartes flottantes, sélection, voile, mouvement) et
+   teintes douces des fonctions.
+
+   Posés APRÈS la charte de base du moteur (`@antsia/ui/styles.css`) et les
+   thèmes `@antsia/ui/themes/diaspora-ga.css` (Sable) et `diaspora-ga-gaboma.css`
+   (Gaboma), qui portent tout le contrat de couleurs. Ici, AUCUNE couleur
+   littérale : chaque rôle RENVOIE à un jeton du contrat, ou en mêle deux
+   (`color-mix`). Une teinte se règle donc à un seul endroit : le thème.
+
+   Charte v4 (20/10/2026) : la maquette « sept thèmes ». Chaque famille
+   d'actions a sa couleur (`--role-*` des thèmes) : publier à l'aplat
+   d'identité, suivre en `social`, écrire en `message`, réagir en `react`,
+   participer et acheter en `commerce`, valider en vert, supprimer en rouge.
+   Les teintes douces (badge Vérifié, bouton tonal) mêlent l'aplat à la carte,
+   aux mêmes doses que la maquette.
+
+   Mêmes sélecteurs que les thèmes, importés après eux : à spécificité égale,
+   l'ordre d'import tranche. Le cliquet `engine-theme-contrast.test.ts` rejoue
+   la cascade complète (base, thème, rôles) dans les deux thèmes et les deux
+   modes.
+   ════════════════════════════════════════════════════════════════════════ */
+
+[data-charte="diaspora-ga"], [data-charte="diaspora-ga-gaboma"] {
+  /* Teintes douces des fonctions (maquette : aplat mêlé à la carte). Écrire et
+     réagir ont la leur dans le thème (`--role-message-soft`, `--role-react-soft`). */
+  --dg-primary-soft: color-mix(in srgb, var(--primary-fill) 15%, var(--card));
+  --dg-social-soft: color-mix(in srgb, var(--role-social-fill) 15%, var(--card));
+  --dg-commerce-soft: color-mix(in srgb, var(--role-commerce-fill) 18%, var(--card));
+  --dg-success-soft: color-mix(in srgb, var(--role-success-fill) 14%, var(--card));
+  --dg-danger-soft: color-mix(in srgb, var(--role-danger-fill) 12%, var(--card));
+
+  /* Survol d'un bouton : l'aplat se rapproche de l'encre (plus sombre en clair, plus
+     clair en sombre), le texte posé dessus garde son contraste. */
+  --dg-social-fill-hover: color-mix(in srgb, var(--role-social-fill) 88%, var(--foreground));
+  --dg-message-fill-hover: color-mix(in srgb, var(--role-message-fill) 88%, var(--foreground));
+  --dg-message-soft-hover: color-mix(in srgb, var(--role-message-soft) 90%, var(--role-message-ink));
+  --dg-react-fill-hover: color-mix(in srgb, var(--role-react-fill) 88%, var(--foreground));
+  --dg-commerce-fill-hover: color-mix(in srgb, var(--role-commerce-fill) 88%, var(--foreground));
+  --dg-success-fill-hover: color-mix(in srgb, var(--role-success-fill) 88%, var(--foreground));
+  --dg-danger-fill-hover: color-mix(in srgb, var(--role-danger-fill) 88%, var(--foreground));
+  --dg-primary-soft-hover: color-mix(in srgb, var(--dg-primary-soft) 90%, var(--primary));
+  --dg-neutral-hover: color-mix(in srgb, var(--muted) 90%, var(--foreground));
+
+  /* L'étiquette pays (charte §5). L'œillet est un trou : il montre le fond. */
+  --dg-tag-bg: var(--esp-neutral-chip);
+  --dg-tag-fg: var(--muted-foreground);
+  --dg-tag-code: var(--foreground);
+  --dg-tag-eyelet: var(--background);
+  --dg-tag-eyelet-ring: var(--ink-300);
+  --dg-tag-diaspora-bg: var(--role-message-soft);
+  --dg-tag-diaspora-fg: var(--role-message-ink);
+  --dg-monument: var(--foreground);
+
+  /* Les badges de confiance (maquette : Officiel · Vérifié · Agent public · Communauté) :
+     « Officiel » est l'encre inversée, « Vérifié » la teinte de suivre, « Agent public »
+     celle d'écrire, « Communauté » le creux. */
+  --dg-official-bg: var(--foreground);
+  --dg-official-fg: var(--background);
+  --dg-verified-bg: var(--dg-social-soft);
+  --dg-verified-fg: var(--role-social-ink);
+  --dg-agent-bg: var(--role-message-soft);
+  --dg-agent-fg: var(--role-message-ink);
+  --dg-community-bg: var(--muted);
+  --dg-community-fg: var(--muted-foreground);
+  --dg-sponsored-bg: var(--muted);
+  --dg-sponsored-fg: var(--foreground);
+
+  /* Tons des cartes flottantes (modération, statut, démonstration — charte §7) :
+     ils ne colorent que la pastille d'icône ; la carte, elle, reste neutre. */
+  --dg-moderation-pending-bg: var(--esp-tone-amber-bg);
+  --dg-moderation-pending-fg: var(--esp-tone-amber);
+  --dg-moderation-published-bg: var(--dg-success-soft);
+  --dg-moderation-published-fg: var(--role-success-ink);
+  --dg-moderation-rejected-bg: var(--dg-danger-soft);
+  --dg-moderation-rejected-fg: var(--role-danger-ink);
+  --dg-demo-bg: var(--esp-tone-amber-bg);
+  --dg-demo-fg: var(--esp-tone-amber);
+
+  /* Sélection, jamais par un contour : la puce choisie prend l'aplat d'identité
+     (maquette, `.chip.on`) ; le curseur d'un sélecteur segmenté est la carte posée
+     sur le creux de sa piste, avec une ombre d'un souffle (`.seg > .on`). */
+  --dg-chosen-bg: var(--primary-fill);
+  --dg-chosen-fg: var(--primary-fill-on);
+  --dg-thumb: var(--card);
+  --dg-shadow-thumb: 0 1px 3px color-mix(in srgb, var(--esp-neutral-900) 14%, transparent);
+
+  /* Bouton destructif : le texte posé sur l'aplat de danger du thème. */
+  --destructive-foreground: var(--role-danger-on);
+
+  /* Voile sous une feuille ou une boîte de dialogue, et relief de la feuille, qui
+     flotte : l'ombre des éléments flottants du thème. */
+  --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 42%, transparent);
+  --dg-shadow-sheet: var(--esp-shadow-float);
+
+  /* Mouvement. */
+  --dg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dg-duration-fast: 160ms;
+  --dg-duration-base: 220ms;
+}
+
+.dark[data-charte="diaspora-ga"],
+.dark [data-charte="diaspora-ga"],
+.dark[data-charte="diaspora-ga-gaboma"],
+.dark [data-charte="diaspora-ga-gaboma"] {
+  /* En sombre, l'ombre du curseur et le voile se renforcent pour rester visibles sur la nuit. */
+  --dg-shadow-thumb: 0 1px 3px color-mix(in srgb, var(--esp-neutral-900) 60%, transparent);
+  --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 72%, transparent);
+}
+
+/* Mouvement réduit : aucune transition ni animation de la charte. */
+@media (prefers-reduced-motion: reduce) {
+  [data-charte="diaspora-ga"], [data-charte="diaspora-ga-gaboma"] {
+    --dg-duration-fast: 0ms;
+    --dg-duration-base: 0ms;
+  }
+}

@@ -1,15 +1,15 @@
 #!/usr/bin/env node
 /**
- * Contrôle d'une version servie de diasporale.com (LX-02), en lecture seule :
+ * Contrôle d'une version servie de diaspora.ga (LX-02), en lecture seule :
  *
- *   node scripts/release-check.mjs --target demo --version diasporale-<12>-antsia-<12>-demo
+ *   node scripts/release-check.mjs --target demo --version diaspora-ga-<12>-antsia-<12>-demo
  *
- * Trois preuves, lues sur le site de la cible (`DIASPORALE_<CIBLE>_SITE_URL`) :
+ * Trois preuves, lues sur le site de la cible (`DIASPORA_GA_<CIBLE>_SITE_URL`) :
  *  1. la sonde `/api/sante-fonctionnelle` (LX-01) dit « ok », l'application
- *     `diasporale-com`, la source « engine », le moteur configuré et joint ;
+ *     `diaspora-ga`, la source « engine », le moteur configuré et joint ;
  *  2. la version servie est l'étiquette attendue (tirée des deux commits publiés) ;
  *  3. le moteur visé est celui de la cible : la politique de sécurité du contenu
- *     autorise l'origine de `DIASPORALE_<CIBLE>_CONVEX_URL`, et aucun autre moteur.
+ *     autorise l'origine de `DIASPORA_GA_<CIBLE>_CONVEX_URL`, et aucun autre moteur.
  *
  * Aucune écriture, aucun identifiant affiché : les messages nomment les variables,
  * jamais leur valeur, et une erreur du réseau n'est jamais recopiée (elle peut citer
@@ -29,7 +29,7 @@ import {
   targetVariableNames,
 } from "./release-lib.mjs"
 
-export const USAGE = "Usage : node scripts/release-check.mjs --target demo|production --version diasporale-<12>-antsia-<12>-<cible>"
+export const USAGE = "Usage : node scripts/release-check.mjs --target demo|production --version diaspora-ga-<12>-antsia-<12>-<cible>"
 
 /** Les options ; la version doit avoir la forme d'une étiquette de la même cible. */
 export function parseCheckArgs(argv) {
@@ -37,7 +37,7 @@ export function parseCheckArgs(argv) {
   const target = parseTarget(options.target)
   if (target === null) problems.push("--target doit valoir demo ou production")
   const label = parseVersionLabel(options.version)
-  if (!label) problems.push("--version doit être une étiquette diasporale-<12>-antsia-<12>-<cible>")
+  if (!label) problems.push("--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>")
   else if (target !== null && label.target !== target) problems.push("--version désigne une autre cible que --target")
   return { target, version: options.version, problems }
 }

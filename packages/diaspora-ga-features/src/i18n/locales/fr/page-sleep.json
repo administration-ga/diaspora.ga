@@ -1,0 +1,56 @@
+{
+  "pageSleep": {
+    "section": {
+      "title": "Mettre la page en sommeil",
+      "lead": "Votre organisation se dissout ou fait une pause ? Mettez la page en sommeil : elle disparaît pour tout le monde, et tout administrateur peut la réactiver pendant {{days}} jours.",
+      "action": "Mettre la page en sommeil",
+      "actionLabel": "Mettre la page {{name}} en sommeil"
+    },
+    "confirm": {
+      "title": "Mettre {{name}} en sommeil ?",
+      "body": "Voici ce qui change dès votre confirmation.",
+      "hidden": "La page, ses offres, ses emplois, ses évènements et ses publications disparaissent pour tout le monde, votre équipe comprise.",
+      "deadlines": "Les demandes, les candidatures et les inscriptions restent en l'état côté page, mais leurs délais courent : une demande sans réponse peut expirer, et son auteur en est prévenu ; une offre d'emploi peut se clore à son échéance.",
+      "live": "Un direct en cours de la page s'arrête.",
+      "kept": "Les adhésions, les abonnés et l'équipe sont gardés.",
+      "silent": "Personne n'est prévenu de la mise en sommeil. Si des inscrits doivent l'être, annulez d'abord vos évènements.",
+      "reversible": "Tout administrateur de la page peut la réactiver depuis « Mes pages » jusqu'au {{date}} : revient alors tout ce qui n'a pas expiré entre-temps.",
+      "after": "Passé cette date, seule l'équipe de la plateforme ANTSIA peut agir.",
+      "action": "Mettre en sommeil"
+    },
+    "done": "{{name}} est en sommeil jusqu'au {{date}}.",
+    "myPages": {
+      "title": "En sommeil",
+      "lead": "Ces pages ne se voient plus. Tant que le délai court, tout administrateur peut les réactiver : chacune revient avec tout ce qui n'a pas expiré entre-temps.",
+      "until": "En sommeil jusqu'au {{date}}",
+      "expired": "Délai passé le {{date}} : seule l'équipe de la plateforme ANTSIA peut désormais agir.",
+      "adminOnly": "Seul un administrateur de la page peut la réactiver.",
+      "wake": "Réactiver",
+      "wakeLabel": "Réactiver la page {{name}}",
+      "woken": "{{name}} est de nouveau visible."
+    },
+    "manage": {
+      "title": "Cette page est en sommeil",
+      "asleepBody": "{{name}} ne se voit plus, ni ses offres, ni ses emplois, ni ses évènements, ni ses publications. Tout administrateur peut la réactiver jusqu'au {{date}}.",
+      "expiredBody": "{{name}} dort depuis plus de {{days}} jours : elle ne se réactive plus d'ici, et rien n'a été effacé. Seule l'équipe de la plateforme ANTSIA peut agir.",
+      "myPages": "Ouvrir « Mes pages »"
+    },
+    "expired": {
+      "contact": "Écrire à l'équipe de la plateforme",
+      "contactLabel": "Écrire à l’équipe de la plateforme au sujet {{name, de}}"
+    },
+    "orphan": {
+      "title": "Cette page n'a plus de responsable",
+      "claimBody": "Personne ne l'administre aujourd'hui. Vous la représentez ? Revendiquez-la, pièces à l'appui : la modération du réseau en jugera.",
+      "claim": "Revendiquer cette page",
+      "pendingBody": "Personne ne l'administre aujourd'hui. Votre revendication est en cours d'instruction par la modération du réseau.",
+      "contactBody": "Personne ne l'administre aujourd'hui. Pour signaler qui la représente, écrivez à l'équipe de DIASPORA.GA.",
+      "contact": "Écrire à l'équipe"
+    }
+  },
+  "errors": {
+    "page_sleep_expired": "Cette page dort depuis plus de {{pageSleepDays}} jours : elle ne se réactive plus d'ici. Seule l'équipe de la plateforme ANTSIA peut agir.",
+    "page_asleep": "Cette page est en sommeil : rien n'y change tant qu'un administrateur ne l'a pas réactivée.",
+    "moderation_desk_page_asleep": "Cette page est en sommeil : la revendication peut seulement être refusée."
+  }
+}

@@ -4,9 +4,9 @@ import { join } from "node:path"
 
 // Le validateur de facette du moteur, celui que la console applique après son schéma strict.
 import { validateFacetSchema } from "../../ANTSIA/packages/social-domain/src/facets.ts"
-import { consoleFacetSchemaJson, diasporaleConsoleNetworkForm } from "../packages/diasporale-domain/src/index.ts"
+import { consoleFacetSchemaJson, diasporaGaConsoleNetworkForm } from "../packages/diaspora-ga-domain/src/index.ts"
 import { buildReleasePlan } from "./release.mjs"
-import { DIASPORALE_ROOT, PUBLIC_RELEASE_VARIABLES, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
+import { DIASPORA_GA_ROOT, PUBLIC_RELEASE_VARIABLES, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
 
 /**
  * Les documents de publication restent vrais (mêmes variables, mêmes étapes que les
@@ -23,8 +23,8 @@ const IDENTIFIER_PATTERNS = [
   ["chemin personnel", new RegExp(["/Users", "/[A-Za-z]"].join(""))],
 ]
 
-const read = (path) => readFileSync(join(DIASPORALE_ROOT, path), "utf8")
-const scriptFiles = () => readdirSync(join(DIASPORALE_ROOT, "scripts")).filter((name) => name.endsWith(".mjs")).map((name) => `scripts/${name}`)
+const read = (path) => readFileSync(join(DIASPORA_GA_ROOT, path), "utf8")
+const scriptFiles = () => readdirSync(join(DIASPORA_GA_ROOT, "scripts")).filter((name) => name.endsWith(".mjs")).map((name) => `scripts/${name}`)
 const PUBLICATION_DOC = "docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md"
 const PRODUCTION_DOC = "docs/36_MISE_EN_PRODUCTION.md"
 
@@ -44,7 +44,7 @@ describe("aucun identifiant dans le dépôt public", () => {
   test("les motifs attrapent bien ce qu'ils visent", () => {
     const samples = ["prj" + "_AbCdEfGhIjKl", "team" + "_AbCdEfGhIjKl", "dpl" + "_AbCdEfGhIjKl", "site-x.vercel" + ".app", "vivid-otter" + "-123", "/Users" + "/quelquun"]
     samples.forEach((sample, index) => expect(IDENTIFIER_PATTERNS[index][1].test(sample)).toBe(true))
-    expect(IDENTIFIER_PATTERNS.some(([, pattern]) => pattern.test("diasporale-111111111111-antsia-222222222222-demo"))).toBe(false)
+    expect(IDENTIFIER_PATTERNS.some(([, pattern]) => pattern.test("diaspora-ga-111111111111-antsia-222222222222-demo"))).toBe(false)
   })
 })
 
@@ -52,7 +52,7 @@ describe("le document de publication dit ce que font les scripts", () => {
   const doc = read(PUBLICATION_DOC)
 
   test("chaque variable de la machine y est nommée, pour les deux cibles", () => {
-    for (const name of Object.values(targetVariableNames("demo"))) expect(doc).toContain(name.replace("DIASPORALE_DEMO_", "DIASPORALE_<CIBLE>_"))
+    for (const name of Object.values(targetVariableNames("demo"))) expect(doc).toContain(name.replace("DIASPORA_GA_DEMO_", "DIASPORA_GA_<CIBLE>_"))
     for (const name of Object.values(SHARED_VARIABLE_NAMES)) expect(doc).toContain(name)
   })
 
@@ -66,7 +66,7 @@ describe("le document de publication dit ce que font les scripts", () => {
   test("le tableau des étapes a autant de lignes que le plan, dans l'ordre", () => {
     const section = doc.slice(doc.indexOf("### 4.2"), doc.indexOf("### 4.3"))
     const rows = section.split("\n").map((line) => /^\| (\d+) \|/.exec(line)?.[1]).filter(Boolean).map(Number)
-    const steps = buildReleasePlan({ target: "demo", antsia: { commit: "a".repeat(40), tree: "b".repeat(40) }, diasporale: { commit: "d".repeat(40), tree: "e".repeat(40) } }).steps
+    const steps = buildReleasePlan({ target: "demo", antsia: { commit: "a".repeat(40), tree: "b".repeat(40) }, diasporaGa: { commit: "d".repeat(40), tree: "e".repeat(40) } }).steps
     expect(rows).toEqual(steps.map((_, index) => index + 1))
   })
 
@@ -98,7 +98,7 @@ describe("le dossier de mise en production (DS-06)", () => {
 
   test("le JSON de facette à coller est exactement celui que rend le domaine", () => {
     expect(facetBlock()).toBe(consoleFacetSchemaJson())
-    expect(diasporaleConsoleNetworkForm().facetSchema).toBe(facetBlock())
+    expect(diasporaGaConsoleNetworkForm().facetSchema).toBe(facetBlock())
   })
 
   test("la console l'accepte : schéma strict, puis validateur du moteur", () => {
@@ -110,7 +110,7 @@ describe("le dossier de mise en production (DS-06)", () => {
   })
 
   test("chaque champ du formulaire porte la valeur du domaine", () => {
-    const form = diasporaleConsoleNetworkForm()
+    const form = diasporaGaConsoleNetworkForm()
     const rows = doc.split("\n")
     for (const [key, label] of CONSOLE_LABELS) {
       const row = rows.find((line) => line.startsWith(`| ${label} |`))

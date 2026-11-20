@@ -1,11 +1,11 @@
-# Mise en production de diasporale.com
+# Mise en production de diaspora.ga
 
 > Lot DS-06 du plan 17 (`docs/etudes/2026-11-10-finalisation/17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md`),
 > repris du plan 15 du moteur. Ce document vit dans un dépôt public : il nomme des variables, jamais
 > leur valeur ; il ne cite aucun identifiant de projet, d'équipe ou de déploiement.
 >
-> **État au 10/11/2026 : rien de ce qui suit n'a été fait.** `diasporale.com` ne répond pas ; aucun
-> backend de production n'a de réseau `diasporale` ; le réseau n'a jamais été créé par la console (la
+> **État au 10/11/2026 : rien de ce qui suit n'a été fait.** `diaspora.ga` ne répond pas ; aucun
+> backend de production n'a de réseau `diaspora-ga` ; le réseau n'a jamais été créé par la console (la
 > démonstration a été semée par la graine). Chaque étape dit qui agit, ce qu'il fait et la preuve
 > qu'elle est faite ; on ne passe à la suivante qu'avec la preuve de la précédente.
 
@@ -48,19 +48,19 @@ réseau »).
 
 La console crée toujours un réseau **fermé**, **enfant de la racine** : ni le genre ni le parent ne
 se saisissent. Les valeurs sont celles de la graine du domaine, que rend
-`diasporaleConsoleNetworkForm()` de `@diasporale/domain` (`packages/diasporale-domain/src/console-network.ts`) ;
+`diasporaGaConsoleNetworkForm()` de `@diaspora-ga/domain` (`packages/diaspora-ga-domain/src/console-network.ts`) ;
 un test vérifie que ce document en est la copie exacte.
 
 | Champ de la console | Valeur à saisir |
 |---|---|
-| Identifiant public | `diasporale` |
-| Nom du réseau | `DIASPORALE` |
+| Identifiant public | `diaspora-ga` |
+| Nom du réseau | `DIASPORA.GA` |
 | Politique d’adhésion | « Déclarée ou vérifiée » (`declared_or_verified`) |
 | Visibilité par défaut | « Dans ce réseau » (`network`) |
 | Portées autorisées | `local, diaspora` |
 | Pays ouverts | `FR` |
-| Thème | `diasporale` |
-| Admission du réseau | « Tranche d’admission DIASPORALE » (`diaspora`) |
+| Thème | `diaspora-ga` |
+| Admission du réseau | « Tranche d’admission DIASPORA.GA » (`diaspora`) |
 | Schéma de facette (JSON) | le bloc ci-dessous, tel quel |
 | Motif de la décision | rédigé par l'opérateur, 10 à 500 caractères, avec la date de l'accord du propriétaire |
 
@@ -113,10 +113,10 @@ un test vérifie que ce document en est la copie exacte.
 }
 ```
 
-Le même texte se régénère depuis la racine de DIASPORALE :
+Le même texte se régénère depuis la racine de DIASPORA.GA :
 
 ```bash
-bun -e 'import { diasporaleConsoleNetworkForm } from "./packages/diasporale-domain/src/index.ts"; console.log(diasporaleConsoleNetworkForm().facetSchema)'
+bun -e 'import { diasporaGaConsoleNetworkForm } from "./packages/diaspora-ga-domain/src/index.ts"; console.log(diasporaGaConsoleNetworkForm().facetSchema)'
 ```
 
 À relire avant d'enregistrer :
@@ -128,13 +128,13 @@ bun -e 'import { diasporaleConsoleNetworkForm } from "./packages/diasporale-doma
   réseau par défaut ; aucun champ n'est lisible depuis la racine ;
 - l'identifiant public est unique : s'il existe déjà, la console refuse (conflit).
 
-**Preuve** : la console liste le réseau avec « Tranche d’admission DIASPORALE » ; le journal des
+**Preuve** : la console liste le réseau avec « Tranche d’admission DIASPORA.GA » ; le journal des
 décisions porte la création et son motif ; la lecture publique `modules/networks/networks:getBySlug`
-(`slug` `diasporale`) rend `managedBy: "diaspora"`.
+(`slug` `diaspora-ga`) rend `managedBy: "diaspora"`.
 
 ## 3. Le premier passage nocturne crée le hub de la France
 
-**Qui** : personne, le moteur. La tâche planifiée « compteurs des hubs DIASPORALE » (chaque jour à
+**Qui** : personne, le moteur. La tâche planifiée « compteurs des hubs DIASPORA.GA » (chaque jour à
 2 h 30 UTC) crée le hub de chaque pays ouvert et compte ses membres ; la mesure du pilote suit à
 2 h 50 UTC. Rien n'est créé à la main.
 
@@ -145,15 +145,15 @@ annonce avant.
 ## 4. L'équipe de modération France et les responsables du réseau
 
 **Qui** : un administrateur de plateforme dans la console du moteur, puis l'administration du réseau
-dans le bureau de modération de diasporale.com, sur les noms désignés par le propriétaire.
+dans le bureau de modération de diaspora.ga, sur les noms désignés par le propriétaire.
 
-- « Équipes de modération » : créer l'équipe de la France pour le réseau DIASPORALE, avec son motif,
+- « Équipes de modération » : créer l'équipe de la France pour le réseau DIASPORA.GA, avec son motif,
   puis y placer les modérateurs désignés. Règle du projet : pas de pays ouvert sans modération.
 - Responsables du réseau (administrateur et modérateur du réseau, lecteurs de `/pilote` et juges des
   recours ; lots EX-08 du moteur, MD-01 et LX-03, décision 3 du plan 17) :
   1. **Le premier administrateur** : un administrateur de plateforme, dans la console (section
-     « Équipes », bloc « Responsables du réseau », réseau DIASPORALE), nomme la personne désignée,
-     motif à l'appui. La console ne trouve un membre de DIASPORALE par son identifiant que s'il a
+     « Équipes », bloc « Responsables du réseau », réseau DIASPORA.GA), nomme la personne désignée,
+     motif à l'appui. La console ne trouve un membre de DIASPORA.GA par son identifiant que s'il a
      choisi de paraître dans l'annuaire du réseau : la personne désignée doit l'avoir choisi au moment
      de la nomination (le rôle reste si elle le retire ensuite).
   2. **Les suivants** : l'administrateur nommé ouvre le bureau de modération (`/moderation`, onglet
@@ -188,12 +188,12 @@ conversation d'une demande (recette réelle, par le propriétaire).
 
 ### 6.1 Backend du moteur de production (posées par le propriétaire)
 
-| Variable | Ce qu'elle doit porter pour DIASPORALE |
+| Variable | Ce qu'elle doit porter pour DIASPORA.GA |
 |---|---|
 | `TRUSTED_ORIGINS` | ajouter l'origine du site (liste séparée par des virgules) ; `SITE_URL` reste celle d'antsia.ga |
-| `NOTIFICATION_APPLICATIONS_JSON` | ajouter une entrée `applicationId`, `networkSlug` (`diasporale`), `origin` (celle du site), `entryPath`. Une seule entrée invalide vide **tout** le registre, celui d'ANTSIA compris : relire avant de poser. DIASPORALE ne s'en sert pas encore (notifications hors du site, lot DS-14) |
-| `RESEND_FROM_ADDRESS` et `RESEND_API_KEY` | une seule adresse d'envoi par déploiement : seule la marque du message change selon le réseau. Une adresse propre à DIASPORALE est la décision 13 du plan 17 |
-| `IDN_CLIENT_ID`, `IDN_CLIENT_SECRET`, `IDN_ISSUER` ou `IDN_DISCOVERY_URL` | seulement quand l'entrée par IDN s'ouvre (plan 01, lot EA-02) : client OIDC de DIASPORALE à enregistrer par le portail développeur d'identite.ga |
+| `NOTIFICATION_APPLICATIONS_JSON` | ajouter une entrée `applicationId`, `networkSlug` (`diaspora-ga`), `origin` (celle du site), `entryPath`. Une seule entrée invalide vide **tout** le registre, celui d'ANTSIA compris : relire avant de poser. DIASPORA.GA ne s'en sert pas encore (notifications hors du site, lot DS-14) |
+| `RESEND_FROM_ADDRESS` et `RESEND_API_KEY` | une seule adresse d'envoi par déploiement : seule la marque du message change selon le réseau. Une adresse propre à DIASPORA.GA est la décision 13 du plan 17 |
+| `IDN_CLIENT_ID`, `IDN_CLIENT_SECRET`, `IDN_ISSUER` ou `IDN_DISCOVERY_URL` | seulement quand l'entrée par IDN s'ouvre (plan 01, lot EA-02) : client OIDC de DIASPORA.GA à enregistrer par le portail développeur d'identite.ga |
 
 Ni `ANTSIA_DEMO_DEPLOYMENT`, ni `ANTSIA_DEV_TOOLS`, ni `ANTSIA_SEEDS_ALLOWED` (étape 1).
 
@@ -204,24 +204,24 @@ machine qui publie (`docs/37`, § 3) ; aucune ne se saisit à la main.
 
 | Variable du site | Origine |
 |---|---|
-| `NEXT_PUBLIC_DIASPORALE_DATA_SOURCE` | posée par le script : `engine` |
-| `NEXT_PUBLIC_SITE_URL` | `DIASPORALE_PRODUCTION_SITE_URL` : l'origine du domaine retenu (étape 7) |
-| `NEXT_PUBLIC_CONVEX_URL` | `DIASPORALE_PRODUCTION_CONVEX_URL` : le backend de l'étape 1 |
-| `CONVEX_SITE_URL` | `DIASPORALE_PRODUCTION_CONVEX_SITE_URL` : les actions HTTP du même backend |
+| `NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE` | posée par le script : `engine` |
+| `NEXT_PUBLIC_SITE_URL` | `DIASPORA_GA_PRODUCTION_SITE_URL` : l'origine du domaine retenu (étape 7) |
+| `NEXT_PUBLIC_CONVEX_URL` | `DIASPORA_GA_PRODUCTION_CONVEX_URL` : le backend de l'étape 1 |
+| `CONVEX_SITE_URL` | `DIASPORA_GA_PRODUCTION_CONVEX_SITE_URL` : les actions HTTP du même backend |
 | `NEXT_PUBLIC_BUILD_SHA` | posée par le script : l'étiquette tirée des deux commits |
-| `NEXT_PUBLIC_IDN_PORTAL_URL` | `DIASPORALE_PRODUCTION_IDN_PORTAL_URL`, facultative : absente, le lien d'élévation ne s'affiche pas |
-| `NEXT_PUBLIC_CONSULATE_URL` | `DIASPORALE_PRODUCTION_CONSULATE_URL`, facultative : idem |
+| `NEXT_PUBLIC_IDN_PORTAL_URL` | `DIASPORA_GA_PRODUCTION_IDN_PORTAL_URL`, facultative : absente, le lien d'élévation ne s'affiche pas |
+| `NEXT_PUBLIC_CONSULATE_URL` | `DIASPORA_GA_PRODUCTION_CONSULATE_URL`, facultative : idem |
 
-Le projet d'hébergement de production se désigne par `DIASPORALE_PRODUCTION_VERCEL_PROJECT_ID`, avec
-`DIASPORALE_VERCEL_ORG_ID` et `DIASPORALE_VERCEL_SCOPE`. Une même ressource déclarée pour la
+Le projet d'hébergement de production se désigne par `DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID`, avec
+`DIASPORA_GA_VERCEL_ORG_ID` et `DIASPORA_GA_VERCEL_SCOPE`. Une même ressource déclarée pour la
 démonstration et pour la production est refusée par le script.
 
 ## 7. Le domaine
 
-**Qui** : le propriétaire. Le catalogue de publication du moteur prévoit `diasporale.com`.
+**Qui** : le propriétaire. Le catalogue de publication du moteur prévoit `diaspora.ga`.
 
 Rattacher le domaine au projet d'hébergement de production, poser ses enregistrements DNS, attendre
-le certificat. Son origine est celle de `DIASPORALE_PRODUCTION_SITE_URL` et de l'entrée ajoutée à
+le certificat. Son origine est celle de `DIASPORA_GA_PRODUCTION_SITE_URL` et de l'entrée ajoutée à
 `TRUSTED_ORIGINS`.
 
 **Preuve** : le certificat est valide ; la ligne « domaines » de la liste de contrôle du moteur
@@ -230,7 +230,7 @@ le certificat. Son origine est celle de `DIASPORALE_PRODUCTION_SITE_URL` et de l
 ## 8. L'indexation
 
 Aujourd'hui tout le site est exclu des moteurs de recherche (`robots: { index: false, follow: false
-}` dans `apps/diasporale_com/src/app/layout.tsx`), sans plan du site. Recommandation du plan 17
+}` dans `apps/diaspora_ga/src/app/layout.tsx`), sans plan du site. Recommandation du plan 17
 (décision 5) : indexer la vitrine seule au lancement, **jamais une page de membre**. C'est un
 changement de code, dans un lot à part, livré et vérifié avant l'ouverture ; sans lui, le site reste
 exclu, ce qui est sûr.
@@ -242,7 +242,7 @@ exclu, ce qui est sûr.
 **Qui** : l'opérateur désigné, sur accord écrit (commits, cible `production`, ordre, retour arrière).
 
 ```bash
-node scripts/release.mjs --target production --antsia <commit ANTSIA> --diasporale <commit DIASPORALE>
+node scripts/release.mjs --target production --antsia <commit ANTSIA> --diaspora-ga <commit DIASPORA.GA>
 ```
 
 Le plan d'abord, puis `--execute` et ses deux phrases (`docs/37`, § 4). Le contrôle public dit l'état
@@ -298,7 +298,7 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
    réseau dans le bureau (étape 4). Aucun code ne nomme personne à la place du propriétaire.
 6. **Modérateurs de l'équipe France** (étape 4).
 7. **Natures de mise en relation ouvertes au lancement** (étape 5, avec DS-04).
-8. **Adresse d'envoi propre à DIASPORALE ou commune (décision 13)**.
+8. **Adresse d'envoi propre à DIASPORA.GA ou commune (décision 13)**.
 9. **Indexation de la vitrine (décision 5)** (étape 8).
 10. **Textes légaux** : juriste, droit applicable, entité éditrice (décision 6, lots LX-05 et DS-07) ;
     sous-traitants et lieux d'hébergement (§ 11).

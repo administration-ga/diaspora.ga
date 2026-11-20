@@ -1,5 +1,5 @@
 /**
- * Bibliothèque commune des scripts de publication de diasporale.com (LX-02) :
+ * Bibliothèque commune des scripts de publication de diaspora.ga (LX-02) :
  * `release.mjs` (publier), `release-check.mjs` (contrôler), `rollback.mjs` (revenir
  * en arrière). Procédure : `docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md`.
  *
@@ -21,12 +21,12 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 import { createInterface } from "node:readline/promises"
 import { fileURLToPath } from "node:url"
 
-export const DIASPORALE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
-export const ECOSYSTEMS_ROOT = resolve(DIASPORALE_ROOT, "..")
+export const DIASPORA_GA_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..")
+export const ECOSYSTEMS_ROOT = resolve(DIASPORA_GA_ROOT, "..")
 export const ANTSIA_ROOT = join(ECOSYSTEMS_ROOT, "ANTSIA")
 
 /** Les dépôts du contexte figé, sous leur nom de dossier dans ECOSYSTEMES. */
-export const RELEASE_REPOSITORIES = Object.freeze({ ANTSIA: ANTSIA_ROOT, DIASPORALE: DIASPORALE_ROOT })
+export const RELEASE_REPOSITORIES = Object.freeze({ ANTSIA: ANTSIA_ROOT, DIASPORA_GA: DIASPORA_GA_ROOT })
 
 /** Les cibles : la démonstration déclarée (ADR-0038 du moteur), puis la production. */
 export const RELEASE_TARGETS = Object.freeze(["demo", "production"])
@@ -45,7 +45,7 @@ export function otherTarget(target) {
 export const HEALTH_PATH = "/api/sante-fonctionnelle"
 
 /** Le nom de l'application dans le rapport de la sonde (catalogue de publication du moteur). */
-export const HEALTH_APPLICATION = "diasporale-com"
+export const HEALTH_APPLICATION = "diaspora-ga"
 
 /**
  * Les NOMS des variables de la machine pour une cible, jamais leur valeur. Une
@@ -53,7 +53,7 @@ export const HEALTH_APPLICATION = "diasporale-com"
  * production, par construction.
  */
 export function targetVariableNames(target) {
-  const prefix = `DIASPORALE_${target.toUpperCase()}_`
+  const prefix = `DIASPORA_GA_${target.toUpperCase()}_`
   return Object.freeze({
     siteUrl: `${prefix}SITE_URL`,
     convexUrl: `${prefix}CONVEX_URL`,
@@ -66,9 +66,9 @@ export function targetVariableNames(target) {
 
 /** Variables de la machine communes aux deux cibles. */
 export const SHARED_VARIABLE_NAMES = Object.freeze({
-  orgId: "DIASPORALE_VERCEL_ORG_ID",
-  scope: "DIASPORALE_VERCEL_SCOPE",
-  workdir: "DIASPORALE_RELEASE_WORKDIR",
+  orgId: "DIASPORA_GA_VERCEL_ORG_ID",
+  scope: "DIASPORA_GA_VERCEL_SCOPE",
+  workdir: "DIASPORA_GA_RELEASE_WORKDIR",
 })
 
 /** Ce que chaque script exige de l'environnement. */
@@ -158,14 +158,14 @@ export function readTargetEnv(target, env = process.env, keys = RELEASE_KEYS) {
 
 /**
  * Les variables qu'une publication passe au site : la liste du catalogue de
- * publication du moteur (`build_args` et `runtime_env` de `diasporale_com`), rien
+ * publication du moteur (`build_args` et `runtime_env` de `diaspora_ga`), rien
  * d'autre. Aucune n'est un secret ; un nom hors de cette liste fait échouer le plan.
  */
 export const PUBLIC_RELEASE_VARIABLES = Object.freeze([
   "NEXT_PUBLIC_CONVEX_URL",
   "NEXT_PUBLIC_SITE_URL",
   "NEXT_PUBLIC_BUILD_SHA",
-  "NEXT_PUBLIC_DIASPORALE_DATA_SOURCE",
+  "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE",
   "NEXT_PUBLIC_IDN_PORTAL_URL",
   "NEXT_PUBLIC_CONSULATE_URL",
   "CONVEX_SITE_URL",
@@ -179,19 +179,19 @@ export function assertPublicOnly(entries) {
 }
 
 const FULL_COMMIT = /^[0-9a-f]{40}$/
-const VERSION_LABEL = /^diasporale-([0-9a-f]{12})-antsia-([0-9a-f]{12})-(demo|production)$/
+const VERSION_LABEL = /^diaspora-ga-([0-9a-f]{12})-antsia-([0-9a-f]{12})-(demo|production)$/
 
 /** L'étiquette de version, tirée des deux commits : celle que la sonde doit dire après publication. */
-export function releaseVersion({ diasporaleCommit, antsiaCommit, target }) {
-  if (!FULL_COMMIT.test(diasporaleCommit) || !FULL_COMMIT.test(antsiaCommit)) throw new Error("Commit complet attendu (40 caractères hexadécimaux)")
+export function releaseVersion({ diasporaGaCommit, antsiaCommit, target }) {
+  if (!FULL_COMMIT.test(diasporaGaCommit) || !FULL_COMMIT.test(antsiaCommit)) throw new Error("Commit complet attendu (40 caractères hexadécimaux)")
   if (parseTarget(target) === null) throw new Error("Cible inconnue")
-  return `diasporale-${diasporaleCommit.slice(0, 12)}-antsia-${antsiaCommit.slice(0, 12)}-${target}`
+  return `diaspora-ga-${diasporaGaCommit.slice(0, 12)}-antsia-${antsiaCommit.slice(0, 12)}-${target}`
 }
 
 /** Une étiquette de version lue (contrôle, retour arrière), ou `null` si elle n'a pas la forme attendue. */
 export function parseVersionLabel(raw) {
   const match = VERSION_LABEL.exec(raw ?? "")
-  return match ? { diasporale: match[1], antsia: match[2], target: match[3] } : null
+  return match ? { diasporaGa: match[1], antsia: match[2], target: match[3] } : null
 }
 
 /**
@@ -202,7 +202,7 @@ export function parseVersionLabel(raw) {
 export function releaseVariables(target, version, values) {
   const names = targetVariableNames(target)
   return assertPublicOnly([
-    ["NEXT_PUBLIC_DIASPORALE_DATA_SOURCE", "engine"],
+    ["NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "engine"],
     ["NEXT_PUBLIC_SITE_URL", envRef(names.siteUrl)],
     ["NEXT_PUBLIC_CONVEX_URL", envRef(names.convexUrl)],
     ["CONVEX_SITE_URL", envRef(names.convexSiteUrl)],
@@ -364,14 +364,14 @@ export function isInside(child, parent) {
 }
 
 /**
- * Crée un dossier de travail VIDE, hors des dépôts : sous `DIASPORALE_RELEASE_WORKDIR`
+ * Crée un dossier de travail VIDE, hors des dépôts : sous `DIASPORA_GA_RELEASE_WORKDIR`
  * s'il est posé, sinon sous le dossier temporaire du système. Rien n'est effacé.
  */
 export function createWorkdir(env = process.env, base = tmpdir()) {
   const parent = resolve(env[SHARED_VARIABLE_NAMES.workdir]?.trim() || base)
   if (isInside(parent, ECOSYSTEMS_ROOT)) throw new Error(`${SHARED_VARIABLE_NAMES.workdir} doit être hors des dépôts`)
   mkdirSync(parent, { recursive: true })
-  return mkdtempSync(join(parent, "diasporale-publication-"))
+  return mkdtempSync(join(parent, "diaspora-ga-publication-"))
 }
 
 /** Les commandes qui figent un dépôt : `git archive` du commit, puis extraction. */
