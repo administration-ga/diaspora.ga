@@ -240,7 +240,7 @@
       "removeSlot": "Retirer le créneau {{index}}",
       "addSlot": "Ajouter un créneau",
       "reminder": "Aucune coordonnée ici : une fois votre demande acceptée, vous échangez par la messagerie. Le mentorat est bénévole.",
-      "consent": "J’accepte que {{name}} voie mon nom publié, mon objectif et mon message.",
+      "consent": "J’accepte {{name, que}} voie mon nom publié, mon objectif et mon message.",
       "submit": "Envoyer la demande",
       "sending": "Envoi…",
       "sent": "Demande envoyée",
