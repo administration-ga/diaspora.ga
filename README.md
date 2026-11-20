@@ -1,11 +1,13 @@
-# DIASPORALE.COM — Le réseau social fermé de la diaspora gabonaise
+# DIASPORA.GA — Le réseau social fermé de la diaspora gabonaise
+
+> Renommage (2026-11-20) : DIASPORALE (diasporale.com) est devenu DIASPORA.GA (diaspora.ga). Les documents datés d'avant gardent l'ancien nom et les anciens chemins ; correspondance : docs/RENOMMAGE_DIASPORA_GA_2026-11-20.md. <!-- renommage:conserver -->
 
 Réseau social **fermé** des Gabonais de l'étranger : fil et publications, hubs par pays, pages
 des postes consulaires et des associations, évènements, groupes, messagerie et appels, puis
 emploi, annonces et entraide. Édité par **NTSAGUI Digital**.
 
-DIASPORALE est une **application du moteur social national** (dépôt `ECOSYSTEMES/ANTSIA`) et un
-réseau **enfant** du réseau public ANTSIA : être membre de DIASPORALE, c'est être membre d'ANTSIA
+DIASPORA.GA est une **application du moteur social national** (dépôt `ECOSYSTEMES/ANTSIA`) et un
+réseau **enfant** du réseau public ANTSIA : être membre de DIASPORA.GA, c'est être membre d'ANTSIA
 avec un contexte en plus — celui de la diaspora, qui reste séparé.
 
 ## État du dossier (relevé du 10 novembre 2026)
@@ -13,15 +15,15 @@ avec un contexte en plus — celui de la diaspora, qui reste séparé.
 Ouvert le 14/10/2026. PD1 est fait et constaté ; PD0 et PD2 à PD8 sont écrits, non recettés en
 tout ou partie ; PD9 (mobile) et PD10 (rapport de lancement) sont à faire. Sur le vrai moteur, deux
 recettes seulement : le 19/10 en local, le 22/10 en ligne. En ligne : la démonstration seulement,
-avec des comptes fictifs ; `diasporale.com` ne répond pas. État ligne par ligne : l'encart en tête
+avec des comptes fictifs ; `diaspora.ga` ne répond pas. État ligne par ligne : l'encart en tête
 de `docs/01` ; état détaillé et suite : le dossier `docs/etudes/2026-11-10-finalisation/`. Le dépôt
-GitHub est `administration-ga/diasporale`.
+GitHub est `administration-ga/diaspora.ga`.
 
 | Document | Rôle |
 |---|---|
 | [`docs/etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md`](docs/etudes/2026-11-10-finalisation/00_PLAN_DIRECTEUR.md) | plan directeur de finalisation (10/11/2026) : état réel, jalons, vagues ; dans le même dossier, un plan par fonctionnalité et le registre des lots |
-| [`docs/00_CAHIER_DES_CHARGES_DIASPORALE.md`](docs/00_CAHIER_DES_CHARGES_DIASPORALE.md) | cahier des charges fonctionnel et technique (exigences `EXF-DG` / `EXT-DG`, lots D0–D4, parcours R1–R10, arbitrages A1–A11) |
-| [`docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md`](docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORALE.md) | encart d'état en tête, puis les onze prompts d'origine PD0 → PD10 |
+| [`docs/00_CAHIER_DES_CHARGES_DIASPORA_GA.md`](docs/00_CAHIER_DES_CHARGES_DIASPORA_GA.md) | cahier des charges fonctionnel et technique (exigences `EXF-DG` / `EXT-DG`, lots D0–D4, parcours R1–R10, arbitrages A1–A11) |
+| [`docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORA_GA.md`](docs/01_PLAN_IMPLEMENTATION_PROMPTS_DIASPORA_GA.md) | encart d'état en tête, puis les onze prompts d'origine PD0 → PD10 |
 | [`docs/36_MISE_EN_PRODUCTION.md`](docs/36_MISE_EN_PRODUCTION.md) | dossier de mise en production : du réseau créé par la console à la version servie vérifiée, retour arrière, décisions du propriétaire |
 | [`docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md`](docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md) | publier le site, le contrôler, revenir en arrière (`scripts/`), derrière l'accord écrit du propriétaire |
 | `../../../Documentation/RESEAUX_SOCIAUX/00_PLAN_RESEAUX_DANS_LE_RESEAU_DIASPORALE_ANTSIA_2026-10-14.md` | plan de pilotage « réseaux dans le réseau » et ses annexes (audits du socle et de consulat.ga) |
@@ -31,34 +33,34 @@ GitHub est `administration-ga/diasporale`.
 ## Ce que sera le dépôt (cible, après PD0)
 
 ```text
-DIASPORALE/
+DIASPORA_GA/
 ├── apps/
-│   ├── diasporale_com        # diasporale.com — Next.js 16, mobile-first (port 3031)
-│   └── diasporale_mobile     # Expo (lot D3)
+│   ├── diaspora_ga        # diaspora.ga — Next.js 16, mobile-first (port 3031)
+│   └── diaspora-ga_mobile     # Expo (lot D3)
 ├── packages/
-│   ├── diasporale-domain     # SSOT métier : facette diaspora, éligibilité, parrainage, pays, portée, badges (TS pur)
-│   └── diasporale-features   # surfaces propres : hub pays, CountrySwitch, cartes, onboarding, modération pays, emploi…
+│   ├── diaspora-ga-domain     # SSOT métier : facette diaspora, éligibilité, parrainage, pays, portée, badges (TS pur)
+│   └── diaspora-ga-features   # surfaces propres : hub pays, CountrySwitch, cartes, onboarding, modération pays, emploi…
 ├── docs/                    # cahier des charges, prompts, charte, parité, recette
-└── Dockerfile               # contexte ECOSYSTEMES (copie du moteur puis de DIASPORALE)
+└── Dockerfile               # contexte ECOSYSTEMES (copie du moteur puis de DIASPORA.GA)
 ```
 
-Le **backend** de DIASPORALE est le moteur : `ECOSYSTEMES/ANTSIA/convex/` (tranche propre
+Le **backend** de DIASPORA.GA est le moteur : `ECOSYSTEMES/ANTSIA/convex/` (tranche propre
 `convex/modules/diaspora/`). Convex ne déploie qu'un dossier de fonctions ; c'est voulu.
-DIASPORALE est un **espace de travail bun externe** du moteur (`../DIASPORALE/apps/*`,
-`../DIASPORALE/packages/*` dans `ANTSIA/package.json`), sur le modèle des applications de l'État
+DIASPORA.GA est un **espace de travail bun externe** du moteur (`../DIASPORA_GA/apps/*`,
+`../DIASPORA_GA/packages/*` dans `ANTSIA/package.json`), sur le modèle des applications de l'État
 vis-à-vis du socle (ADR-0165) : une seule installation, dans `ANTSIA/`.
 
 ## Commandes (posées par PD0)
 
 ```bash
 cd ../ANTSIA && bun install            # une seule installation, dans le moteur
-bun run --cwd ../ANTSIA dev:diasporale  # http://localhost:3031
-bun run --cwd ../ANTSIA verify         # codegen + typecheck + tests + lint (moteur + DIASPORALE)
+bun run --cwd ../ANTSIA dev:diaspora-ga  # http://localhost:3031
+bun run --cwd ../ANTSIA verify         # codegen + typecheck + tests + lint (moteur + DIASPORA.GA)
 bun run test:scripts                   # tests des scripts de publication (sans réseau)
 # Publication (docs/37) : plan par défaut, rien ne part ; l'exécution exige l'accord écrit du propriétaire.
-node scripts/release.mjs --target demo --antsia <commit> --diasporale <commit>
+node scripts/release.mjs --target demo --antsia <commit> --diaspora-ga <commit>
 # Secours si l'hébergement (A10) l'impose : l'image autoportante, construite depuis ECOSYSTEMES :
-# docker build -f DIASPORALE/apps/diasporale_com/Dockerfile .
+# docker build -f DIASPORA_GA/apps/diaspora_ga/Dockerfile .
 ```
 
 ## Règles non négociables

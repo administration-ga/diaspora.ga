@@ -1,4 +1,4 @@
-# Publication et retour arrière de diasporale.com
+# Publication et retour arrière de diaspora.ga
 
 > Lot LX-02 du plan 17 (`docs/etudes/2026-11-10-finalisation/17_LANCEMENT_PILOTE_EXPLOITATION_MODELE_ECONOMIQUE.md`).
 > Ce document vit dans un dépôt public : il nomme des variables, jamais leur valeur ; il ne cite
@@ -19,7 +19,7 @@ les mêmes scripts, avec la cible `production`.
 Toute publication, démonstration comprise, et tout retour arrière exigent **l'accord écrit et
 détaillé du propriétaire**, qui nomme :
 
-1. le **commit de chaque dépôt** : ANTSIA et DIASPORALE ;
+1. le **commit de chaque dépôt** : ANTSIA et DIASPORA.GA ;
 2. la **cible** : `demo` ou `production` ;
 3. l'**ordre** : le backend du moteur d'abord, publié par la session du moteur depuis le même
    commit d'ANTSIA ; puis ce site ; un seul publieur à la fois ;
@@ -40,8 +40,8 @@ la demande d'accord, car il ne recopie aucune valeur de la machine.
 | `scripts/rollback.mjs` | remettre en service le déploiement précédent | affiche le plan, rien ne part | exécute, après la phrase « REVENIR … » |
 | `scripts/release-lib.mjs` | bibliothèque commune (cibles, variables, contexte figé, porte) | — | — |
 
-Ils se lancent avec `node` (22 ou plus) ou `bun`, depuis la racine de DIASPORALE, ANTSIA à côté dans
-`ECOSYSTEMES`. Tests : `bun test ./scripts` depuis la racine de DIASPORALE (repris par `bun run
+Ils se lancent avec `node` (22 ou plus) ou `bun`, depuis la racine de DIASPORA.GA, ANTSIA à côté dans
+`ECOSYSTEMES`. Tests : `bun test ./scripts` depuis la racine de DIASPORA.GA (repris par `bun run
 test`). Aucun test ne joint le réseau.
 
 ## 3. Le poste qui publie
@@ -53,7 +53,7 @@ Préalables, posés par le propriétaire ou par l'opérateur qu'il désigne :
   login`) : aucun jeton ne passe par les scripts ;
 - le projet d'hébergement de la cible, créé par le propriétaire et réglé comme celui de la
   démonstration (`../ANTSIA/docs/23_ENVIRONNEMENT_DE_DEMONSTRATION.md`, § 6) : dossier racine
-  `DIASPORALE/apps/diasporale_com`, Node 24, installation
+  `DIASPORA_GA/apps/diaspora_ga`, Node 24, installation
   `cd ../../../ANTSIA && npx --yes bun@1.4.2 install --frozen-lockfile`, construction
   `npx --yes bun@1.4.2 run build` ;
 - les **variables de la machine**, posées dans le terminal de la session de publication, jamais dans
@@ -64,25 +64,25 @@ démonstration ne peuvent pas servir la production par mégarde.
 
 | Variable de la machine | Rôle | Passe au site sous le nom |
 |---|---|---|
-| `DIASPORALE_<CIBLE>_SITE_URL` | origine https du site de la cible | `NEXT_PUBLIC_SITE_URL` |
-| `DIASPORALE_<CIBLE>_CONVEX_URL` | origine du backend du moteur de la cible | `NEXT_PUBLIC_CONVEX_URL` |
-| `DIASPORALE_<CIBLE>_CONVEX_SITE_URL` | origine des actions HTTP du même backend | `CONVEX_SITE_URL` |
-| `DIASPORALE_<CIBLE>_VERCEL_PROJECT_ID` | projet d'hébergement de la cible | `VERCEL_PROJECT_ID` (ligne de commande seulement) |
-| `DIASPORALE_<CIBLE>_IDN_PORTAL_URL` (facultative) | portail IDN ; absente, le lien d'élévation ne s'affiche pas | `NEXT_PUBLIC_IDN_PORTAL_URL` |
-| `DIASPORALE_<CIBLE>_CONSULATE_URL` (facultative) | consulat.ga ; absente, le lien ne s'affiche pas | `NEXT_PUBLIC_CONSULATE_URL` |
-| `DIASPORALE_VERCEL_ORG_ID` | équipe d'hébergement | `VERCEL_ORG_ID` (ligne de commande seulement) |
-| `DIASPORALE_VERCEL_SCOPE` | portée des commandes de l'hébergeur | option `--scope` |
-| `DIASPORALE_RELEASE_WORKDIR` (facultative) | dossier parent du dossier de travail, hors des dépôts | — |
+| `DIASPORA_GA_<CIBLE>_SITE_URL` | origine https du site de la cible | `NEXT_PUBLIC_SITE_URL` |
+| `DIASPORA_GA_<CIBLE>_CONVEX_URL` | origine du backend du moteur de la cible | `NEXT_PUBLIC_CONVEX_URL` |
+| `DIASPORA_GA_<CIBLE>_CONVEX_SITE_URL` | origine des actions HTTP du même backend | `CONVEX_SITE_URL` |
+| `DIASPORA_GA_<CIBLE>_VERCEL_PROJECT_ID` | projet d'hébergement de la cible | `VERCEL_PROJECT_ID` (ligne de commande seulement) |
+| `DIASPORA_GA_<CIBLE>_IDN_PORTAL_URL` (facultative) | portail IDN ; absente, le lien d'élévation ne s'affiche pas | `NEXT_PUBLIC_IDN_PORTAL_URL` |
+| `DIASPORA_GA_<CIBLE>_CONSULATE_URL` (facultative) | consulat.ga ; absente, le lien ne s'affiche pas | `NEXT_PUBLIC_CONSULATE_URL` |
+| `DIASPORA_GA_VERCEL_ORG_ID` | équipe d'hébergement | `VERCEL_ORG_ID` (ligne de commande seulement) |
+| `DIASPORA_GA_VERCEL_SCOPE` | portée des commandes de l'hébergeur | option `--scope` |
+| `DIASPORA_GA_RELEASE_WORKDIR` (facultative) | dossier parent du dossier de travail, hors des dépôts | — |
 
-Le script pose lui-même `NEXT_PUBLIC_DIASPORALE_DATA_SOURCE=engine` (un site publié sert le moteur,
+Le script pose lui-même `NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE=engine` (un site publié sert le moteur,
 jamais les données fictives) et `NEXT_PUBLIC_BUILD_SHA=<étiquette de version>` (que la sonde dira).
-La garde de construction (LX-01, `apps/diasporale_com/src/lib/production-build-guard.ts`) refuserait
+La garde de construction (LX-01, `apps/diaspora_ga/src/lib/production-build-guard.ts`) refuserait
 de toute façon une construction vers un domaine public sans ces deux valeurs.
 
 Le plan refuse : une variable manquante ; une origine qui n'est pas en https ou qui porte un chemin ;
 un site sur un poste de développement (`localhost`, `*.test`…) ; une même ressource déclarée pour la
 démonstration et pour la production ; toute variable hors de la liste publique. Cette liste est celle
-du catalogue de publication du moteur (`../ANTSIA/deploy/catalog.json`, entrée `diasporale_com`) :
+du catalogue de publication du moteur (`../ANTSIA/deploy/catalog.json`, entrée `diaspora_ga`) :
 un test les compare.
 
 ## 4. Publier
@@ -90,13 +90,13 @@ un test les compare.
 ### 4.1 Le plan
 
 ```bash
-node scripts/release.mjs --target demo --antsia <commit ANTSIA> --diasporale <commit DIASPORALE>
+node scripts/release.mjs --target demo --antsia <commit ANTSIA> --diaspora-ga <commit DIASPORA.GA>
 ```
 
 Le script résout chaque référence en commit complet et en arbre, par le dépôt local seulement, dit si
 chacun est sur `origin/main` (relevé local, relu avant toute exécution), liste les variables de la
 machine qui manquent, et affiche les étapes ci-dessous avec les commandes exactes. Les valeurs de la
-machine y paraissent sous leur nom (`<DIASPORALE_DEMO_SITE_URL>`), jamais en clair.
+machine y paraissent sous leur nom (`<DIASPORA_GA_DEMO_SITE_URL>`), jamais en clair.
 
 ### 4.2 Les étapes
 
@@ -116,14 +116,14 @@ machine y paraissent sous leur nom (`<DIASPORALE_DEMO_SITE_URL>`), jamais en cla
 
 ### 4.3 L'étiquette de version
 
-`diasporale-<12 premiers caractères du commit DIASPORALE>-antsia-<12 premiers caractères du commit
+`diaspora-ga-<12 premiers caractères du commit DIASPORA.GA>-antsia-<12 premiers caractères du commit
 ANTSIA>-<cible>`, la même forme que les publications de la démonstration du 22/10 au 3/11. La sonde
 la rend dans son champ `version` ; c'est la preuve que la version servie est celle de l'accord.
 
 ### 4.4 Le relevé
 
 Chaque exécution écrit `release.json` dans son dossier de travail (sous le dossier temporaire du
-système, ou sous `DIASPORALE_RELEASE_WORKDIR`) : commits, étiquette, empreinte et nombre de fichiers,
+système, ou sous `DIASPORA_GA_RELEASE_WORKDIR`) : commits, étiquette, empreinte et nombre de fichiers,
 déploiement créé, déploiement servi avant la bascule et sa version, étapes franchies, écarts. Ce
 relevé contient des identifiants : il **ne s'ajoute jamais au dépôt**. Un rapport de recette dans
 `docs/recette/` ne reprend que la date, les deux commits, l'étiquette et les verdicts.
@@ -136,12 +136,12 @@ node scripts/release-check.mjs --target demo --version <étiquette>
 
 Trois preuves, lues sur le site de la cible :
 
-1. la sonde `/api/sante-fonctionnelle` (LX-01) dit l'état « ok », l'application `diasporale-com`, la
+1. la sonde `/api/sante-fonctionnelle` (LX-01) dit l'état « ok », l'application `diaspora-ga`, la
    source « engine », le moteur configuré et joint ;
 2. la version servie est l'étiquette attendue ;
 3. le **moteur visé** est celui de la cible : la politique de sécurité du contenu (`connect-src`,
    construite à partir de l'adresse du moteur au moment de la construction) autorise l'origine de
-   `DIASPORALE_<CIBLE>_CONVEX_URL`, et aucune origine d'un autre moteur.
+   `DIASPORA_GA_<CIBLE>_CONVEX_URL`, et aucune origine d'un autre moteur.
 
 Le contrôle ne suit aucune redirection : une protection d'accès posée sur le domaine public le ferait
 échouer (le contrôle privé de l'étape 8 passe, lui, par la ligne de commande de l'hébergeur). Ses
@@ -161,7 +161,7 @@ public en écart, `release.mjs` affiche la commande exacte. Avec `--execute`, ap
 <cible> <version> », le script :
 
 1. vérifie que le déploiement désigné existe, est prêt, a été publié pour la production de la cible
-   et appartient au projet de `DIASPORALE_<CIBLE>_VERCEL_PROJECT_ID` ;
+   et appartient au projet de `DIASPORA_GA_<CIBLE>_VERCEL_PROJECT_ID` ;
 2. le remet en service par promotion (`vercel promote`) : **rien n'est reconstruit ni supprimé** ;
 3. contrôle que le site dit de nouveau l'étiquette attendue, sur le bon moteur.
 
@@ -178,8 +178,8 @@ décision). L'ordre entre le site et le backend se fixe dans l'accord ; après c
 
 ## 7. Ce que ces scripts ne couvrent pas
 
-- **L'image autoportante** (`apps/diasporale_com/Dockerfile`) : le secours si la décision
-  d'hébergement (A10) l'impose. Son plan se lit avec `bun run --cwd ../ANTSIA deploy:diasporale`
+- **L'image autoportante** (`apps/diaspora_ga/Dockerfile`) : le secours si la décision
+  d'hébergement (A10) l'impose. Son plan se lit avec `bun run --cwd ../ANTSIA deploy:diaspora-ga`
   (`scripts/deploy-app.mjs` du moteur, plan seulement). Elle n'a jamais été construite.
 - **Le backend du moteur** : publié et remis en arrière par sa session (lot EX-01 du moteur, même
   forme).

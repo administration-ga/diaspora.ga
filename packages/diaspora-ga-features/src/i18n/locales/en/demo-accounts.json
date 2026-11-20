@@ -1,0 +1,108 @@
+{
+  "demoAccounts": {
+    "open": "Demo accounts",
+    "openHint": "Demo and local development only",
+    "title": "Demo accounts",
+    "lead": "Each account signs in with the real one-time code, read here for you; its onboarding and setup then happen on their own. People, pages and addresses are fictitious; online, each account is shared by all visitors.",
+    "close": "Close",
+    "groups": {
+      "members": "Members, status by status",
+      "pages": "Pages",
+      "roles": "Roles and services",
+      "access": "Restricted access"
+    },
+    "newcomer": "New account",
+    "outsider": "Not a member",
+    "signingIn": "Signing in…",
+    "preparing": "Preparing the demo account…",
+    "ready": "Demo account ready: {{name}}.",
+    "failed": "The demo sign-in did not go through. Try again in a moment.",
+    "equipFailed": "The account is open, but its setup did not go through: {{name}}.",
+    "actors": {
+      "nouveau": {
+        "title": "Newcomer",
+        "description": "New account: onboarding still to fill in."
+      },
+      "leger": {
+        "title": "Light account",
+        "description": "Email code, no IDN or sponsorship: reads now, posts later."
+      },
+      "declare": {
+        "title": "Declared member",
+        "description": "IDN identity, assurance level 1."
+      },
+      "parraine": {
+        "title": "Sponsored member",
+        "description": "Sponsored by the “Verified member” account."
+      },
+      "verifie": {
+        "title": "Verified member",
+        "description": "Consular registration attested; can sponsor."
+      },
+      "fondateur": {
+        "title": "Founding member",
+        "description": "Verified by a recorded decision of the network, without attestation; can sponsor without waiting 30 days."
+      },
+      "belgique": {
+        "title": "Member in Belgium",
+        "description": "Verified in Brussels, Belgium hub."
+      },
+      "canada": {
+        "title": "Member in Canada",
+        "description": "IDN level 2 in Montreal, Canada hub."
+      },
+      "association": {
+        "title": "Association",
+        "description": "Chair of an association in Lyon; one volunteer mission and two events, awaiting moderation."
+      },
+      "entreprise": {
+        "title": "Company",
+        "description": "Caterer in Paris: one service offer and one job offer."
+      },
+      "media": {
+        "title": "Media",
+        "description": "Journalist, admin of a verified media page."
+      },
+      "communaute": {
+        "title": "Community",
+        "description": "Organiser of a student collective in Bordeaux."
+      },
+      "institution": {
+        "title": "Institution",
+        "description": "Officer of a fictitious consular post, official page."
+      },
+      "mentor": {
+        "title": "Mentor",
+        "description": "Volunteer mentor, mentoring profile published."
+      },
+      "talent": {
+        "title": "Talent",
+        "description": "Developer looking for a job, profile published."
+      },
+      "moderateur": {
+        "title": "Moderation",
+        "description": "Network moderator, France team."
+      },
+      "administrateur": {
+        "title": "Network administration",
+        "description": "Administrator of the DIASPORA.GA network."
+      },
+      "suspendu": {
+        "title": "Suspended member",
+        "description": "Suspended in DIASPORA.GA only: can no longer post."
+      },
+      "suspendu-racine": {
+        "title": "Root suspension",
+        "description": "Suspended on ANTSIA: the suspension applies everywhere, DIASPORA.GA included."
+      },
+      "bloque": {
+        "title": "Blocked member",
+        "description": "Blocked by the “Verified member” account: no link left between them, either way."
+      },
+      "exterieur": {
+        "title": "Outside the network",
+        "description": "ANTSIA account with no DIASPORA.GA membership: lands on the welcome page."
+      }
+    }
+  }
+}

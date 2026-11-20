@@ -1,0 +1,167 @@
+import {
+  FACET_REFUSALS,
+  MEMBERSHIP_EVENT_REFUSALS,
+  RESIDENCE_COUNTRY_REFUSALS,
+  SCOPE_REFUSALS,
+  SPONSORSHIP_REFUSALS,
+  SPONSORSHIP_REVOCATION_REFUSALS,
+} from "@diaspora-ga/domain"
+
+import { HANDLE_REFUSALS } from "../lib/handle"
+import { ASSOCIATION_ERROR_CODES } from "./associations-port"
+import { ASSOCIATION_ACTIVITY_ERROR_CODES } from "./association-activities-port"
+import { DATA_RIGHTS_ERROR_CODES } from "./data-rights-port"
+import { PAGE_ADMIN_ERROR_CODES } from "./page-admin-port"
+import { PAGE_ERROR_CODES } from "./pages-port"
+import { PAGE_PUBLICATIONS_ERROR_CODES } from "./page-publications-port"
+import { SERVICE_REQUEST_ERROR_CODES } from "./service-requests-port"
+import { SERVICE_REVIEW_ERROR_CODES } from "./service-reviews-port"
+import { SERVICE_ERROR_CODES } from "./services-port"
+import { CONTENT_REPORT_ERROR_CODES } from "./content-reports-port"
+import { CONVERSATION_ERROR_CODES } from "./conversations-port"
+import { MUTUAL_AID_ERROR_CODES } from "./mutual-aid-port"
+import { ARRIVAL_KIT_ERROR_CODES } from "./arrival-kit-port"
+import { MENTORING_ERROR_CODES } from "./mentoring-port"
+import { JOB_ERROR_CODES } from "./jobs-port"
+import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
+import { PILOT_METRICS_ERROR_CODES } from "./pilot-metrics-port"
+import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
+import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
+
+/**
+ * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
+ *
+ * Trois sources, et aucune autre :
+ *   · les refus du domaine (`@diaspora-ga/domain`), rendus tels quels ;
+ *   · les refus propres à la couche de données (session, adhésion,
+ *     publication, attestation) — ce que le moteur rendra aussi en
+ *     `ConvexError` à code ;
+ *   · les refus des formulaires, posés par l'écran avant toute écriture.
+ * Le cliquet i18n vérifie que chaque code a sa phrase, en français comme en
+ * anglais, et qu'aucune phrase d'erreur n'est orpheline.
+ */
+export const DATA_ERROR_CODES = [
+  "unknown",
+  "not_found",
+  "not_signed_in",
+  "not_member",
+  "already_member",
+  "idn_invalid",
+  "email_invalid",
+  "phone_invalid",
+  "code_invalid",
+  "code_expired",
+  "display_name_invalid",
+  "headline_too_long",
+  "handle_taken",
+  // Rendu aussi par l'entrée dans le réseau (EA-04) quand aucun identifiant n'est fourni : refus d'action, pas seulement de formulaire.
+  "handle_required",
+  // Un profil commun retiré se republie par le geste de la personne avant d'entrer (EA-04).
+  "profile_republish_required",
+  "consent_social_profile_required",
+  "consent_directory_required",
+  "publish_not_allowed",
+  "post_empty",
+  "comment_empty",
+  "comment_too_long",
+  "report_reason_required",
+  "report_note_too_long",
+  "post_too_long",
+  // Médias d'une publication (EXF-DG-10) : les règles du moteur, et l'envoi lui-même.
+  "media_too_many",
+  "media_video_alone",
+  "media_type_invalid",
+  "media_too_large",
+  "media_alt_too_long",
+  "media_upload_failed",
+  // Préparation d'une photo avant l'envoi (FD-01) : chaque refus du module du moteur ; l'original ne part jamais.
+  "media_unreadable",
+  "media_preparation_unavailable",
+  "media_preparation_failed",
+  "media_metadata_remaining",
+  // Une image animée ne se recadre pas (refus « not-croppable » du module du moteur).
+  "media_not_croppable",
+  // Vidéo d'une publication (FD-02, SD-03 du moteur) : MP4 ou WebM seulement, durée bornée.
+  "media_video_format",
+  "media_video_too_long",
+  // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
+  "share_not_allowed",
+  "share_with_media",
+  // Pays pas encore ouvert (FD-04, HB-01) : la publication dans son hub attend son ouverture.
+  "hub_not_open",
+  "attestation_not_needed",
+  "attestation_too_soon",
+  "attestation_unavailable",
+  // Refus du moteur ANTSIA (PD2) : débit, sanction, statut, codes à usage unique, câblage à venir.
+  "rate_limited",
+  "status_insufficient",
+  "suspended",
+  "too_many_attempts",
+  "delivery_unavailable",
+  "feature_unavailable",
+  "network_unavailable",
+] as const
+
+export const FORM_ERROR_CODES = [
+  "idn_identity_required",
+  "idn_consent_required",
+  "code_format",
+  "attestation_consent_required",
+  "clipboard_unavailable",
+  // « Je connais cette personne » (EA-10) : on ne parraine qu'une personne que l'on connaît.
+  "sponsor_acquaintance_required",
+  // EV-03 : annuler un évènement exige un motif de la liste fermée.
+  "association_event_cancel_reason_required",
+] as const
+
+export const ACTION_ERROR_CODES = [
+  ...DATA_ERROR_CODES,
+  ...MEMBERSHIP_EVENT_REFUSALS,
+  ...RESIDENCE_COUNTRY_REFUSALS,
+  ...FACET_REFUSALS,
+  ...SCOPE_REFUSALS,
+  ...SPONSORSHIP_REFUSALS,
+  ...SPONSORSHIP_REVOCATION_REFUSALS,
+  ...HANDLE_REFUSALS,
+  // Les codes des capacités du plan global (docs/14), chacun tenu par son chantier.
+  ...PAGE_ERROR_CODES,
+  ...PAGE_PUBLICATIONS_ERROR_CODES,
+  ...PAGE_ADMIN_ERROR_CODES,
+  ...SERVICE_ERROR_CODES,
+  ...SERVICE_REQUEST_ERROR_CODES,
+  ...DATA_RIGHTS_ERROR_CODES,
+  ...ASSOCIATION_ERROR_CODES,
+  ...ASSOCIATION_ACTIVITY_ERROR_CODES,
+  ...SERVICE_REVIEW_ERROR_CODES,
+  ...CONTENT_REPORT_ERROR_CODES,
+  ...MUTUAL_AID_ERROR_CODES,
+  ...ARRIVAL_KIT_ERROR_CODES,
+  ...MENTORING_ERROR_CODES,
+  ...JOB_ERROR_CODES,
+  ...MODERATION_DESK_ERROR_CODES,
+  ...PILOT_METRICS_ERROR_CODES,
+  ...CONVERSATION_ERROR_CODES,
+  // Entrée par IDN (EA-02) : départ refusé, retour d'un refus ou d'un échec chez IDN.
+  ...ENTRY_DOORS_ERROR_CODES,
+  ...CALL_SETTINGS_ERROR_CODES,
+] as const
+
+export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]
+export type FormErrorCode = (typeof FORM_ERROR_CODES)[number]
+export type ErrorCode = ActionErrorCode | FormErrorCode
+
+/** Tous les codes traduisibles, sans doublon. */
+export const ERROR_CODES: ReadonlySet<ErrorCode> = new Set<ErrorCode>([...ACTION_ERROR_CODES, ...FORM_ERROR_CODES])
+
+/**
+ * Les refus d'ACCÈS d'une lecture : réessayer n'y change rien. Un écran les dit
+ * tels quels (`errors.<code>`), sans « Réessayer » ; une panne
+ * (`network_unavailable`, `unknown`…) garde sa reprise.
+ */
+export const ACCESS_REFUSAL_CODES: ReadonlySet<ActionErrorCode> = new Set<ActionErrorCode>([
+  "not_signed_in",
+  "not_member",
+  "not_found",
+  "status_insufficient",
+  "suspended",
+])

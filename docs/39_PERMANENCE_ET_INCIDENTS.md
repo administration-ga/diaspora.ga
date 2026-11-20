@@ -98,7 +98,7 @@ consulter.
 - **Accusé de réception non remis**, guichet inaccessible, dossier qui ne quitte pas la file après
   une décision, refus inexpliqué du moteur.
 - Créer une équipe, y ajouter ou retirer un membre, tant que MD-01 n'est pas livré.
-- Toute mesure ou demande qui dépasse DIASPORALE : une suspension ou une exclusion vaut dans tout
+- Toute mesure ou demande qui dépasse DIASPORA.GA : une suspension ou une exclusion vaut dans tout
   ANTSIA ; un **profil** signalé est traité par la modération d'ANTSIA (réseau racine).
 - Toute **demande d'une autorité** (§ 5.3), en parallèle de l'éditeur.
 
@@ -116,7 +116,7 @@ la procédure la traite pourtant en priorité.
 4. Le moteur informe le déclarant de l'effet sur le contenu ; le modérateur ne le contacte pas
    autrement : il n'a pas ses coordonnées et ne doit pas les chercher.
 5. La consigne d'urgence de la feuille de signalement renvoie la personne en danger aux secours du
-   pays où elle se trouve : DIASPORALE n'alerte aucun service de secours.
+   pays où elle se trouve : DIASPORA.GA n'alerte aucun service de secours.
 6. Signaler la menace à une autorité, et qui le fait : **à fournir (question Q7 au juriste)**.
 7. Compte rendu (§ 6).
 
@@ -161,7 +161,7 @@ vers l'opérateur. Il se conserve **hors du dépôt**, avec la charte signée. *
 coordonnée, aucune copie du contenu.**
 
 ```text
-Compte rendu d'incident de modération — DIASPORALE
+Compte rendu d'incident de modération — DIASPORA.GA
 
 Date et heure (avec le fuseau) :
 Rédigé par (rôle) :

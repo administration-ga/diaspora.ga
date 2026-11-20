@@ -1,7 +1,7 @@
 # Comptes de démonstration par acteur — 19 octobre 2026
 
 Demande du propriétaire : « le bouton des comptes démo des différents acteurs et users de
-DIASPORALE ». Le contrat (17 acteurs) a été posé par la session du plan global ; le
+DIASPORA.GA ». Le contrat (17 acteurs) a été posé par la session du plan global ; le
 propriétaire a confié la suite à la session de la porte d'entrée. Modèle : les comptes de
 démonstration de la racine d'ANTSIA (`convex/modules/platform/demoAccounts.ts`,
 `DemoAccountsPanel`, `DemoAccountBootstrap`).
@@ -20,30 +20,30 @@ la racine et l'utilisateur extérieur au réseau. Le catalogue compte désormais
   qu'il obtiendra. L'utilisateur extérieur au réseau n'a pas de statut : il porte « Hors réseau ».
 - Un appui suffit. La connexion passe par le VRAI code à usage unique, lu pour la personne. Puis
   l'accueil, l'équipement et les gestes se font tout seuls, avec un avis du début à la fin. On
-  arrive sur le fil ; l'utilisateur extérieur, lui, arrive à l'accueil de DIASPORALE.
+  arrive sur le fil ; l'utilisateur extérieur, lui, arrive à l'accueil de DIASPORA.GA.
 - En démonstration (données fictives de ce navigateur), le même bouton mène à `/demo`.
 - Ailleurs, catalogue vide, production comprise : rien ne s'affiche.
 
-## Les acteurs (`packages/diasporale-domain/src/demo-accounts.ts`)
+## Les acteurs (`packages/diaspora-ga-domain/src/demo-accounts.ts`)
 
-Adresses réservées `<acteur>@demo.diasporale.test`. Le domaine `.test` n'est jamais routable.
+Adresses réservées `<acteur>@demo.diaspora-ga.test`. Le domaine `.test` n'est jamais routable.
 
 | Groupe | Acteurs | Ce qui est posé |
 |---|---|---|
 | Membres | nouveau, leger, declare, parraine, verifie, belgique, canada | Statut dérivé des faits fictifs : rien (en attente), IDN niveau 1 ou 2, parrainage par « verifie », attestation consulaire ; hubs Belgique et Canada. |
 | Pages | association, entreprise, media, communaute, institution | Une page par nature dans le pays de l'acteur, l'acteur administrateur. Confiance communauté, vérifiée ou officielle (institution seulement). Type d'association ou secteur. |
 | Rôles et services | mentor, talent, moderateur, administrateur | Profil de mentor, profil de talent ; rôle de modération et équipe de démonstration ; administration du réseau. |
-| Accès restreints | suspendu, suspendu-racine, bloque, exterieur | Suspension dans DIASPORALE seulement ; suspension à la racine, qui vaut partout ; blocage par « verifie » ; compte ANTSIA sans adhésion DIASPORALE. |
+| Accès restreints | suspendu, suspendu-racine, bloque, exterieur | Suspension dans DIASPORA.GA seulement ; suspension à la racine, qui vaut partout ; blocage par « verifie » ; compte ANTSIA sans adhésion DIASPORA.GA. |
 
 Gestes réels, joués par l'application à la première entrée :
 - profil de mentor (mentor) et profil de talent (talent) ;
 - offre de service et offre d'emploi de la page d'entreprise (entreprise) ;
 - mission bénévole de l'association (association) ;
 - deux événements fictifs de l'association (association, geste `associationEvent`, EV-01 du
-  plan 08, ajouté le 10/11/2026) : une soirée d'accueil ouverte à tout DIASPORALE, deux places,
+  plan 08, ajouté le 10/11/2026) : une soirée d'accueil ouverte à tout DIASPORA.GA, deux places,
   dans sept jours ; une assemblée générale réservée aux adhérents, dans quatorze jours. Fuseau de
   Paris, heure ronde. Créés par la capacité du port (`associationEvents.create`), chacun sous une
-  clé d'idempotence stable (`diasporale-demo:association-event:accueil`, `…:assemblee`). Aucune
+  clé d'idempotence stable (`diaspora-ga-demo:association-event:accueil`, `…:assemblee`). Aucune
   politique de modération n'est posée : ils restent « en attente de modération », visibles de
   l'équipe de la page seule, jusqu'à l'approbation par la modératrice (compte `moderateur`) au
   bureau, par le chemin réel.
@@ -55,7 +55,7 @@ Gestes réels, joués par l'application à la première entrée :
    c'est-à-dire `ANTSIA_DEV_TOOLS=true` ET un backend local.
 2. **Connexion** : `requestCode` puis `verifyCode` du port. Le code se lit par
    `devTools.latestOtp`, avec jusqu'à 8 lectures espacées de 250 ms. L'acteur choisi est mémorisé
-   sous la clé `antsia:diasporale:demo-account`, que la déconnexion de partout purge.
+   sous la clé `antsia:diaspora-ga:demo-account`, que la déconnexion de partout purge.
 3. **Accueil réel** : `actions.join`, qui pose le profil publié, les consentements (profil,
    annuaire) et l'adhésion, avec le pays et la ville de l'acteur. L'utilisateur extérieur au
    réseau ne rejoue que l'accueil d'ANTSIA, `demoAccounts.welcomeOutsider` : le consentement au
@@ -63,7 +63,7 @@ Gestes réels, joués par l'application à la première entrée :
 4. **Équipement** : `equipMyDemoAccount`, un `@selfScoped` exécuté seulement si l'adresse
    vérifiée de la session est celle de l'acteur.
    - Les faits fictifs :
-     - le compte et la preuve IDN `diasporale-demo-idn-<acteur>`, de nationalité GA ;
+     - le compte et la preuve IDN `diaspora-ga-demo-idn-<acteur>`, de nationalité GA ;
      - le lien d'attestation consulaire, et la demande « vérifiée » que lisent les réglages ;
      - le parrainage par « verifie », antidaté de 31 jours. Parrain et filleuls ne sont retenus
        que sur leur adresse réservée vérifiée, jamais sur le seul identifiant public.
@@ -76,13 +76,13 @@ Gestes réels, joués par l'application à la première entrée :
      se pose dès que les deux comptes existent, quel que soit l'ordre d'équipement, et les deux
      comptes sont retenus sur leur adresse réservée vérifiée.
    - Les sanctions en dernier, car elles ne sont jamais dérivées :
-     - la suspension de « suspendu », dans DIASPORALE seulement ;
+     - la suspension de « suspendu », dans DIASPORA.GA seulement ;
      - celle de « suspendu-racine » à la racine, par le chemin de la console :
        `people/memberships.suspendRootMembership`, le cœur de `suspendEverywhere`, extrait sans
-       changement. Elle vaut partout, et l'adhésion DIASPORALE garde son statut propre.
-   - L'utilisateur extérieur n'a pas d'adhésion DIASPORALE. L'équipement exige son accueil
+       changement. Elle vaut partout, et l'adhésion DIASPORA.GA garde son statut propre.
+   - L'utilisateur extérieur n'a pas d'adhésion DIASPORA.GA. L'équipement exige son accueil
      d'ANTSIA (profil publié, consentement), l'admet à la racine par la vraie règle d'admission,
-     comme les comptes de la racine, et n'écrit rien dans DIASPORALE.
+     comme les comptes de la racine, et n'écrit rien dans DIASPORA.GA.
    - L'équipement rend le statut EFFECTIF, celui que lit l'application ; statut et rôle sont
      vides sans adhésion.
    - Le tout est idempotent.
@@ -98,7 +98,7 @@ Gestes réels, joués par l'application à la première entrée :
   reposé au prochain équipement de « bloque » ou de « verifie ».
 - La suspension à la racine ne se lève que par la console des opérateurs (`liftSuspension`) ;
   les comptes de démonstration ne la lèvent jamais.
-- Si l'utilisateur extérieur entre de lui-même dans DIASPORALE, son adhésion reste la sienne :
+- Si l'utilisateur extérieur entre de lui-même dans DIASPORA.GA, son adhésion reste la sienne :
   l'équipement la rend telle quelle et n'y pose rien.
 - Les envois de code sont limités à 3 par 5 minutes et par adresse, et les connexions à 5 par
   15 minutes. Un quatrième appui rapide sur le même acteur est refusé un moment.
@@ -129,20 +129,20 @@ Gestes réels, joués par l'application à la première entrée :
     offre d'emploi publiées ;
   - association : statut vérifiée, attestation « vérifiée » aux réglages, page de Lyon, mission
     bénévole publiée.
-- Recette des accès restreints, même moteur local, 19/10 vers 22 h (`diasporale-engine` sur :3031) :
+- Recette des accès restreints, même moteur local, 19/10 vers 22 h (`diaspora-ga-engine` sur :3031) :
   - la feuille de la porte montre 20 acteurs en quatre groupes. « Accès restreints » réunit
     Membre suspendu, Suspension à la racine, Membre bloqué et Extérieur au réseau, ce dernier
     marqué « Hors réseau » ;
-  - extérieur : arrivée à l'accueil de DIASPORALE (étape 1 sur 3). Côté moteur : profil ANTSIA
+  - extérieur : arrivée à l'accueil de DIASPORA.GA (étape 1 sur 3). Côté moteur : profil ANTSIA
     publié (`demo.exterieur`), une seule adhésion, à la racine, « déclarée » ; aucune adhésion
-    DIASPORALE ;
+    DIASPORA.GA ;
   - membre bloqué : « Compte de démonstration prêt : Yannick MBADINGA. », puis le fil. Équipé
     avant son bloqueur, il n'était pas encore bloqué. Le blocage s'est posé à l'équipement de
-    « Membre vérifié » : une intention et une ligne de relation fermée dans `diasporale`, et
+    « Membre vérifié » : une intention et une ligne de relation fermée dans `diaspora-ga`, et
     l'onglet « Personnes bloquées » de Patrice MBOUMBA en compte une ;
   - suspension à la racine : « Compte de démonstration prêt : Christelle IVANGA. », puis l'avis
     « Votre compte est suspendu ». Côté moteur, la racine est « suspendue » et l'adhésion
-    DIASPORALE est restée « vérifiée ».
+    DIASPORA.GA est restée « vérifiée ».
 - Remarques relevées en recette :
   - CORRIGÉE le 19/10 au soir : un compte connecté sans adhésion (l'extérieur, comme le nouvel
     arrivant) n'avait aucune sortie dans l'accueil, ni « Se déconnecter », ni réglages. Le bas de
