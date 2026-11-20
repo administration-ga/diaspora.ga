@@ -179,6 +179,15 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.useRealTimers() })
 
 describe("activités associatives — gestes volontaires et droits vivants", () => {
+  it("un groupe illisible se refuse sans dire s'il existe, jamais « n'existe plus »", () => {
+    mocks.group = { status: "error", code: "not_found" }
+    render(groupTree())
+    expect(screen.getByText(t("associationActivities.group.unavailableTitle"))).toBeVisible()
+    expect(screen.getByText(t("associationActivities.group.unavailableBody"))).toBeVisible()
+    expect(screen.queryByText(t("errors.not_found"))).not.toBeInTheDocument()
+    expect(mocks.readPosts).not.toHaveBeenCalled()
+  })
+
   it("ne monte ni ne lit le mur du groupe pour une personne non admise", () => {
     mocks.group = { status: "ready", data: { ...GROUP, role: null, isMember: false, canJoin: false, canPublish: false } }
     render(groupTree())

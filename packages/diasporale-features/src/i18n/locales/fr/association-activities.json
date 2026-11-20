@@ -12,6 +12,8 @@
       "lead": "L’adhésion à l’association et l’entrée dans son groupe sont deux gestes distincts. Les échanges restent réservés aux membres autorisés du groupe.",
       "open": "Ouvrir le groupe",
       "notCreated": "L’association n’a pas encore créé son groupe.",
+      "unavailableTitle": "Ce groupe n’est pas disponible.",
+      "unavailableBody": "Il n’existe pas, ou vous ne pouvez pas le voir.",
       "create": "Créer le groupe de l’association",
       "created": "Le groupe est prêt. Aucun adhérent n’a été ajouté automatiquement.",
       "closed": "Ce groupe est fermé : personne n’y lit ni n’y publie, et personne ne peut le rejoindre.",
