@@ -1,0 +1,380 @@
+{
+  "pageAdmin": {
+    "unavailable": {
+      "title": "Page management unavailable",
+      "body": "This feature is not open here yet."
+    },
+    "kind": {
+      "institution": "Institution",
+      "association": "Association",
+      "company": "Business",
+      "media": "Media",
+      "community": "Community"
+    },
+    "role": {
+      "admin": "Administrator",
+      "signatory": "Editor",
+      "moderator": "Moderator"
+    },
+    "claimStatus": {
+      "pending": "Under review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "withdrawn": "Withdrawn"
+    },
+    "create": {
+      "metaTitle": "Register an organisation",
+      "title": "Register an organisation",
+      "lead": "Your association or business gets its page on DIASPORA.GA: it posts, recruits, welcomes its members or offers its services. It speaks through its signatories, never on behalf of the State.",
+      "kindLegend": "What would you like to register?",
+      "kindHint": {
+        "association": "A registered association, or one being registered.",
+        "company": "A business, a shop or an independent professional."
+      },
+      "name": "Page name",
+      "nameHint": "The full name, as your members know it ({{max}} characters at most).",
+      "shortName": "Acronym (optional)",
+      "shortNameHint": "{{max}} characters at most.",
+      "handle": "Page address (optional)",
+      "handleHint": "Without an address, it is derived from the name. It cannot change afterwards.",
+      "handlePreview": "Address: {{handle}}. It cannot change afterwards.",
+      "description": "Description (optional)",
+      "descriptionHint": "What the page does and for whom ({{max}} characters at most). No contact details: people reach you through messages.",
+      "country": "Country of the page",
+      "countryHint": "Where it operates: the page appears in that country's hub.",
+      "countryPlaceholder": "Choose a country",
+      "trustNote": "A page registered by a member carries the “Community” badge. The “Verified” badge comes from a claim approved by moderation; “Official” is reserved for institutions.",
+      "submit": "Register the page",
+      "created": "Page registered: you are its administrator.",
+      "verifiedOnly": {
+        "title": "Registering an organisation is reserved for verified members",
+        "body": "Your membership is currently: {{status}}. It becomes verified once your consular registration is verified, or with an IDN identity of level 2 and a sponsorship.",
+        "attestation": "Verify my consular registration",
+        "sponsor": "Get a sponsorship"
+      }
+    },
+    "register": {
+      "steps": "Registration steps",
+      "stepOf": "Step {{current}} of {{total}}: {{step}}",
+      "step": {
+        "nature": "Kind",
+        "identity": "Identity",
+        "review": "Review"
+      },
+      "next": "Continue",
+      "back": "Back",
+      "natureClosed": "During the pilot, DIASPORA.GA registers associations and businesses. An informal collective meets in a group; media outlets await their label.",
+      "natureOffer": {
+        "association": "Members, a private group, events, job offers and services.",
+        "company": "Job offers, services by appointment and customer reviews."
+      },
+      "identityTitle": "Page identity",
+      "identityLead": "What members will read on the page and in the directory. The logo and banner are added right after registration.",
+      "reviewTitle": "Check before registering",
+      "reviewLead": "The page appears in the directory and in its country's hub as soon as it is registered.",
+      "edit": "Edit",
+      "editLabel": "Edit: {{field}}",
+      "notProvided": "Not provided",
+      "review": {
+        "kind": "Kind",
+        "name": "Name",
+        "shortName": "Acronym",
+        "handle": "Address",
+        "country": "Country",
+        "city": "City",
+        "category": "Activity",
+        "description": "Description"
+      },
+      "nearby": {
+        "title": "Your organisation may already be registered",
+        "lead": "These pages have a similar name. If one of them is yours, claim it rather than registering a second one.",
+        "claim": "Claim",
+        "claimLabel": "Claim {{name}}",
+        "see": "View",
+        "seeLabel": "View {{name}}",
+        "continue": "None of them is mine: continue"
+      },
+      "done": {
+        "title": "{{name}} is registered",
+        "lead": "You are its administrator. The page carries the “Community” badge: here are the first steps that will bring it to life.",
+        "stepsLabel": "First steps",
+        "seePage": "View the page",
+        "identity": {
+          "title": "Add the logo and banner",
+          "hint": "A recognisable page inspires trust."
+        },
+        "verification": {
+          "title": "Request the “Verified” badge",
+          "hint": "Articles, registration receipt or company extract: moderation reviews your request."
+        },
+        "team": {
+          "title": "Invite your team",
+          "hint": "Editors publish on behalf of the page; moderators remove inappropriate comments."
+        },
+        "members": {
+          "title": "Welcome your members",
+          "hint": "Membership requests arrive here; joining is not following."
+        },
+        "jobs": {
+          "title": "Post a job offer",
+          "hint": "It appears in DIASPORA.GA jobs, on behalf of the page."
+        },
+        "services": {
+          "title": "Offer your services",
+          "hint": "By appointment, with your customers' reviews."
+        },
+        "publication": {
+          "title": "Publish a first announcement",
+          "hint": "It appears on the page and in its followers' feed."
+        }
+      }
+    },
+    "claim": {
+      "metaTitle": "Claim a page",
+      "title": "Claim {{name}}",
+      "verifyTitle": "Have {{name}} verified",
+      "lead": "Do you represent this organisation? Ask to take over its management, with supporting documents.",
+      "verifyLead": "You administer this page: ask for its verification, with supporting documents.",
+      "formTitle": "Your claim",
+      "verifyFormTitle": "Your verification request",
+      "how": {
+        "title": "How a claim works",
+        "evidence": "Attach one to five documents: statutes, registration receipt, appointment minutes, company registration extract.",
+        "private": "Your documents stay private: only DIASPORA.GA moderation and you can see them. They are never published.",
+        "decision": "Moderation rules with a reasoned decision. If approved, you become an administrator and the page gets the “Verified” badge.",
+        "notOfficial": "“Verified” is not “Official”: no claim grants official authority, which is reserved for institutions.",
+        "withdraw": "While it is pending, you can withdraw your request: its documents are then erased."
+      },
+      "officialPage": "An official page cannot be claimed: it belongs to the institution it represents.",
+      "verifiedPage": "This page is already verified. To dispute its management, report it to moderation.",
+      "signatoryOnly": "You are an editor of this page: only an administrator can request its verification.",
+      "evidence": "Supporting documents",
+      "evidenceHint": "PDF, JPEG, PNG or WebP; {{max}} documents at most, {{size}} MB each. They leave your device only when you send.",
+      "addEvidence": "Add documents",
+      "removeEvidence": "Remove {{name}}",
+      "fileSize": "{{size}} MB",
+      "mandateLegend": "Your mandate",
+      "mandateHint": "A statement: the documents prove it, moderation assesses it.",
+      "mandate": {
+        "legal_representative": "Legal representative (chair, manager)",
+        "board_member": "Board member, mandated by the board",
+        "owner_manager": "Management of the business",
+        "mandated_member": "Member mandated by the organisation",
+        "other": "Other mandate, detailed below"
+      },
+      "details": "Details (optional)",
+      "detailsHint": "Role, date and appointing body ({{max}} characters at most). No civil-status data.",
+      "noteMandate": "Declared mandate: {{mandate}}.",
+      "noteWithDetails": "Declared mandate: {{mandate}}. {{details}}",
+      "consent": "I declare that I am mandated by this organisation and I agree that DIASPORA.GA moderation may consult these documents to review my request.",
+      "submit": "Send my claim",
+      "submitVerify": "Send my verification request",
+      "sending": "Sending documents…",
+      "sent": "Request sent: moderation will review it.",
+      "pendingTitle": "Your request is under review",
+      "pendingBody_one": "Sent on {{date}}, with {{count}} document.",
+      "pendingBody_other": "Sent on {{date}}, with {{count}} documents.",
+      "withdraw": "Withdraw my request",
+      "withdrawConfirmTitle": "Withdraw your request?",
+      "withdrawConfirmBody": "It will not be reviewed and its documents will be erased. You can file a new one.",
+      "withdrawn": "Request withdrawn; its documents are erased.",
+      "history": "Your previous requests",
+      "decisionReason": "Reason: {{reason}}"
+    },
+    "manage": {
+      "metaTitle": "Manage the page",
+      "title": "Manage {{name}}",
+      "roleAdmin": "You administer this page: identity, team and verification.",
+      "roleSignatory": "You are an editor of this page: you publish on its behalf, its administrators manage it.",
+      "viewPage": "View the page",
+      "tabs": "Page management",
+      "tab": {
+        "identity": "Identity",
+        "team": "Team",
+        "claims": "Verification",
+        "jobs": "Jobs"
+      },
+      "notManager": {
+        "title": "You do not manage this page",
+        "body": "Only its team has access. If your role was just removed, access closed immediately."
+      },
+      "roleModerator": "You moderate this page: you remove inappropriate comments under its posts, without publishing on its behalf.",
+      "moderation": {
+        "title": "Moderate comments",
+        "body": "Open the comments of one of the page's posts: each one offers “Remove”, followed by a confirmation.",
+        "open": "See the page's posts"
+      },
+      "moderatorTitle": "{{name}}: team and moderation"
+    },
+    "identity": {
+      "title": "Page identity",
+      "lead": "Name, acronym, description and country. The address does not change: a shared link must always lead to the page.",
+      "address": "Address: {{handle}}",
+      "history": "Every change is kept in the page history.",
+      "adminOnly": "Only administrators edit the page identity.",
+      "save": "Save the identity",
+      "saved": "Identity saved.",
+      "unchanged": "Nothing changed."
+    },
+    "images": {
+      "title": "Logo and banner",
+      "lead": "JPEG, PNG or WebP images: 5 MB at most for the logo, 10 MB for the banner. Each image is scanned before it is shown.",
+      "logo": "Logo",
+      "banner": "Banner",
+      "logoAlt": "Current page logo",
+      "bannerAlt": "Current page banner",
+      "chooseLogo": "Choose a new logo",
+      "chooseBanner": "Choose a new banner",
+      "removeLogo": "Remove the logo",
+      "removeBanner": "Remove the banner",
+      "removeBody": "The image is removed from the page and erased.",
+      "none": "No image.",
+      "pending": "Image received: it will show once scanned.",
+      "quarantined": "Image blocked by the scan: choose another one.",
+      "saved": "Image saved.",
+      "removed": "Image removed."
+    },
+    "team": {
+      "title": "Page team",
+      "lead": "Each team member has one of these three roles. An appointment is an invitation: it only counts once accepted.",
+      "empty": "Nobody is appointed yet.",
+      "readOnly": "Only administrators invite, change a role or remove a team member.",
+      "neutralName": "Withdrawn profile",
+      "me": "(you)",
+      "since": "Since {{date}}",
+      "invited": "Invitation pending since {{date}}",
+      "changeRole": "Role of {{name}}",
+      "remove": "Remove",
+      "removeLabel": "Remove {{name}} from the team",
+      "leave": "Leave the team",
+      "lastAdmin": "You are the last administrator: appoint another one before leaving.",
+      "removeConfirmTitle": "Remove {{name}} from the team?",
+      "removeConfirmBody": "This person immediately loses their role on the page: they will no longer publish on it, manage it or moderate its comments.",
+      "leaveConfirmTitle": "Leave this page's team?",
+      "leaveConfirmBody": "You immediately lose your role on the page. An administrator can invite you again.",
+      "removed": "Member removed from the team.",
+      "left": "You left the team.",
+      "roleChanged": "Role updated.",
+      "inviteTitle": "Invite a member",
+      "inviteLead": "Enter the handle of a DIASPORA.GA member: they will receive an invitation to accept.",
+      "handle": "Member handle",
+      "handleHint": "For example firstname.lastname, without the @.",
+      "role": "Proposed role",
+      "invite": "Send the invitation",
+      "invitedToast": "Invitation sent.",
+      "rolesTitle": "Team roles",
+      "roleImmediate": "This member has already accepted: a new role applies immediately, without a new invitation.",
+      "transfer": {
+        "title": "Hand over the page",
+        "lead": "Entrust the administration to someone else, then step down if you wish. The page always keeps at least one administrator.",
+        "stepName": "Name an administrator",
+        "stepLeave": "Step down",
+        "who": "Hand over to whom?",
+        "member": "A team member",
+        "memberHint": "They become an administrator immediately, with no invitation to accept.",
+        "newPerson": "Someone else",
+        "newPersonHint": "They receive an invitation: they only become an administrator once they accept it.",
+        "memberSelect": "Team member",
+        "memberPlaceholder": "Choose a member",
+        "memberOption": "{{name}} ({{role}})",
+        "noMember": "No team member can be named yet: they must have accepted their invitation and published their profile.",
+        "promote": "Name administrator now",
+        "invite": "Invite as administrator",
+        "promoted": "{{name}} is an administrator from now on.",
+        "invited": "Invitation sent: the person will become an administrator by accepting it.",
+        "leave": "Step down",
+        "leaveReady": "Another administrator has accepted their role. You can step down if they are still an active member of DIASPORA.GA: the platform checks it when you step down.",
+        "leaveBlocked": "To step down, the page must keep another administrator: name one and wait until they have accepted their role.",
+        "leaveConfirmTitle": "Step down from the page?",
+        "leaveConfirmBody": "You immediately lose your role on the page; its other administrators keep managing it.",
+        "personHandle": "Person's handle"
+      }
+    },
+    "verification": {
+      "title": "Page verification",
+      "state": {
+        "official": "Official page: its authority comes from the institution it represents, not from a claim.",
+        "verified": "Verified page: a claim was approved by DIASPORA.GA moderation. This is not an official authority.",
+        "community": "Community page: it has not been verified yet."
+      },
+      "request": "Request verification",
+      "adminOnly": "Only an administrator can request verification.",
+      "myRequests": "Your requests for this page",
+      "none": "No request for this page."
+    },
+    "entry": {
+      "manage": "Manage the page",
+      "claim": "Claim this page",
+      "verify": "Request verification",
+      "pending": "Your request is under review.",
+      "follow": "Follow my request"
+    },
+    "myPages": {
+      "title": "My pages",
+      "lead": "The pages whose team you belong to in DIASPORA.GA.",
+      "emptyTitle": "You do not manage any page yet",
+      "emptyBody": "Register your association or business, or claim its page if it already exists.",
+      "createAssociation": "Register an association",
+      "createCompany": "Register a business",
+      "manage": "Manage",
+      "manageLabel": "Manage {{name}}",
+      "team": "Team",
+      "teamLabel": "Team of {{name}}",
+      "moderate": "Moderate comments",
+      "moderateLabel": "Moderate the comments of {{name}}"
+    },
+    "invitations": {
+      "title": "Team invitations",
+      "lead": "A page invites you to join its team. Nothing changes until you accept.",
+      "item": "Proposed role: {{role}}. Invited on {{date}}.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "accepted": "Invitation accepted: you are now part of the {{name}} team.",
+      "declined": "Invitation declined."
+    },
+    "claims": {
+      "title": "My claims",
+      "sentOn": "Sent on {{date}}"
+    },
+    "roleHint": {
+      "admin": "Publishes on behalf of the page and manages it: identity, team, verification.",
+      "signatory": "Publishes on behalf of the page, without managing it.",
+      "moderator": "Removes inappropriate comments under the page's posts; does not publish on its behalf."
+    }
+  },
+  "errors": {
+    "page_verified_required": "Registering an organisation is reserved for verified members: have your consular registration verified, or link an IDN identity of level 2 with a sponsorship.",
+    "page_kind_reserved": "This kind of page is not registered here: a member registers an association or a business, and an institution page results from a platform decision.",
+    "page_name_invalid": "The page name has 1 to 120 characters.",
+    "page_short_name_too_long": "The acronym has 30 characters at most.",
+    "page_description_too_long": "The description has 1,000 characters at most.",
+    "page_handle_length": "The page address has 3 to 60 characters.",
+    "page_handle_charset": "Address: unaccented letters, digits, dot, hyphen or underscore; signs neither at the start nor at the end.",
+    "page_handle_taken": "This address is already taken: choose another one.",
+    "page_country_required": "Choose the page's country.",
+    "page_country_invalid": "This country is not recognised.",
+    "page_post_country_required": "To publish locally, the page must first declare its country (Manage the page, Identity tab).",
+    "page_role_required": "You do not have, or no longer have, the required role on this page.",
+    "page_last_admin": "The page must keep at least one active administrator: name another one, an active member of DIASPORA.GA, before leaving or changing this role.",
+    "page_signatories_full": "A page team has 50 members at most.",
+    "page_signatory_identity_required": "Being part of the team of an official page requires an IDN identity of level 2.",
+    "page_signatory_self": "You cannot invite yourself.",
+    "page_member_not_found": "No DIASPORA.GA member matches this handle.",
+    "page_member_handle_required": "Enter the member's handle.",
+    "page_invitation_gone": "This invitation no longer exists.",
+    "page_not_claimable": "This page cannot be claimed.",
+    "page_already_verified": "This page is already verified.",
+    "page_already_claimed": "This page already has an administrator: only one of them can request its verification.",
+    "page_claim_pending": "You already have a pending request for this page.",
+    "page_claim_evidence_count": "Attach 1 to 5 documents.",
+    "page_claim_evidence_type": "Accepted documents: PDF, JPEG, PNG or WebP.",
+    "page_claim_evidence_too_large": "A document weighs 10 MB at most.",
+    "page_claim_note_too_long": "The note has 1,000 characters at most.",
+    "page_claim_mandate_required": "State your mandate.",
+    "page_claim_consent_required": "Tick the statement to send your request.",
+    "page_claim_closed": "This claim is no longer awaiting a decision: already decided, or its author is no longer an active member.",
+    "page_image_type_invalid": "Accepted images: JPEG, PNG or WebP.",
+    "page_image_too_large": "Image too heavy: 5 MB at most for the logo, 10 MB for the banner.",
+    "page_team_member_required": "Choose the member to name as administrator."
+  }
+}

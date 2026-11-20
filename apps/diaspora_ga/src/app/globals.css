@@ -1,0 +1,18 @@
+@import "tailwindcss";
+/* Charte de base du moteur (polices Familjen Grotesk, Inter et DM Mono, famille
+   shadcn, rayons, base), puis les deux thèmes au choix du membre — Sable, la charte
+   DIASPORA.GA (par défaut), et Gaboma, le thème du réseau ANTSIA, sur la même
+   structure (charte v4 : la maquette « sept thèmes ») —, puis les rôles et la couche
+   propres à DIASPORA.GA. L'ordre compte : même spécificité, le dernier l'emporte. */
+@import "@antsia/ui/styles.css";
+@import "@antsia/ui/themes/diaspora-ga.css";
+@import "@antsia/ui/themes/diaspora-ga-gaboma.css";
+@import "@diaspora-ga/features/styles/extras.css";
+@import "@diaspora-ga/features/styles/tailwind-theme.css";
+
+/* Tailwind ne parcourt que le dossier de l'application : les surfaces de
+   @diaspora-ga/features doivent être lues pour générer leurs classes, et celles
+   du moteur montées par iCom (PD7 : messagerie, appels, statuts) aussi. */
+@source "../../../../packages/diaspora-ga-features/src";
+@source "../../../../../ANTSIA/packages/ui/src";
+@source "../../../../../ANTSIA/packages/social-features/src";

@@ -5,18 +5,18 @@ import { buildRollbackPlan, executeRollback, isDeploymentReference, parseRollbac
 
 /** Valeurs FICTIVES (domaines réservés à la documentation, RFC 2606) : aucune ressource réelle. */
 const DEMO_ENV = Object.freeze({
-  DIASPORALE_DEMO_SITE_URL: "https://site-demo.example.org",
-  DIASPORALE_DEMO_CONVEX_URL: "https://moteur-demo.example.net",
-  DIASPORALE_DEMO_VERCEL_PROJECT_ID: "projet_fictif_demo",
-  DIASPORALE_VERCEL_ORG_ID: "equipe_fictive",
-  DIASPORALE_VERCEL_SCOPE: "portee-fictive",
+  DIASPORA_GA_DEMO_SITE_URL: "https://site-demo.example.org",
+  DIASPORA_GA_DEMO_CONVEX_URL: "https://moteur-demo.example.net",
+  DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: "projet_fictif_demo",
+  DIASPORA_GA_VERCEL_ORG_ID: "equipe_fictive",
+  DIASPORA_GA_VERCEL_SCOPE: "portee-fictive",
 })
 const OLD_DEPLOYMENT = "https://ancien-deploiement.example.org"
-const OLD_VERSION = "diasporale-111111111111-antsia-222222222222-demo"
+const OLD_VERSION = "diaspora-ga-111111111111-antsia-222222222222-demo"
 const CSP = "default-src 'self'; connect-src 'self' https://moteur-demo.example.net wss://moteur-demo.example.net"
 
 const plan = () => buildRollbackPlan({ target: "demo", to: OLD_DEPLOYMENT, version: OLD_VERSION })
-const report = (version) => ({ status: "ok", application: "diasporale-com", version, backend: "configured", dataSource: "engine", engine: "reachable" })
+const report = (version) => ({ status: "ok", application: "diaspora-ga", version, backend: "configured", dataSource: "engine", engine: "reachable" })
 
 describe("ligne de commande", () => {
   test("un déploiement se désigne par son adresse https ou son identifiant", () => {
@@ -44,7 +44,7 @@ describe("ligne de commande", () => {
       "argument inconnu : --force",
       "--target doit valoir demo ou production",
       "--to doit désigner un déploiement (adresse https ou identifiant)",
-      "--version doit être une étiquette diasporale-<12>-antsia-<12>-<cible>",
+      "--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>",
     ])
   })
 
@@ -60,19 +60,19 @@ describe("plan de retour arrière", () => {
     expect(plan().steps[0].gate).toBe(`REVENIR demo ${OLD_VERSION}`)
     const commands = plan().steps.flatMap((step) => (step.commands ?? []).map(renderCommand))
     expect(commands).toEqual([
-      `vercel inspect ${OLD_DEPLOYMENT} --scope <DIASPORALE_VERCEL_SCOPE> --format=json`,
-      `vercel promote ${OLD_DEPLOYMENT} --scope <DIASPORALE_VERCEL_SCOPE> --yes`,
+      `vercel inspect ${OLD_DEPLOYMENT} --scope <DIASPORA_GA_VERCEL_SCOPE> --format=json`,
+      `vercel promote ${OLD_DEPLOYMENT} --scope <DIASPORA_GA_VERCEL_SCOPE> --yes`,
       `node scripts/release-check.mjs --target demo --version ${OLD_VERSION}`,
     ])
     expect(commands.some((command) => /deploy|remove|rm |convex/.test(command))).toBe(false)
   })
 
   test("le plan rendu nomme les variables et ne recopie aucune valeur de la machine", () => {
-    const rendered = renderRollbackPlan(plan(), { problems: ["DIASPORALE_VERCEL_SCOPE manque"] })
+    const rendered = renderRollbackPlan(plan(), { problems: ["DIASPORA_GA_VERCEL_SCOPE manque"] })
     expect(rendered).toContain(`version attendue après le retour : ${OLD_VERSION}`)
     expect(rendered).toContain("phrase à taper : REVENIR demo")
-    expect(rendered).toContain("avec VERCEL_ORG_ID=<DIASPORALE_VERCEL_ORG_ID>, VERCEL_PROJECT_ID=<DIASPORALE_DEMO_VERCEL_PROJECT_ID>")
-    expect(rendered).toContain("  - DIASPORALE_VERCEL_SCOPE manque")
+    expect(rendered).toContain("avec VERCEL_ORG_ID=<DIASPORA_GA_VERCEL_ORG_ID>, VERCEL_PROJECT_ID=<DIASPORA_GA_DEMO_VERCEL_PROJECT_ID>")
+    expect(rendered).toContain("  - DIASPORA_GA_VERCEL_SCOPE manque")
     for (const value of Object.values(DEMO_ENV)) expect(rendered).not.toContain(value)
   })
 })
@@ -120,7 +120,7 @@ describe("exécution", () => {
       [null, "déploiement introuvable ou réponse illisible"],
       [{ id: "x", readyState: "ERROR" }, "déploiement non prêt (ERROR)"],
       [{ id: "x", readyState: "READY", target: "preview" }, "ce déploiement n'a pas été publié pour la production de la cible"],
-      [{ id: "x", readyState: "READY", target: "production", projectId: "autre_projet" }, "ce déploiement n'appartient pas au projet de DIASPORALE_DEMO_VERCEL_PROJECT_ID"],
+      [{ id: "x", readyState: "READY", target: "production", projectId: "autre_projet" }, "ce déploiement n'appartient pas au projet de DIASPORA_GA_DEMO_VERCEL_PROJECT_ID"],
     ]
     for (const [inspect, reason] of cases) {
       const fake = fakeDeps({ inspect })
@@ -131,7 +131,7 @@ describe("exécution", () => {
 
   test("une remise en service qui échoue, ou une version qui ne revient pas, se disent", async () => {
     expect(await executeRollback(plan(), fakeDeps({ promote: 1 }).deps)).toMatchObject({ ok: false, stage: "promote" })
-    const result = await executeRollback(plan(), fakeDeps({ servedVersion: "diasporale-dddddddddddd-antsia-aaaaaaaaaaaa-demo" }).deps)
+    const result = await executeRollback(plan(), fakeDeps({ servedVersion: "diaspora-ga-dddddddddddd-antsia-aaaaaaaaaaaa-demo" }).deps)
     expect(result).toMatchObject({ ok: false, stage: "public-check" })
     expect(result.reason).toContain(`attendue « ${OLD_VERSION} »`)
   })

@@ -1,5 +1,7 @@
 # Plan directeur de finalisation de DIASPORALE
 
+> Renommage (2026-11-20) : DIASPORALE (diasporale.com) est devenu DIASPORA.GA (diaspora.ga). Les documents datés d'avant gardent l'ancien nom et les anciens chemins ; correspondance : docs/RENOMMAGE_DIASPORA_GA_2026-11-20.md. <!-- renommage:conserver -->
+
 > Établi le 10 novembre 2026, par lecture de tous les documents du projet et du code d'`origin/main` (DIASPORALE `bead76d`, ANTSIA `fd58d73b`). Rien n'a été exécuté : ni test, ni recette, ni publication.
 > Ce dossier est la suite du plan 15 du dossier de finalisation d'ANTSIA (9 novembre), qui tenait lieu de lot G0 pour DIASPORALE. Le plan 15 donnait l'état d'ensemble et vingt-trois lots. Ce dossier descend d'un niveau : dix-sept plans, un par fonctionnalité, chacun comparé aux meilleures applications de sa catégorie.
 > Les comparaisons viennent de la connaissance de ces produits, sans revérification en ligne. Un « ? » marque ce qui n'est pas sûr.

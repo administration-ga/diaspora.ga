@@ -7,16 +7,16 @@ import { checkRelease, cspSources, evaluateEngineTarget, evaluateHealth, evaluat
 /** Valeurs FICTIVES (domaines réservés à la documentation, RFC 2606) : aucune ressource réelle. */
 const SITE = "https://site-demo.example.org"
 const ENGINE = "https://moteur-demo.example.net"
-const VERSION = "diasporale-dddddddddddd-antsia-aaaaaaaaaaaa-demo"
-const report = (overrides = {}) => ({ status: "ok", application: "diasporale-com", version: VERSION, backend: "configured", dataSource: "engine", engine: "reachable", ...overrides })
+const VERSION = "diaspora-ga-dddddddddddd-antsia-aaaaaaaaaaaa-demo"
+const report = (overrides = {}) => ({ status: "ok", application: "diaspora-ga", version: VERSION, backend: "configured", dataSource: "engine", engine: "reachable", ...overrides })
 const productionCsp = (convexUrl) => buildContentSecurityPolicy({ convexUrl, isDev: false })
 
 describe("ligne de commande", () => {
   test("une cible et une étiquette de la même cible", () => {
     expect(parseCheckArgs(["--target", "demo", "--version", VERSION])).toEqual({ target: "demo", version: VERSION, problems: [] })
     expect(parseCheckArgs(["--target", "production", "--version", VERSION]).problems).toEqual(["--version désigne une autre cible que --target"])
-    expect(parseCheckArgs(["--target", "demo", "--version", "main-abc"]).problems).toEqual(["--version doit être une étiquette diasporale-<12>-antsia-<12>-<cible>"])
-    expect(parseCheckArgs([]).problems).toEqual(["--target doit valoir demo ou production", "--version doit être une étiquette diasporale-<12>-antsia-<12>-<cible>"])
+    expect(parseCheckArgs(["--target", "demo", "--version", "main-abc"]).problems).toEqual(["--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>"])
+    expect(parseCheckArgs([]).problems).toEqual(["--target doit valoir demo ou production", "--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>"])
   })
 })
 
@@ -26,7 +26,7 @@ describe("rapport de la sonde (LX-01)", () => {
   })
 
   test("chaque écart se dit : application, état, version, source, moteur", () => {
-    expect(evaluateHealth(report({ application: "antsia-ga" }), { version: VERSION })).toEqual(["la sonde n'est pas celle de diasporale-com"])
+    expect(evaluateHealth(report({ application: "antsia-ga" }), { version: VERSION })).toEqual(["la sonde n'est pas celle de diaspora-ga"])
     expect(evaluateHealth(report({ status: "degraded", engine: "unreachable" }), { version: VERSION })).toEqual([
       "état dégradé : le service ne peut pas servir ses données",
       "moteur injoignable depuis le site",
@@ -58,24 +58,24 @@ describe("moteur visé, lu dans la politique de sécurité", () => {
   })
 
   test("la politique réelle du moteur, construite pour le moteur de la cible, est conforme", () => {
-    expect(evaluateEngineTarget(productionCsp("https://moteur-demo.convex.cloud"), "https://moteur-demo.convex.cloud", "DIASPORALE_DEMO_CONVEX_URL")).toEqual([])
-    expect(evaluateEngineTarget(productionCsp(ENGINE), ENGINE, "DIASPORALE_DEMO_CONVEX_URL")).toEqual([])
+    expect(evaluateEngineTarget(productionCsp("https://moteur-demo.convex.cloud"), "https://moteur-demo.convex.cloud", "DIASPORA_GA_DEMO_CONVEX_URL")).toEqual([])
+    expect(evaluateEngineTarget(productionCsp(ENGINE), ENGINE, "DIASPORA_GA_DEMO_CONVEX_URL")).toEqual([])
   })
 
   test("un site construit pour un autre moteur est signalé, en nommant la variable", () => {
     const csp = productionCsp("https://moteur-production.convex.cloud")
-    expect(evaluateEngineTarget(csp, "https://moteur-demo.convex.cloud", "DIASPORALE_DEMO_CONVEX_URL")).toEqual([
-      "la politique de sécurité n'autorise pas le moteur de DIASPORALE_DEMO_CONVEX_URL",
-      "la politique de sécurité autorise 2 origine(s) d'un autre moteur que celui de DIASPORALE_DEMO_CONVEX_URL",
+    expect(evaluateEngineTarget(csp, "https://moteur-demo.convex.cloud", "DIASPORA_GA_DEMO_CONVEX_URL")).toEqual([
+      "la politique de sécurité n'autorise pas le moteur de DIASPORA_GA_DEMO_CONVEX_URL",
+      "la politique de sécurité autorise 2 origine(s) d'un autre moteur que celui de DIASPORA_GA_DEMO_CONVEX_URL",
     ])
   })
 
   test("un moteur de trop, ou une politique absente, sont des écarts", () => {
     const csp = productionCsp("https://moteur-demo.convex.cloud").replace("connect-src 'self'", "connect-src 'self' https://autre.convex.cloud")
-    expect(evaluateEngineTarget(csp, "https://moteur-demo.convex.cloud", "DIASPORALE_DEMO_CONVEX_URL")).toEqual([
-      "la politique de sécurité autorise 1 origine(s) d'un autre moteur que celui de DIASPORALE_DEMO_CONVEX_URL",
+    expect(evaluateEngineTarget(csp, "https://moteur-demo.convex.cloud", "DIASPORA_GA_DEMO_CONVEX_URL")).toEqual([
+      "la politique de sécurité autorise 1 origine(s) d'un autre moteur que celui de DIASPORA_GA_DEMO_CONVEX_URL",
     ])
-    expect(evaluateEngineTarget(null, ENGINE, "DIASPORALE_DEMO_CONVEX_URL")).toEqual(["en-tête Content-Security-Policy absent : le moteur visé ne se vérifie pas"])
+    expect(evaluateEngineTarget(null, ENGINE, "DIASPORA_GA_DEMO_CONVEX_URL")).toEqual(["en-tête Content-Security-Policy absent : le moteur visé ne se vérifie pas"])
   })
 })
 
@@ -118,6 +118,6 @@ describe("contrôle d'une version servie", () => {
         throw new Error(`getaddrinfo ENOTFOUND ${SITE}`)
       },
     })
-    expect(result).toEqual({ ok: false, problems: ["site de DIASPORALE_PRODUCTION_SITE_URL injoignable"], report: null, attempts: 1 })
+    expect(result).toEqual({ ok: false, problems: ["site de DIASPORA_GA_PRODUCTION_SITE_URL injoignable"], report: null, attempts: 1 })
   })
 })

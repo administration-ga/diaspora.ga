@@ -1,4 +1,4 @@
-# Charte des modérateurs de DIASPORALE
+# Charte des modérateurs de DIASPORA.GA
 
 > **Statut : PROVISOIRE, en attente de relecture.** Rédigée le 10/11/2026 (lot MD-05, plan 14 du
 > dossier de finalisation, § 5 et § 7). Le propriétaire a accepté les recommandations du § 7 ;
@@ -13,7 +13,7 @@
 
 ## 1. Ce que fait un modérateur
 
-Le modérateur tranche, au guichet de DIASPORALE (`/moderation`), les dossiers que la communauté lui
+Le modérateur tranche, au guichet de DIASPORA.GA (`/moderation`), les dossiers que la communauté lui
 confie. Tout ce qui suit décrit ce que le guichet permet réellement aujourd'hui.
 
 - **Lire la file** : les signalements ouverts, par fenêtres, filtrés par pays de la cible et par
@@ -64,7 +64,7 @@ et les recours du premier niveau n'ont pas de titulaire.
 - **Le décideur reste anonyme** : la personne concernée ne lit pas qui a décidé. Ne signez pas vos
   décisions et n'en parlez pas en votre nom.
 - **Aucune donnée consulaire** : un passeport, un état civil, un dossier consulaire n'ont rien à
-  faire dans DIASPORALE ; un contenu qui en expose se retire.
+  faire dans DIASPORA.GA ; un contenu qui en expose se retire.
 - Le statut d'un modérateur bénévole et l'engagement écrit qu'il doit signer pour lire des extraits
   de contenus privés sont **à fournir (question Q8 au juriste)**.
 
@@ -134,7 +134,7 @@ propriétaire.
 
 À recopier sur l'exemplaire signé, **hors de ce dépôt** :
 
-> Je, soussigné(e), en qualité de [rôle], ai lu la charte des modérateurs de DIASPORALE (version
+> Je, soussigné(e), en qualité de [rôle], ai lu la charte des modérateurs de DIASPORA.GA (version
 > provisoire du 10/11/2026) et les règles de la communauté. Je m'engage à la respecter, à
 > garder confidentiels les dossiers et l'identité des déclarants, à déclarer mes intérêts et à me
 > retirer d'un dossier où je serais en conflit.

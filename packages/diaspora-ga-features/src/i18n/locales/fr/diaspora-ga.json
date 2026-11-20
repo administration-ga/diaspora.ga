@@ -1,0 +1,1471 @@
+{
+  "brand": {
+    "name": "DIASPORA.GA"
+  },
+  "meta": {
+    "title": "DIASPORA.GA — le réseau des Gabonais de l'étranger",
+    "titleTemplate": "%s · DIASPORA.GA",
+    "description": "Le réseau social fermé de la diaspora gabonaise : votre pays, votre communauté, des contenus dont on sait toujours qui les publie."
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu"
+  },
+  "common": {
+    "back": "Retour",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "next": "Continuer",
+    "pleaseWait": "Un instant…",
+    "save": "Enregistrer"
+  },
+  "nav": {
+    "label": "Navigation principale",
+    "home": "Accueil de DIASPORA.GA",
+    "enter": "Entrer",
+    "feed": "Fil",
+    "hub": "Mon pays",
+    "profile": "Profil",
+    "sponsor": "Parrainer",
+    "members": "Membres",
+    "relations": "Mes relations",
+    "messages": "Messages",
+    "settings": "Réglages"
+  },
+  "footer": {
+    "label": "Informations",
+    "publisher": "DIASPORA.GA est édité par NTSAGUI Digital. Le réseau est réservé aux Gabonais de l'étranger.",
+    "legalNotice": "Mentions légales",
+    "privacy": "Confidentialité",
+    "charte": "Charte graphique"
+  },
+  "preferences": {
+    "language": "Langue",
+    "locale": {
+      "fr": "Français",
+      "en": "English"
+    },
+    "theme": "Thème",
+    "themeOption": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    }
+  },
+  "landing": {
+    "title": "Retrouvez les vôtres,\noù que vous soyez.",
+    "lead": "Échangez avec les Gabonais du monde, partagez votre quotidien et créez votre propre réseau.",
+    "eligibility": "Le réseau des Gabonais de l’étranger.",
+    "signInTitle": "Se connecter à DIASPORA.GA",
+    "idnContinue": "Continuer avec IDN",
+    "idnUnavailable": "La connexion IDN sera disponible prochainement.",
+    "or": "ou",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "newHere": "Nouveau sur DIASPORA.GA ?",
+    "free": "L’inscription est gratuite.",
+    "privacy": "Votre e-mail reste privé. Connexion par code, sans mot de passe.",
+    "boardTitle": "Votre communauté, pays par pays."
+  },
+  "entry": {
+    "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
+    "title": "Entrer dans DIASPORA.GA",
+    "signUpTitle": "Créer votre compte DIASPORA.GA",
+    "signUpLead": "Compte léger : vous lisez tout de suite, vous publiez après un parrainage ou la vérification de votre inscription consulaire.",
+    "existingAccount": "J’ai déjà un compte : me connecter",
+    "smsInstead": "Recevoir plutôt le code par SMS",
+    "noPassword": "Aucun mot de passe : IDN ou un code à usage unique. Vos coordonnées ne sont jamais montrées aux autres membres."
+  },
+  "idn": {
+    "title": "Connexion avec IDN",
+    "lead": "En production, ce bouton vous envoie sur identite.ga, puis vous ramène ici.",
+    "simulation": "Démonstration : cet écran simule le consentement d'identite.ga avec des identités fictives. Aucune donnée n'est transmise.",
+    "identityLegend": "Identité de démonstration",
+    "preset": {
+      "awa": "Niveau de garantie 2, nationalité gabonaise, inscrite dans un poste de démonstration.",
+      "yannick": "Niveau de garantie 1, nationalité gabonaise, inscription consulaire expirée.",
+      "foreign": "Niveau de garantie 2, nationalité non gabonaise : la porte IDN ne suffit pas."
+    },
+    "customTitle": "Une autre identité",
+    "customBody": "Saisissez un prénom, un nom et un niveau de garantie.",
+    "firstName": "Prénom",
+    "lastName": "Nom",
+    "loa": "Niveau de garantie",
+    "loaHint": "Le niveau 2 donne le badge Vérifié.",
+    "loaLevel": "Niveau {{level}}",
+    "gabonese": "Nationalité gabonaise",
+    "receivesTitle": "DIASPORA.GA recevra",
+    "receives": "Votre identifiant IDN, votre niveau de garantie, votre nationalité, et vos prénom et nom pour vous proposer un identifiant.",
+    "neverTitle": "DIASPORA.GA ne recevra jamais",
+    "never": "Votre numéro d'identification, votre date et votre lieu de naissance, votre adresse.",
+    "consent": "J'autorise DIASPORA.GA à recevoir ces informations.",
+    "submit": "Autoriser et continuer"
+  },
+  "code": {
+    "title": "Recevoir un code",
+    "lead": "Un code à usage unique, valable peu de temps. Il ne sert qu'une fois.",
+    "kindLabel": "Recevoir le code par",
+    "kind": {
+      "email": "E-mail",
+      "phone": "SMS"
+    },
+    "emailLabel": "Votre adresse e-mail",
+    "phoneLabel": "Votre numéro de téléphone",
+    "destinationHint": "Elle reste privée : aucun membre ne la voit.",
+    "send": "Recevoir le code",
+    "sentTo": "Code envoyé à {{destination}}.",
+    "demoCode": "Démonstration — votre code :",
+    "codeLabel": "Code à 6 chiffres",
+    "verify": "Valider le code",
+    "changeDestination": "Changer d'adresse"
+  },
+  "welcome": {
+    "metaTitle": "Bienvenue",
+    "stepOf": "Étape {{step}} sur {{total}}",
+    "step1Title": "Où vivez-vous ?",
+    "step1Lead": "Votre pays de résidence est le contexte de tout ce que vous verrez. Vous pourrez le changer plus tard.",
+    "step2Title": "Comment vous appeler ?",
+    "step2Lead": "Votre nom affiché et votre identifiant sont les mêmes dans DIASPORA.GA et dans ANTSIA.",
+    "step3Title": "Vos choix",
+    "step3Lead": "Chaque consentement est séparé, révocable à tout moment dans vos réglages.",
+    "countryLabel": "Pays de résidence",
+    "countryHint": "Le Gabon n'est pas proposé : DIASPORA.GA est le réseau des Gabonais de l'étranger.",
+    "countrySheetTitle": "Votre pays de résidence",
+    "countrySheetDescription": "Cherchez par nom ou par code.",
+    "countryNotOpen": "Ce pays n'est pas encore ouvert : vous lisez tout et publiez pour toute la diaspora. La publication dans le hub du pays attend son ouverture.",
+    "cityLabel": "Ville",
+    "cityHint": "Facultative. Par défaut, seules vos relations la voient.",
+    "displayNameLabel": "Nom affiché",
+    "displayNameHint": "Le nom que les membres verront. Il n'est jamais recopié d'un document officiel.",
+    "handleLegend": "Votre identifiant",
+    "handleHint": "Il vous désigne sur le réseau (@identifiant). Aucune proposition n'est choisie pour vous.",
+    "handleOther": "Un autre identifiant",
+    "handleOtherLabel": "Identifiant",
+    "handleRules": "3 à 30 caractères : lettres sans accent, chiffres, point, tiret ou souligné.",
+    "consentsLegend": "Consentements",
+    "consentsFooter": "Vous pourrez retirer chaque consentement d'un geste dans vos réglages.",
+    "submit": "Entrer dans DIASPORA.GA",
+    "joined": "Bienvenue dans DIASPORA.GA.",
+    "notYourAccount": "Ce n'est pas votre compte, ou vous voulez en changer ?"
+  },
+  "consent": {
+    "required": "Requis",
+    "socialProfile": {
+      "title": "Créer mon profil social",
+      "body": "Votre nom affiché, votre identifiant et votre pays sont visibles des membres de DIASPORA.GA. Sans ce consentement, il n'y a pas de membre."
+    },
+    "directory": {
+      "title": "Apparaître dans l'annuaire des membres",
+      "body": "Masqué par défaut. Si vous l'acceptez, vous choisissez qui peut vous trouver. On vous contacte seulement par la messagerie.",
+      "levelLabel": "Qui peut vous trouver dans l'annuaire",
+      "country": "Les membres de mon pays de résidence",
+      "network": "Tous les membres de DIASPORA.GA"
+    },
+    "notifications": {
+      "title": "Recevoir des notifications",
+      "body": "Les réponses à vos publications et la vie de votre pays. Jamais le contenu d'un message dans la notification."
+    }
+  },
+  "consentPurpose": {
+    "social_profile": {
+      "title": "Profil social",
+      "body": "Enregistré lors de l’inscription au profil commun. Retirer le profil et quitter DIASPORA.GA sont des gestes distincts, proposés séparément."
+    },
+    "directory": {
+      "title": "Annuaire des membres",
+      "body": "Apparaître dans l'annuaire, au niveau que vous choisissez."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "body": "Réponses, mentions, vie de votre pays."
+    },
+    "consular_attestation": {
+      "title": "Attestation consulaire",
+      "body": "Donné au moment de la vérification. Le retirer arrête une demande en cours ; un statut déjà obtenu reste acquis. Une nouvelle vérification vous demandera un nouvel accord."
+    },
+    "talents": {
+      "title": "Profil professionnel visible",
+      "body": "Votre profil de talent porte son propre accord : vous le publiez, le masquez ou le supprimez depuis la page Talents.",
+      "link": "Gérer mon profil de talent"
+    }
+  },
+  "status": {
+    "regionLabel": "Statut de votre compte",
+    "pendingTitle": "Votre compte est en attente.",
+    "pendingBody": "Vous pouvez lire votre hub et les pages. Pour publier, demandez un parrainage à un membre vérifié, ou vérifiez votre inscription consulaire.",
+    "declaredTitle": "Votre compte est déclaré.",
+    "declaredBody": "Vous pouvez publier. Pour obtenir le badge Vérifié : activez votre identité numérique IDN ou vérifiez votre inscription consulaire.",
+    "declaredVerifiedTitle": "Votre identité est vérifiée.",
+    "declaredVerifiedBody": "Vous portez le badge Vérifié. La vérification de votre inscription consulaire complètera votre compte.",
+    "verifiedTitle": "Votre compte est vérifié.",
+    "suspendedTitle": "Votre compte est suspendu.",
+    "suspendedUntil": "Jusqu'au {{date}}. Vous pouvez faire recours auprès de la modération.",
+    "suspendedIndefinite": "Jusqu'à décision de la modération. Vous pouvez faire recours.",
+    "verifyConsular": "Vérifier mon inscription consulaire",
+    "sponsorHelp": "Obtenir un parrainage",
+    "activateIdn": "Activer mon identité numérique IDN",
+    "registerConsulate": "M'inscrire au consulat"
+  },
+  "membership": {
+    "status": {
+      "en_attente": "En attente",
+      "declaree": "Déclarée",
+      "verifiee": "Vérifiée",
+      "suspendue": "Suspendue",
+      "partie": "Quittée"
+    }
+  },
+  "badge": {
+    "official": "Officiel",
+    "officialHint": "Page d'une institution reconnue (poste consulaire, ministère).",
+    "verified": "Vérifié",
+    "verifiedHint": "Identité numérique de niveau 2, inscription consulaire attestée, revendication validée, ou membre fondateur admis par une décision tracée du réseau.",
+    "publicAgent": "Agent public",
+    "publicAgentHint": "Agent de l'État relié à son compte administration.",
+    "community": "Communauté",
+    "communityHint": "Membre ou page de la communauté, sans vérification.",
+    "sponsored": "Sponsorisé"
+  },
+  "scope": {
+    "diaspora": "Toute la diaspora",
+    "origin": "Depuis : {{country}}"
+  },
+  "country": {
+    "choose": "Choisir un pays",
+    "searchLabel": "Rechercher un pays",
+    "searchPlaceholder": "France, Canada, BE…",
+    "resultCount_one": "{{count}} pays",
+    "resultCount_other": "{{count}} pays",
+    "noResult": "Aucun pays ne correspond à votre recherche.",
+    "openBadge": "Ouvert",
+    "quickAccess": "Accès rapide",
+    "homeTag": "mon pays"
+  },
+  "moderation": {
+    "pending": "En relecture.",
+    "pendingHint": "Visible par vous seulement jusqu'à la décision de la modération.",
+    "published": "Publiée.",
+    "rejected": "Refusée.",
+    "rejectedReason": "Motif : {{reason}}"
+  },
+  "demo": {
+    "chipLabel": "Démo : afficher l'avis de démonstration",
+    "tag": "Démo",
+    "bannerTitle": "Démonstration.",
+    "bannerBody": "Toutes les données sont fictives et restent dans ce navigateur.",
+    "accountsLink": "Comptes de démonstration",
+    "title": "Démonstration",
+    "lead": "Le moteur social n'est pas encore branché : cette version tourne sur un fournisseur de démonstration. Les personnes, les associations et les postes sont fictifs ; rien ne quitte ce navigateur.",
+    "scenariosTitle": "Parcours à jouer",
+    "scenario": {
+      "r1": {
+        "title": "R1 — Une personne inscrite entre par IDN",
+        "step1": "Entrer, puis « Identité numérique IDN » ; choisir Awa Ogooué et autoriser.",
+        "step2": "Choisir « France », saisir « Lyon ».",
+        "step3": "Choisir un identifiant proposé, puis cocher le profil social.",
+        "step4": "Constater : compte déclaré, hub France, adhésion ANTSIA dérivée dans les réglages."
+      },
+      "r2": {
+        "title": "R2 — Vérifier son inscription consulaire",
+        "step1": "Après R1, ouvrir « Vérifier mon inscription consulaire ».",
+        "step2": "Lire ce qui est demandé, reçu et jamais reçu ; cocher le consentement.",
+        "step3": "Lancer la vérification (fournisseur d'attestation fictif).",
+        "step4": "Constater : compte vérifié, badge Vérifié, poste de rattachement."
+      },
+      "r3": {
+        "title": "R3 — Un compte léger se fait parrainer",
+        "step1": "Entrer par code, choisir « Canada » et « Montréal ».",
+        "step2": "Constater : en attente, lecture seule, publication impossible.",
+        "step3": "Ici, basculer sur Mireille (vérifiée depuis plus de 30 jours) et parrainer votre identifiant.",
+        "step4": "Revenir sur votre compte : il est déclaré et peut publier (contenu relu, le Canada n'étant pas ouvert)."
+      }
+    },
+    "accountsTitle": "Comptes de démonstration",
+    "accountsBody": "Basculez d'un compte à l'autre pour jouer plusieurs rôles. Ce sélecteur n'existe qu'en démonstration.",
+    "accounts": {
+      "mireille": "Vérifiée par attestation consulaire depuis plus de 30 jours : elle peut parrainer.",
+      "prisca": "Vérifiée par IDN niveau 2 et parrainage.",
+      "steeve": "Déclarée par IDN niveau 1, à Lyon.",
+      "mine": "Le compte que vous avez créé."
+    },
+    "current": "Compte actuel",
+    "switch": "Utiliser ce compte",
+    "resetTitle": "Remettre à zéro",
+    "resetBody": "Efface vos comptes, publications et choix de démonstration, et recharge le jeu fictif.",
+    "reset": "Remettre la démonstration à zéro",
+    "resetDone": "Démonstration remise à zéro.",
+    "charteLink": "Voir la charte graphique et tous les composants"
+  },
+  "notice": {
+    "dismiss": "Écarter cet avis",
+    "region": "Avis"
+  },
+  "feed": {
+    "tagFilter": "Publications avec #{{tag}}",
+    "clearTag": "Retirer le filtre",
+    "tagEmptyTitle": "Aucune publication avec #{{tag}}",
+    "tagEmptyBody": "Essayez une autre portée ou retirez le filtre. Seules les publications que vous pouvez lire apparaissent.",
+    "pagination": {
+      "loadMore": "Voir plus de publications",
+      "loading": "Chargement des publications…",
+      "retry": "Réessayer",
+      "errorTitle": "Les publications ne sont pas disponibles.",
+      "errorBody": "Vérifiez votre connexion et réessayez. Les publications déjà affichées restent accessibles.",
+      "deniedTitle": "Ces publications ne vous sont pas accessibles.",
+      "lacunar": "Certaines publications peuvent manquer dans ce fil. Vous pouvez continuer à parcourir les suivantes.",
+      "added_one": "{{count}} publication supplémentaire affichée.",
+      "added_other": "{{count}} publications supplémentaires affichées.",
+      "noneAdded": "Aucune publication supplémentaire à afficher sur cette page."
+    },
+    "title": "Fil",
+    "scopesLabel": "Portées du fil",
+    "scope": {
+      "mon_pays": "Mon pays",
+      "diaspora": "Toute la diaspora",
+      "recents": "Récents",
+      "pour_vous": "Pour vous"
+    },
+    "scopeHint": {
+      "mon_pays": "{{country}}, et ce qui concerne toute la diaspora.",
+      "diaspora": "Ce qui concerne toute la diaspora, quel que soit le pays.",
+      "recents": "Tout ce que vous pouvez lire, du plus récent au plus ancien.",
+      "pour_vous": "Vos relations, les pages et les groupes que vous suivez."
+    },
+    "prompt": "Quoi de neuf à {{city}} ?",
+    "promptNoCity": "Quoi de neuf de votre côté ?",
+    "empty": {
+      "action": "Publier",
+      "mon_pays": {
+        "title": "Rien encore dans le hub {{country}}.",
+        "body": "Les premières publications font vivre un hub. Lancez-vous."
+      },
+      "diaspora": {
+        "title": "Aucune publication pour toute la diaspora.",
+        "body": "Choisissez « Toute la diaspora » en publiant pour toucher tous les pays."
+      },
+      "recents": {
+        "title": "Aucune publication à lire pour l'instant.",
+        "body": "Les publications des membres apparaîtront ici."
+      },
+      "pour_vous": {
+        "title": "Votre fil « Pour vous » est vide.",
+        "body": "Connectez-vous à des membres et suivez des pages pour le remplir."
+      }
+    },
+    "registerLabel": "Inscrire votre organisation"
+  },
+  "rail": {
+    "myHub": "Votre pays",
+    "openHub": "Ouvrir le hub",
+    "upcoming": "Prochains évènements",
+    "noEvents": "Aucun évènement prévu pour l'instant.",
+    "pages": {
+      "title": "Pages · {{country}}",
+      "empty": "Aucune page inscrite dans ce pays pour l'instant.",
+      "directory": "Toutes les pages du pays"
+    }
+  },
+  "composer": {
+    "open": "Publier",
+    "notAllowed": "Publication possible après un parrainage ou une vérification",
+    "title": "Nouvelle publication",
+    "description": "Écrivez, choisissez où et pour qui, puis publiez.",
+    "bodyLabel": "Votre message",
+    "placeholder": "Une information utile pour la communauté — {{country}} ?",
+    "counter": "{{count}} / {{max}} caractères",
+    "draftKept": "brouillon gardé sur cet appareil",
+    "mediaLegend": "Photos ou vidéo",
+    "mediaAdd": "Joindre des photos ou une vidéo",
+    "mediaHint": "Jusqu'à quatre photos, ou une vidéo seule.",
+    "mediaWaiting": "Envoi des médias en cours : la publication attend.",
+    "mediaListLabel": "Médias joints",
+    "mediaUploading": "Envoi…",
+    "mediaRemove": "Retirer {{name}}",
+    "mediaAltLabel": "Texte alternatif",
+    "mediaAltPlaceholder": "Ce que montre la photo…",
+    "mediaAltPlaceholderVideo": "Ce que montre la vidéo…",
+    "shareTitle": "Partager une publication",
+    "shareDescription": "Ajoutez un mot si vous le souhaitez, puis choisissez où et pour qui.",
+    "shareOriginal": "Vous partagez",
+    "shareBodyLabel": "Votre mot (facultatif)",
+    "sharePlaceholder": "Pourquoi cette publication compte…",
+    "shared": "Partagé.",
+    "reachLegend": "Où publier",
+    "reachLocal": "Dans le hub {{country}}",
+    "reachDiaspora": "Pour toute la diaspora",
+    "reviewNotice": "{{country}} n'est pas encore ouvert : la publication dans son hub attend son ouverture. Votre publication part pour toute la diaspora.",
+    "audienceLegend": "Qui peut lire",
+    "audiencePublic": "Tous les membres de DIASPORA.GA",
+    "audienceConnections": "Mes relations",
+    "alsoOnRoot": "Publier aussi sur ANTSIA",
+    "alsoOnRootHint": "Elle sera aussi lue dans ANTSIA, le réseau public, et restera dans DIASPORA.GA.",
+    "alsoOnRootDisabled": "Possible seulement pour une publication lisible par tous les membres.",
+    "publish": "Publier",
+    "publishing": "Publication…",
+    "published": "Publié.",
+    "sentForReview": "Envoyé en relecture : vous serez prévenu de la décision."
+  },
+  "post": {
+    "react": "Réagir",
+    "reactDisabled": "Réagir est possible après un parrainage ou une vérification.",
+    "reactedAs": "Votre réaction : {{reaction}}. Changer",
+    "reaction": {
+      "like": "J'aime",
+      "bravo": "Bravo",
+      "soutien": "Soutien",
+      "instructif": "Instructif"
+    },
+    "comments_one": "{{count}} commentaire",
+    "comments_other": "{{count}} commentaires",
+    "alsoOnRoot": "Aussi dans ANTSIA",
+    "share": "Partager",
+    "shareActions": {
+      "title": "Partager la publication",
+      "description": "Les destinataires doivent avoir accès à cette publication pour la consulter.",
+      "link": "Lien de la publication",
+      "copyLink": "Copier le lien",
+      "copied": "Lien copié.",
+      "copyFailed": "La copie automatique a échoué. Le lien est sélectionné : copiez-le manuellement.",
+      "quote": "Partager dans mon fil"
+    },
+    "shareCounted_one": "Partager, déjà partagée {{count}} fois",
+    "shareCounted_other": "Partager, déjà partagée {{count}} fois",
+    "sharedLabel": "Publication partagée",
+    "sharedUnavailable": "Publication indisponible : retirée, ou hors de votre portée.",
+    "edited": "modifiée",
+    "media": {
+      "photo": "Photo jointe à la publication",
+      "video": "Vidéo jointe à la publication",
+      "scanPending": "Analyse du fichier en cours…",
+      "quarantined": "Fichier retenu par la garde des fichiers",
+      "unavailable": "Média indisponible",
+      "openImage": "Agrandir la photo {{position}} sur {{total}}",
+      "expandVideo": "Agrandir la vidéo",
+      "viewer": {
+        "title": "Médias de la publication",
+        "position": "Média {{position}} sur {{total}}",
+        "previous": "Média précédent",
+        "next": "Média suivant"
+      }
+    }
+  },
+  "event": {
+    "category": {
+      "celebration": "Célébration",
+      "culture": "Culture",
+      "sport": "Sport",
+      "charity": "Solidarité",
+      "diplomacy": "Officiel"
+    },
+    "full": "Complet",
+    "past": "Passé",
+    "gauge": "{{registered}} / {{capacity}} inscrits",
+    "by": "Organisé par"
+  },
+  "association": {
+    "type": {
+      "cultural": "Culturelle",
+      "sports": "Sportive",
+      "religious": "Religieuse",
+      "professional": "Professionnelle",
+      "solidarity": "Solidarité",
+      "education": "Éducation",
+      "youth": "Jeunesse",
+      "women": "Femmes",
+      "student": "Étudiante",
+      "other": "Autre"
+    }
+  },
+  "company": {
+    "sector": {
+      "food": "Restauration",
+      "services": "Services",
+      "retail": "Commerce",
+      "tech": "Numérique",
+      "transport": "Transport et colis",
+      "health": "Santé",
+      "beauty": "Beauté",
+      "other": "Autre"
+    }
+  },
+  "page": {
+    "metaTitle": "Page",
+    "see": "Voir la page",
+    "claimable": "Revendicable",
+    "kind": {
+      "institution": "Institution",
+      "association": "Association",
+      "company": "Entreprise"
+    },
+    "officialNote": "Page officielle : seuls les agents habilités du poste y publient.",
+    "events": "Évènements à venir",
+    "posts": "Publications",
+    "noPosts": "Cette page n'a encore rien publié.",
+    "unavailableTitle": "Cette page n'est pas disponible.",
+    "unavailableBody": "Elle n'existe pas, ou vous ne pouvez pas la voir."
+  },
+  "job": {
+    "contract": {
+      "cdi": "CDI",
+      "cdd": "CDD",
+      "internship": "Stage",
+      "part_time": "Temps partiel",
+      "freelance": "Indépendant"
+    },
+    "filled": "Pourvue"
+  },
+  "classified": {
+    "category": {
+      "housing": "Logement",
+      "goods": "Objets",
+      "services": "Services",
+      "parcel": "Colis",
+      "other": "Autre"
+    }
+  },
+  "talent": {
+    "skills": "Compétences",
+    "languages": "Langues : {{languages}}"
+  },
+  "group": {
+    "private": "Privé",
+    "members_one": "{{count}} membre",
+    "members_other": "{{count}} membres",
+    "unread_one": "{{count}} message non lu",
+    "unread_other": "{{count}} messages non lus"
+  },
+  "mentor": {
+    "badge": "Mentor",
+    "since": "Dans le pays depuis {{year}}",
+    "domains": "Domaines d'aide",
+    "domain": {
+      "housing": "Logement",
+      "studies": "Études",
+      "work": "Emploi",
+      "family": "Famille",
+      "admin": "Démarches"
+    }
+  },
+  "contact": {
+    "write": "Écrire",
+    "writeTo": "Écrire à {{name}}",
+    "soon": "La messagerie arrive bientôt : aucun contact ne passera par une adresse ou un numéro affiché.",
+    "needsRelation": "Écrire est réservé à vos relations : connectez-vous d'abord.",
+    "call": "Appeler",
+    "callTo": "Appeler {{name}}"
+  },
+  "filters": {
+    "advanced": "Plus de filtres"
+  },
+  "hub": {
+    "errorTitle": "Les informations de ce pays ne sont pas disponibles.",
+    "errorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
+    "reload": "Recharger la page",
+    "metaTitle": "Hub pays",
+    "title": "La communauté — {{country}}",
+    "open": "Pays ouvert",
+    "notOpen": "Pas encore ouvert",
+    "notOpenNotice": "{{country}} n'est pas encore ouvert. Vous lisez tout et publiez pour toute la diaspora ; la publication dans le hub du pays attend son ouverture. Un pays s'ouvre avec deux associations relais et un modérateur.",
+    "switch": "Changer de pays",
+    "switchTitle": "Changer de pays",
+    "switchDescription": "Vous pouvez lire le hub de n'importe quel pays.",
+    "chooseCountry": "Choisir un pays",
+    "counters": {
+      "members": "Membres visibles",
+      "associations": "Associations",
+      "companies": "Entreprises",
+      "events": "Évènements à venir"
+    },
+    "belowThreshold": "Moins de {{threshold}}",
+    "countersDemo": "Compteurs de démonstration, calculés sur les données fictives.",
+    "soon": "Bientôt disponible",
+    "official": "Pages officielles",
+    "tabsLabel": "La vie de la communauté — {{country}}",
+    "tab": {
+      "actus": "Actualités",
+      "evenements": "Évènements",
+      "associations": "Associations",
+      "entreprises": "Entreprises",
+      "emploi": "Emploi",
+      "annonces": "Annonces",
+      "groupes": "Groupes"
+    },
+    "welcomeTitle": "Bienvenue, {{name}}.",
+    "welcomeBody": "Vous êtes aussi membre d'ANTSIA, le réseau public, avec le même profil. Ce que vous publiez ici reste dans DIASPORA.GA, sauf si vous cochez « Publier aussi sur ANTSIA ».",
+    "emptyPosts": "Aucune publication dans le hub {{country}} pour l'instant.",
+    "emptyPostsBody": "Une information pratique, une question, un bon plan : la première publication lance le hub.",
+    "emptyEvents": "Aucun évènement prévu — {{country}}.",
+    "emptyEventsBody": "Les associations publient leurs évènements sur leur page.",
+    "emptyAssociations": "Aucune association inscrite — {{country}}.",
+    "emptyAssociationsBody": "Une association de la diaspora peut créer sa page.",
+    "emptyCompanies": "Aucune entreprise inscrite — {{country}}.",
+    "emptyCompaniesBody": "Une entreprise de la diaspora peut créer sa page.",
+    "dormantTitle": "Le hub {{country}} est bientôt disponible.",
+    "dormantBody": "Personne n'y a encore rien publié. Vous pouvez être parmi les premiers.",
+    "notFoundTitle": "Ce hub n'existe pas.",
+    "notFoundBody": "Les hubs couvrent les pays de résidence de la diaspora."
+  },
+  "profile": {
+    "metaTitle": "Profil",
+    "edit": "Modifier",
+    "preview": "Me voir comme les autres",
+    "previewExit": "Revenir à mon profil",
+    "previewNotice": "Aperçu limité de votre facette diaspora pour un membre actif d’un autre pays, sans relation avec vous. La visibilité réelle du profil dépend aussi du lecteur et des règles de publication.",
+    "managePublication": "Gérer la publication de mon profil",
+    "posts": "Publications",
+    "tabsLabel": "Contenus du profil",
+    "photos": "Photos",
+    "albums": "Albums",
+    "noPosts": "{{name}} n'a encore rien publié.",
+    "noPostsSelf": "Vous n'avez encore rien publié.",
+    "unavailableTitle": "Ce profil n'est pas disponible.",
+    "unavailableBody": "Il n'existe pas, ou vous ne pouvez pas le voir.",
+    "bookmarks": "Mes enregistrements",
+    "errorTitle": "Le profil ne s’affiche pas.",
+    "errorBody": "Impossible de charger ce profil. Réessayez dans un instant.",
+    "reload": "Recharger le profil",
+    "previewPostsUnavailable": "Les publications et les albums sont masqués dans cet aperçu. Leur visibilité dépend de chaque lecteur.",
+    "images": {
+      "edit": "Modifier mes images",
+      "title": "Photo et couverture",
+      "shared": "Ces images appartiennent à votre profil ANTSIA et sont partagées entre vos réseaux. Leur affichage respecte les droits de chaque lecteur.",
+      "readOnly": "La modification des images nécessite une adhésion active à DIASPORA.GA.",
+      "unavailable": "Vos images ne sont pas disponibles pour le moment.",
+      "avatar": "Photo de profil",
+      "cover": "Image de couverture",
+      "chooseAvatar": "Choisir une photo de profil",
+      "chooseCover": "Choisir une couverture",
+      "saveAvatar": "Enregistrer la photo",
+      "saveCover": "Enregistrer la couverture",
+      "saving": "Enregistrement…",
+      "removeAvatar": "Retirer ma photo",
+      "removeCover": "Retirer ma couverture",
+      "confirmRemove": "Retirer cette image de votre profil dans tous vos réseaux ? Le fichier déjà déposé n’est pas supprimé par ce geste.",
+      "cancel": "Annuler",
+      "required": "Choisissez une image non vide.",
+      "updated": "Image enregistrée.",
+      "pending": "Image enregistrée, en attente de vérification avant affichage.",
+      "blocked": "Cette image ne peut pas être affichée. Vous pouvez en choisir une autre.",
+      "removed": "Image retirée de votre profil."
+    }
+  },
+  "albums": {
+    "metaTitle": "Album photo",
+    "unavailableTitle": "Albums indisponibles",
+    "previewUnavailableBody": "Les albums ne sont pas proposés dans cet aperçu.",
+    "unavailableBody": "Les albums nécessitent une adhésion active au réseau. Ils ne sont pas proposés en démonstration."
+  },
+  "facet": {
+    "country": "Pays de résidence",
+    "city": "Ville",
+    "post": "Poste de rattachement",
+    "arrivedAt": "Arrivée dans le pays",
+    "help": "Entraide",
+    "helpAvailable": "Disponible pour aider les nouveaux arrivants",
+    "field": {
+      "countryOfResidence": "Pays de résidence",
+      "city": "Ville",
+      "postSlug": "Poste de rattachement",
+      "associationIds": "Associations",
+      "arrivedAt": "Année d'arrivée",
+      "helpAvailable": "Disponibilité pour l'entraide"
+    },
+    "visibility": {
+      "only_me": "Moi uniquement",
+      "connections": "Mes relations",
+      "country": "Les membres de mon pays",
+      "network": "Tous les membres"
+    }
+  },
+  "settings": {
+    "contentPreferences": {
+      "title": "Mon fil",
+      "lead": "Retrouvez les publications masquées et les auteurs mis en sourdine. Ces choix sont privés et concernent uniquement votre fil DIASPORA.GA.",
+      "hiddenTab": "Publications masquées",
+      "mutedTab": "Auteurs en sourdine",
+      "emptyHidden": "Vous n’avez aucune publication masquée.",
+      "emptyMuted": "Vous n’avez aucun auteur en sourdine.",
+      "emptyPage": "Rien à afficher sur cette page.",
+      "unavailablePost": "Publication indisponible",
+      "unknownAuthor": "Profil non affiché",
+      "noText": "Publication avec média",
+      "hiddenAt": "Masquée le {{date}}",
+      "mutedAt": "Mis en sourdine le {{date}}",
+      "showPost": "Voir la publication",
+      "restoreHidden": "Ne plus masquer",
+      "restoreMuted": "Ne plus mettre en sourdine",
+      "restoring": "Rétablissement…",
+      "restoredHidden": "Le masquage est annulé.",
+      "restoredMuted": "La mise en sourdine est annulée.",
+      "error": "Impossible de charger ces choix.",
+      "retry": "Réessayer",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "page": "Page {{number}}",
+      "moved": "Ce choix a déjà été mis à jour.",
+      "unavailableLead": "Les détails ne sont plus accessibles. Vous pouvez quand même annuler ce choix."
+    },
+    "profilePublication": {
+      "title": "Publication du profil",
+      "globalScope": "Ce profil est commun à ANTSIA et DIASPORA.GA. Ces réglages s’appliquent dans les deux applications ; l’annuaire DIASPORA.GA se règle séparément.",
+      "loadError": "Le profil personnel n’a pas pu être chargé.",
+      "reload": "Recharger le profil",
+      "unavailable": "Les réglages du profil sont indisponibles pour cette session.",
+      "state": {
+        "published": "Publication du profil enregistrée.",
+        "private": "Publication enregistrée, mode privé activé.",
+        "withdrawn": "Votre profil est retiré.",
+        "unpublished": "Votre profil n’est pas publié."
+      },
+      "privateLead": "Le mode privé vous retire des recherches et suggestions et ferme les nouveaux abonnements et demandes entrants. Votre lien connu, vos publications et vos relations existantes conservent leurs règles habituelles de visibilité.",
+      "withdrawLead": "Retirer le profil rend votre fiche publique indisponible et votre nom neutre. Le compte, les adhésions, médias, contenus, relations et consentements sont conservés. Vous restez membre de DIASPORA.GA.",
+      "republishLead": "La republication reprend votre identité et votre accroche conservées, ainsi que vos choix de confidentialité et d’annuaire. La modération peut retarder la visibilité du profil.",
+      "makePrivate": "Passer en mode privé",
+      "privacyOn": "Mode privé activé.",
+      "privacyOff": "Mode privé désactivé.",
+      "makeDiscoverable": "Désactiver le mode privé",
+      "withdraw": "Retirer mon profil",
+      "republish": "Republier mon profil",
+      "working": "Enregistrement…",
+      "saved": {
+        "privacy": "Réglage de confidentialité enregistré.",
+        "withdraw": "Retrait du profil enregistré.",
+        "republish": "Republication demandée. La modération peut retarder la visibilité du profil."
+      },
+      "confirm": {
+        "withdraw": {
+          "title": "Retirer le profil commun ?",
+          "body": "Le retrait s’applique à ANTSIA et DIASPORA.GA. Votre fiche publique devient indisponible et votre nom neutre ; vos données, contenus, liens, adhésions et consentements sont conservés. Vous pourrez republier depuis ces réglages.",
+          "confirm": "Confirmer le retrait"
+        },
+        "republish": {
+          "title": "Republier le profil commun ?",
+          "body": "La republication est demandée dans ANTSIA et DIASPORA.GA avec l’identité et l’accroche conservées. Le mode privé et vos choix d’annuaire sont conservés. La modération peut retarder la visibilité.",
+          "confirm": "Confirmer la republication"
+        }
+      }
+    },
+    "signingOut": "Déconnexion…",
+    "title": "Réglages",
+    "memberships": "Mes réseaux",
+    "membershipsLead": "Entrer dans DIASPORA.GA vous a aussi fait membre d'ANTSIA. Vos contextes restent séparés.",
+    "memberSince": "Membre depuis le {{date}}",
+    "sponsoredBy": "Parrainé par {{name}} (@{{handle}})",
+    "rootName": "ANTSIA",
+    "rootDerived": "Adhésion dérivée de DIASPORA.GA : même profil, même identifiant. Quitter DIASPORA.GA ne vous retire pas d'ANTSIA.",
+    "attestationVerified": "Inscription consulaire vérifiée.",
+    "attestationNotConfirmed": "Nous n'avons pas pu confirmer votre inscription consulaire.",
+    "attestationNone": "Inscription consulaire non vérifiée.",
+    "facet": "Ma facette diaspora",
+    "facetLead": "Ce que la communauté sait de vous, et qui peut le voir, champ par champ.",
+    "arrivedAtHint": "Une année, par exemple 2016. Facultative.",
+    "visibilityLegend": "Qui voit quoi",
+    "saved": "Enregistré.",
+    "directory": "Annuaire des membres",
+    "directoryLead": "Masqué par défaut. Un profil privé ou retiré reste absent de l’annuaire, même si le niveau choisi est visible. On vous contacte seulement par la messagerie, jamais par une adresse.",
+    "directoryNeedsConsent": "Activez d'abord le consentement « Annuaire des membres » ci-dessous.",
+    "directoryLevel": {
+      "hidden": "Masqué",
+      "country": "Visible des membres de mon pays",
+      "network": "Visible de tous les membres"
+    },
+    "consents": "Consentements",
+    "consentsLead": "Vos consentements enregistrés et les choix disponibles ici. Chaque modification est horodatée.",
+    "consentRecorded": "Enregistré le {{date}} — texte du {{version}}",
+    "consentGranted": "Consentement donné.",
+    "consentRevoked": "Consentement retiré.",
+    "leaveExplain": "Quitter DIASPORA.GA termine cette adhésion. Votre compte, votre profil commun et votre adhésion à ANTSIA restent.",
+    "leave": "Quitter DIASPORA.GA",
+    "leaveConfirmTitle": "Quitter DIASPORA.GA ?",
+    "leaveConfirmBody": "Votre adhésion à DIASPORA.GA prend fin, ainsi que votre parrainage reçu. Votre profil commun et vos consentements sont conservés. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
+    "left": "Vous avez quitté DIASPORA.GA.",
+    "sponsorHelp": "Parrainage",
+    "sponsorHelpLead": "Un membre vérifié depuis plus de 30 jours peut parrainer un compte en attente avec son identifiant.",
+    "sponsorHelpPending": "Pour publier : demandez à un membre vérifié depuis plus de 30 jours de vous parrainer. Il lui suffit de votre identifiant.",
+    "copyHandle": "Copier mon identifiant",
+    "handleCopied": "Identifiant copié.",
+    "goSponsor": "Parrainer quelqu'un",
+    "data": "Mes données",
+    "export": "Télécharger mes données",
+    "exported": "Données téléchargées.",
+    "delete": "Effacer mon compte",
+    "deleteConfirmTitle": "Effacer votre compte ?",
+    "deleteConfirmBody": "Votre profil, vos publications, vos réactions, vos consentements et vos parrainages seront effacés. Les contenus qui vous citaient afficheront « compte supprimé ».",
+    "deleteAcknowledge": "Je comprends que l'effacement est définitif.",
+    "appearance": "Langue et apparence",
+    "session": "Session",
+    "sessionLead": "Déconnecte cet appareil et tous les autres.",
+    "signOutEverywhere": "Se déconnecter partout",
+    "profileIdentity": {
+      "title": "Nom et accroche",
+      "lead": "Ces textes sont communs à ANTSIA et DIASPORA.GA. Les enregistrer conserve votre choix privé et l’état publié ou retiré du profil.",
+      "edit": "Modifier le nom et l’accroche",
+      "name": "Nom affiché",
+      "nameHint": "Un nom choisi librement pour votre profil social. Votre identifiant reste inchangé.",
+      "headline": "Accroche",
+      "headlineHint": "Facultative, {{max}} caractères maximum. Vider le champ retire l’accroche.",
+      "save": "Enregistrer les textes"
+    }
+  },
+  "sponsor": {
+    "title": "Parrainer",
+    "lead": "Vous admettez dans DIASPORA.GA un compte en attente que vous connaissez. Chaque parrainage est tracé ; vous pouvez le retirer.",
+    "tooRecent": "Vous pourrez parrainer à partir du {{date}} : votre compte doit être vérifié depuis plus de 30 jours.",
+    "quota": "{{remaining}} parrainages possibles sur {{total}} (sur les {{days}} derniers jours)",
+    "handleLabel": "Identifiant du compte à parrainer",
+    "handleHint": "La personne vous le donne : il commence par @.",
+    "handlePlaceholder": "@prenom.nom",
+    "submit": "Parrainer",
+    "done": "Le compte @{{handle}} est parrainé.",
+    "given": "Parrainages donnés",
+    "noneGiven": "Vous n'avez parrainé personne.",
+    "noneGivenBody": "Parrainez un proche qui vous a donné son identifiant.",
+    "givenOn": "Parrainé le {{date}}",
+    "revokedOn": "Retiré le {{date}}",
+    "revoke": "Retirer",
+    "revoked": "Parrainage retiré."
+  },
+  "attestation": {
+    "title": "Vérifier mon inscription consulaire",
+    "lead": "Vous avez une inscription dans un poste consulaire ? Avec votre accord, DIASPORA.GA demande à consulat.ga une confirmation, et rien d'autre.",
+    "askedTitle": "Ce qui est demandé",
+    "asked": "Si une inscription consulaire active existe pour votre identité numérique ou votre adresse vérifiée.",
+    "receivedTitle": "Ce que DIASPORA.GA reçoit",
+    "received": "Oui ou non, le pays, le poste de rattachement et la date de l'inscription.",
+    "neverTitle": "Ce que DIASPORA.GA ne reçoit jamais",
+    "never": "Votre passeport, votre numéro d'identification, votre état civil, vos enfants, votre dossier.",
+    "consent": "J'accepte que DIASPORA.GA demande cette confirmation à consulat.ga.",
+    "inProgress": "Vérification en cours…",
+    "success": "Inscription consulaire confirmée : votre compte est vérifié.",
+    "verifiedTitle": "Votre inscription consulaire est vérifiée.",
+    "verifiedSince": "Vérifiée le {{date}}.",
+    "notConfirmedTitle": "Nous n'avons pas pu confirmer votre inscription.",
+    "notConfirmedBody": "Vous restez membre. Vous pourrez renouveler la demande dans 24 heures, ou vous inscrire au consulat.",
+    "footer": "Une demande par 24 heures. Votre consentement est enregistré avant la demande."
+  },
+  "legal": {
+    "todoLawyer": "TODO JURISTE — texte provisoire en attente de validation juridique ; bloquant pour la mise en ligne.",
+    "notice": {
+      "title": "Mentions légales",
+      "section1": {
+        "title": "Éditeur",
+        "body": "DIASPORA.GA est édité par NTSAGUI Digital. Les coordonnées complètes de l'éditeur seront publiées après validation juridique."
+      },
+      "section2": {
+        "title": "Directeur de la publication",
+        "body": "À désigner par l'éditeur."
+      },
+      "section3": {
+        "title": "Hébergement",
+        "body": "Le prestataire et la région d'hébergement seront indiqués ici une fois choisis et contractualisés."
+      },
+      "section4": {
+        "title": "Propriété intellectuelle",
+        "body": "Les contenus publiés par les membres restent leur propriété ; ils en accordent la diffusion dans le réseau qu'ils choisissent."
+      }
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "section1": {
+        "title": "Responsable de traitement",
+        "body": "À confirmer par le juriste. Droit applicable : loi gabonaise n° 001/2011 modifiée par la loi n° 025/2023 (APDPVP) ; le RGPD pour les résidents de l'Union européenne."
+      },
+      "section2": {
+        "title": "Ce que nous traitons",
+        "body": "Votre profil (nom affiché, identifiant, pays de résidence), vos contenus et vos consentements. Aucune donnée consulaire : une attestation consulaire se limite à un oui ou non, un pays, un poste et une date."
+      },
+      "section3": {
+        "title": "Vos choix",
+        "body": "Chaque consentement est séparé, horodaté et révocable dans vos réglages. L'annuaire est masqué par défaut."
+      },
+      "section4": {
+        "title": "Vos droits",
+        "body": "Vous téléchargez vos données et effacez votre compte depuis vos réglages. L'autorité compétente au Gabon est l'APDPVP."
+      }
+    }
+  },
+  "notFound": {
+    "title": "Cette page n'existe pas.",
+    "body": "L'adresse est peut-être incomplète.",
+    "back": "Revenir à l'accueil"
+  },
+  "charte": {
+    "title": "Charte « Sable de la diaspora »",
+    "eyebrow": "Charte graphique · version 4 · 20 octobre 2026",
+    "heading": "Sable de la diaspora",
+    "lead": "Les composants de DIASPORA.GA, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
+    "tocLabel": "Sommaire de la charte",
+    "section": {
+      "color": {
+        "title": "Couleur",
+        "lead": "Six couleurs nommées pour les surfaces et le texte, une seule teinte chaude par thème : rien ne vire au beige ni au brun. S'y ajoute une couleur par famille d'actions : bleu pour publier et écrire, sarcelle pour suivre, sable doré pour réagir et acheter. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."
+      },
+      "contrast": {
+        "title": "Contraste",
+        "lead": "Mesuré en direct sur cette page, dans le thème affiché. Le texte tient 4,5:1 au moins et le texte principal reste entre 12 et 16:1, fort sans éblouir ; les contours de champ et l'anneau de focus tiennent 3:1."
+      },
+      "type": {
+        "title": "Typographie",
+        "lead": "Familjen Grotesk pour les titres, Inter pour le texte et l'interface, DM Mono pour les codes. Un seul grand titre par écran ; les sous-titres en Inter."
+      },
+      "shape": {
+        "title": "Géométrie",
+        "lead": "Un angle par élément, du badge à la barre d'onglets, et la pilule pour les boutons et tout ce qu'on fait basculer."
+      },
+      "tag": {
+        "title": "Étiquette pays",
+        "lead": "La signature : l'étiquette qu'on accroche à une valise. Le pays est le contexte permanent ; en tête de hub, son code devient monumental."
+      },
+      "trust": {
+        "title": "Confiance",
+        "lead": "Quatre badges, jamais confondus, toujours avec une icône et un libellé. « Officiel » est un tampon d'encre."
+      },
+      "notices": {
+        "title": "Cartes flottantes",
+        "lead": "Les avis passent devant la page : une carte sans contour, le ton porté par la seule pastille, une croix pour l'écarter. La démonstration garde un repère permanent dans l'en-tête."
+      },
+      "cards": {
+        "title": "Cartes",
+        "lead": "Cartes sable sur fond papier en clair, cartes éclaircies sur fond nuit en sombre : les surfaces se distinguent par la clarté, sans filet. Chaque contenu porte son pays."
+      },
+      "controls": {
+        "title": "Commandes",
+        "lead": "Des pilules pour basculer comme pour agir, sans contour : la couleur suffit, une par famille d'actions. L'élément choisi prend une teinte de sélection. Un seul bouton principal par zone ; des cibles de 44 pixels."
+      }
+    },
+    "theme": {
+      "light": "Clair",
+      "dark": "Sombre",
+      "lightRoles": "Fond papier · carte sable · texte encre",
+      "darkRoles": "Fond nuit · carte relevée · texte sable",
+      "text": "Le texte principal",
+      "secondary": "Le texte secondaire, plus discret",
+      "action": "Agir"
+    },
+    "swatch": {
+      "sable": {
+        "name": "Sable",
+        "role": "Cartes claires, texte sombre"
+      },
+      "papier": {
+        "name": "Papier",
+        "role": "Fond clair"
+      },
+      "encre": {
+        "name": "Encre",
+        "role": "Texte, tampon « Officiel »"
+      },
+      "nuit": {
+        "name": "Nuit",
+        "role": "Fond sombre"
+      },
+      "bleu": {
+        "name": "Bleu Gabon",
+        "role": "Publier, écrire, lien, focus"
+      },
+      "gres": {
+        "name": "Grès",
+        "role": "Texte secondaire"
+      }
+    },
+    "contrast": {
+      "pair": "Paire",
+      "tokens": "Jetons",
+      "ratio": "Rapport",
+      "level": "Niveau",
+      "shownLight": "Thème affiché : clair",
+      "shownDark": "Thème affiché : sombre",
+      "measuring": "Mesure…",
+      "sample": "Aa",
+      "row": {
+        "textBackground": "Texte sur fond",
+        "textCard": "Texte sur carte",
+        "mutedCard": "Secondaire sur carte",
+        "mutedBackground": "Secondaire sur fond",
+        "faintCard": "Discret sur carte",
+        "linkCard": "Lien sur carte",
+        "linkBackground": "Lien sur fond",
+        "primaryButton": "Bouton principal",
+        "fieldEdge": "Contour de champ"
+      },
+      "levelAaa": "AAA",
+      "levelAa": "AA",
+      "levelComponent": "AA composant",
+      "levelFail": "Insuffisant"
+    },
+    "type": {
+      "display": {
+        "role": "Display",
+        "spec": "Familjen Grotesk · 700 · 40/44",
+        "sample": "La communauté de France"
+      },
+      "title": {
+        "role": "Titre",
+        "spec": "Inter · 600 · 20/26",
+        "sample": "Évènements à venir"
+      },
+      "subtitle": {
+        "role": "Sous-titre",
+        "spec": "Inter · 600 · 17/24",
+        "sample": "Soirée culturelle de la communauté"
+      },
+      "body": {
+        "role": "Corps",
+        "spec": "Inter · 400 · 15/23",
+        "sample": "Inter porte le texte et l'interface, à 15 pixels pour un public qui lit sur téléphone."
+      },
+      "caption": {
+        "role": "Légende",
+        "spec": "Inter · 400 · 13/18",
+        "sample": "Il y a 5 heures · Lyon"
+      },
+      "code": {
+        "role": "Code",
+        "spec": "DM Mono · 11 · capitales",
+        "sample": "FR · CA · 12/150"
+      }
+    },
+    "shape": {
+      "badge": {
+        "value": "6 px",
+        "use": "Badges"
+      },
+      "chip": {
+        "value": "10 px",
+        "use": "Puces"
+      },
+      "page": {
+        "value": "12 px",
+        "use": "Pages, en avatar"
+      },
+      "field": {
+        "value": "14 px",
+        "use": "Champs"
+      },
+      "media": {
+        "value": "16 px",
+        "use": "Images et vidéos"
+      },
+      "fab": {
+        "value": "18 px",
+        "use": "Bouton Créer"
+      },
+      "card": {
+        "value": "24 px",
+        "use": "Cartes"
+      },
+      "dock": {
+        "value": "28 px",
+        "use": "Barre d'onglets du téléphone"
+      },
+      "pill": {
+        "value": "Pilule",
+        "use": "Boutons, onglets, filtres, sélecteurs"
+      },
+      "relief": "Relief : aucun contour ni aucune ombre autour d'une carte ; seul ce qui flotte porte une ombre."
+    },
+    "monumentCaption": "La communauté — France",
+    "notices": {
+      "restore": "Réafficher les cartes",
+      "live": "Voir une carte en situation",
+      "chip": "Repère permanent de l'en-tête"
+    },
+    "controlGroup": {
+      "filters": "Filtres et onglets",
+      "buttons": "Boutons",
+      "fields": "Champs et choix",
+      "contact": "Contact et emplacement sponsorisé"
+    },
+    "filtersLabel": "Catégories d'évènements",
+    "tabsLabel": "Onglets de la communauté",
+    "button": {
+      "primary": "Principal",
+      "secondary": "Secondaire",
+      "outline": "Neutre",
+      "ghost": "Discret",
+      "destructive": "Destructif",
+      "social": "Suivre",
+      "message": "Écrire",
+      "send": "Envoyer",
+      "react": "Réagir",
+      "commerce": "Acheter",
+      "success": "Valider",
+      "disabled": "Désactivé",
+      "small": "Petit",
+      "medium": "Moyen",
+      "large": "Grand"
+    },
+    "fieldLabel": "Ville de résidence",
+    "fieldHint": "Elle s'affiche sur votre étiquette pays.",
+    "fieldPlaceholder": "Lyon, Montréal, Bruxelles…",
+    "checkboxLabel": "Case jamais cochée d'avance",
+    "switchLabel": "Interrupteur",
+    "radioLegend": "Portée de la publication",
+    "radioLocal": "Mon pays",
+    "radioDiaspora": "Toute la diaspora",
+    "sample": {
+      "cityLyon": "Lyon",
+      "cityParis": "Paris",
+      "cityMontreal": "Montréal",
+      "description": "Une description d'exemple, fictive, de deux lignes au plus.",
+      "association": "Association d'exemple (démo)",
+      "associationClaimable": "Association à revendiquer (démo)",
+      "company": "Entreprise d'exemple (démo)",
+      "person": "Awa Ogooué",
+      "shortName": "Awa O.",
+      "eventTitle": "Soirée culturelle de la communauté",
+      "eventFull": "Atelier complet",
+      "eventPast": "Tournoi de l'an dernier",
+      "postBody": "Exemple de publication pour toute la diaspora, venue d'un autre pays : la pastille d'origine le dit.",
+      "jobTitle": "Cuisinier ou cuisinière",
+      "classifiedTitle": "Place dans une valise pour Libreville",
+      "talentTitle": "Ingénieure en informatique",
+      "skill1": "TypeScript",
+      "skill2": "Gestion de projet",
+      "skill3": "Données",
+      "groupName": "Gabonais de Lyon (démo)",
+      "groupMessage": "Qui vient samedi ?",
+      "rejectReason": "contenu commercial hors des annonces",
+      "emptyTitle": "Aucun évènement pour l'instant.",
+      "emptyBody": "Proposez le premier : il sera relu, puis publié.",
+      "advertiser": "Annonceur d'exemple",
+      "advertiserMessage": "Un encart étiqueté, jamais plus d'un par écran, jamais dans la messagerie.",
+      "postMine": "Ma publication, en relecture : la carte flottante n'est montrée qu'à son autrice ou son auteur."
+    }
+  },
+  "messages": {
+    "title": "Messages"
+  },
+  "stories": {
+    "title": "Statuts"
+  },
+  "icom": {
+    "unavailableTitle": "Messagerie indisponible",
+    "unavailable": {
+      "demo": "La messagerie et les appels passent par le réseau en service : la démonstration ne les porte pas.",
+      "networkMissing": "La messagerie n'est pas encore ouverte sur ce réseau : revenez un peu plus tard."
+    }
+  },
+  "relations": {
+    "title": "Mes relations",
+    "lead": "Retrouvez vos relations, vos demandes et vos abonnements, et gérez vos choix personnels.",
+    "tabsLabel": "Relations, demandes, abonnements, blocages et suggestions",
+    "acceptedTab": "Mes relations",
+    "receivedTab": "Demandes reçues",
+    "sentTab": "Demandes envoyées",
+    "followingTab": "Mes abonnements",
+    "blockedTab": "Personnes bloquées",
+    "member": "Membre",
+    "loading": "Chargement de vos relations…",
+    "errorTitle": "La liste n’a pas pu être actualisée",
+    "errorBody": "Réessayez dans un instant. Les éléments déjà chargés restent affichés.",
+    "retry": "Réessayer",
+    "emptyAcceptedTitle": "Vous n’avez pas encore de relation",
+    "emptyAcceptedBody": "Rencontrez des membres dans l’annuaire et proposez-leur de vous connecter.",
+    "emptyReceivedTitle": "Aucune demande en attente",
+    "emptyReceivedBody": "Vos prochaines demandes de connexion apparaîtront ici.",
+    "discover": "Rencontrer des membres",
+    "loadMore": "Voir la suite",
+    "loadingMore": "Chargement…",
+    "readOnly": "Vous pourrez répondre aux demandes lorsque votre adhésion vous permettra de publier.",
+    "accepted": "Demande acceptée. Vous êtes maintenant en relation.",
+    "declined": "Demande refusée.",
+    "unavailableTitle": "Les relations sont indisponibles ici",
+    "unavailableBody": "Cette liste est réservée aux membres actifs de DIASPORA.GA. En démonstration, explorez les gestes de relation depuis les profils.",
+    "dismissedTab": "Suggestions masquées",
+    "dismissed": {
+      "title": "Suggestions masquées",
+      "body": "Retirer un masquage permet une nouvelle proposition seulement si le membre est toujours éligible. Aucune connexion ni aucun abonnement n’est créé.",
+      "neutral": "Suggestion masquée",
+      "hiddenAt": "Masquée le {{date}}",
+      "restore": "Retirer le masquage",
+      "restoreLabel": "Retirer le masquage de {{name}}",
+      "restoring": "Retrait en cours…",
+      "restored": "Choix de masquage mis à jour.",
+      "restoreFailed": "Le masquage n’a pas pu être retiré.",
+      "empty": "Vous n’avez aucune suggestion masquée.",
+      "loading": "Chargement des suggestions masquées…",
+      "loadMore": "Voir plus de suggestions masquées",
+      "errorTitle": "Impossible de charger les suggestions masquées",
+      "errorBody": "Réessayez pour actualiser vos choix.",
+      "retry": "Réessayer"
+    }
+  },
+  "members": {
+    "title": "Membres",
+    "lead": "Les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie : aucune coordonnée n'est affichée.",
+    "searchLabel": "Chercher un membre",
+    "searchPlaceholder": "Nom ou identifiant",
+    "reachLabel": "Où chercher",
+    "reachNetwork": "Tout le réseau",
+    "idleTitle": "Cherchez un membre par son nom ou son identifiant.",
+    "idleBody": "Seuls les membres qui l'ont choisi apparaissent : personne n'est listé sans son accord.",
+    "emptyTitle": "Aucun membre trouvé pour « {{query}} ».",
+    "emptyBody": "Un membre qui n'a pas choisi d'apparaître dans l'annuaire reste introuvable. Vérifiez l'orthographe, ou l'identifiant exact.",
+    "count_one": "{{count}} membre trouvé.",
+    "count_other": "{{count}} membres trouvés.",
+    "resultsLabel": "Membres trouvés",
+    "mine": "Votre niveau d'annuaire : « {{level}} ».",
+    "mineAction": "Le régler"
+  },
+  "comments": {
+    "title": "Commentaires",
+    "description": "Les commentaires de cette publication.",
+    "close": "Fermer les commentaires",
+    "emptyTitle": "Aucun commentaire pour l'instant.",
+    "emptyBody": "Lancez la conversation : les commentaires restent dans DIASPORA.GA.",
+    "notAllowed": "Vous pourrez commenter après un parrainage ou la vérification de votre inscription consulaire.",
+    "label": "Votre commentaire",
+    "placeholder": "Écrire un commentaire…",
+    "replyPlaceholder": "Écrire une réponse…",
+    "replyingTo": "En réponse à {{name}}",
+    "cancelReply": "Ne plus répondre",
+    "counter": "{{count}} / {{max}} caractères",
+    "send": "Envoyer",
+    "sent": "Commentaire publié.",
+    "reply": "Répondre",
+    "remove": "Retirer",
+    "confirmRemove": "Retirer définitivement",
+    "cancel": "Annuler",
+    "removed": "Commentaire retiré.",
+    "showReplies_one": "Voir {{count}} réponse",
+    "showReplies_other": "Voir les {{count}} réponses",
+    "edited": "modifié",
+    "someone": "Un membre",
+    "edit": "Modifier",
+    "editLabel": "Modifier votre commentaire",
+    "updated": "Commentaire modifié.",
+    "removeLabel": "Retirer le commentaire de {{name}}",
+    "removeLabelNeutral": "Retirer ce commentaire",
+    "confirmRemoveLabel": "Retirer définitivement le commentaire de {{name}}",
+    "confirmRemoveLabelNeutral": "Retirer définitivement ce commentaire"
+  },
+  "postMenu": {
+    "open": "Plus d'actions sur cette publication",
+    "bookmark": "Enregistrer",
+    "unbookmark": "Retirer des enregistrements",
+    "bookmarked": "Publication enregistrée.",
+    "unbookmarked": "Retirée de vos enregistrements.",
+    "hide": "Masquer cette publication",
+    "hidden": "Publication masquée : elle ne paraît plus pour vous.",
+    "mute": "Mettre {{name}} en sourdine",
+    "muted": "{{name}} est en sourdine : ses publications quittent vos fils.",
+    "report": "Signaler…",
+    "remove": "Retirer ma publication…",
+    "edit": "Modifier ma publication…"
+  },
+  "report": {
+    "title": "Signaler cette publication",
+    "description": "Choisissez un motif. La publication est aussitôt masquée pour vous ; l'équipe de modération l'examine.",
+    "close": "Fermer le signalement",
+    "reasonLegend": "Motif",
+    "reason": {
+      "harassment": "Harcèlement",
+      "minor_harm": "Contenu préjudiciable à un mineur",
+      "hate": "Haine ou discrimination",
+      "violence": "Violence ou menace",
+      "sexual_content": "Contenu sexuel",
+      "deepfake_of_me": "Hypertrucage d'une personne sans son accord",
+      "prohibited_ai_content": "Contenu d'IA interdit",
+      "institution_impersonation": "Imitation d'une institution de l'État",
+      "impersonation": "Usurpation d'identité",
+      "privacy_or_honor": "Atteinte à la vie privée ou à l'honneur",
+      "misinformation": "Fausse information",
+      "job_fee_requested": "Frais demandés au candidat",
+      "job_impersonation": "Usurpation d'une entreprise",
+      "other": "Autre motif"
+    },
+    "noteLabel": "Précision (facultative)",
+    "noteHint": "Ce qui aide l'équipe à comprendre — sans coordonnées.",
+    "send": "Envoyer le signalement",
+    "sent": "Signalement envoyé : la publication est masquée pour vous.",
+    "cancel": "Annuler"
+  },
+  "removePost": {
+    "title": "Retirer cette publication ?",
+    "description": "Elle disparaît des fils et de votre profil, avec ses commentaires.",
+    "close": "Fermer",
+    "confirm": "Retirer",
+    "cancel": "Annuler",
+    "done": "Publication retirée."
+  },
+  "suggestions": {
+    "title": "Des membres à rencontrer",
+    "sameCity": "Même ville : {{city}}",
+    "sameCountry": "Même hub : {{country}}",
+    "sharedAssociations_one": "{{count}} association en commun",
+    "sharedAssociations_other": "{{count}} associations en commun",
+    "mutualConnections_one": "{{count}} relation en commun",
+    "mutualConnections_other": "{{count}} relations en commun",
+    "requested": "Demande de relation envoyée.",
+    "dismiss": "Ne plus me proposer {{name}}",
+    "dismissed": "Suggestion retirée."
+  },
+  "editPost": {
+    "title": "Modifier ma publication",
+    "description": "Le texte seulement : la portée, l'audience et la visibilité ne changent pas.",
+    "label": "Votre message",
+    "save": "Enregistrer la modification",
+    "saved": "Publication modifiée.",
+    "cancel": "Annuler",
+    "close": "Fermer"
+  },
+  "postScreen": {
+    "title": "Publication",
+    "notFoundTitle": "Publication introuvable.",
+    "notFoundBody": "Elle a pu être retirée, ou elle ne vous est pas lisible.",
+    "back": "Revenir au fil"
+  },
+  "bookmarks": {
+    "title": "Mes enregistrements",
+    "lead": "Les publications que vous avez enregistrées. Elles ne sont visibles que de vous.",
+    "emptyTitle": "Aucune publication enregistrée.",
+    "emptyBody": "Enregistrez une publication depuis son menu « … » pour la retrouver ici.",
+    "open": "Ouvrir",
+    "remove": "Retirer",
+    "loadMore": "Voir plus d’enregistrements",
+    "loadingMore": "Chargement des enregistrements…",
+    "retry": "Réessayer"
+  },
+  "bell": {
+    "open": "Notifications",
+    "openUnread_one": "Notifications, {{count}} non lue",
+    "openUnread_other": "Notifications, {{count}} non lues",
+    "title": "Notifications",
+    "description": "Ce qui s'est passé pour vous dans DIASPORA.GA.",
+    "close": "Fermer les notifications",
+    "emptyTitle": "Aucune notification pour l'instant.",
+    "emptyBody": "Les demandes de relation, les parrainages et les réponses à vos publications s'afficheront ici.",
+    "markAll": "Tout marquer comme lu",
+    "markRead": "Marquer comme lue",
+    "unread": "non lue",
+    "someone": "Un membre",
+    "kind": {
+      "connection_request": "souhaite entrer en relation avec vous.",
+      "connection_accepted": "a accepté votre demande de relation.",
+      "new_follower": "suit désormais votre activité.",
+      "post_reaction": "a réagi à votre publication.",
+      "post_comment": "a commenté votre publication.",
+      "post_share": "a partagé votre publication.",
+      "mention": "vous mentionne dans une publication.",
+      "sponsorship_received": "vous parraine dans DIASPORA.GA.",
+      "sponsorship_withdrawn": "a retiré son parrainage."
+    },
+    "system": {
+      "sponsorship_withdrawn": "Votre parrainage a été retiré.",
+      "attestation_verified": "Votre inscription consulaire est confirmée : votre compte est vérifié.",
+      "attestation_not_confirmed": "Nous n'avons pas pu confirmer votre inscription consulaire.",
+      "other": "Nouvelle activité dans DIASPORA.GA."
+    },
+    "outcome": {
+      "accepted": "acceptée",
+      "declined": "refusée",
+      "gone": "n'est plus d'actualité"
+    },
+    "openPost": "Voir la publication"
+  },
+  "relation": {
+    "connect": "Se connecter",
+    "requested": "Demande envoyée",
+    "accept": "Accepter",
+    "decline": "Refuser",
+    "connected": "En relation",
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "block": "Bloquer",
+    "blockAction": "Bloquer",
+    "blockConfirm": "Bloquer {{name}} ?",
+    "blockEffect": "Vous ne vous verrez plus, dans aucun réseau. Votre relation et vos abonnements sont retirés dans les deux sens, sans que la personne en soit avertie. Débloquer plus tard ne rétablit ni la relation ni les abonnements.",
+    "cancel": "Annuler",
+    "unblock": "Débloquer",
+    "blocked": "Vous avez bloqué {{name}}.",
+    "unblocked": "Vous avez débloqué {{name}}. Ni la relation ni les abonnements ne sont rétablis.",
+    "requestSent": "Demande envoyée à {{name}}.",
+    "accepted": "Vous et {{name}} êtes maintenant en relation.",
+    "needsStatus": "Pour échanger, il faut être membre déclaré : demandez un parrainage."
+  },
+  "engine": {
+    "backendMissing": "Le service n'est pas configuré sur cet environnement.",
+    "sessionLoading": "Ouverture de votre session…",
+    "sessionFailed": "Votre session n'a pas pu s'ouvrir.",
+    "sessionRetry": "Réessayer"
+  },
+  "errors": {
+    "unknown": "Une erreur est survenue. Réessayez dans un instant.",
+    "not_found": "Cet élément n'existe plus.",
+    "not_signed_in": "Votre session a expiré : entrez de nouveau.",
+    "not_member": "Il faut être membre de DIASPORA.GA pour cela.",
+    "already_member": "Vous êtes déjà membre de DIASPORA.GA.",
+    "idn_invalid": "L'identité IDN est incomplète.",
+    "idn_identity_required": "Choisissez une identité.",
+    "idn_consent_required": "Cochez l'autorisation pour continuer.",
+    "email_invalid": "Saisissez une adresse e-mail valide, par exemple nom@example.com.",
+    "phone_invalid": "Saisissez un numéro avec son indicatif, par exemple +33 6 39 98 12 34.",
+    "code_format": "Le code compte 6 chiffres.",
+    "code_invalid": "Ce code ne correspond pas. Vérifiez-le, ou demandez-en un nouveau.",
+    "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
+    "country_required": "Choisissez votre pays de résidence.",
+    "country_unknown": "Ce pays n'est pas reconnu.",
+    "country_is_home": "Le Gabon n'est pas un pays de résidence de la diaspora.",
+    "city_too_long": "La ville compte 80 caractères au plus.",
+    "city_invalid": "La ville tient sur une seule ligne.",
+    "arrived_at_out_of_range": "Saisissez une année entre 1950 et l'année en cours.",
+    "too_many_associations": "Vingt associations au plus.",
+    "association_id_invalid": "Une association n'est pas reconnue.",
+    "visibility_invalid": "Ce niveau de visibilité n'existe pas.",
+    "display_name_invalid": "Le nom affiché compte de 2 à 60 caractères.",
+    "handle_required": "Choisissez un identifiant.",
+    "handle_length": "L'identifiant compte de 3 à 30 caractères.",
+    "handle_charset": "Lettres sans accent, chiffres, point, tiret ou souligné ; ni au début ni à la fin pour les signes.",
+    "handle_taken": "Cet identifiant est déjà pris. Essayez une variante.",
+    "consent_social_profile_required": "Ce consentement est nécessaire pour devenir membre.",
+    "consent_directory_required": "Activez d'abord le consentement « Annuaire des membres ».",
+    "publish_not_allowed": "Vous pourrez publier après un parrainage ou la vérification de votre inscription consulaire.",
+    "post_empty": "Écrivez un message avant de publier.",
+    "post_too_long": "Une publication compte 2 000 caractères au plus.",
+    "media_too_many": "Quatre médias au plus par publication.",
+    "media_video_alone": "Une vidéo se publie seule, sans photo ni autre vidéo.",
+    "media_type_invalid": "Ce type de fichier n'est pas accepté : photos {{postImageFormats}} ; vidéos {{postVideoFormats}}.",
+    "media_too_large": "Fichier trop lourd : {{postImageMaxMegabytes}} Mo au plus pour une photo, {{postVideoMaxMegabytes}} Mo pour une vidéo.",
+    "media_alt_too_long": "Le texte alternatif dépasse 300 caractères.",
+    "media_upload_failed": "L'envoi du fichier a échoué : retirez-le, puis réessayez.",
+    "share_not_allowed": "Seule une publication lisible par tous les membres se partage.",
+    "share_with_media": "Un partage montre les médias de l'original : il n'en joint pas d'autres.",
+    "comment_empty": "Écrivez un commentaire avant de l'envoyer.",
+    "comment_too_long": "Un commentaire compte 1 000 caractères au plus.",
+    "report_reason_required": "Choisissez un motif de signalement.",
+    "report_note_too_long": "Une précision compte 1 000 caractères au plus.",
+    "scope_reach_invalid": "Cette portée n'existe pas.",
+    "scope_country_required": "Une publication locale porte un pays.",
+    "scope_country_invalid": "Ce pays n'est pas un pays de la diaspora.",
+    "sponsor_not_verified": "Le parrainage est réservé aux membres vérifiés.",
+    "sponsor_too_recent": "Pour parrainer, votre compte doit être vérifié depuis plus de 30 jours.",
+    "sponsor_quota_reached": "Vous avez atteint dix parrainages sur les 30 derniers jours.",
+    "self_sponsorship": "Vous ne pouvez pas vous parrainer vous-même.",
+    "target_not_eligible": "Ce compte ne peut pas être parrainé.",
+    "not_allowed": "Cette action ne vous est pas ouverte.",
+    "already_revoked": "Ce parrainage est déjà retiré.",
+    "membership_left": "Cette adhésion est quittée.",
+    "not_left": "Vous êtes déjà membre.",
+    "idn_already_linked": "Une identité IDN est déjà reliée.",
+    "no_idn_link": "Aucune identité IDN n'est reliée.",
+    "loa_invalid": "Ce niveau de garantie n'existe pas.",
+    "already_sponsored": "Ce compte est déjà parrainé.",
+    "no_sponsorship": "Aucun parrainage à retirer.",
+    "already_attested": "Votre inscription consulaire est déjà vérifiée.",
+    "no_attestation": "Aucune attestation à retirer.",
+    "not_suspended": "Ce compte n'est pas suspendu.",
+    "attestation_consent_required": "Cochez votre consentement pour lancer la vérification.",
+    "attestation_not_needed": "Votre compte est déjà vérifié.",
+    "attestation_too_soon": "Une demande par 24 heures : réessayez demain.",
+    "attestation_unavailable": "La vérification demande une identité IDN ou une adresse e-mail vérifiée.",
+    "clipboard_unavailable": "Copie impossible : sélectionnez l'identifiant à la main.",
+    "rate_limited": "Trop de demandes d'affilée : réessayez dans quelques minutes.",
+    "suspended": "Votre compte est suspendu : vous ne pouvez plus agir dans le réseau pour le moment.",
+    "too_many_attempts": "Trop d'essais pour ce code : demandez-en un nouveau.",
+    "delivery_unavailable": "Le code n'a pas pu être envoyé pour le moment. Réessayez dans un instant.",
+    "feature_unavailable": "Cette fonction n'est pas encore ouverte.",
+    "network_unavailable": "DIASPORA.GA est injoignable pour le moment. Réessayez dans un instant.",
+    "status_insufficient": "Votre statut ne permet pas encore ce geste : demandez un parrainage ou vérifiez votre inscription consulaire.",
+    "headline_too_long": "L’accroche est trop longue (160 caractères maximum)."
+  }
+}

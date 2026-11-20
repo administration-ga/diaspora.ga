@@ -2,9 +2,9 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "diasporale-com",
+      "name": "diaspora-ga",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "--cwd", "../ANTSIA", "dev:diasporale"],
+      "runtimeArgs": ["run", "--cwd", "../ANTSIA", "dev:diaspora-ga"],
       "port": 3031
     },
     {
@@ -14,9 +14,9 @@
       "port": 3210
     },
     {
-      "name": "diasporale-engine",
+      "name": "diaspora-ga-engine",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "--cwd", "apps/diasporale_com", "dev:engine"],
+      "runtimeArgs": ["run", "--cwd", "apps/diaspora_ga", "dev:engine"],
       "port": 3031
     }
   ]

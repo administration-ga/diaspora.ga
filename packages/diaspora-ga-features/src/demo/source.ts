@@ -1,0 +1,548 @@
+"use client"
+
+import { extractHashtags } from "@antsia/social-domain/richText"
+import { hasCapability, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
+import { useMemo, useSyncExternalStore } from "react"
+
+import type { EntryDoorsView } from "../data/entry-doors-port"
+import { describeMediaFile, downscaleImage } from "../data/media"
+import type { ActionResult, ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaGaDataSource } from "../data/port"
+import type {
+  BookmarkView,
+  BookmarksPageQuery,
+  BookmarksPageRequest,
+  CommentPageQuery,
+  CommentsPageRequest,
+  CommentThreadView,
+  CommentView,
+  FeedCursorView,
+  FeedPageQuery,
+  FeedPageRequest,
+  FeedPageView,
+  Loadable,
+  MemberHitView,
+  NotificationView,
+  NotificationsPageQuery,
+  NotificationsPageRequest,
+  PostView,
+  ProfilePostsPageRequest,
+  RelationView,
+  RepliesPageRequest,
+  SuggestionView,
+  UnreadCountView,
+} from "../data/types"
+import { BOOKMARKS_PAGE_SIZE } from "../data/types"
+import { splitDisplayName, suggestHandles } from "../lib/handle"
+import { contentPreferencesPage } from "./content-preferences"
+import { createDemoAssociationsContext } from "./associations"
+import { createDemoAssociationActivities } from "./association-activities"
+import { createDemoDataRights } from "./data-rights"
+import { createDemoPageAdmin, demoPageAdminContext } from "./page-admin"
+import { createDemoPages } from "./pages"
+import { createDemoPagePublications } from "./page-publications"
+import {
+  bookmarksView,
+  commentsPageView,
+  consentsView,
+  countryHubView,
+  demoAccountsView,
+  demoRepliesList,
+  feedView,
+  memberSearchView,
+  openCountriesView,
+  ownProfileView,
+  postDetailView,
+  notificationsPageView,
+  notificationsView,
+  profileView,
+  readDemoCommentCursor,
+  readDemoNotificationCursor,
+  relationView,
+  repliesPageView,
+  sessionView,
+  sponsorDashboardView,
+  statusOf,
+  suggestionsView,
+  unreadCountView,
+} from "./selectors"
+import { createDemoServiceRequestsContext } from "./service-requests"
+import { createDemoServiceReviews } from "./service-reviews"
+import { createDemoServices } from "./services"
+import { createDemoContentReports } from "./content-reports"
+import { createDemoMutualAid } from "./mutual-aid"
+import { createDemoArrivalKit } from "./arrival-kit"
+import { createDemoMentoring } from "./mentoring"
+import { createDemoJobs } from "./jobs"
+import { createDemoModerationDesk } from "./moderation-desk"
+import { createDemoPilotMetrics } from "./pilot-metrics"
+import { createDemoPageDecisions } from "./page-decisions"
+import { createDemoCallSettings } from "./call-settings"
+import type { DemoStore } from "./store"
+
+const LOADING = { status: "loading" } as const
+const FEED_PAGE = 30
+/** Les lectures locales sont immédiates ; il n'existe aucune requête distante à relancer. */
+const retryLocalFeed = () => undefined
+
+/** Côté le plus long d'une photo gardée par la démonstration (stockage du navigateur : quelques Mo). */
+const DEMO_IMAGE_MAX_SIDE = 1280
+
+/** EA-02 : la démonstration sert toutes ses portes, en simulation (IDN par l'écran `/entrer/idn`). */
+const DEMO_ENTRY_DOORS: Loadable<EntryDoorsView> = { status: "ready", data: { idn: true, emailCode: true } }
+
+function ready<T>(data: T): Loadable<T> {
+  return { status: "ready", data }
+}
+
+/** Même ordre composite pour les pages locales du fil et du mur. */
+function localPostsPage(posts: readonly PostView[], cursor: FeedCursorView | null): FeedPageView {
+  // Le jeu local ne possède pas `_creationTime` : son identifiant opaque
+  // départage les publications de même instant de manière déterministe.
+  const items = [...posts]
+    .sort((left, right) => right.createdAt - left.createdAt || (left.id === right.id ? 0 : left.id < right.id ? 1 : -1))
+    .filter((post) => cursor === null || post.createdAt < cursor.publishedAt || (post.createdAt === cursor.publishedAt && post.id < cursor.postId))
+  const page = items.slice(0, FEED_PAGE)
+  const last = page.at(-1)
+  return {
+    items: page,
+    nextCursor: items.length > FEED_PAGE && last ? { publishedAt: last.createdAt, postId: last.id } : null,
+    lacunar: false,
+  }
+}
+
+/**
+ * La source de données de DÉMONSTRATION, branchée sur un `DemoStore`.
+ *
+ * Rendu serveur et premier rendu client : « en chargement » (instantané serveur
+ * à -1), puis l'état local du navigateur — aucun écart d'hydratation, comme une
+ * query Convex qui arrive après le premier rendu.
+ */
+export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
+  const useVersion = () => useSyncExternalStore(store.subscribe, store.getVersion, () => -1)
+  const demoServices = createDemoServices(store)
+  // La fiche d'une page lit la capacité (abonnements locaux, rôle du lecteur) : une seule instance.
+  const demoPages = createDemoPages(store)
+  const demoPageTeams = demoPageAdminContext(store)
+  const demoAssociations = createDemoAssociationsContext(store)
+  const demoAssociationActivities = createDemoAssociationActivities(store, { associations: demoAssociations, teams: demoPageTeams })
+  const demoRequests = createDemoServiceRequestsContext(store, {
+    findOffer: demoServices.findOffer,
+    signatoriesOf: demoPageTeams.signatoriesOf,
+    subscribeSignatories: demoPageTeams.subscribe,
+    getSignatoriesVersion: demoPageTeams.getVersion,
+  })
+
+  return {
+    kind: "demo",
+    profilePublication: {
+      useMyProfile() {
+        const version = useVersion()
+        return useMemo(() => {
+          if (version < 0) return LOADING
+          const state = store.getState()
+          return state.session.personId ? ready(ownProfileView(state, state.session.personId)) : { status: "error" as const, code: "not_signed_in" as const }
+        }, [version])
+      },
+      setPrivacy: (personId, isPrivate) => store.setProfilePrivacy(personId, isPrivate),
+      withdraw: (personId) => store.withdrawProfile(personId),
+      republish: (personId) => store.republishProfile(personId),
+      updateIdentity: (personId, input) => store.updateProfileIdentity(personId, input),
+    },
+    contentPreferences: {
+      usePage({ personId, kind, cursor }: ContentPreferencesRequest): ContentPreferencesQuery {
+        const version = useVersion()
+        return useMemo(() => version < 0 ? LOADING : contentPreferencesPage(store.getState(), { personId, kind, cursor }, store.now()), [version, personId, kind, cursor])
+      },
+      restore: (args) => store.restoreContentPreference(args),
+    },
+    // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
+    pages: demoPages,
+    pagePublications: createDemoPagePublications(store),
+    pageAdmin: createDemoPageAdmin(store),
+    services: demoServices.capability,
+    serviceRequests: demoRequests.capability,
+    dataRights: createDemoDataRights(store),
+    associations: demoAssociations.capability,
+    associationGroups: demoAssociationActivities.groups,
+    associationEvents: demoAssociationActivities.events,
+    serviceReviews: createDemoServiceReviews(store, { requests: demoRequests, teams: demoPageTeams, findOffer: demoServices.findOffer }),
+    contentReports: createDemoContentReports(store),
+    // Vague H du plan global (entraide, kit d'arrivée, mentorat, emploi, modération, mesure).
+    mutualAid: createDemoMutualAid(store),
+    arrivalKit: createDemoArrivalKit(store),
+    mentoring: createDemoMentoring(store),
+    jobs: createDemoJobs(store),
+    moderationDesk: createDemoModerationDesk(store),
+    pilotMetrics: createDemoPilotMetrics(store),
+    // P16 · G9 : décisions qui ont retiré un contenu porté par une page, relues pour un signataire vivant.
+    pageDecisions: createDemoPageDecisions(store, demoPageTeams),
+    // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
+    callSettings: createDemoCallSettings(store),
+
+    useSession() {
+      const version = useVersion()
+      return useMemo(() => (version < 0 ? LOADING : ready(sessionView(store.getState(), store.now()))), [version])
+    },
+
+    useEntryDoors: () => DEMO_ENTRY_DOORS,
+
+    useOpenCountries() {
+      const version = useVersion()
+      return useMemo(() => (version < 0 ? LOADING : ready(openCountriesView(store.getState(), store.now()))), [version])
+    },
+
+    useCountryHub(country: CountryCode) {
+      const version = useVersion()
+      return useMemo(
+        () => (version < 0 ? LOADING : ready(countryHubView(store.getState(), country, store.now()))),
+        [version, country],
+      )
+    },
+
+    useFeed(args: { scope: FeedScope; hubCountry?: CountryCode }) {
+      const version = useVersion()
+      const { scope, hubCountry } = args
+      return useMemo(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return ready(viewerId ? feedView(state, viewerId, scope, store.now(), hubCountry) : [])
+      }, [version, scope, hubCountry])
+    },
+
+    useFeedPage(args: FeedPageRequest): FeedPageQuery {
+      const version = useVersion()
+      const { scope, hubCountry } = args
+      const tag = args.tag?.trim().toLowerCase() || undefined
+      const publishedAt = args.cursor?.publishedAt
+      const postId = args.cursor?.postId
+      return useMemo<FeedPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { data: undefined, isLoading: false, error: "not_signed_in", retry: retryLocalFeed }
+        const membership = state.memberships[viewerId]
+        if (!membership) return { data: undefined, isLoading: false, error: "not_member", retry: retryLocalFeed }
+        const status = statusOf(state, viewerId, store.now())
+        if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+          return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
+        }
+        // Le sélecteur applique déjà audiences, réseau, blocages et masquages.
+        const admitted = feedView(state, viewerId, scope, store.now(), scope === "mon_pays" ? hubCountry : undefined)
+        const posts = tag === undefined ? admitted : admitted.filter((post) => extractHashtags(post.body).includes(tag))
+        return {
+          data: localPostsPage(posts, publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
+          isLoading: false,
+          error: null,
+          retry: retryLocalFeed,
+        }
+      }, [version, scope, hubCountry, tag, publishedAt, postId])
+    },
+
+    useProfile(handle: string) {
+      const version = useVersion()
+      return useMemo(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        return ready(profileView(state, handle, state.session.personId, store.now(), { includePosts: false }))
+      }, [version, handle])
+    },
+
+    useProfilePostsPage(args: ProfilePostsPageRequest): FeedPageQuery {
+      const version = useVersion()
+      const handle = args.handle.trim().replace(/^@/, "").toLowerCase()
+      const publishedAt = args.cursor?.publishedAt
+      const postId = args.cursor?.postId
+      return useMemo<FeedPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { data: undefined, isLoading: false, error: "not_signed_in", retry: retryLocalFeed }
+        const membership = state.memberships[viewerId]
+        if (!membership) return { data: undefined, isLoading: false, error: "not_member", retry: retryLocalFeed }
+        const status = statusOf(state, viewerId, store.now())
+        if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+          return { data: undefined, isLoading: false, error: status === "suspendue" ? "suspended" : "not_member", retry: retryLocalFeed }
+        }
+        // Le profil applique déjà le refus indistinct et les audiences du mur.
+        const profile = profileView(state, handle, viewerId, store.now())
+        return {
+          data: localPostsPage(profile?.posts ?? [], publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
+          isLoading: false,
+          error: null,
+          retry: retryLocalFeed,
+        }
+      }, [version, handle, publishedAt, postId])
+    },
+
+    // Même fiche que la capacité « pages » (DG-007) : abonnements locaux et rôle du lecteur compris.
+    usePage: (handle: string) => demoPages.usePage(handle),
+
+    useRelation(personId: string) {
+      const version = useVersion()
+      return useMemo<Loadable<RelationView>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(relationView(state, viewerId, personId)) : { status: "error", code: "not_signed_in" }
+      }, [version, personId])
+    },
+
+    useMemberSearch(args: { query: string; country?: CountryCode }) {
+      const version = useVersion()
+      const { query, country } = args
+      return useMemo<Loadable<readonly MemberHitView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        // Un compte en attente lit le réseau ; il ne consulte pas l'annuaire.
+        const status = statusOf(state, viewerId, store.now())
+        if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
+        return ready(memberSearchView(state, viewerId, query, country, store.now()))
+      }, [version, query, country])
+    },
+
+    usePost(postId: string) {
+      const version = useVersion()
+      return useMemo<Loadable<PostView | null>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(postDetailView(state, postId, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
+      }, [version, postId])
+    },
+
+    useBookmarks() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly BookmarkView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(bookmarksView(state, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    useBookmarksPage({ cursor = null }: BookmarksPageRequest): BookmarksPageQuery {
+      const version = useVersion()
+      return useMemo<BookmarksPageQuery>(() => {
+        const read = (): Omit<BookmarksPageQuery, "retry"> => {
+          const unavailable = (error: BookmarksPageQuery["error"]): Omit<BookmarksPageQuery, "retry"> => ({ data: undefined, isLoading: false, error })
+          if (version < 0) return { data: undefined, isLoading: true, error: null }
+          const state = store.getState()
+          const viewerId = state.session.personId
+          if (!viewerId) return unavailable("not_signed_in")
+          const membership = state.memberships[viewerId]
+          if (!membership) return unavailable("not_member")
+          const status = statusOf(state, viewerId, store.now())
+          if (status === null || !hasCapability(status, "read_network", { suspensionReadAccess: membership.grounds.suspension?.readAccess ?? "none" })) {
+            return unavailable(status === "suspendue" ? "suspended" : "not_member")
+          }
+          let boundary: { at: number; postId: string } | null = null
+          if (cursor !== null) {
+            try {
+              const decoded: unknown = JSON.parse(cursor)
+              if (!Array.isArray(decoded) || decoded.length !== 4 || decoded[0] !== "demo-bookmarks" || decoded[1] !== viewerId
+                || typeof decoded[2] !== "number" || !Number.isFinite(decoded[2]) || typeof decoded[3] !== "string") return unavailable("unknown")
+              boundary = { at: decoded[2], postId: decoded[3] }
+            } catch { return unavailable("unknown") }
+          }
+          // Comme une page native : la fenêtre de marques précède la projection
+          // gardée. Cinquante publications devenues illisibles ne sont pas la fin.
+          const marks = state.marks.filter((mark) => mark.personId === viewerId && mark.kind === "bookmark")
+            .sort((a, b) => b.createdAt - a.createdAt || (a.postId === b.postId ? 0 : a.postId < b.postId ? 1 : -1))
+            .filter((mark) => boundary === null || mark.createdAt < boundary.at || (mark.createdAt === boundary.at && mark.postId < boundary.postId))
+          const window = marks.slice(0, BOOKMARKS_PAGE_SIZE)
+          const visible = new Map(bookmarksView(state, viewerId, store.now()).map((item) => [item.postId, item]))
+          const last = window.at(-1)
+          return {
+            data: {
+              items: window.flatMap((mark) => { const item = visible.get(mark.postId); return item ? [item] : [] }),
+              isDone: marks.length <= BOOKMARKS_PAGE_SIZE,
+              continueCursor: last ? JSON.stringify(["demo-bookmarks", viewerId, last.createdAt, last.postId]) : "",
+            },
+            isLoading: false, error: null,
+          }
+        }
+        return { ...read(), retry: () => read().data }
+      }, [version, cursor])
+    },
+
+    useSuggestions() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly SuggestionView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return { status: "error", code: "not_signed_in" }
+        const status = statusOf(state, viewerId, store.now())
+        if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
+        return ready(suggestionsView(state, viewerId, store.now()))
+      }, [version])
+    },
+
+    // FD-03 : les commentaires et les réponses se lisent page après page, comme le moteur les pagine.
+    useCommentsPage({ postId, cursor = null }: CommentsPageRequest): CommentPageQuery<CommentThreadView> {
+      const version = useVersion()
+      return useMemo<CommentPageQuery<CommentThreadView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentThreadView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(postId, cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = commentsPageView(state, postId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, cursor])
+    },
+
+    useRepliesPage({ postId, commentId, cursor = null }: RepliesPageRequest): CommentPageQuery<CommentView> {
+      const version = useVersion()
+      return useMemo<CommentPageQuery<CommentView>>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: CommentPageQuery<CommentView>["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoCommentCursor(demoRepliesList(postId, commentId), cursor)
+        if (after === undefined) return unavailable("unknown")
+        const page = repliesPageView(state, postId, commentId, viewerId, store.now(), after)
+        return page ? { data: page, isLoading: false, error: null, retry: retryLocalFeed } : unavailable("not_found")
+      }, [version, postId, commentId, cursor])
+    },
+
+    useNotifications() {
+      const version = useVersion()
+      return useMemo<Loadable<readonly NotificationView[]>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(notificationsView(state, viewerId)) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    // NP-04 : la page des notifications lit les mêmes avis page après page, comme le moteur les pagine.
+    useNotificationsPage({ cursor = null }: NotificationsPageRequest): NotificationsPageQuery {
+      const version = useVersion()
+      return useMemo<NotificationsPageQuery>(() => {
+        if (version < 0) return { data: undefined, isLoading: true, error: null, retry: retryLocalFeed }
+        const unavailable = (error: NotificationsPageQuery["error"]) => ({ data: undefined, isLoading: false, error, retry: retryLocalFeed })
+        const state = store.getState()
+        const viewerId = state.session.personId
+        if (!viewerId) return unavailable("not_signed_in")
+        const after = readDemoNotificationCursor(cursor)
+        if (after === undefined) return unavailable("unknown")
+        return { data: notificationsPageView(state, viewerId, after), isLoading: false, error: null, retry: retryLocalFeed }
+      }, [version, cursor])
+    },
+
+    useUnreadCount() {
+      const version = useVersion()
+      return useMemo<Loadable<UnreadCountView>>(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(unreadCountView(state, viewerId)) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    useHandleSuggestions(displayName: string) {
+      const version = useVersion()
+      return useMemo(() => {
+        if (version < 0) return []
+        const state = store.getState()
+        const person = state.session.personId ? state.persons[state.session.personId] : undefined
+        // Les propositions viennent du nom reçu d'IDN, sinon du nom affiché saisi.
+        const names = person?.idn
+          ? { firstName: person.idn.firstName, lastName: person.idn.lastName }
+          : splitDisplayName(displayName)
+        const taken = new Set(Object.values(state.persons).map((candidate) => candidate.profile?.handle))
+        return suggestHandles(names.firstName, names.lastName).filter((handle) => !taken.has(handle))
+      }, [version, displayName])
+    },
+
+    useSponsorDashboard() {
+      const version = useVersion()
+      return useMemo(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(sponsorDashboardView(state, viewerId, store.now())) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    useMyConsents() {
+      const version = useVersion()
+      return useMemo(() => {
+        if (version < 0) return LOADING
+        const state = store.getState()
+        const viewerId = state.session.personId
+        return viewerId ? ready(consentsView(state, viewerId)) : { status: "error", code: "not_signed_in" }
+      }, [version])
+    },
+
+    actions: {
+      // Sans l'identité simulée de `/entrer/idn`, rien ne s'ouvre : la démonstration ne part pas chez IDN.
+      signInWithIdn: (input) => (input === undefined ? Promise.resolve<ActionResult>({ ok: false, code: "idn_invalid" }) : store.signInWithIdn(input)),
+      requestCode: (destination) => store.requestCode(destination),
+      verifyCode: (code, destination) => store.verifyCode(code, destination),
+      signOutEverywhere: () => store.signOutEverywhere(),
+      checkHandle: (handle) => store.checkHandle(handle),
+      join: (input) => store.join(input),
+      uploadMedia: async (file) => {
+        const facts = await describeMediaFile(file)
+        if (!facts.ok) return facts
+        // Le stockage du navigateur ne garderait pas une vidéo d'une visite à l'autre : pas de vidéo en démonstration.
+        if (facts.value.kind === "video") return { ok: false, code: "feature_unavailable" }
+        // La règle du moteur (FD-01) : ré-encodée par son module, sans métadonnées, refus fermés ; aucun dépôt.
+        const image = await downscaleImage(file, DEMO_IMAGE_MAX_SIDE)
+        if (!image.ok) return image
+        return { ok: true, value: store.stageMedia({ kind: "image", url: image.value.dataUrl, width: image.value.width, height: image.value.height }) }
+      },
+      publish: (input) => store.publish(input),
+      react: (postId, kind) => store.react(postId, kind),
+      comment: (input) => store.comment(input),
+      editComment: (commentId, body) => store.editComment(commentId, body),
+      removeComment: (commentId) => store.removeComment(commentId),
+      dismissSuggestion: (handle) => store.dismissSuggestion(handle),
+      toggleBookmark: (postId) => store.toggleBookmark(postId),
+      hidePost: (postId) => store.hidePost(postId),
+      saveAccountTheme: (theme) => store.saveAccountTheme(theme),
+      saveAccountLocale: (locale) => store.saveAccountLocale(locale),
+      muteAuthor: (personId) => store.muteAuthor(personId),
+      reportPost: (input) => store.reportPost(input),
+      removePost: (postId) => store.removePost(postId),
+      editPost: (postId, body) => store.editPost(postId, body),
+      connect: (personId) => store.connect(personId),
+      respondToConnection: (connectionId, accept) => store.respondToConnection(connectionId, accept),
+      follow: (handle) => store.follow(handle),
+      unfollow: (personId) => store.unfollow(personId),
+      block: (personId) => store.block(personId),
+      unblock: (personId) => store.unblock(personId),
+      markNotificationRead: (notificationId) => store.markNotificationRead(notificationId),
+      markAllNotificationsRead: () => store.markAllNotificationsRead(),
+      sponsor: (handle) => store.sponsor(handle),
+      revokeSponsorship: (id) => store.revokeSponsorship(id),
+      requestAttestation: () => store.requestAttestation(),
+      setConsent: (purpose, granted) => store.setConsent(purpose, granted),
+      leaveDiasporaGa: () => store.leaveDiasporaGa(),
+      updateFacet: (input) => store.updateFacet(input),
+      setDirectoryVisibility: (level) => store.setDirectoryVisibility(level),
+      exportMyData: () => store.exportMyData(),
+      deleteMyAccount: () => store.deleteMyAccount(),
+    },
+
+    demo: {
+      useAccounts() {
+        const version = useVersion()
+        return useMemo<Loadable<readonly DemoAccountView[]>>(
+          () => (version < 0 ? LOADING : ready(demoAccountsView(store.getState()))),
+          [version],
+        )
+      },
+      switchTo: (personId) => store.switchTo(personId),
+      reset: () => store.reset(),
+    },
+  }
+}

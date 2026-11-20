@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Publication de diasporale.com (LX-02) — procédure : docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
+ * Publication de diaspora.ga (LX-02) — procédure : docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
  *
- *   node scripts/release.mjs --target demo --antsia <commit> --diasporale <commit>
+ *   node scripts/release.mjs --target demo --antsia <commit> --diaspora-ga <commit>
  *       affiche le plan (par défaut) : RIEN ne part, aucune commande réseau
- *   node scripts/release.mjs --target demo --antsia <commit> --diasporale <commit> --execute
+ *   node scripts/release.mjs --target demo --antsia <commit> --diaspora-ga <commit> --execute
  *       exécute le plan, après deux confirmations tapées dans un terminal
  *
  * Le plan suit la méthode employée du 22/10 au 3/11/2026 pour la démonstration :
@@ -54,16 +54,16 @@ import {
 import { rollbackCommand } from "./rollback.mjs"
 
 export const USAGE =
-  "Usage : node scripts/release.mjs --target demo|production --antsia <commit> --diasporale <commit> [--execute]"
+  "Usage : node scripts/release.mjs --target demo|production --antsia <commit> --diaspora-ga <commit> [--execute]"
 
 /** Les options de la ligne de commande ; `problems` non vide = usage refusé. */
 export function parseReleaseArgs(argv) {
-  const { options, problems } = parseOptions(argv, { values: ["target", "antsia", "diasporale"], flags: ["execute"] })
+  const { options, problems } = parseOptions(argv, { values: ["target", "antsia", "diaspora-ga"], flags: ["execute"] })
   const target = parseTarget(options.target)
   if (target === null) problems.push("--target doit valoir demo ou production")
   if (!options.antsia) problems.push("--antsia <commit> manque")
-  if (!options.diasporale) problems.push("--diasporale <commit> manque")
-  return { target, antsia: options.antsia, diasporale: options.diasporale, execute: options.execute === true, problems }
+  if (!options["diaspora-ga"]) problems.push("--diaspora-ga <commit> manque")
+  return { target, antsia: options.antsia, diasporaGa: options["diaspora-ga"], execute: options.execute === true, problems }
 }
 
 const DEPLOYMENT = runtimeRef("deploymentUrl", "adresse du déploiement")
@@ -72,11 +72,11 @@ const DEPLOYMENT = runtimeRef("deploymentUrl", "adresse du déploiement")
  * Le plan de publication, sans rien exécuter ni lire du réseau. Les valeurs de la
  * machine y restent des références : le plan rendu se colle tel quel dans une demande
  * d'accord.
- * @param {{ target: "demo" | "production", antsia: { commit: string, tree: string }, diasporale: { commit: string, tree: string }, values?: Record<string, string> }} input
+ * @param {{ target: "demo" | "production", antsia: { commit: string, tree: string }, diasporaGa: { commit: string, tree: string }, values?: Record<string, string> }} input
  */
-export function buildReleasePlan({ target, antsia, diasporale, values = {} }) {
+export function buildReleasePlan({ target, antsia, diasporaGa, values = {} }) {
   const names = targetVariableNames(target)
-  const version = releaseVersion({ diasporaleCommit: diasporale.commit, antsiaCommit: antsia.commit, target })
+  const version = releaseVersion({ diasporaGaCommit: diasporaGa.commit, antsiaCommit: antsia.commit, target })
   const variables = releaseVariables(target, version, values)
   const scope = envRef(SHARED_VARIABLE_NAMES.scope)
   const vercelEnv = { VERCEL_ORG_ID: envRef(SHARED_VARIABLE_NAMES.orgId), VERCEL_PROJECT_ID: envRef(names.projectId) }
@@ -84,19 +84,19 @@ export function buildReleasePlan({ target, antsia, diasporale, values = {} }) {
   const promotePhrase = confirmationPhrase("BASCULER", target, version)
   const steps = [
     { id: "agreement", title: "Accord écrit du propriétaire, puis confirmation tapée", gate: publishPhrase },
-    { id: "fetch", title: "Relire origin/main des deux dépôts", commands: ["ANTSIA", "DIASPORALE"].map((name) => ["git", "-C", repoRef(name), "fetch", "origin", "main"]) },
+    { id: "fetch", title: "Relire origin/main des deux dépôts", commands: ["ANTSIA", "DIASPORA_GA"].map((name) => ["git", "-C", repoRef(name), "fetch", "origin", "main"]) },
     {
       id: "published",
       title: "Chaque commit est sur origin/main (jamais une branche ni un HEAD local)",
       commands: [
         ["git", "-C", repoRef("ANTSIA"), "merge-base", "--is-ancestor", antsia.commit, "origin/main"],
-        ["git", "-C", repoRef("DIASPORALE"), "merge-base", "--is-ancestor", diasporale.commit, "origin/main"],
+        ["git", "-C", repoRef("DIASPORA_GA"), "merge-base", "--is-ancestor", diasporaGa.commit, "origin/main"],
       ],
     },
     {
       id: "freeze",
       title: "Contexte figé : fichiers suivis des deux commits, dans un dossier vide hors des dépôts, avec .vercelignore et empreinte",
-      commands: [...freezeCommands("ANTSIA", antsia.commit), ...freezeCommands("DIASPORALE", diasporale.commit)],
+      commands: [...freezeCommands("ANTSIA", antsia.commit), ...freezeCommands("DIASPORA_GA", diasporaGa.commit)],
     },
     {
       id: "served",
@@ -120,7 +120,7 @@ export function buildReleasePlan({ target, antsia, diasporale, values = {} }) {
           scope,
           ...variables.flatMap(([name, value]) => ["--build-env", [`${name}=`, value], "--env", [`${name}=`, value]]),
           "--meta",
-          `diasporaleReleaseCommit=${diasporale.commit}`,
+          `diasporaGaReleaseCommit=${diasporaGa.commit}`,
           "--meta",
           `antsiaReleaseCommit=${antsia.commit}`,
           "--meta",
@@ -144,13 +144,13 @@ export function buildReleasePlan({ target, antsia, diasporale, values = {} }) {
       commands: [["node", "scripts/release-check.mjs", "--target", target, "--version", version]],
     },
   ]
-  return { target, version, antsia, diasporale, variables, steps, confirmations: { publish: publishPhrase, promote: promotePhrase } }
+  return { target, version, antsia, diasporaGa, variables, steps, confirmations: { publish: publishPhrase, promote: promotePhrase } }
 }
 
 /** Les quatre points de l'accord du propriétaire, pour ce plan. */
 export function releaseAgreementPoints(plan) {
   return [
-    `commits : ANTSIA ${plan.antsia.commit}, DIASPORALE ${plan.diasporale.commit}`,
+    `commits : ANTSIA ${plan.antsia.commit}, DIASPORA_GA ${plan.diasporaGa.commit}`,
     `cible : ${plan.target} (variables ${targetVariableNames(plan.target).siteUrl} et suivantes)`,
     "ordre : backend du moteur déjà publié depuis le même commit d'ANTSIA, puis ce site ; un seul publieur à la fois",
     "retour arrière : le déploiement servi avant la bascule, relevé à l'étape « served » (node scripts/rollback.mjs)",
@@ -159,19 +159,19 @@ export function releaseAgreementPoints(plan) {
 
 /**
  * Le plan rendu en texte : étapes numérotées, commandes sans aucune valeur de la machine.
- * @param {{ published?: { antsia: boolean, diasporale: boolean }, problems?: string[] }} facts relevés locaux
+ * @param {{ published?: { antsia: boolean, diasporaGa: boolean }, problems?: string[] }} facts relevés locaux
  */
 export function renderReleasePlan(plan, { published, problems = [] } = {}) {
   const lines = [
-    `Plan de publication de diasporale.com — cible ${plan.target}`,
+    `Plan de publication de diaspora.ga — cible ${plan.target}`,
     `  version : ${plan.version}`,
     `  ANTSIA ${plan.antsia.commit} (arbre ${plan.antsia.tree})`,
-    `  DIASPORALE ${plan.diasporale.commit} (arbre ${plan.diasporale.tree})`,
+    `  DIASPORA_GA ${plan.diasporaGa.commit} (arbre ${plan.diasporaGa.tree})`,
     `  variables publiques : ${plan.variables.map(([name]) => name).join(", ")}`,
   ]
   if (published) {
     lines.push(
-      `  sur origin/main (relevé local, relu avant exécution) : ANTSIA ${published.antsia ? "oui" : "NON"}, DIASPORALE ${published.diasporale ? "oui" : "NON"}`,
+      `  sur origin/main (relevé local, relu avant exécution) : ANTSIA ${published.antsia ? "oui" : "NON"}, DIASPORA_GA ${published.diasporaGa ? "oui" : "NON"}`,
     )
   }
   plan.steps.forEach((step, index) => {
@@ -194,7 +194,7 @@ export function renderReleasePlan(plan, { published, problems = [] } = {}) {
  */
 export async function executeRelease(plan, deps) {
   const names = targetVariableNames(plan.target)
-  const record = { target: plan.target, version: plan.version, antsiaCommit: plan.antsia.commit, diasporaleCommit: plan.diasporale.commit, stages: [] }
+  const record = { target: plan.target, version: plan.version, antsiaCommit: plan.antsia.commit, diasporaGaCommit: plan.diasporaGa.commit, stages: [] }
   const runtime = {}
   let workdir = null
   const context = () => ({ env: deps.env, runtime, repos: deps.repos })
@@ -227,7 +227,7 @@ export async function executeRelease(plan, deps) {
     if (runStep("fetch", index).status !== 0) return stop("fetch", "origin/main n'a pas pu être relu")
   }
   done("fetch")
-  for (const [index, name] of [[0, "ANTSIA"], [1, "DIASPORALE"]]) {
+  for (const [index, name] of [[0, "ANTSIA"], [1, "DIASPORA_GA"]]) {
     if (runStep("published", index).status !== 0) return stop("published", `le commit de ${name} n'est pas sur origin/main`)
   }
   done("published")
@@ -235,7 +235,7 @@ export async function executeRelease(plan, deps) {
   try {
     workdir = deps.makeWorkdir()
     runtime.workdir = workdir
-    const frozen = deps.freeze({ workdir, commits: { ANTSIA: plan.antsia.commit, DIASPORALE: plan.diasporale.commit } })
+    const frozen = deps.freeze({ workdir, commits: { ANTSIA: plan.antsia.commit, DIASPORA_GA: plan.diasporaGa.commit } })
     runtime.context = frozen.context
     runtime.fingerprint = frozen.fingerprint
     record.sourceFingerprint = frozen.fingerprint
@@ -312,20 +312,20 @@ async function main() {
     return
   }
   let antsia
-  let diasporale
+  let diasporaGa
   try {
     antsia = resolveCommit(RELEASE_REPOSITORIES.ANTSIA, args.antsia)
-    diasporale = resolveCommit(RELEASE_REPOSITORIES.DIASPORALE, args.diasporale)
+    diasporaGa = resolveCommit(RELEASE_REPOSITORIES.DIASPORA_GA, args.diasporaGa)
   } catch (error) {
     console.error(`✗ ${error instanceof Error ? error.message : "commit illisible"}`)
     process.exitCode = 1
     return
   }
   const { values, problems } = readTargetEnv(args.target, process.env, RELEASE_KEYS)
-  const plan = buildReleasePlan({ target: args.target, antsia, diasporale, values })
+  const plan = buildReleasePlan({ target: args.target, antsia, diasporaGa, values })
   const published = {
     antsia: isPublishedCommit(RELEASE_REPOSITORIES.ANTSIA, antsia.commit),
-    diasporale: isPublishedCommit(RELEASE_REPOSITORIES.DIASPORALE, diasporale.commit),
+    diasporaGa: isPublishedCommit(RELEASE_REPOSITORIES.DIASPORA_GA, diasporaGa.commit),
   }
   console.log(renderReleasePlan(plan, { published, problems }))
   if (!args.execute) {

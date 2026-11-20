@@ -1,7 +1,7 @@
 {
-  "description": "Dernier couple de versions DIASPORALE et moteur ANTSIA vérifiés ensemble (vérification commune verte, depuis ANTSIA). La session qui joue la vérification complète sur un assemblage met ce fichier à jour dans la PR qui la consigne. Un couple non vérifié ne s'écrit pas ici.",
+  "description": "Dernier couple de versions DIASPORA.GA et moteur ANTSIA vérifiés ensemble (vérification commune verte, depuis ANTSIA). La session qui joue la vérification complète sur un assemblage met ce fichier à jour dans la PR qui la consigne. Un couple non vérifié ne s'écrit pas ici.",
   "verifiedOn": "2026-11-19",
-  "diasporaleCommit": "70edfb3",
+  "diasporaGaCommit": "70edfb3",
   "antsiaCommit": "0785f6a",
   "command": "bun run --cwd ../ANTSIA verify",
   "result": "green",
