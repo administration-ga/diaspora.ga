@@ -92,7 +92,7 @@
       "notFoundBody": "Elle n'existe pas, ou vous n'êtes pas responsable de cette association.",
       "unknownPerson": "Profil non publié",
       "requestedAt": "Demande du {{date}}",
-      "memberSince": "Adhésion depuis le {{date}}",
+      "memberSince": "Membre depuis le {{date}}",
       "removedAt": "Exclusion du {{date}}",
       "role": "Rôle : {{role}}",
       "message": "Son mot : {{message}}",
