@@ -11,7 +11,7 @@
     "card": {
       "languages": "Langues : {{languages}}",
       "full": "Complet pour le moment",
-      "open": "Voir le profil de {{name}}"
+      "open": "Voir le profil {{name, de}}"
     },
     "status": {
       "sent": "En attente de réponse",
@@ -108,7 +108,7 @@
     },
     "requestCard": {
       "withMentor": "Avec {{name}} · {{domain}}",
-      "fromMentee": "De {{name}} · {{domain}}",
+      "fromMentee": "{{name, de(capital: true)}} · {{domain}}",
       "show": "Voir le détail",
       "hide": "Masquer le détail"
     },
@@ -240,7 +240,7 @@
       "removeSlot": "Retirer le créneau {{index}}",
       "addSlot": "Ajouter un créneau",
       "reminder": "Aucune coordonnée ici : une fois votre demande acceptée, vous échangez par la messagerie. Le mentorat est bénévole.",
-      "consent": "J’accepte que {{name}} voie mon nom publié, mon objectif et mon message.",
+      "consent": "J’accepte {{name, que}} voie mon nom publié, mon objectif et mon message.",
       "submit": "Envoyer la demande",
       "sending": "Envoi…",
       "sent": "Demande envoyée",

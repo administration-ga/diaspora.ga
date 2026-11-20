@@ -12,6 +12,8 @@
       "lead": "L’adhésion à l’association et l’entrée dans son groupe sont deux gestes distincts. Les échanges restent réservés aux membres autorisés du groupe.",
       "open": "Ouvrir le groupe",
       "notCreated": "L’association n’a pas encore créé son groupe.",
+      "unavailableTitle": "Ce groupe n’est pas disponible.",
+      "unavailableBody": "Il n’existe pas, ou vous ne pouvez pas le voir.",
       "create": "Créer le groupe de l’association",
       "created": "Le groupe est prêt. Aucun adhérent n’a été ajouté automatiquement.",
       "closed": "Ce groupe est fermé : personne n’y lit ni n’y publie, et personne ne peut le rejoindre.",
@@ -51,9 +53,9 @@
       "pinnedErrorTitle": "L’épingle du groupe n’a pas pu être lue",
       "removed": "Publication retirée du groupe.",
       "removeOtherDescription": "La publication ne sera plus lisible dans le groupe. Son auteur la voit encore, marquée comme retirée.",
-      "pinPostOf": "Épingler en tête du groupe la publication de {{name}}",
-      "unpinPostOf": "Désépingler la publication de {{name}}",
-      "removePostOf": "Retirer cette publication de {{name}}",
+      "pinPostOf": "Épingler en tête du groupe la publication {{name, de}}",
+      "unpinPostOf": "Désépingler la publication {{name, de}}",
+      "removePostOf": "Retirer cette publication {{name, de}}",
       "someone": "un membre"
     },
     "event": {

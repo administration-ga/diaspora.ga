@@ -156,8 +156,29 @@ function MembersBoard(props: { readonly associations: AssociationsCapability; re
 
 type Dialog = { readonly kind: "reject" | "remove"; readonly item: AssociationMemberView }
 
+/**
+ * Recette moteur du 20/11/2026 : chaque geste sur une personne la nomme dans son nom accessible
+ * (« Accepter la demande de Rodrigue KOMO »), et dit « un profil non publié » quand le nom manque.
+ * Le libellé visible reste le verbe seul, en tête du nom accessible.
+ */
+const PERSON_ACTION_LABELS = {
+  accept: ["associations.members.actionLabel.accept", "associations.members.actionLabelUnnamed.accept"],
+  reject: ["associations.members.actionLabel.reject", "associations.members.actionLabelUnnamed.reject"],
+  makeAnimator: ["associations.members.actionLabel.makeAnimator", "associations.members.actionLabelUnnamed.makeAnimator"],
+  makeMember: ["associations.members.actionLabel.makeMember", "associations.members.actionLabelUnnamed.makeMember"],
+  remove: ["associations.members.actionLabel.remove", "associations.members.actionLabelUnnamed.remove"],
+  allowReadmission: ["associations.members.actionLabel.allowReadmission", "associations.members.actionLabelUnnamed.allowReadmission"],
+} as const
+
+type PersonAction = keyof typeof PERSON_ACTION_LABELS
+
 function MembersList(props: { readonly associations: AssociationsCapability; readonly pageId: string; readonly status: AssociationListStatus; readonly role: AssociationResponsibleRole }) {
   const { t } = useDiasporaleT()
+  const labelFor = (action: PersonAction, item: AssociationMemberView) => {
+    const [named, unnamed] = PERSON_ACTION_LABELS[action]
+    const name = item.person.displayName
+    return name ? t(named, { name }) : t(unnamed)
+  }
   const pages = useCursorPages()
   const list = props.associations.useMembers({ pageId: props.pageId, status: props.status, cursor: pages.cursor })
   const { busy, run } = useGuardedAction()
@@ -194,11 +215,12 @@ function MembersList(props: { readonly associations: AssociationsCapability; rea
                     <Button variant="success"
                       disabled={busy !== null}
                       aria-busy={busy === `accept:${item.membershipId}`}
+                      aria-label={labelFor("accept", item)}
                       onClick={() => void act(`accept:${item.membershipId}`, "accepted", () => props.associations.decide({ membershipId: item.membershipId, decision: "accept", expectedVersion: item.version, reason: "" }))}
                     >
                       {t(busy === `accept:${item.membershipId}` ? "common.pleaseWait" : "associations.members.accept")}
                     </Button>
-                    <Button variant="outline" disabled={busy !== null} onClick={() => setDialog({ kind: "reject", item })}>{t("associations.members.reject")}</Button>
+                    <Button variant="outline" disabled={busy !== null} aria-label={labelFor("reject", item)} onClick={() => setDialog({ kind: "reject", item })}>{t("associations.members.reject")}</Button>
                   </>
                 ) : item.status === "accepted" && isAdmin ? (
                   <>
@@ -206,17 +228,19 @@ function MembersList(props: { readonly associations: AssociationsCapability; rea
                       variant="outline"
                       disabled={busy !== null}
                       aria-busy={busy === `role:${item.membershipId}`}
+                      aria-label={labelFor(item.role === "animator" ? "makeMember" : "makeAnimator", item)}
                       onClick={() => void act(`role:${item.membershipId}`, "roleChanged", () => props.associations.setRole({ membershipId: item.membershipId, expectedVersion: item.version, role: item.role === "animator" ? "member" : "animator" }))}
                     >
                       {t(item.role === "animator" ? "associations.members.makeMember" : "associations.members.makeAnimator")}
                     </Button>
-                    <Button variant="ghost" className="text-destructive" disabled={busy !== null} onClick={() => setDialog({ kind: "remove", item })}>{t("associations.members.remove")}</Button>
+                    <Button variant="ghost" className="text-destructive" disabled={busy !== null} aria-label={labelFor("remove", item)} onClick={() => setDialog({ kind: "remove", item })}>{t("associations.members.remove")}</Button>
                   </>
                 ) : item.status === "removed" && isAdmin && !item.readmissionAllowed ? (
                   <Button
                     variant="outline"
                     disabled={busy !== null}
                     aria-busy={busy === `readmit:${item.membershipId}`}
+                    aria-label={labelFor("allowReadmission", item)}
                     onClick={() => void act(`readmit:${item.membershipId}`, "readmissionAllowed", () => props.associations.allowReadmission({ membershipId: item.membershipId, expectedVersion: item.version }))}
                   >
                     {t("associations.members.allowReadmission")}

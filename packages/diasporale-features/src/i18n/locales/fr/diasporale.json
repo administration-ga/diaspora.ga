@@ -1178,7 +1178,7 @@
       "neutral": "Suggestion masquée",
       "hiddenAt": "Masquée le {{date}}",
       "restore": "Retirer le masquage",
-      "restoreLabel": "Retirer le masquage de {{name}}",
+      "restoreLabel": "Retirer le masquage {{name, de}}",
       "restoring": "Retrait en cours…",
       "restored": "Choix de masquage mis à jour.",
       "restoreFailed": "Le masquage n’a pas pu être retiré.",
@@ -1234,9 +1234,9 @@
     "edit": "Modifier",
     "editLabel": "Modifier votre commentaire",
     "updated": "Commentaire modifié.",
-    "removeLabel": "Retirer le commentaire de {{name}}",
+    "removeLabel": "Retirer le commentaire {{name, de}}",
     "removeLabelNeutral": "Retirer ce commentaire",
-    "confirmRemoveLabel": "Retirer définitivement le commentaire de {{name}}",
+    "confirmRemoveLabel": "Retirer définitivement le commentaire {{name, de}}",
     "confirmRemoveLabelNeutral": "Retirer définitivement ce commentaire"
   },
   "postMenu": {

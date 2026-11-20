@@ -10,7 +10,8 @@
  *  · une habilitation est une INVITATION : elle ne vaut qu'acceptée ; le rôle d'un
  *    membre qui a déjà accepté change AUSSITÔT, sans invitation — l'écran le dit ;
  *  · un administrateur invite, change un rôle, retire ; chacun se retire, quel
- *    que soit son rôle ;
+ *    que soit son rôle ; retirer une invitation encore en attente se dit comme
+ *    telle (la personne n'avait aucun rôle à perdre) ;
  *  · « Transmettre la page » : nommer un administrateur (aussitôt s'il est déjà
  *    membre accepté, par invitation sinon), puis se retirer dès qu'un second
  *    administrateur a accepté ;
@@ -152,6 +153,7 @@ function SignatoryRow(props: {
   const label = usePersonLabel()
   const { row } = props
   const name = label(row)
+  const pendingInvite = !row.accepted && !row.isMe
   const id = useId()
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
@@ -180,9 +182,16 @@ function SignatoryRow(props: {
       setRefusal(result.code)
       return true
     }
-    if (result.value.revoked) toast.success(t(row.isMe ? "pageAdmin.team.left" : "pageAdmin.team.removed"))
+    if (result.value.revoked) toast.success(t(row.isMe ? "pageAdmin.team.left" : pendingInvite ? "pageAdmin.team.inviteWithdrawn" : "pageAdmin.team.removed"))
     return true
   }
+
+  // L'invitation d'une autre personne, pas encore acceptée : aucun rôle à perdre, seulement une invitation à retirer.
+  const confirmation = row.isMe
+    ? { title: t("pageAdmin.team.leaveConfirmTitle"), body: t("pageAdmin.team.leaveConfirmBody"), confirm: t("pageAdmin.team.leave") }
+    : pendingInvite
+      ? { title: t("pageAdmin.team.withdrawInviteConfirmTitle", { name }), body: t("pageAdmin.team.withdrawInviteConfirmBody", { name }), confirm: t("pageAdmin.team.withdrawInvite") }
+      : { title: t("pageAdmin.team.removeConfirmTitle", { name }), body: t("pageAdmin.team.removeConfirmBody"), confirm: t("pageAdmin.team.remove") }
 
   return (
     <li>
@@ -230,9 +239,15 @@ function SignatoryRow(props: {
                 {row.accepted ? <p id={`${id}-aussitot`} className="text-[13px] text-muted-foreground">{t("pageAdmin.team.roleImmediate")}</p> : null}
               </div>
             ) : null}
-            <Button variant="outline" disabled={busy} onClick={() => setConfirming(true)} aria-label={t("pageAdmin.team.removeLabel", { name })}>
+            <Button
+              variant="outline"
+              disabled={busy}
+              onClick={() => setConfirming(true)}
+              aria-label={pendingInvite ? t("pageAdmin.team.withdrawInviteLabel", { name }) : t("pageAdmin.team.removeLabel", { name })}
+            >
               <UserMinusIcon aria-hidden />
-              {t("pageAdmin.team.remove")}
+              {/* WCAG 2.5.3 : le libellé visible est contenu dans le nom accessible, en français comme en anglais. */}
+              {pendingInvite ? t("pageAdmin.team.withdrawInvite") : t("pageAdmin.team.remove")}
             </Button>
           </div>
         ) : null}
@@ -250,9 +265,9 @@ function SignatoryRow(props: {
       <ConfirmSheet
         open={confirming}
         onOpenChange={setConfirming}
-        title={row.isMe ? t("pageAdmin.team.leaveConfirmTitle") : t("pageAdmin.team.removeConfirmTitle", { name })}
-        body={row.isMe ? t("pageAdmin.team.leaveConfirmBody") : t("pageAdmin.team.removeConfirmBody")}
-        confirm={row.isMe ? t("pageAdmin.team.leave") : t("pageAdmin.team.remove")}
+        title={confirmation.title}
+        body={confirmation.body}
+        confirm={confirmation.confirm}
         onConfirm={revoke}
       />
     </li>

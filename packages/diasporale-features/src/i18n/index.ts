@@ -19,6 +19,7 @@ import {
 import { PAGE_SLEEP_DAYS } from "@antsia/social-domain/pages"
 import type { i18n as I18nInstance } from "i18next"
 
+import { registerFrenchFormats } from "./french-elision"
 import { MEDIA_LIMIT_VARIABLES } from "./media-limits"
 import { DIASPORALE_LOCALES } from "./resources"
 
@@ -51,19 +52,21 @@ export const diasporaleResources: AppResources = {
  * Instance i18next ISOLÉE (une par requête côté serveur, une par arbre côté
  * client), construite par le moteur : ressources en mémoire, initialisation
  * synchrone, aucun écart d'hydratation. Les bornes des médias y entrent comme
- * variables par défaut, tirées du domaine du moteur (`MEDIA_LIMIT_VARIABLES`).
+ * variables par défaut, tirées du domaine du moteur (`MEDIA_LIMIT_VARIABLES`) ;
+ * l'élision de « de » devant un nom, comme format (`{{name, de}}`, `french-elision`).
  */
 export function createAppI18n(options: { locale: Locale; appResources?: AppResources; defaultNS?: string }): I18nInstance {
   const appResources = {} as AppResources
   for (const locale of SUPPORTED_LOCALES) {
     appResources[locale] = { ...diasporaleResources[locale], ...options.appResources?.[locale] }
   }
-  return createEngineI18n({
+  // Le format `de` des phrases françaises (« au nom d’Amicale ») : inscrit sur chaque instance.
+  return registerFrenchFormats(createEngineI18n({
     locale: options.locale,
     appResources,
     defaultNS: options.defaultNS ?? DIASPORALE_NAMESPACE,
     defaultVariables: { brand: DIASPORALE_BRAND, ...MEDIA_LIMIT_VARIABLES, ...PAGE_RULE_VARIABLES },
-  })
+  }))
 }
 
 /** Traduction hors React (serveur, métadonnées, tests). */

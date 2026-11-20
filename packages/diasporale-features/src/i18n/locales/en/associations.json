@@ -75,7 +75,7 @@
       "lead": "Only the association's officers can see this list. It is not a legal register of members.",
       "roleNote": {
         "admin": "As a page administrator, you handle requests and manage members.",
-        "signatory": "As a page signatory, you handle requests. Removing a member, naming a coordinator or allowing a new request is up to an administrator."
+        "signatory": "You publish on behalf of the page: you handle requests. Removing a member, naming a coordinator or allowing a new request is up to an administrator."
       },
       "tabsLabel": "Association lists",
       "tab": {
@@ -102,7 +102,23 @@
       "makeAnimator": "Name coordinator",
       "makeMember": "Back to member",
       "remove": "Remove",
-      "allowReadmission": "Allow a new request"
+      "allowReadmission": "Allow a new request",
+      "actionLabel": {
+        "accept": "Accept the request from {{name}}",
+        "reject": "Decline the request from {{name}}",
+        "makeAnimator": "Name coordinator: {{name}}",
+        "makeMember": "Back to member: {{name}}",
+        "remove": "Remove {{name}} from the association",
+        "allowReadmission": "Allow a new request from {{name}}"
+      },
+      "actionLabelUnnamed": {
+        "accept": "Accept the request from an unpublished profile",
+        "reject": "Decline the request from an unpublished profile",
+        "makeAnimator": "Name coordinator: unpublished profile",
+        "makeMember": "Back to member: unpublished profile",
+        "remove": "Remove an unpublished profile from the association",
+        "allowReadmission": "Allow a new request from an unpublished profile"
+      }
     },
     "rejectSheet": {
       "title": "Decline the request from {{name}}?",

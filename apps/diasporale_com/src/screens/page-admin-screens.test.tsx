@@ -385,6 +385,42 @@ describe("gérer une page — équipe", () => {
     expect(mocks.success).toHaveBeenCalledWith(t("pageAdmin.team.removed"))
   })
 
+  it("retirer une invitation en attente dit ce qu'elle est : la personne n'avait encore aucun rôle", async () => {
+    const INVITED: PageSignatoryView = { personId: "person-3", handle: "amina.demo", displayName: "Amina", role: "signatory", accepted: false, since: 3, isMe: false }
+    const manage = provide(management({ useSignatories: () => ready([ME, OTHER, INVITED]) }))!
+    const user = userEvent.setup()
+    wrap(<PageManageScreen handle="amicale-lyon" tab="equipe" />)
+    // Le nom accessible dit le geste (l'invitation), et « de » s'élide devant le nom.
+    expect(text("pageAdmin.team.withdrawInviteLabel", { name: "Amina" })).toBe("Retirer l’invitation d’Amina")
+    expect(screen.queryByRole("button", { name: text("pageAdmin.team.removeLabel", { name: "Amina" }) })).not.toBeInTheDocument()
+    // WCAG 2.5.3 : le libellé visible (« Retirer l’invitation ») est contenu dans le nom accessible.
+    const withdraw = screen.getByRole("button", { name: text("pageAdmin.team.withdrawInviteLabel", { name: "Amina" }) })
+    expect(withdraw).toHaveTextContent(text("pageAdmin.team.withdrawInvite"))
+    expect(text("pageAdmin.team.withdrawInviteLabel", { name: "Amina" })).toContain(text("pageAdmin.team.withdrawInvite"))
+    await user.click(withdraw)
+    const dialog = await screen.findByRole("dialog")
+    expect(dialog).toHaveTextContent(text("pageAdmin.team.withdrawInviteConfirmTitle", { name: "Amina" }))
+    expect(dialog).toHaveTextContent(text("pageAdmin.team.withdrawInviteConfirmBody", { name: "Amina" }))
+    // Rien sur un rôle perdu : elle n'en avait aucun.
+    expect(dialog).not.toHaveTextContent(text("pageAdmin.team.removeConfirmBody"))
+    await user.click(within(dialog).getByRole("button", { name: text("pageAdmin.team.withdrawInvite") }))
+    await waitFor(() => expect(manage.revokeRole).toHaveBeenCalledExactlyOnceWith("page-1", "person-3"))
+    expect(mocks.success).toHaveBeenCalledWith(t("pageAdmin.team.inviteWithdrawn"))
+    // Un membre qui a accepté garde la confirmation du retrait de l'équipe.
+    await user.click(screen.getByRole("button", { name: text("pageAdmin.team.removeLabel", { name: "Steeve" }) }))
+    expect(await screen.findByRole("dialog")).toHaveTextContent(text("pageAdmin.team.removeConfirmBody"))
+  })
+
+  it("en anglais aussi, le libellé visible d'une invitation à retirer est contenu dans son nom accessible", () => {
+    const INVITED: PageSignatoryView = { personId: "person-3", handle: "amina.demo", displayName: "Amina", role: "signatory", accepted: false, since: 3, isMe: false }
+    provide(management({ useSignatories: () => ready([ME, OTHER, INVITED]) }))
+    render(<I18nProvider locale="en"><PageManageScreen handle="amicale-lyon" tab="equipe" /></I18nProvider>)
+    const en = getFixedT("en")
+    const withdraw = screen.getByRole("button", { name: String(en("pageAdmin.team.withdrawInviteLabel", { name: "Amina" })) })
+    expect(withdraw).toHaveTextContent(String(en("pageAdmin.team.withdrawInvite")))
+    expect(String(en("pageAdmin.team.withdrawInviteLabel", { name: "Amina" }))).toContain(String(en("pageAdmin.team.withdrawInvite")))
+  })
+
   it("invite par identifiant ; un identifiant invalide est refusé avant le serveur", async () => {
     const manage = provide(management())!
     const user = userEvent.setup()

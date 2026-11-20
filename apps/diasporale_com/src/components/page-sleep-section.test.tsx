@@ -282,6 +282,26 @@ describe("AS-11a — « Mes pages », section « En sommeil »", () => {
     expect(mocks.success).not.toHaveBeenCalled()
   })
 
+  it("seule page en sommeil : « Mes pages » ne dit pas « aucune page », et garde l'inscription d'une autre page", () => {
+    provide(management({ useMySleepingPages: () => ready([ASLEEP]) }))
+    const view = wrap(<MyPagesPanel />)
+    expect(screen.getByRole("region", { name: named("pageSleep.myPages.title") })).toBeInTheDocument()
+    expect(screen.queryByText(text("pageAdmin.myPages.emptyTitle"))).not.toBeInTheDocument()
+    expect(screen.queryByText(text("pageAdmin.myPages.emptyBody"))).not.toBeInTheDocument()
+    expect(screen.getByText(text("pageAdmin.myPages.onlyAsleep"))).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: text("pageAdmin.myPages.createAssociation") })).toHaveAttribute("href", routes.newPage("association"))
+    expect(screen.getByRole("link", { name: text("pageAdmin.myPages.createCompany") })).toHaveAttribute("href", routes.newPage("company"))
+    // Tant que la section « En sommeil » se lit, la phrase vide ne s'affiche pas non plus.
+    provide(management({ useMySleepingPages: () => ({ status: "loading" }) }))
+    view.rerender(<I18nProvider locale="fr"><MyPagesPanel /></I18nProvider>)
+    expect(screen.queryByText(text("pageAdmin.myPages.emptyTitle"))).not.toBeInTheDocument()
+    // Sans page en sommeil, l'état vide revient tel quel.
+    provide(management())
+    view.rerender(<I18nProvider locale="fr"><MyPagesPanel /></I18nProvider>)
+    expect(screen.getByText(text("pageAdmin.myPages.emptyTitle"))).toBeInTheDocument()
+    expect(screen.queryByText(text("pageAdmin.myPages.onlyAsleep"))).not.toBeInTheDocument()
+  })
+
   it("vide, ou sans le fournisseur, la section se tait", () => {
     provide(management())
     const view = wrap(<MyPagesPanel />)

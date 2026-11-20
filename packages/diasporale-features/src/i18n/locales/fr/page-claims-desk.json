@@ -5,8 +5,8 @@
     },
     "claims": {
       "title": "Pages à vérifier",
-      "lead": "Les demandes de vérification des pages d'association et d'entreprise, pièces à l'appui. Validée, une demande fait de son auteur un administrateur de la page, qui devient « Vérifié » — jamais « Officiel ». Chaque décision est motivée, son motif est lu par le demandeur, et elle est inscrite au journal des décisions du moteur.",
-      "countryNote": "Le pays est celui de la page. Pour l'instant, seuls les responsables du réseau tranchent ces demandes ; leur demandeur et l'équipe de la page, jamais.",
+      "lead": "Les demandes de vérification des pages d'association et d'entreprise, pièces à l'appui. Validée, une demande confie l'administration de la page à la personne qui l'a faite, et la page devient « Vérifié » — jamais « Officiel ». Chaque décision est motivée : la personne qui a fait la demande en lit le motif, et la décision est inscrite au journal des décisions du moteur.",
+      "countryNote": "Le pays est celui de la page. Pour l'instant, seuls les responsables du réseau tranchent ces demandes ; ni la personne qui les a faites ni l'équipe de la page, jamais.",
       "restricted": "Les demandes de vérification des pages sont tranchées par les responsables du réseau.",
       "emptyTitle": "Aucune page à vérifier",
       "emptyBody": "Aucune demande de vérification n'attend de décision.",
@@ -16,16 +16,16 @@
       "evidenceCount_other": "{{count}} pièces",
       "open": "Instruire",
       "view": "Consulter",
-      "sheetTitle": "Vérification de {{page}}",
+      "sheetTitle": "Vérification {{page, de}}",
       "sheetDescription": "Lisez la note et les pièces, puis tranchez par une décision motivée.",
       "page": "Page",
       "received": "Reçue le",
       "claimant": "Demandeur",
       "loading": "Chargement de la demande…",
-      "note": "Note du demandeur",
+      "note": "Note de la demande",
       "noNote": "Aucune note.",
       "evidence": "Pièces",
-      "evidencePrivate": "Lues par la modération du réseau et par le demandeur seuls.",
+      "evidencePrivate": "Lues seulement par la modération du réseau et par la personne qui a fait la demande.",
       "noEvidence": "Aucune pièce n'est jointe à cette demande.",
       "evidenceOpen": "Ouvrir la pièce {{index}}",
       "evidencePending": "Pièce {{index}} : analyse en cours.",
@@ -35,7 +35,7 @@
       "party": {
         "title": "Vous ne tranchez pas cette demande",
         "author": "Vous avez déposé cette demande.",
-        "page": "Vous êtes membre de l'équipe de cette page, ou invité à la rejoindre.",
+        "page": "Vous êtes membre de l'équipe de cette page, ou une invitation à la rejoindre vous attend.",
         "server": "Le serveur ne vous laisse pas trancher cette demande.",
         "handOver": "Un autre responsable du réseau doit la trancher."
       },
@@ -43,11 +43,11 @@
       "decisionLegend": "Votre décision",
       "decision": {
         "approved": "Valider",
-        "approvedHint": "Le demandeur devient administrateur de la page, qui devient « Vérifié ».",
+        "approvedHint": "La personne qui a fait la demande reçoit le rôle d'administrateur ; la page devient « Vérifié ».",
         "rejected": "Refuser",
-        "rejectedHint": "Rien ne change pour la page ; le demandeur lit le motif."
+        "rejectedHint": "Rien ne change pour la page ; la personne qui a fait la demande lit le motif."
       },
-      "reasonHint": "Lu par le demandeur et inscrit au journal des décisions ({{min}} à {{max}} caractères).",
+      "reasonHint": "Lu par la personne qui a fait la demande et inscrit au journal des décisions ({{min}} à {{max}} caractères).",
       "submit": "Enregistrer la décision",
       "decided": {
         "approved": "Vérification validée : {{page}}.",

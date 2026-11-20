@@ -47,6 +47,11 @@ export interface ServicePagerProps<Row> {
   readonly loadMoreLabel?: string
   /** Les médias privés sont démontés aussi sur une erreur transitoire de leur lecture. */
   readonly clearOnError?: boolean
+  /**
+   * L'issue d'une lecture close, une fois connue : `true` si des lignes sont lues, `false` si la
+   * liste est vide et close ; rien pendant un chargement ni sur une erreur.
+   */
+  readonly onSettled?: (hasRows: boolean) => void
 }
 
 /**
@@ -116,6 +121,12 @@ export function ServicePager<Row>(props: ServicePagerProps<Row>) {
   useEffect(() => {
     if (autoAdvance) setState((current) => ({ ...current, pages: appendCursorPage(current.pages) }))
   }, [autoAdvance])
+  const settled = rows.length > 0 ? true : empty ? false : null
+  const { onSettled } = props
+  // Avant la peinture : ce qui dépend de l'issue (les filtres d'une rubrique) paraît avec les lignes.
+  useLayoutEffect(() => {
+    if (settled !== null) onSettled?.(settled)
+  }, [settled, onSettled])
   const retry = () => {
     // Les médias fermés après un refus ne reviennent pas pendant la nouvelle lecture.
     setState((current) => props.clearOnError ? { pages: initialCursorPages<Row>(), errors: {} } : { ...current, errors: {} })

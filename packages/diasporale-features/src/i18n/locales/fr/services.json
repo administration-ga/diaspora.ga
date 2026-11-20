@@ -126,7 +126,7 @@
       "goToPages": "Voir mes pages"
     },
     "manage": {
-      "title": "Offres de {{page}}",
+      "title": "Offres {{page, de}}",
       "newOffer": "Nouvelle offre",
       "cannotPublish": "Vous pourrez gérer les offres après un parrainage ou la vérification de votre inscription consulaire.",
       "emptyTitle": "Aucune offre pour cette page",

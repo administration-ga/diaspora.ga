@@ -26,7 +26,7 @@ import {
 } from "@diasporale/features/data"
 import { useDiasporaleT } from "@diasporale/features/i18n/client"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { NewspaperIcon, PenSquareIcon } from "lucide-react"
+import { NewspaperIcon, PenSquareIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useId, useState } from "react"
 import { useForm } from "react-hook-form"
@@ -86,6 +86,10 @@ function GroupContent(props: { readonly pageId: string; readonly capability: Ass
   const task = useActivityTask()
   const [confirmation, setConfirmation] = useState<"leave" | "close" | null>(null)
   if (query.status === "loading") return <Skeleton className="h-32 w-full rounded-xl" />
+  // Un groupe illisible se refuse comme une page indisponible : sans dire s'il existe, jamais « n'existe plus ».
+  if (query.status === "error" && query.code === "not_found") {
+    return <EmptyState icon={<UsersRoundIcon />} title={t("associationActivities.group.unavailableTitle")} description={t("associationActivities.group.unavailableBody")} />
+  }
   if (query.status === "error") return <Card role="alert" className="p-4">{t(`errors.${query.code}`)}</Card>
   if (!query.data) return <Card className="p-4">{t("associationActivities.group.notCreated")}</Card>
   const group = query.data

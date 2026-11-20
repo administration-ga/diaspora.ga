@@ -12,6 +12,8 @@
       "lead": "Joining the association and entering its group are separate choices. Discussions remain restricted to authorized group members.",
       "open": "Open the group",
       "notCreated": "The association has not created its group yet.",
+      "unavailableTitle": "This group is not available.",
+      "unavailableBody": "It does not exist, or you cannot see it.",
       "create": "Create the association group",
       "created": "The group is ready. No association member was added automatically.",
       "closed": "This group is closed: no one can read or post in it, and no one can join it.",
