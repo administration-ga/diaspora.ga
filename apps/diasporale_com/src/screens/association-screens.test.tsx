@@ -53,11 +53,9 @@ function memoryStorage(): Storage {
 function mount(viewer: string, screenNode: ReactNode, options: { withCapability?: boolean; locale?: "fr" | "en"; withdrawnProfiles?: readonly string[] } = {}) {
   const seed = createDemoSeed(NOW)
   // Un profil retiré : la liste ne dit plus son nom.
-  for (const personId of options.withdrawnProfiles ?? []) {
-    const person = seed.persons[personId]
-    if (person) seed.persons[personId] = { ...person, withdrawnAt: NOW - 1 }
-  }
-  const state = { ...seed, session: { personId: viewer } }
+  const withdrawn = new Set(options.withdrawnProfiles ?? [])
+  const persons = Object.fromEntries(Object.entries(seed.persons).map(([id, person]) => [id, withdrawn.has(id) ? { ...person, withdrawnAt: NOW - 1 } : person]))
+  const state = { ...seed, persons, session: { personId: viewer } }
   const store = new DemoStore({ getItem: () => JSON.stringify(state), setItem: () => undefined, removeItem: () => undefined }, () => NOW, 0)
   const source = options.withCapability === false ? ({} as DiasporaleDataSource) : createDemoDataSource(store)
   render(
