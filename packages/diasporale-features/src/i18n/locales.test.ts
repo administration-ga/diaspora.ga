@@ -91,6 +91,37 @@ describe("locales fr / en", () => {
     expect(unelided.test("Publier au nom de {{name}}")).toBe(true)
   })
 
+  it("français : un rôle ne s'accorde jamais à une personne dont on ignore le genre", () => {
+    // Recette moteur du 20/11/2026 : « Béatrice MOUSSAVOU est administrateur dès maintenant. »
+    // Les NOMS de rôle restent des étiquettes (« Administrateur », « Éditeur ») ; appliqués à une
+    // personne nommée ou à « vous », ils passent par un verbe ou une tournure neutre.
+    const role = "administrateur|éditeur|modérateur|animateur|auteur|invité|exclu"
+    const word = (alternatives: string) => `(?<!\\p{L})(?:${alternatives})(?!\\p{L})`
+    const gendered = [
+      // « vous êtes éditeur », « {{name}} est administrateur », « êtes propriétaire ou modérateur »
+      new RegExp(`${word("êtes|est|sera|serez|restez|reste")}\\s+(?:[\\p{L}'’]+\\s+ou\\s+)?(?:le\\s+|l['’]|un\\s+)?(?:seul\\s+|dernier\\s+|nouvel\\s+)?${word(role)}`, "u"),
+      // « il devient administrateur », « deviendra administrateur »
+      new RegExp(`${word("devien\\p{L}*")}\\s+(?:un\\s+|l['’])?${word(role)}`, "u"),
+      // « vous en êtes l'administrateur »
+      new RegExp(`${word("en")} êtes l['’]`, "u"),
+      // « Administrateur de la page, vous… »
+      new RegExp(`^(?:Administrateur|Éditeur|Modérateur|Animateur|Signataire)(?!\\p{L})[^.]{0,40}, vous(?!\\p{L})`, "u"),
+      // « vous ont exclu », « vous êtes… ou invité à »
+      new RegExp(`vous ont ${word("exclu|nommé|invité")}|, ou ${word("invité")}`, "u"),
+      // « fait de son auteur un administrateur »
+      new RegExp("fait de son auteur", "u"),
+      // une ligne de la liste qui qualifie la personne : « Adhérent depuis le », « Exclu le »
+      new RegExp(`^${word("Adhérent|Exclu")}`, "u"),
+    ]
+    const faults = [...FR].filter(([, text]) => gendered.some((pattern) => pattern.test(text)))
+    expect(faults.map(([key]) => key)).toEqual([])
+    // Le cliquet sait reconnaître la phrase de la recette, et laisse passer les noms de rôle.
+    expect(gendered.some((pattern) => pattern.test("{{name}} est administrateur dès maintenant."))).toBe(true)
+    expect(gendered.some((pattern) => pattern.test("Vous êtes éditeur de cette page."))).toBe(true)
+    expect(gendered.some((pattern) => pattern.test("Administrateur"))).toBe(false)
+    expect(gendered.some((pattern) => pattern.test("Seul un administrateur peut demander la vérification."))).toBe(false)
+  })
+
   it("le format `de` n'existe qu'en français", () => {
     const faults = [...EN].filter(([, text]) => /\{\{[^}]*,\s*de\b/.test(text))
     expect(faults.map(([key]) => key)).toEqual([])

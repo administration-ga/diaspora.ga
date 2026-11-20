@@ -20,7 +20,7 @@
       "file_withheld": "Un fichier que vous avez déposé est retenu par l’analyse de sécurité : il n’est montré à personne.",
       "membership_changed": "Votre statut dans DIASPORALE a changé.",
       "badge_changed": "Vos badges de confiance ont changé.",
-      "page_signatory_invite": "Vous êtes invité à rejoindre l’équipe qui signe pour une page.",
+      "page_signatory_invite": "Une page vous invite à rejoindre l’équipe qui signe pour elle.",
       "page_claim_decided": "Votre revendication d’une page a été examinée."
     }
   },

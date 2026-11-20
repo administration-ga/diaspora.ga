@@ -116,11 +116,11 @@
     },
     "party": {
       "title": "Vous ne tranchez pas ce dossier",
-      "author": "Vous êtes l'auteur du contenu visé.",
+      "author": "Le contenu visé est le vôtre.",
       "reporter": "Vous avez signalé ce contenu.",
       "page": "Vous faites partie de l'équipe de la page dont relève ce contenu.",
       "decider": "Vous avez pris la décision contestée.",
-      "group": "Vous êtes propriétaire ou modérateur du groupe visé.",
+      "group": "Vous possédez ou modérez le groupe visé.",
       "handOver": "Un autre membre de l'équipe doit le trancher."
     },
     "sanction": {

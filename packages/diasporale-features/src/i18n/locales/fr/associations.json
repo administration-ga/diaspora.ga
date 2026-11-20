@@ -10,7 +10,7 @@
       "pending": "Demande envoyée le {{date}}. Les responsables de l'association y répondront.",
       "yourMessage": "Votre mot : {{message}}",
       "previousRejected": "Votre précédente demande n'a pas été retenue.",
-      "removed": "Les responsables vous ont exclu de cette association.",
+      "removed": "Les responsables ont mis fin à votre adhésion à cette association.",
       "readmissionAllowed": "Ils vous autorisent à présenter une nouvelle demande.",
       "left": "Vous avez quitté cette association.",
       "notManaged": "Cette association n'a pas encore d'équipe sur DIASPORALE : aucune demande ne peut y être traitée pour l'instant.",
@@ -54,7 +54,7 @@
       "left": "Vous avez quitté l'association.",
       "accepted": "Demande acceptée.",
       "rejected": "Demande refusée.",
-      "removed": "Adhérent exclu.",
+      "removed": "Exclusion enregistrée.",
       "roleChanged": "Rôle mis à jour.",
       "readmissionAllowed": "Nouvelle demande autorisée."
     },
@@ -74,8 +74,8 @@
       "backToPage": "Retour à la page de l'association",
       "lead": "Cette liste n'est visible que des responsables de l'association. Elle ne constitue pas un registre légal des adhérents.",
       "roleNote": {
-        "admin": "Administrateur de la page, vous traitez les demandes et gérez les adhérents.",
-        "signatory": "Signataire de la page, vous traitez les demandes. Exclure, nommer un animateur ou autoriser une nouvelle demande revient à un administrateur."
+        "admin": "Vous administrez la page : vous traitez les demandes et gérez les adhérents.",
+        "signatory": "Vous publiez au nom de la page : vous traitez les demandes. Exclure, confier l'animation ou autoriser une nouvelle demande revient à un administrateur."
       },
       "tabsLabel": "Listes de l'association",
       "tab": {
@@ -92,8 +92,8 @@
       "notFoundBody": "Elle n'existe pas, ou vous n'êtes pas responsable de cette association.",
       "unknownPerson": "Profil non publié",
       "requestedAt": "Demande du {{date}}",
-      "memberSince": "Adhérent depuis le {{date}}",
-      "removedAt": "Exclu le {{date}}",
+      "memberSince": "Adhésion depuis le {{date}}",
+      "removedAt": "Exclusion du {{date}}",
       "role": "Rôle : {{role}}",
       "message": "Son mot : {{message}}",
       "readmissionAllowed": "Nouvelle demande autorisée.",

@@ -109,7 +109,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     expect(await within(sheet).findByText("Une exclusion se motive : précisez le motif.")).toBeInTheDocument()
     fireEvent.change(reason, { target: { value: "Propos injurieux répétés" } })
     await act(async () => { fireEvent.click(within(sheet).getByRole("button", { name: "Exclure" })) })
-    expect(await screen.findByText("Adhérent exclu.")).toBeInTheDocument()
+    expect(await screen.findByText("Exclusion enregistrée.")).toBeInTheDocument()
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
 
     openTab("Exclusions")
@@ -139,7 +139,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     await act(async () => {
       expect(await source.pageAdmin!.management!.respondToInvitation("page-asso-lyon", true)).toEqual({ ok: true, value: { role: "signatory" } })
     })
-    expect(screen.getByText(/Signataire de la page, vous traitez les demandes/)).toBeInTheDocument()
+    expect(screen.getByText(/Vous publiez au nom de la page : vous traitez les demandes/)).toBeInTheDocument()
     fireEvent.click(screen.getByRole("button", { name: "Refuser" }))
     const sheet = await screen.findByRole("dialog", { name: "Refuser la demande de Rodrigue KOMO ?" })
     expect(within(sheet).getByText(/Elle pourra redemander dans 7 jours/)).toBeInTheDocument()
