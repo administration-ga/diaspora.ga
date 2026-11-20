@@ -99,10 +99,26 @@
       "readmissionAllowed": "Nouvelle demande autorisée.",
       "accept": "Accepter",
       "reject": "Refuser",
-      "makeAnimator": "Nommer animateur",
-      "makeMember": "Repasser membre",
+      "makeAnimator": "Confier l'animation",
+      "makeMember": "Retirer l'animation",
       "remove": "Exclure",
-      "allowReadmission": "Autoriser une nouvelle demande"
+      "allowReadmission": "Autoriser une nouvelle demande",
+      "actionLabel": {
+        "accept": "Accepter la demande {{name, de}}",
+        "reject": "Refuser la demande {{name, de}}",
+        "makeAnimator": "Confier l'animation à {{name}}",
+        "makeMember": "Retirer l'animation à {{name}}",
+        "remove": "Exclure {{name}} de l'association",
+        "allowReadmission": "Autoriser une nouvelle demande {{name, de}}"
+      },
+      "actionLabelUnnamed": {
+        "accept": "Accepter la demande d’un profil non publié",
+        "reject": "Refuser la demande d’un profil non publié",
+        "makeAnimator": "Confier l'animation à un profil non publié",
+        "makeMember": "Retirer l'animation à un profil non publié",
+        "remove": "Exclure un profil non publié de l'association",
+        "allowReadmission": "Autoriser une nouvelle demande d’un profil non publié"
+      }
     },
     "rejectSheet": {
       "title": "Refuser la demande {{name, de}} ?",

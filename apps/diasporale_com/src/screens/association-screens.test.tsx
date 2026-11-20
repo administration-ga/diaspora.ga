@@ -50,8 +50,14 @@ function memoryStorage(): Storage {
   }
 }
 
-function mount(viewer: string, screenNode: ReactNode, options: { withCapability?: boolean; locale?: "fr" | "en" } = {}) {
-  const state = { ...createDemoSeed(NOW), session: { personId: viewer } }
+function mount(viewer: string, screenNode: ReactNode, options: { withCapability?: boolean; locale?: "fr" | "en"; withdrawnProfiles?: readonly string[] } = {}) {
+  const seed = createDemoSeed(NOW)
+  // Un profil retiré : la liste ne dit plus son nom.
+  for (const personId of options.withdrawnProfiles ?? []) {
+    const person = seed.persons[personId]
+    if (person) seed.persons[personId] = { ...person, withdrawnAt: NOW - 1 }
+  }
+  const state = { ...seed, session: { personId: viewer } }
   const store = new DemoStore({ getItem: () => JSON.stringify(state), setItem: () => undefined, removeItem: () => undefined }, () => NOW, 0)
   const source = options.withCapability === false ? ({} as DiasporaleDataSource) : createDemoDataSource(store)
   render(
@@ -87,7 +93,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     expect(within(request).getByRole("link", { name: "Rodrigue KOMO" })).toHaveAttribute("href", routes.profile("rodrigue.komo"))
     expect(within(request).getByText(/Son mot : J'arrive à Lyon en janvier/)).toBeInTheDocument()
 
-    await act(async () => { fireEvent.click(within(request).getByRole("button", { name: "Accepter" })) })
+    await act(async () => { fireEvent.click(within(request).getByRole("button", { name: "Accepter la demande de Rodrigue KOMO" })) })
     expect(await screen.findByText("Demande acceptée.")).toBeInTheDocument()
     expect(await screen.findByText("Aucune demande en attente.")).toBeInTheDocument()
 
@@ -101,7 +107,7 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     mount("p-steeve", <AssociationMembersScreen handle="collectif-ivindo-lyon" />)
     openTab("Adhérents")
     const nadia = (await screen.findAllByRole("listitem"))[0]!
-    fireEvent.click(within(nadia).getByRole("button", { name: "Exclure" }))
+    fireEvent.click(within(nadia).getByRole("button", { name: "Exclure Nadia MPASSA de l'association" }))
     const sheet = await screen.findByRole("dialog", { name: "Exclure Nadia MPASSA de l'association ?" })
     const reason = within(sheet).getByLabelText("Motif (obligatoire)")
     fireEvent.change(reason, { target: { value: "bref" } })
@@ -115,19 +121,47 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
     openTab("Exclusions")
     const removed = await screen.findByRole("listitem")
     expect(within(removed).getByText("Motif : Propos injurieux répétés")).toBeInTheDocument()
-    await act(async () => { fireEvent.click(within(removed).getByRole("button", { name: "Autoriser une nouvelle demande" })) })
+    await act(async () => { fireEvent.click(within(removed).getByRole("button", { name: "Autoriser une nouvelle demande de Nadia MPASSA" })) })
     // L'issue annoncée, et la ligne qui le dit désormais.
     await waitFor(() => expect(screen.getAllByText("Nouvelle demande autorisée.")).toHaveLength(2))
-    expect(screen.queryByRole("button", { name: "Autoriser une nouvelle demande" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Autoriser une nouvelle demande/ })).not.toBeInTheDocument()
   })
 
-  it("nommer animatrice puis repasser membre", async () => {
+  it("confier l'animation puis la retirer", async () => {
     mount("p-steeve", <AssociationMembersScreen handle="collectif-ivindo-lyon" />)
     openTab("Adhérents")
     const clarisse = (await screen.findAllByRole("listitem"))[1]!
-    await act(async () => { fireEvent.click(within(clarisse).getByRole("button", { name: "Nommer animateur" })) })
+    const entrust = within(clarisse).getByRole("button", { name: "Confier l'animation à Clarisse MBÉI" })
+    expect(entrust).toHaveTextContent("Confier l'animation")
+    await act(async () => { fireEvent.click(entrust) })
     expect(await screen.findByText("Rôle mis à jour.")).toBeInTheDocument()
-    expect(within((await screen.findAllByRole("listitem"))[1]!).getByRole("button", { name: "Repasser membre" })).toBeInTheDocument()
+    expect(within((await screen.findAllByRole("listitem"))[1]!).getByRole("button", { name: "Retirer l'animation à Clarisse MBÉI" })).toHaveTextContent("Retirer l'animation")
+  })
+
+  it("chaque geste sur une personne la nomme dans son nom accessible, et dit « un profil non publié » quand le nom manque", async () => {
+    mount("p-steeve", <AssociationMembersScreen handle="collectif-ivindo-lyon" />)
+    const request = screen.getByRole("listitem")
+    // Le libellé visible reste le verbe, en tête du nom accessible.
+    expect(within(request).getByRole("button", { name: "Accepter la demande de Rodrigue KOMO" })).toHaveTextContent("Accepter")
+    expect(within(request).getByRole("button", { name: "Refuser la demande de Rodrigue KOMO" })).toHaveTextContent("Refuser")
+    openTab("Adhérents")
+    const [nadia] = await screen.findAllByRole("listitem")
+    expect(within(nadia!).getByRole("button", { name: "Retirer l'animation à Nadia MPASSA" })).toBeInTheDocument()
+    expect(within(nadia!).getByRole("button", { name: "Exclure Nadia MPASSA de l'association" })).toHaveTextContent("Exclure")
+    cleanup()
+
+    mount("p-steeve", <AssociationMembersScreen handle="collectif-ivindo-lyon" />, { withdrawnProfiles: ["p-rodrigue"] })
+    const unnamed = screen.getByRole("listitem")
+    expect(within(unnamed).getByText("Profil non publié")).toBeInTheDocument()
+    expect(within(unnamed).getByRole("button", { name: "Accepter la demande d’un profil non publié" })).toBeInTheDocument()
+    expect(within(unnamed).getByRole("button", { name: "Refuser la demande d’un profil non publié" })).toBeInTheDocument()
+  })
+
+  it("en anglais aussi, chaque geste nomme la personne", () => {
+    mount("p-steeve", <AssociationMembersScreen handle="collectif-ivindo-lyon" />, { locale: "en" })
+    const request = screen.getByRole("listitem")
+    expect(within(request).getByRole("button", { name: "Accept the request from Rodrigue KOMO" })).toHaveTextContent("Accept")
+    expect(within(request).getByRole("button", { name: "Decline the request from Rodrigue KOMO" })).toHaveTextContent("Decline")
   })
 
   it("la signataire, son invitation acceptée, refuse avec un motif facultatif, sans aucun geste de gouvernance", async () => {
@@ -140,15 +174,16 @@ describe("/pages/<handle>/adherents — les responsables de l'association", () =
       expect(await source.pageAdmin!.management!.respondToInvitation("page-asso-lyon", true)).toEqual({ ok: true, value: { role: "signatory" } })
     })
     expect(screen.getByText(/Vous publiez au nom de la page : vous traitez les demandes/)).toBeInTheDocument()
-    fireEvent.click(screen.getByRole("button", { name: "Refuser" }))
+    fireEvent.click(screen.getByRole("button", { name: "Refuser la demande de Rodrigue KOMO" }))
     const sheet = await screen.findByRole("dialog", { name: "Refuser la demande de Rodrigue KOMO ?" })
     expect(within(sheet).getByText(/Elle pourra redemander dans 7 jours/)).toBeInTheDocument()
     await act(async () => { fireEvent.click(within(sheet).getByRole("button", { name: "Refuser la demande" })) })
     expect(await screen.findByText("Demande refusée.")).toBeInTheDocument()
     openTab("Adhérents")
     await screen.findAllByRole("listitem")
-    expect(screen.queryByRole("button", { name: "Exclure" })).not.toBeInTheDocument()
-    expect(screen.queryByRole("button", { name: "Nommer animateur" })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Exclure/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Confier l'animation/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: /^Retirer l'animation/ })).not.toBeInTheDocument()
   })
 
   it("R-G14 : pour une adhérente ou tout autre membre, la liste n'existe pas", () => {
