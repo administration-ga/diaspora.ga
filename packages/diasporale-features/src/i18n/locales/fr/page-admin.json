@@ -319,6 +319,7 @@
       "lead": "Les pages dont vous faites partie de l'équipe dans DIASPORALE.",
       "emptyTitle": "Vous ne gérez encore aucune page",
       "emptyBody": "Inscrivez votre association ou votre entreprise, ou revendiquez sa page si elle existe déjà.",
+      "onlyAsleep": "Pour l'instant, aucune de vos pages n'est en ligne : celles qui dorment sont listées plus bas. Vous pouvez aussi inscrire une autre organisation.",
       "createAssociation": "Inscrire une association",
       "createCompany": "Inscrire une entreprise",
       "manage": "Gérer",

@@ -319,6 +319,7 @@
       "lead": "The pages whose team you belong to in DIASPORALE.",
       "emptyTitle": "You do not manage any page yet",
       "emptyBody": "Register your association or business, or claim its page if it already exists.",
+      "onlyAsleep": "For now, none of your pages is online: the sleeping ones are listed below. You can also register another organisation.",
       "createAssociation": "Register an association",
       "createCompany": "Register a business",
       "manage": "Manage",

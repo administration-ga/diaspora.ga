@@ -7,7 +7,8 @@
  * l'équipe et la modération des commentaires, ni publication ni gestion.
  * L'instruction des revendications est au bureau de modération, onglet
  * « Pages à vérifier » (AS-01). AS-11a : la section « En sommeil » dit l'échéance de
- * chaque page endormie et la laisse réactiver.
+ * chaque page endormie et la laisse réactiver ; une page qui dort n'est pas « aucune page » :
+ * l'état vide ne s'affiche pas au-dessus d'elle.
  * PROPRIÉTAIRE : chantier « gestion des pages ». « Mon activité » (chantier
  * « catalogue ») le monte ; la signature est figée.
  */
@@ -72,9 +73,26 @@ function asTeamPage(page: ManagedPageView): TeamPageView {
   return { ...rest, teamRole: role }
 }
 
+/** Mes pages en sommeil, quand le fournisseur les sert : « loading » tant qu'on ne sait pas, « some » s'il en reste une. */
+type SleepingPresence = "none" | "loading" | "some"
+
 function PanelBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; readonly management: PageManagement | null }) {
+  // Monté seulement quand le fournisseur sert `useMySleepingPages` : l'appel est stable d'un rendu à l'autre.
+  return props.management?.useMySleepingPages
+    ? <SleepingAwareBody pages={props.pages} management={props.management} />
+    : <PanelContent pages={props.pages} management={props.management} sleeping="none" />
+}
+
+function SleepingAwareBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; readonly management: PageManagement }) {
+  const sleeping = props.management.useMySleepingPages?.() ?? null
+  const presence: SleepingPresence =
+    sleeping?.status === "loading" ? "loading" : sleeping?.status === "ready" && sleeping.data.length > 0 ? "some" : "none"
+  return <PanelContent pages={props.pages} management={props.management} sleeping={presence} />
+}
+
+function PanelContent(props: { readonly pages: Loadable<readonly TeamPageView[]>; readonly management: PageManagement | null; readonly sleeping: SleepingPresence }) {
   const { t } = useDiasporaleT()
-  const { pages } = props
+  const { pages, sleeping } = props
   return (
     <div className="flex flex-col gap-6">
       <section aria-labelledby="mes-pages" className="flex flex-col gap-3">
@@ -87,6 +105,11 @@ function PanelBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; r
           <Skeleton className="h-20 w-full rounded-xl" />
         ) : pages.status === "error" ? (
           <ErrorNotice code={pages.code} />
+        ) : pages.data.length === 0 && sleeping === "loading" ? (
+          <Skeleton className="h-20 w-full rounded-xl" />
+        ) : pages.data.length === 0 && sleeping === "some" ? (
+          // Mes pages dorment : rien ne dit « aucune page » au-dessus de la section « En sommeil ».
+          <p className="text-sm text-muted-foreground">{t("pageAdmin.myPages.onlyAsleep")}</p>
         ) : pages.data.length === 0 ? (
           <EmptyState
             icon={<Building2Icon />}
@@ -101,7 +124,7 @@ function PanelBody(props: { readonly pages: Loadable<readonly TeamPageView[]>; r
             ))}
           </ul>
         )}
-        {props.management && pages.status === "ready" && pages.data.length > 0 ? <CreateLinks /> : null}
+        {props.management && pages.status === "ready" && (pages.data.length > 0 || sleeping === "some") ? <CreateLinks /> : null}
       </section>
       {props.management ? <MySleepingPages management={props.management} /> : null}
       {props.management ? <Invitations management={props.management} /> : null}
