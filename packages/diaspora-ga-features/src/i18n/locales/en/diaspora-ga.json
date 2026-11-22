@@ -360,7 +360,6 @@
     "noEvents": "No event planned yet.",
     "pages": {
       "title": "Pages · {{country}}",
-      "empty": "No page registered in this country yet.",
       "directory": "All pages in this country"
     }
   },

@@ -360,7 +360,6 @@
     "noEvents": "Aucun évènement prévu pour l'instant.",
     "pages": {
       "title": "Pages · {{country}}",
-      "empty": "Aucune page inscrite dans ce pays pour l'instant.",
       "directory": "Toutes les pages du pays"
     }
   },

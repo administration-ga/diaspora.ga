@@ -1,10 +1,10 @@
 "use client"
 
-import { FEED_SCOPES, parseFeedScope, parseResidenceCountry, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
+import { hasCapability, parseFeedScope, parseResidenceCountry, type CounterPresentation, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
 import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
 import { useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { ArrowRightIcon, Building2Icon, GalleryVerticalEndIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
+import { ArrowRightIcon, Building2Icon, GalleryVerticalEndIcon, HandshakeIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
@@ -16,9 +16,14 @@ import { FeedStories } from "@/components/feed-stories"
 import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
 import { StatusBanner } from "@/components/status-banner"
 import { countryPagesPreview } from "@/lib/country-pages"
+import { FEED_DISCOVERY_OFFERED, OFFERED_FEED_SCOPES, offeredFeedScope, showsFeedDiscovery } from "@/lib/feed-presentation"
 import { normalizeFeedTag, routes } from "@/lib/routes"
 
-/** `/fil` — le fil et ses quatre portées (EXF-DG-13), « Mon pays » par défaut. */
+/**
+ * `/fil` — le fil (EXF-DG-13), « Mon pays » par défaut. CH-816 (P2) : l'écran n'offre que les
+ * portées et le mode que déclare `lib/feed-presentation` — au lancement, le pays et toute la
+ * diaspora, en liste ; une adresse qui demande une portée ou un mode retiré montre le défaut.
+ */
 export function FeedScreen() {
   return (
     <Gate require="member">
@@ -59,11 +64,13 @@ function Feed(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaGaT()
   const searchParams = useSearchParams()
   const router = useRouter()
-  const scope = parseFeedScope(searchParams.get("scope"))
+  // CH-816 (P2) : une portée retirée de l'écran (« Récents », « Pour vous ») montre la portée par défaut, son onglet actif.
+  const scope = offeredFeedScope(parseFeedScope(searchParams.get("scope")), OFFERED_FEED_SCOPES)
   const tag = normalizeFeedTag(searchParams.get("tag"))
   const parsedCountry = parseResidenceCountry(searchParams.get("country"))
   const hubCountry = parsedCountry.ok ? parsedCountry.value : undefined
-  const discovery = isDiscoveryView(searchParams)
+  // La découverte non offerte, son adresse rend la liste ; son code reste branché derrière la déclaration.
+  const discovery = showsFeedDiscovery(isDiscoveryView(searchParams), FEED_DISCOVERY_OFFERED)
   const composer = useComposer()
   // ADR-0041 du moteur : l'inscription d'une organisation n'est proposée que pages ouvertes.
   const pagesOpen = useFeatureGate().isOpen("pages")
@@ -125,7 +132,7 @@ function Feed(props: { membership: MembershipView }) {
       <h1 className="sr-only">{t("feed.title")}</h1>
       <FolderTabsNav
         label={t("feed.scopesLabel")}
-        items={FEED_SCOPES.map((id: FeedScope) => ({
+        items={OFFERED_FEED_SCOPES.map((id: FeedScope) => ({
           id,
           label: id === "mon_pays" ? countryName(country, locale) : t(`feed.scope.${id}`),
           href: viewHref(id, tag),
@@ -169,7 +176,8 @@ function Feed(props: { membership: MembershipView }) {
         />
       ) : (
         <>
-          <div className="flex">{viewToggle}</div>
+          {/* CH-816 (P2) : la bascule ne paraît que la découverte offerte (`FEED_DISCOVERY_OFFERED`). */}
+          {FEED_DISCOVERY_OFFERED ? <div className="flex">{viewToggle}</div> : null}
 
           <FeedStories now={now} />
 
@@ -266,11 +274,18 @@ function ListReturn(props: { postId: string | null; fallback: RefObject<HTMLAnch
   return null
 }
 
+/** Un compteur du rail ne s'affiche que mesuré et positif : jamais « 0 », jamais un seuil (CH-816, P2). */
+function railCounterShown(counter: CounterPresentation): boolean {
+  return counter.kind === "value" && counter.value > 0
+}
+
 /**
- * Rail droit (≥ 1 280 px) : le hub de mon pays, les pages du pays (AS-05) et ses
- * prochains évènements, lus par la capacité des évènements du pays (HB-02). Leur nombre ne s'affiche que
- * mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit pas les
- * évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
+ * Rail droit (≥ 1 280 px), dans l'ordre de la fiche de lancement (CH-816, P2) : des membres à
+ * rencontrer, la carte de mon pays, les pages du pays (AS-05 : les officielles d'abord, les
+ * institutions à suivre), les prochains évènements (module des groupes et évènements ouvert,
+ * HB-02), puis le rappel du parrainage. Un compteur à zéro ne s'affiche pas ; le nombre des
+ * évènements ne s'affiche que mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit
+ * pas les évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
  */
 export function FeedRail(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaGaT()
@@ -283,16 +298,19 @@ export function FeedRail(props: { membership: MembershipView }) {
   const pagesOpen = features.isOpen("pages")
   const eventsOpen = features.isOpen("groupsAndEvents")
   const eventsMeasured = eventsOpen && hub.status === "ready" && hub.data.eventsSource !== "unmeasured"
-  const counters = pagesOpen || eventsMeasured
+  const counters = hub.status === "ready" && !hub.data.counters.dormant ? hub.data.counters : null
+  const associationsShown = pagesOpen && counters !== null && railCounterShown(counters.associations)
+  const eventsShown = eventsMeasured && counters !== null && railCounterShown(counters.upcomingEvents)
   return (
     <>
+      <MemberSuggestions headingId="rail-suggestions" />
       <Card className="p-4">
         <p className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">{t("rail.myHub")}</p>
         <p className="mt-1 font-display text-xl font-bold">{countryName(country, locale)}</p>
-        {counters && hub.status === "ready" && !hub.data.counters.dormant ? (
-          <div className={pagesOpen && eventsMeasured ? "mt-3 grid grid-cols-2 gap-3" : "mt-3"}>
-            {pagesOpen ? <StatCounter value={hub.data.counters.associations} label={t("hub.counters.associations")} /> : null}
-            {eventsMeasured ? <StatCounter value={hub.data.counters.upcomingEvents} label={t("hub.counters.events")} /> : null}
+        {counters !== null && (associationsShown || eventsShown) ? (
+          <div className={associationsShown && eventsShown ? "mt-3 grid grid-cols-2 gap-3" : "mt-3"}>
+            {associationsShown ? <StatCounter value={counters.associations} label={t("hub.counters.associations")} /> : null}
+            {eventsShown ? <StatCounter value={counters.upcomingEvents} label={t("hub.counters.events")} /> : null}
           </div>
         ) : null}
         <NextLink
@@ -303,7 +321,6 @@ export function FeedRail(props: { membership: MembershipView }) {
           <ArrowRightIcon className="size-4" aria-hidden />
         </NextLink>
       </Card>
-      <MemberSuggestions headingId="rail-suggestions" />
       <RailCountryPages country={country} />
       {eventsOpen ? (
       <section aria-labelledby="rail-evenements" className="flex flex-col gap-3">
@@ -334,7 +351,35 @@ export function FeedRail(props: { membership: MembershipView }) {
         )}
       </section>
       ) : null}
+      <RailSponsorReminder membership={props.membership} />
     </>
+  )
+}
+
+/**
+ * Le rappel du parrainage, en fin de rail (CH-816, P2) : le parrainage est la porte d'entrée
+ * des proches, et « Parrainer » quitte la barre pour le menu du compte. Une phrase et un lien,
+ * sans chiffre ni promesse ; seulement à qui peut parrainer (membre vérifié), l'ancienneté se
+ * jugeant sur la page du parrainage.
+ */
+function RailSponsorReminder(props: { membership: MembershipView }) {
+  const { t } = useDiasporaGaT()
+  if (!hasCapability(props.membership.status, "sponsor")) return null
+  return (
+    <section aria-labelledby="rail-parrainage" className="flex flex-col gap-2 rounded-xl bg-muted p-4">
+      <h2 id="rail-parrainage" className="flex items-center gap-2 font-display text-base font-bold">
+        <HandshakeIcon className="size-4 shrink-0" aria-hidden />
+        {t("rail.sponsor.title")}
+      </h2>
+      <p className="text-[13px] leading-relaxed text-muted-foreground">{t("rail.sponsor.body")}</p>
+      <NextLink
+        href={routes.sponsor()}
+        className="inline-flex min-h-10 items-center gap-1 self-start text-sm font-semibold text-primary hover:underline focus-visible:shadow-focus"
+      >
+        {t("rail.sponsor.link")}
+        <ArrowRightIcon className="size-4" aria-hidden />
+      </NextLink>
+    </section>
   )
 }
 
@@ -342,6 +387,8 @@ export function FeedRail(props: { membership: MembershipView }) {
  * Les pages du pays de résidence dans le rail, comme le rail des pages du réseau de
  * l'administration : les officielles d'abord, puis associations et entreprises. Sans
  * annuaire servi, rien ; avant la lecture, rien n'est affirmé (ni liste, ni « aucune »).
+ * CH-816 (P2) : une lecture prête sans aucune page ni suite ne rend rien — un bloc du rail
+ * qui dit « rien » est du bruit.
  */
 function RailCountryPages(props: { country: CountryCode }) {
   const pages = useOptionalDataSource()?.pages ?? null
@@ -356,14 +403,15 @@ function RailCountryPagesRead(props: { capability: PagesCapability; country: Cou
   // Une lecture refusée ne dit ni liste ni « aucune page » : le chemin vers l'annuaire reste.
   const preview = result.status === "ready" ? countryPagesPreview(result.data) : null
   const more = result.status === "ready" && (result.data.more.officialPages || result.data.more.associations || result.data.more.companies)
+  if (preview !== null && preview.length === 0 && !more) return null
   return (
     <section aria-labelledby="rail-pages" className="flex flex-col gap-3">
       <h2 id="rail-pages" className="font-display text-lg font-bold">
         {t("rail.pages.title", { country: countryName(props.country, locale) })}
       </h2>
       {preview === null ? null : preview.length === 0 ? (
-        // Une fenêtre bornée peut ne rien garder d'un pays qui a des pages : on ne dit « aucune » que sans suite.
-        <p className="text-[13px] text-muted-foreground">{t(more ? "hub.pagesElsewhere" : "rail.pages.empty")}</p>
+        // Une fenêtre bornée peut ne rien garder d'un pays qui a des pages : la suite est dans l'annuaire.
+        <p className="text-[13px] text-muted-foreground">{t("hub.pagesElsewhere")}</p>
       ) : (
         <ul className="flex flex-col gap-1">
           {preview.map((page) => (
