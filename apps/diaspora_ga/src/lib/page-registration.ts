@@ -7,9 +7,10 @@
  * création du réseau de l'administration (`creation-controller`). Les clés de texte
  * sont écrites en toutes lettres : le cliquet i18n les relève ici.
  */
-import { isJobEmployerOwnerKind, isServiceProviderOwnerKind, type MembershipStatus } from "@diaspora-ga/domain"
+import type { MembershipStatus } from "@diaspora-ga/domain"
 import type { MemberPageKind } from "@diaspora-ga/features/data"
 
+import { offeredManageTabs } from "./page-manage-tabs"
 import { routes } from "./routes"
 
 // ═══════════════════════════════════════════════════════════════
@@ -179,8 +180,10 @@ export function registrationNextSteps(page: { readonly handle: string; readonly 
     { id: "team", href: routes.pageManage(handle, "equipe") },
   ]
   if (capabilities.members && ownerKind === "association") steps.push({ id: "members", href: routes.associationMembers(handle) })
-  if (capabilities.jobs && isJobEmployerOwnerKind(ownerKind)) steps.push({ id: "jobs", href: routes.pageManage(handle, "emplois") })
-  if (capabilities.services && isServiceProviderOwnerKind(ownerKind)) steps.push({ id: "services", href: routes.pageManage(handle, "services") })
+  // CH-816 (P0) : la règle des onglets de gestion, partagée (`offeredManageTabs`) — jamais un lien vers un onglet non offert.
+  const offered = offeredManageTabs(ownerKind, { jobs: capabilities.jobs, servicesOpen: capabilities.services })
+  if (offered.includes("emplois")) steps.push({ id: "jobs", href: routes.pageManage(handle, "emplois") })
+  if (offered.includes("services")) steps.push({ id: "services", href: routes.pageManage(handle, "services") })
   steps.push({ id: "publication", href: routes.pageManage(handle, "publications") })
   return steps.map((step) => ({ ...step, ...NEXT_STEP_KEYS[step.id] }))
 }

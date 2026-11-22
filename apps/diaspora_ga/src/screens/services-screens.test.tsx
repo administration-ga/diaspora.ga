@@ -268,7 +268,7 @@ describe("/mon-activite", () => {
   it("liste les offres de la seule page d'entreprise ou d'association, tous états", () => {
     mocks.myPages.set("first", ready([detail("a", { status: "active" }), detail("d", { status: "draft" }), detail("w", { status: "withdrawn" })]))
     render(tree(<MyActivityScreen />))
-    expect(screen.getByRole("navigation", { name: "Sections de Mon activité" })).toBeTruthy()
+    expect(screen.getByRole("navigation", { name: "Sections de Mes pages" })).toBeTruthy()
     expect(screen.getByRole("heading", { name: "Offres de Coiffure Paris (fictif)" })).toBeTruthy()
     // Une institution ne propose pas de services : aucun choix de page à faire.
     expect(screen.queryByLabelText("Page")).toBeNull()

@@ -10,7 +10,8 @@
  *     le mode, les langues, la durée et le tarif ANNONCÉ, « aucun paiement sur
  *     DIASPORA.GA », puis la demande structurée ; une offre indisponible est un
  *     état neutre (inconnue, en pause ou retirée : la même réponse) ;
- *   · `/mon-activite` : les offres et les demandes des pages que je gère, et mes pages.
+ *   · `/mon-activite` (« Mes pages ») : mes pages et, modules ouverts, les offres, les
+ *     demandes et les emplois des pages que je gère (CH-816 : un module fermé n'a pas d'onglet).
  *
  * Mise en relation seulement : aucun paiement, aucune note ni avis inventés,
  * aucune coordonnée ; le badge d'une page dit qui elle est, il ne garantit pas
@@ -31,6 +32,7 @@ import {
 } from "@diaspora-ga/domain"
 import { Button, Card, EmptyState, Field, FolderTabsNav, Input, Skeleton, TrustBadge, countryName, formatDate, residenceCountryOptions } from "@diaspora-ga/features"
 import {
+  useFeatureGate,
   usePageAdmin,
   useServices,
   type ManagedPageView,
@@ -53,7 +55,7 @@ import { Gate } from "@/components/gate"
 import { JobRecruiterPanel } from "@/components/job-recruiter-panel"
 import { MyPagesPanel } from "@/components/my-pages-panel"
 import { PageServicesManager } from "@/components/page-services-manager"
-import { ACTIVITY_TABS, parseActivityTab } from "@/components/service-activity"
+import { activityTabOf, offeredActivityTabs } from "@/components/service-activity"
 import { ServiceCard } from "@/components/service-card"
 import { formatServiceDuration, formatServicePrice, languageList, majorAmountInput } from "@/components/service-format"
 import { ServiceInbox } from "@/components/service-inbox"
@@ -431,24 +433,33 @@ function Detail(props: { readonly label: string; readonly children: ReactNode })
 function MyActivity(props: { readonly membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const params = useSearchParams()
-  const tab = parseActivityTab(params.get("onglet"))
+  // CH-816 (P0) : seuls les onglets dont le module est ouvert ; un onglet fermé demandé par l'adresse rend le premier offert.
+  const offered = offeredActivityTabs(useFeatureGate())
+  const tab = activityTabOf(params.get("onglet"), offered)
   const pageAdmin = usePageAdmin()
   const services = useServices()
+  const titleId = useId()
+  // Les pages seules (lancement) : le titre de l'écran nomme le panneau, qui ne répète ni son titre
+  // ni sa phrase ; on garde la phrase la plus précise, celle du panneau.
+  const pagesOnly = offered.length === 1 && tab === "pages"
   return (
     <>
       <header className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-bold">{t("services.activity.title")}</h1>
-        <p className="text-[15px] leading-relaxed text-muted-foreground">{t("services.activity.lead")}</p>
+        <h1 id={titleId} className="font-display text-3xl font-bold">{t("services.activity.title")}</h1>
+        <p className="text-[15px] leading-relaxed text-muted-foreground">{t(pagesOnly ? "pageAdmin.myPages.lead" : "services.activity.lead")}</p>
       </header>
-      <FolderTabsNav
-        label={t("services.activity.tabsLabel")}
-        items={ACTIVITY_TABS.map((item) => ({ id: item, label: t(`services.activity.tab.${item}`), href: routes.myActivity(item), active: item === tab }))}
-        renderLink={(item, className, children) => (
-          <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined}>{children}</NextLink>
-        )}
-      />
-      {tab === "pages" ? (
-        <MyPagesPanel />
+      {/* Un seul onglet offert (les pages, au lancement) : aucune barre d'onglets à un seul choix. */}
+      {offered.length > 1 ? (
+        <FolderTabsNav
+          label={t("services.activity.tabsLabel")}
+          items={offered.map((item) => ({ id: item, label: t(`services.activity.tab.${item}`), href: routes.myActivity(item), active: item === tab }))}
+          renderLink={(item, className, children) => (
+            <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined}>{children}</NextLink>
+          )}
+        />
+      ) : null}
+      {tab === null ? null : tab === "pages" ? (
+        <MyPagesPanel {...(pagesOnly ? { labelledBy: titleId } : {})} />
       ) : pageAdmin === null ? (
         <Unavailable title={t("services.activity.unavailableTitle")} body={t("services.activity.unavailableBody")} />
       ) : (

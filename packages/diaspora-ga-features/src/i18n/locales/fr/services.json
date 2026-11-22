@@ -3,12 +3,12 @@
     "meta": {
       "catalog": "Services",
       "offer": "Offre de service",
-      "activity": "Mon activité"
+      "activity": "Mes pages"
     },
     "catalog": {
       "title": "Services de la diaspora",
       "lead": "Des prestations proposées par les entreprises et les associations du réseau. DIASPORA.GA met en relation : aucun paiement ne passe par la plateforme.",
-      "offerYourServices": "Vous proposez des services ? Gérez vos offres dans Mon activité"
+      "offerYourServices": "Vous proposez des services ? Gérez vos offres dans Mes pages"
     },
     "search": {
       "label": "Rechercher un service",
@@ -109,9 +109,9 @@
       "withdrawn": "Retirée"
     },
     "activity": {
-      "title": "Mon activité",
-      "lead": "Les offres et les demandes des pages que vous gérez, et vos pages.",
-      "tabsLabel": "Sections de Mon activité",
+      "title": "Mes pages",
+      "lead": "Les pages que vous gérez, réunies au même endroit.",
+      "tabsLabel": "Sections de Mes pages",
       "tab": {
         "offres": "Offres",
         "demandes": "Demandes",

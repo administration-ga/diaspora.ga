@@ -13,10 +13,8 @@
  * « catalogue ») le monte ; la signature est figée.
  */
 import { Avatar, Button, Card, EmptyState, Skeleton, TrustBadge, formatDate } from "@diaspora-ga/features"
-import { isServiceProviderOwnerKind } from "@diaspora-ga/domain"
 import {
   usePageAdmin,
-  useServiceReviews,
   type ActionErrorCode,
   type Loadable,
   type ManagedPageView,
@@ -29,18 +27,30 @@ import {
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { Building2Icon, CheckIcon, FilePlus2Icon, MessageSquareXIcon, NewspaperIcon, Settings2Icon, UsersRoundIcon, XIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useMemo, useRef, useState } from "react"
+import { createContext, useContext, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { offeredManageTabs } from "@/lib/page-manage-tabs"
 import { routes } from "@/lib/routes"
 
-import { ClaimStatusChip, ConfirmSheet, ErrorNotice, PageAdminUnavailable, RoleChip } from "./page-admin-parts"
+import { ClaimStatusChip, ConfirmSheet, ErrorNotice, PageAdminUnavailable, RoleChip, usePageManageServed } from "./page-admin-parts"
 import { MySleepingPages } from "./page-sleep-section"
 
-export function MyPagesPanel() {
+/** L'identifiant du titre qui nomme déjà la section « Mes pages » (le H1 de l'écran), ou `null`. */
+const SectionTitle = createContext<string | null>(null)
+
+/**
+ * `labelledBy` (CH-816, P0) : quand le panneau est la seule section de l'écran, le titre de
+ * l'écran (« Mes pages ») le nomme ; la section ne répète ni son titre ni sa phrase d'introduction.
+ */
+export function MyPagesPanel(props: { readonly labelledBy?: string }) {
   const capability = usePageAdmin()
   if (!capability) return <PageAdminUnavailable />
-  return <Panel capability={capability} management={capability.management ?? null} />
+  return (
+    <SectionTitle.Provider value={props.labelledBy ?? null}>
+      <Panel capability={capability} management={capability.management ?? null} />
+    </SectionTitle.Provider>
+  )
 }
 
 function Panel(props: { readonly capability: PageAdminCapability; readonly management: PageManagement | null }) {
@@ -93,13 +103,16 @@ function SleepingAwareBody(props: { readonly pages: Loadable<readonly TeamPageVi
 function PanelContent(props: { readonly pages: Loadable<readonly TeamPageView[]>; readonly management: PageManagement | null; readonly sleeping: SleepingPresence }) {
   const { t } = useDiasporaGaT()
   const { pages, sleeping } = props
+  const titledBy = useContext(SectionTitle)
   return (
     <div className="flex flex-col gap-6">
-      <section aria-labelledby="mes-pages" className="flex flex-col gap-3">
-        <div>
-          <h2 id="mes-pages" className="font-display text-xl font-bold">{t("pageAdmin.myPages.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("pageAdmin.myPages.lead")}</p>
-        </div>
+      <section aria-labelledby={titledBy ?? "mes-pages"} className="flex flex-col gap-3">
+        {titledBy === null ? (
+          <div>
+            <h2 id="mes-pages" className="font-display text-xl font-bold">{t("pageAdmin.myPages.title")}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t("pageAdmin.myPages.lead")}</p>
+          </div>
+        ) : null}
         <Button asChild variant="outline" className="self-start"><NextLink href={routes.pages({ followed: true })}>{t("pageBrowsing.followingShortcut")}</NextLink></Button>
         {pages.status === "loading" ? (
           <Skeleton className="h-20 w-full rounded-xl" />
@@ -200,21 +213,23 @@ function ModeratorLinks(props: { readonly page: TeamPageView }) {
   )
 }
 
-/** L'administrateur et l'éditeur : publications, services, gestion et équipe. */
+/**
+ * L'administrateur et l'éditeur : publications, services, gestion et équipe. CH-816 (P0) : un lien
+ * rapide ne mène qu'à un onglet que la gestion de la page offre (même règle, `offeredManageTabs`) —
+ * services fermés, ni « Services », ni « Demandes reçues », ni « Avis ».
+ */
 function SpeakerLinks(props: { readonly page: TeamPageView }) {
   const { t } = useDiasporaGaT()
-  const reviews = useServiceReviews()
   const { page } = props
+  const offered = offeredManageTabs(page.ownerKind, usePageManageServed())
   return (
     <div className="flex flex-wrap gap-2">
       <Button asChild variant="ghost" size="sm" className="min-h-11">
         <NextLink href={routes.pageManage(page.handle, "publications")}><NewspaperIcon aria-hidden />{t("pagePostManagement.tab")}</NextLink>
       </Button>
-      {isServiceProviderOwnerKind(page.ownerKind) ? <>
-        <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "services")}>{t("pageServiceManagement.tabServices")}</NextLink></Button>
-        <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "demandes")}>{t("pageServiceManagement.tabRequests")}</NextLink></Button>
-        {reviews?.usePageReviews ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "avis")}>{t("pageReviews.tab")}</NextLink></Button> : null}
-      </> : null}
+      {offered.includes("services") ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "services")}>{t("pageServiceManagement.tabServices")}</NextLink></Button> : null}
+      {offered.includes("demandes") ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "demandes")}>{t("pageServiceManagement.tabRequests")}</NextLink></Button> : null}
+      {offered.includes("avis") ? <Button asChild variant="ghost" size="sm" className="min-h-11"><NextLink href={routes.pageManage(page.handle, "avis")}>{t("pageReviews.tab")}</NextLink></Button> : null}
       <Button asChild variant="outline" size="sm">
         <NextLink href={routes.pageManage(page.handle)} aria-label={t("pageAdmin.myPages.manageLabel", { name: page.name })}>
           <Settings2Icon aria-hidden />

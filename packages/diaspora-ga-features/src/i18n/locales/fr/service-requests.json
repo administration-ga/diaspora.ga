@@ -108,7 +108,7 @@
     },
     "detail": {
       "backMine": "Mes demandes",
-      "backActivity": "Mon activité",
+      "backActivity": "Mes pages",
       "notFoundTitle": "Demande introuvable",
       "notFoundBody": "Cette demande n’existe pas ou ne vous est pas accessible.",
       "fromRequester": "Demande {{name, de}}",

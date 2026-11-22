@@ -3,12 +3,12 @@
     "meta": {
       "catalog": "Services",
       "offer": "Service offer",
-      "activity": "My activity"
+      "activity": "My pages"
     },
     "catalog": {
       "title": "Diaspora services",
       "lead": "Services offered by the network's businesses and associations. DIASPORA.GA puts people in touch: no payment goes through the platform.",
-      "offerYourServices": "Do you offer services? Manage your offers in My activity"
+      "offerYourServices": "Do you offer services? Manage your offers in My pages"
     },
     "search": {
       "label": "Search for a service",
@@ -109,9 +109,9 @@
       "withdrawn": "Withdrawn"
     },
     "activity": {
-      "title": "My activity",
-      "lead": "The offers and requests of the pages you manage, and your pages.",
-      "tabsLabel": "My activity sections",
+      "title": "My pages",
+      "lead": "The pages you manage, gathered in one place.",
+      "tabsLabel": "My pages sections",
       "tab": {
         "offres": "Offers",
         "demandes": "Requests",
