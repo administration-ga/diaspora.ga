@@ -3,7 +3,7 @@
 import { MessagerieDock } from "@antsia/social-features/messagerie"
 import { MESSAGES_UNREAD_CAP } from "@antsia/social-features/shell/reseau-menu-destinations"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
-import { parseResidenceCountry, type CountryCode, type MembershipStatus } from "@diaspora-ga/domain"
+import { parseResidenceCountry, type AssociationMembershipStatus, type CountryCode, type MembershipStatus } from "@diaspora-ga/domain"
 import {
   Avatar,
   Button,
@@ -20,14 +20,20 @@ import {
   countryName,
 } from "@diaspora-ga/features"
 import {
+  useAssociations,
   useDataSource,
   useFeatureGate,
   useModerationDesk,
   useOpenCountries,
+  usePageAdmin,
   usePilotMetrics,
+  type AssociationListPage,
+  type AssociationsCapability,
   type FeatureGate,
+  type Loadable,
   type MembershipView,
   type ModerationDeskCapability,
+  type PageAdminCapability,
   type PilotMetricsCapability,
   type PostView,
 } from "@diaspora-ga/features/data"
@@ -43,9 +49,9 @@ import {
   ChartColumnIcon,
   ChevronsUpDownIcon,
   ClipboardListIcon,
-  CompassIcon,
   ContactRoundIcon,
   DatabaseIcon,
+  EarthIcon,
   FileTextIcon,
   GraduationCapIcon,
   HandshakeIcon,
@@ -76,7 +82,7 @@ import { toast } from "sonner"
 
 import { createFormats, type CreateFormat, type CreateFormatId } from "@/lib/create-menu"
 import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
-import { featureOfPath, hrefServed } from "@/lib/network-features"
+import { communitiesOffered, featureOfPath, hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
@@ -99,7 +105,7 @@ export function useComposer(): ComposerControl {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Arborescence (DG-005) — cinq destinations, un espace personnel, le compte
+// Arborescence (DG-005, menu léger CH-816) — une barre de cinq entrées au plus, le menu du compte
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -176,34 +182,52 @@ function served(gate: FeatureGate): (entry: NavEntry) => boolean {
 }
 
 /**
- * Les cinq destinations, dans cet ordre : Fil, Explorer, Services, Communautés, Messages.
- * Messages n'existe qu'avec iCom (même règle qu'avant) : sans lui, la barre garde
- * quatre onglets, sans trou. Ce qui relève de chacune ne s'écrit pas ici : la table des
- * destinations le dit pour toute adresse de la table des routes (UX-05, décision 5).
- * Messages porte ses non-lus (UX-06), lus seulement quand iCom est ouvert.
+ * La barre, cinq entrées au plus, dans cet ordre : Fil, Membres, Services, Communautés, Messages
+ * (menu léger, CH-816 lot P1). Fil et Membres toujours (Membres est la destination `explore`,
+ * servie à `/explorer`) ; Services quand son module est ouvert (filtre `served`) ; Communautés
+ * quand un module rangé sous elle est ouvert (`communitiesOffered`), son pays restant joignable
+ * par « Mon pays » ; Messages avec iCom (même règle qu'avant). Une entrée absente ne laisse pas
+ * de trou. Ce qui relève de chacune ne s'écrit pas ici : la table des destinations le dit pour
+ * toute adresse de la table des routes (UX-05, décision 5). Messages porte ses non-lus (UX-06),
+ * lus seulement quand iCom est ouvert.
  */
-function primaryEntries(current: NavDestination | null, withMessages: boolean, messagesUnread: number): NavEntry[] {
+function primaryEntries(current: NavDestination | null, offer: { readonly communities: boolean; readonly messages: boolean }, messagesUnread: number): NavEntry[] {
   const entries: NavEntry[] = [
     { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", active: current === "feed" },
-    { id: "explore", href: routes.explore(), icon: CompassIcon, labelKey: "nav.explore", active: current === "explore" },
+    // Des personnes pour « Membres », la Terre pour « Communautés » : les deux icônes ne se confondent jamais.
+    { id: "explore", href: routes.explore(), icon: UsersRoundIcon, labelKey: "nav.members", active: current === "explore" },
     { id: "services", href: routes.services(), icon: StoreIcon, labelKey: "nav.services", active: current === "services" },
-    { id: "communities", href: routes.communities(), icon: UsersRoundIcon, labelKey: "nav.communities", active: current === "communities" },
   ]
-  if (withMessages) {
+  if (offer.communities) {
+    entries.push({ id: "communities", href: routes.communities(), icon: EarthIcon, labelKey: "nav.communities", active: current === "communities" })
+  }
+  if (offer.messages) {
     entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages", unread: messagesUnread })
   }
   return entries
 }
 
-/** L'espace personnel : le rail du bureau le montre sous les destinations, le menu du compte le reprend. */
-function personalEntries(current: NavDestination | null, withRelations: boolean): NavEntry[] {
-  const relations: NavEntry[] = withRelations
+/**
+ * Les entrées personnelles, dans le menu du compte seulement (le rail du bureau ne les porte plus,
+ * CH-816) : une entrée n'y paraît qu'avec un contenu. « Mes pages » et « Mes associations »
+ * attendent la lecture qui le prouve ; les entrées d'un module (demandes, candidatures, mentorats)
+ * suivent son ouverture (filtre `served`) ; relations (réseau du moteur), enregistrements et
+ * parrainage restent toujours.
+ */
+function personalEntries(current: NavDestination | null, holds: { readonly relations: boolean; readonly pages: boolean; readonly associations: boolean }): NavEntry[] {
+  const relations: NavEntry[] = holds.relations
     ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: current === "relations" }]
+    : []
+  const pages: NavEntry[] = holds.pages
+    ? [{ id: "myActivity", href: routes.myActivity(), icon: BriefcaseBusinessIcon, labelKey: "nav.myActivity", active: current === "myActivity" }]
+    : []
+  const associations: NavEntry[] = holds.associations
+    ? [{ id: "myAssociations", href: routes.myAssociations(), icon: HeartHandshakeIcon, labelKey: "nav.myAssociations", active: current === "myAssociations" }]
     : []
   return [
     { id: "myRequests", href: routes.myServiceRequests(), icon: ClipboardListIcon, labelKey: "nav.myRequests", active: current === "myRequests" },
-    { id: "myActivity", href: routes.myActivity(), icon: BriefcaseBusinessIcon, labelKey: "nav.myActivity", active: current === "myActivity" },
-    { id: "myAssociations", href: routes.myAssociations(), icon: HeartHandshakeIcon, labelKey: "nav.myAssociations", active: current === "myAssociations" },
+    ...pages,
+    ...associations,
     // Vague H du plan global : candidatures (DG-025) et mentorat (DG-024).
     { id: "myApplications", href: routes.myApplications(), icon: FileTextIcon, labelKey: "nav.myApplications", active: current === "myApplications" },
     { id: "myMentoring", href: routes.myMentoring(), icon: GraduationCapIcon, labelKey: "nav.myMentoring", active: current === "myMentoring" },
@@ -221,6 +245,45 @@ const NO_MODERATION_DESK: Pick<ModerationDeskCapability, "useDesk"> = { useDesk:
 const NO_PILOT_METRICS: Pick<PilotMetricsCapability, "useAccess"> = { useAccess: () => ({ status: "ready", data: { allowed: false } }) }
 
 /**
+ * Même règle pour les entrées personnelles qui attendent un contenu : sans capacité (module des
+ * pages fermé, fournisseur qui ne la sert pas), une lecture constante qui ne prouve rien.
+ */
+const NOTHING_HELD: Loadable<readonly never[]> = { status: "ready", data: [] }
+const NO_ASSOCIATION_ITEMS: Loadable<AssociationListPage<never>> = { status: "ready", data: { items: [], continueCursor: null, isDone: true } }
+const NO_PAGE_ADMIN: Pick<PageAdminCapability, "useMyPages" | "useMyTeamPages" | "management"> = { useMyPages: () => NOTHING_HELD }
+const NO_ASSOCIATIONS: Pick<AssociationsCapability, "useMyAssociations"> = { useMyAssociations: () => NO_ASSOCIATION_ITEMS }
+/** La première fenêtre de « Mes associations », la plus récemment changée : une constante, lue telle quelle à chaque rendu. */
+const FIRST_ASSOCIATIONS_WINDOW = { cursor: null } as const
+
+/** Une lecture prête qui montre au moins un élément ; en cours, refusée ou vide : rien n'est affirmé. */
+function holdsAny(read: Loadable<readonly unknown[]>): boolean {
+  return read.status === "ready" && read.data.length > 0
+}
+
+/**
+ * « Mes pages » : au moins une page où je tiens un rôle vivant — l'équipe entière, modérateur
+ * compris, quand le fournisseur la sert (sinon les pages où je parle), et mes pages en sommeil,
+ * qui restent les miennes et ne se lisent plus que là. Tant qu'aucune lecture ne l'a prouvé,
+ * l'entrée ne paraît pas (aucun clignement). La source ne change pas pendant la vie de l'arbre
+ * (un changement des modules ouverts le remonte) : les appels facultatifs sont stables.
+ */
+function useHoldsPageRole(): boolean {
+  const pageAdmin = usePageAdmin() ?? NO_PAGE_ADMIN
+  const team: Loadable<readonly unknown[]> = pageAdmin.useMyTeamPages ? pageAdmin.useMyTeamPages() : pageAdmin.useMyPages()
+  const sleeping: Loadable<readonly unknown[]> = pageAdmin.management?.useMySleepingPages?.() ?? NOTHING_HELD
+  return holdsAny(team) || holdsAny(sleeping)
+}
+
+/** Une adhésion vivante, ou une demande qui attend sa réponse ; un refus, un départ ou une exclusion seuls n'ouvrent rien. */
+const ASSOCIATION_HELD: ReadonlySet<AssociationMembershipStatus> = new Set<AssociationMembershipStatus>(["requested", "accepted"])
+
+/** « Mes associations » : au moins une adhésion ou une demande en cours dans la première fenêtre de la liste. */
+function useHoldsAssociation(): boolean {
+  const mine = (useAssociations() ?? NO_ASSOCIATIONS).useMyAssociations(FIRST_ASSOCIATIONS_WINDOW)
+  return mine.status === "ready" && mine.data.items.some((item) => ASSOCIATION_HELD.has(item.status))
+}
+
+/**
  * Les entrées réservées aux responsables que le serveur reconnaît (modération par pays, mesure du
  * pilote) : absentes pour tout autre membre, et le serveur rejuge chaque lecture derrière elles.
  */
@@ -235,7 +298,7 @@ function responsibleEntries(current: NavDestination | null, access: { readonly m
   return entries
 }
 
-/** Le menu du compte, ouvert depuis l'avatar : profil, réglages, l'espace personnel, mes données. */
+/** Le menu du compte, ouvert depuis l'avatar : profil, réglages, les entrées personnelles et réservées, mes données. */
 function accountEntries(membership: MembershipView, current: NavDestination | null, personal: readonly NavEntry[]): NavEntry[] {
   return [
     { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", active: current === "profile" },
@@ -308,12 +371,16 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Coque des pages membres — squelette de l'espace agent (charte §8), arborescence DG-005 :
- *   · bureau (≥ 960 px) : rail gauche (pays, cinq destinations, espace personnel,
- *     Publier, carte de l'avatar qui ouvre le menu du compte), colonne du fil
+ * Coque des pages membres — squelette de l'espace agent (charte §8), arborescence DG-005,
+ * menu léger (CH-816, lot P1) :
+ *   · bureau (≥ 960 px) : rail gauche (pays, la barre de trois à cinq entrées, Publier,
+ *     Créer, carte de l'avatar qui ouvre le menu du compte), colonne du fil
  *     (≤ 792 px), rail droit de 312 px dès 1 280 px ;
  *   · téléphone : en-tête collant (mot-symbole, Publier, cloche, avatar → feuille du
- *     compte), barre basse flottante à cinq destinations, composeur en feuille.
+ *     compte), barre basse flottante aux mêmes entrées, composeur en feuille.
+ * Les entrées personnelles (Mes relations, Enregistrements, Parrainer ; Mes pages et Mes
+ * associations quand j'en ai ; celles d'un module ouvert) et celles des responsables
+ * (Modération, Pilote) vivent dans le menu du compte seulement, plus dans le rail.
  *
  * Publier vit dans l'en-tête au téléphone, pas en bouton flottant : au-dessus de la
  * barre basse se tient la pile des cartes flottantes (démonstration, statut d'adhésion,
@@ -321,9 +388,9 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
  * vertical (G6) ne doit rien porter sur le sujet d'une vidéo. L'en-tête collant le
  * garde au même endroit sur chaque écran.
  *
- * Aucune perte d'accès : chaque lien d'avant reste à un geste (destinations, Publier,
- * cloche) ou à deux (Membres par Explorer ; Profil, Réglages, Relations, Parrainer par
- * le menu du compte, aussi présents dans le rail du bureau). Le menu du compte porte
+ * Aucune perte d'accès : chaque lien d'avant reste à un geste (barre, Publier, cloche,
+ * « Mon pays » pour le hub de son pays) ou à deux (la recherche des membres par Membres ;
+ * Profil, Réglages, Relations, Parrainer par le menu du compte). Le menu du compte porte
  * aussi les textes du site (« Informations ») et « Se déconnecter partout » (UX-03).
  * Jamais d'AppShell de l'administration, jamais de chrome du Poste.
  */
@@ -349,14 +416,18 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
   // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
   const current = navDestinationOf(pathname, membership.handle)
-  // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et « Mon espace » n'offrent que ceux-là.
+  // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et le menu du compte n'offrent que ceux-là.
   const features = useFeatureGate()
   const offered = served(features)
-  const primary = primaryEntries(current, icom !== null, icom === null ? 0 : messagesUnread).filter(offered)
+  const primary = primaryEntries(current, { communities: communitiesOffered(features), messages: icom !== null }, icom === null ? 0 : messagesUnread).filter(offered)
+  // Sur le hub de son pays sans « Communautés » dans la barre, « Mon pays » est l'entrée courante (une entrée l'est toujours).
+  const homeCountryCurrent = current === "communities" && !primary.some((entry) => entry.id === "communities")
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
+  const holdsPageRole = useHoldsPageRole()
+  const holdsAssociation = useHoldsAssociation()
   const personal = [
-    ...personalEntries(current, network !== null),
+    ...personalEntries(current, { relations: network !== null, pages: holdsPageRole, associations: holdsAssociation }),
     ...responsibleEntries(current, {
       moderation: desk.status === "ready" && desk.data !== null,
       pilot: pilot.status === "ready" && pilot.data.allowed,
@@ -381,10 +452,10 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={primary} personal={personal} account={account} information={information} create={create} onPublish={openComposer} />
+          <DesktopRail membership={membership} primary={primary} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
 
           <div className="min-w-0 flex-1">
-            <MobileHeader membership={membership} account={account} information={information} create={create} onPublish={openComposer} />
+            <MobileHeader membership={membership} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
             <main
               id="contenu"
               className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
@@ -480,17 +551,21 @@ function FeatureLoading() {
 // Bureau : le rail gauche
 // ═══════════════════════════════════════════════════════════════
 
+/**
+ * Le rail du bureau : le pays, la barre, Publier, Créer, puis la carte de l'avatar. Plus de
+ * groupe « Mon espace » (CH-816) : les entrées personnelles sont dans le menu du compte, qui
+ * les montrait déjà ; le rail ne double plus ce menu.
+ */
 function DesktopRail(props: {
   membership: MembershipView
   primary: readonly NavEntry[]
-  personal: readonly NavEntry[]
+  homeCountryCurrent: boolean
   account: readonly NavEntry[]
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
   onPublish: () => void
 }) {
   const { t } = useDiasporaGaT()
-  const personalId = useId()
   return (
     <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col gap-4 overflow-y-auto overscroll-contain border-r border-border px-4 py-5 min-[960px]:flex">
       <div className="flex flex-wrap items-center gap-2 px-2">
@@ -500,18 +575,10 @@ function DesktopRail(props: {
         <AppDemoChip />
         <NotificationBell className="ml-auto" />
       </div>
-      <HomeCountryLink membership={props.membership} caption="visible" className="mx-2 flex-col items-start gap-1" />
+      <HomeCountryLink membership={props.membership} caption="visible" current={props.homeCountryCurrent} className="mx-2 flex-col items-start gap-1" />
       <nav aria-label={t("nav.label")} className="flex flex-col gap-1">
         {props.primary.map((entry) => (
           <RailLink key={entry.id} entry={entry} />
-        ))}
-      </nav>
-      <nav aria-labelledby={personalId} className="flex flex-col gap-0.5">
-        <p id={personalId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
-          {t("nav.personal")}
-        </p>
-        {props.personal.map((entry) => (
-          <RailLink key={entry.id} entry={entry} compact />
         ))}
       </nav>
       <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
@@ -521,7 +588,7 @@ function DesktopRail(props: {
   )
 }
 
-function RailLink(props: { entry: NavEntry; compact?: boolean }) {
+function RailLink(props: { entry: NavEntry }) {
   const { t } = useDiasporaGaT()
   const Icon = props.entry.icon
   const unread = props.entry.unread ?? 0
@@ -531,24 +598,38 @@ function RailLink(props: { entry: NavEntry; compact?: boolean }) {
       aria-current={props.entry.active ? "page" : undefined}
       aria-label={unreadName(t, props.entry)}
       className={cn(
-        "flex min-h-11 min-w-0 items-center gap-3 rounded-[var(--esp-r-chrome)] px-3 font-medium transition-colors focus-visible:shadow-focus",
-        props.compact ? "text-sm" : "text-[15px]",
+        "flex min-h-11 min-w-0 items-center gap-3 rounded-[var(--esp-r-chrome)] px-3 text-[15px] font-medium transition-colors focus-visible:shadow-focus",
         props.entry.active ? "bg-[var(--esp-accent-soft)] text-[var(--esp-accent-deep)]" : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <Icon className={cn("shrink-0", props.compact ? "size-4" : "size-5")} aria-hidden />
+      <Icon className="size-5 shrink-0" aria-hidden />
       <span className="min-w-0 truncate">{t(props.entry.labelKey)}</span>
       {unread > 0 ? <UnreadBadge count={unread} className="ml-auto shrink-0" /> : null}
     </NextLink>
   )
 }
 
-/** Le pays de résidence, contexte permanent (charte §5) : il mène à « Communautés », le hub de son pays. */
-function HomeCountryLink(props: { membership: MembershipView; caption: "visible" | "hidden"; className?: string }) {
+/**
+ * Le pays de résidence, contexte permanent (charte §5) : il mène au hub de son pays
+ * (`/communautes`, socle). Quand « Communautés » n'est pas dans la barre (aucun module rangé
+ * sous elle n'est ouvert), c'est lui l'entrée courante sur ces adresses : `aria-current`, et la
+ * légende passe à la couleur et à la graisse de l'entrée courante.
+ */
+function HomeCountryLink(props: { membership: MembershipView; caption: "visible" | "hidden"; current: boolean; className?: string }) {
   const { t } = useDiasporaGaT()
   return (
-    <NextLink href={routes.communities()} className={cn("flex min-w-0 rounded-md focus-visible:shadow-focus", props.className)}>
-      <span className={props.caption === "visible" ? "text-xs font-semibold text-muted-foreground" : "sr-only"}>{t("nav.hub")}</span>
+    <NextLink
+      href={routes.communities()}
+      aria-current={props.current ? "page" : undefined}
+      className={cn("flex min-w-0 rounded-md focus-visible:shadow-focus", props.className)}
+    >
+      <span
+        className={
+          props.caption === "visible" ? cn("text-xs", props.current ? "font-bold text-[var(--esp-accent-deep)]" : "font-semibold text-muted-foreground") : "sr-only"
+        }
+      >
+        {t("nav.hub")}
+      </span>
       <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} className="min-w-0 shrink" />
     </NextLink>
   )
@@ -663,7 +744,14 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
 // Téléphone : l'en-tête, la feuille du compte, la barre basse
 // ═══════════════════════════════════════════════════════════════
 
-function MobileHeader(props: { membership: MembershipView; account: readonly NavEntry[]; information: readonly NavEntry[]; create: readonly CreateFormat[]; onPublish: () => void }) {
+function MobileHeader(props: {
+  membership: MembershipView
+  homeCountryCurrent: boolean
+  account: readonly NavEntry[]
+  information: readonly NavEntry[]
+  create: readonly CreateFormat[]
+  onPublish: () => void
+}) {
   const { t } = useDiasporaGaT()
   const demo = useDataSource().kind === "demo"
   return (
@@ -673,7 +761,7 @@ function MobileHeader(props: { membership: MembershipView; account: readonly Nav
           tiennent dès 320 px ; avec le repère de démonstration, celui-ci ne garde que son icône sous
           420 px (son nom reste lu) et le mot-symbole son œillet sous 380 px (le lien reste nommé).
           L'étiquette pays n'entre qu'à partir de 440 px, le format téléphone de la charte ; plus
-          étroit, « Communautés » et la feuille du compte portent le pays. */}
+          étroit, la feuille du compte porte le pays (et « Communautés » quand elle est dans la barre). */}
       <div className="flex shrink-0 items-center gap-2 max-[420px]:[&_[data-slot=demo-chip]>span]:sr-only">
         <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
           <Wordmark className={demo ? "max-[380px]:[&>span:last-child]:sr-only" : undefined} />
@@ -681,7 +769,7 @@ function MobileHeader(props: { membership: MembershipView; account: readonly Nav
         <AppDemoChip />
       </div>
       <div className="flex min-w-0 items-center justify-end gap-1">
-        <HomeCountryLink membership={props.membership} caption="hidden" className="hidden min-[440px]:flex" />
+        <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
         <AccountSheet membership={props.membership} entries={props.account} information={props.information} create={props.create} />
@@ -853,10 +941,11 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
 }
 
 /**
- * La barre basse flottante : les cinq destinations (quatre sans iCom). Chaque onglet
- * prend la largeur de son libellé (« Communautés » ne tient pas dans un cinquième de
- * 320 px) et garde 44 px au moins ; un libellé trop long pour un très grand texte se
- * tronque, son nom accessible reste entier. Posée au-dessus de la zone sûre.
+ * La barre basse flottante : les entrées de la barre, de trois à cinq selon les modules
+ * ouverts et iCom (même liste que le rail). Aucun nombre de colonnes écrit : chaque onglet
+ * prend la largeur de son libellé et partage le reste (« Communautés » ne tient pas dans un
+ * cinquième de 320 px), et garde 44 px au moins ; un libellé trop long pour un très grand
+ * texte se tronque, son nom accessible reste entier. Posée au-dessus de la zone sûre.
  */
 function MobileTabBar(props: { entries: readonly NavEntry[] }) {
   const { t } = useDiasporaGaT()

@@ -1,8 +1,8 @@
-import { NETWORK_FEATURES } from "@diaspora-ga/features/data"
+import { featureGateOf, NETWORK_FEATURES, type NetworkFeature } from "@diaspora-ga/features/data"
 import { describe, expect, it } from "vitest"
 
-import { featureOfPath, ROUTE_FEATURES } from "./network-features"
-import { ROUTE_DESTINATIONS } from "./nav-destinations"
+import { COMMUNITY_FEATURES, communitiesOffered, featureOfPath, featuresUnderDestination, ROUTE_FEATURES } from "./network-features"
+import { ROUTE_DESTINATIONS, type RouteKey } from "./nav-destinations"
 import { routes } from "./routes"
 
 /** ADR-0041 du moteur : chaque adresse relève du socle ou d'une fonctionnalité activable. */
@@ -56,5 +56,60 @@ describe("adresses et fonctionnalités du réseau", () => {
     expect(featureOfPath("/inconnue")).toBeNull()
     expect(featureOfPath(routes.legalNotice())).toBeNull()
     expect(featureOfPath(routes.enter())).toBeNull()
+  })
+})
+
+/** CH-816, lot P1 : « Communautés » n'entre dans la barre qu'avec un module qui s'y range. */
+describe("les modules rangés sous une destination, dérivés des deux tables", () => {
+  /** Une garde comme l'application la monte : ces seules clés ouvertes, lecture faite. */
+  const gate = (open: readonly NetworkFeature[]) => featureGateOf({ openFeatures: open, featuresReady: true })
+
+  it("sous Communautés : groupes et évènements, emploi, entraide, mentorat, kit d'arrivée — ni les pages, ni les services, ni la mesure du pilote", () => {
+    expect(COMMUNITY_FEATURES).toEqual(["groupsAndEvents", "jobs", "mutualAid", "mentoring", "arrivalKit"])
+    expect(featuresUnderDestination("communities")).toEqual(COMMUNITY_FEATURES)
+  })
+
+  it("suit les tables : un module y figure si et seulement si une de ses adresses se range sous la destination", () => {
+    const keys = Object.keys(ROUTE_FEATURES) as RouteKey[]
+    for (const destination of ["feed", "explore", "services", "communities", "messages", "myActivity", "pilot"] as const) {
+      const expected = NETWORK_FEATURES.filter((feature) =>
+        keys.some((key) => {
+          const home = ROUTE_DESTINATIONS[key]
+          return ROUTE_FEATURES[key] === feature && home.kind === "member" && home.destination === destination
+        }),
+      )
+      expect(featuresUnderDestination(destination), destination).toEqual(expected)
+    }
+    // Le socle seul ne range aucun module : le fil et la messagerie n'en ont pas.
+    expect(featuresUnderDestination("feed")).toEqual([])
+    expect(featuresUnderDestination("messages")).toEqual([])
+    expect(featuresUnderDestination("services")).toEqual(["services"])
+  })
+
+  it.each([
+    [[], false],
+    [["pages"], false],
+    [["pages", "pilotMetrics"], false],
+    [["pages", "services"], false],
+    [["pages", "services", "groupsAndEvents"], true],
+    [["pages", "groupsAndEvents"], true],
+    [["pages", "jobs"], true],
+    [["mutualAid"], true],
+    [["mentoring"], true],
+    [["arrivalKit"], true],
+    [[...NETWORK_FEATURES], true],
+  ] as const)("ouverts %j : Communautés offerte = %s", (open, offered) => {
+    expect(communitiesOffered(gate(open))).toBe(offered)
+  })
+
+  it("chaque module seul : offerte exactement pour ceux qui se rangent sous Communautés", () => {
+    for (const feature of NETWORK_FEATURES) {
+      expect(communitiesOffered(gate([feature])), feature).toBe(COMMUNITY_FEATURES.includes(feature))
+    }
+  })
+
+  it("pendant la lecture des modules, rien n'est affirmé ouvert ; une source non gardée (test d'écran) sert tout", () => {
+    expect(communitiesOffered(featureGateOf({ openFeatures: [], featuresReady: false }))).toBe(false)
+    expect(communitiesOffered(featureGateOf(null))).toBe(true)
   })
 })

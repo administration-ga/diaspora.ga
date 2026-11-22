@@ -75,9 +75,12 @@ describe("/explorer — le point d'entrée de la découverte", () => {
   it("monte, pour un membre de la démonstration, la recherche de membres, les services, l'annuaire des pages et les pays ouverts", () => {
     renderExplore(demoSource("p-mireille"))
 
-    expect(screen.getByRole("heading", { level: 1, name: "Explorer" })).toBeInTheDocument()
-    const members = screen.getByRole("region", { name: "Membres" })
-    expect(within(members).getByRole("link", { name: "Chercher un membre" })).toHaveAttribute("href", "/membres")
+    // CH-816, lot P1 : l'entrée s'appelle « Membres » ; sa carte dit le geste, sans répéter le titre.
+    expect(screen.getByRole("heading", { level: 1, name: "Membres" })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "Explorer" })).toBeNull()
+    expect(screen.getAllByRole("heading", { name: "Membres" })).toHaveLength(1)
+    const members = screen.getByRole("region", { name: "Chercher une personne" })
+    expect(within(members).getByRole("link", { name: "Ouvrir la recherche" })).toHaveAttribute("href", "/membres")
     const services = screen.getByRole("region", { name: "Services" })
     expect(within(services).getByRole("link", { name: "Parcourir les services" })).toHaveAttribute("href", "/services")
     expect(screen.getByRole("region", { name: "Annuaire des pages" })).toBeInTheDocument()
@@ -116,8 +119,8 @@ describe("/explorer — le point d'entrée de la découverte", () => {
 
   it("parle anglais", () => {
     renderExplore(demoSource("p-mireille"), "en")
-    expect(screen.getByRole("heading", { level: 1, name: "Explore" })).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: "Search for a member" })).toHaveAttribute("href", "/membres")
+    expect(screen.getByRole("heading", { level: 1, name: "Members" })).toBeInTheDocument()
+    expect(within(screen.getByRole("region", { name: "Find a person" })).getByRole("link", { name: "Open the search" })).toHaveAttribute("href", "/membres")
     expect(screen.getByRole("link", { name: "Browse services" })).toHaveAttribute("href", "/services")
     expect(within(screen.getByRole("region", { name: "Open countries" })).getByRole("link")).toHaveTextContent("my country")
   })
@@ -145,7 +148,7 @@ describe("/explorer — le point d'entrée de la découverte", () => {
 
   it("sans session, ne montre rien et renvoie vers l'entrée", () => {
     renderExplore(demoSource(null))
-    expect(screen.queryByRole("heading", { name: "Explorer" })).toBeNull()
+    expect(screen.queryByRole("heading", { name: "Membres" })).toBeNull()
     expect(mocks.replace).toHaveBeenCalledWith("/entrer")
   })
 })

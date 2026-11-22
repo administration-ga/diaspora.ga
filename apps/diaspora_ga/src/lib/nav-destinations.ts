@@ -2,14 +2,21 @@
  * La table des destinations (UX-05) — module PUR : chaque adresse de la table des routes se range
  * sous UNE entrée de la navigation de membre, ou reste hors de la coque.
  *
- *  · une des cinq destinations de la barre (Fil, Explorer, Services, Communautés, Messages) ;
- *  · une entrée de « Mon espace » (rail du bureau, menu du compte), entrées des responsables comprises ;
+ *  · une destination de la barre, cinq au plus (Fil, Membres, Services, Communautés, Messages) ;
+ *  · une entrée personnelle du menu du compte, sous l'avatar, entrées des responsables comprises ;
  *  · une entrée du compte, sous l'avatar (profil, réglages) ;
  *  · hors de la coque : la porte, les pages publiques et « Mes données » hors adhésion.
  *
+ * Menu léger (CH-816, lot P1) : la barre n'offre une destination que si elle a de quoi montrer.
+ * Fil et Membres toujours (Membres est la destination `explore`, servie à `/explorer`) ;
+ * Services avec son module ; Communautés dès qu'un module rangé sous elle est ouvert (dérivé de
+ * cette table et de celle des fonctionnalités, `lib/network-features`) ; Messages avec iCom. Les
+ * entrées personnelles ne vivent plus dans le rail du bureau : seulement dans le menu du compte,
+ * chacune quand elle a un contenu ou que son module est ouvert (la coque en juge).
+ *
  * Rattachements de la décision 5 du plan 02, accordée par le propriétaire : entraide, kit
  * d'arrivée, mentorat, emploi, talents, agenda, groupes et évènements sous Communautés ; annuaire
- * des pages, page et profil d'un autre membre sous Explorer. Ce module n'écrit aucune adresse : il
+ * des pages, page et profil d'un autre membre sous Membres. Ce module n'écrit aucune adresse : il
  * compose chaque gabarit par la table des routes. La coque le lit pour poser `aria-current` ; le
  * mobile le reprendra (plan 16). Un test de complétude fait échouer toute route sans rangement.
  */
@@ -17,11 +24,14 @@ import type { CountryCode } from "@diaspora-ga/domain"
 
 import { routes } from "./routes"
 
-/** Les cinq destinations de la barre, dans l'ordre du rendu (DG-005). */
+/**
+ * Les destinations de la barre, dans l'ordre du rendu (DG-005) : cinq au plus, chacune offerte
+ * selon sa règle (la coque). `explore` s'affiche « Membres ».
+ */
 export const PRIMARY_DESTINATIONS = ["feed", "explore", "services", "communities", "messages"] as const
 export type PrimaryDestination = (typeof PRIMARY_DESTINATIONS)[number]
 
-/** « Mon espace » : l'espace personnel, puis les entrées réservées aux responsables. */
+/** Les entrées personnelles du menu du compte, puis celles réservées aux responsables. */
 export const PERSONAL_DESTINATIONS = [
   "myRequests",
   "myActivity",
@@ -101,7 +111,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   // La page des notifications (NP-04) relève du fil, comme le relevé des notifications du moteur
   // (`reseau-agent-nav` : « notifications » aboutit au fil) ; la cloche, elle, reste dans l'en-tête.
   notifications: member("feed", routes.notifications()),
-  // Explorer : l'annuaire des membres et des pages, une page et ce qu'on y fait sans la gérer.
+  // Membres (destination `explore`) : l'annuaire des membres et des pages, une page et ce qu'on y fait sans la gérer.
   explore: member("explore", routes.explore()),
   members: member("explore", routes.members()),
   pages: member("explore", routes.pages()),
@@ -111,7 +121,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   pageClaim: member("explore", routes.pageClaim(SEGMENT)),
   // Pas encore servie ici : rangée comme le volet des conférences de la coque du moteur (Découvrir).
   conference: member("explore", routes.conference(SEGMENT)),
-  // Un profil : le sien relève du compte, celui d'un autre membre d'Explorer.
+  // Un profil : le sien relève du compte, celui d'un autre membre de Membres.
   profile: person(routes.profile(SEGMENT)),
   profilePreview: person(routes.profilePreview(SEGMENT)),
   profileTab: person(routes.profileTab(SEGMENT, "publications")),
@@ -121,7 +131,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   // Services : le catalogue et ses offres.
   services: member("services", routes.services()),
   serviceOffer: member("services", routes.serviceOffer(SEGMENT)),
-  // Communautés : les hubs pays et la vie communautaire du pays.
+  // Communautés : les hubs pays (socle, joignables aussi par « Mon pays ») et la vie communautaire du pays.
   communities: member("communities", routes.communities()),
   hub: member("communities", routes.hub(SEGMENT as CountryCode)),
   hubWelcome: member("communities", routes.hubWelcome(SEGMENT as CountryCode)),
@@ -143,13 +153,13 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   // IM-04 : une conversation de groupe et le journal d'appels d'iCom.
   groupConversation: member("messages", routes.groupConversation(SEGMENT)),
   callJournal: member("messages", routes.callJournal()),
-  // Mon espace.
+  // Les entrées personnelles (menu du compte). `myActivity` s'affiche « Mes pages ».
   myServiceRequests: member("myRequests", routes.myServiceRequests()),
   serviceRequest: member("myRequests", routes.serviceRequest(SEGMENT)),
   myActivity: member("myActivity", routes.myActivity()),
   activityRequest: member("myActivity", routes.activityRequest(SEGMENT)),
   newPage: member("myActivity", routes.newPage()),
-  // Gérer une page, ses décisions et ses adhérents relève de « Mon activité », la lire d'Explorer.
+  // Gérer une page, ses décisions et ses adhérents relève de « Mes pages », la lire de Membres.
   pageManage: member("myActivity", routes.pageManage(SEGMENT)),
   pageDecisions: member("myActivity", routes.pageDecisions(SEGMENT)),
   associationMembers: member("myActivity", routes.associationMembers(SEGMENT)),
@@ -240,8 +250,8 @@ export function routeKeyOf(pathname: string): RouteKey | null {
 
 /**
  * L'entrée de navigation dont relève ce chemin, ou `null` (hors de la coque, ou inconnu). Le
- * gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer` relève de « Mon activité »,
- * `/pages/<page>` d'Explorer, `/messages/<conversation>` de Messages ; `/servicesx` d'aucune.
+ * gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer` relève de « Mes pages »,
+ * `/pages/<page>` de Membres, `/messages/<conversation>` de Messages ; `/servicesx` d'aucune.
  */
 export function navDestinationOf(pathname: string, ownHandle: string | null): NavDestination | null {
   const segments = segmentsOf(pathname)

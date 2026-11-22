@@ -4,13 +4,18 @@ import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspo
 import {
   DataSourceProvider,
   gateSource,
+  type AssociationListPage,
   type DiasporaGaActions,
   type DiasporaGaDataSource,
   type Loadable,
+  type ManagedPageView,
   type MembershipView,
   type ModerationDeskView,
+  type MyAssociationItemView,
   type NetworkFeature,
   type PilotMetricsAccessView,
+  type SleepingPageView,
+  type TeamPageView,
 } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
@@ -22,7 +27,7 @@ import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
-import { ACCOUNT_DESTINATIONS, PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
+import { PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
 import { AppShell, useComposer } from "./app-shell"
@@ -149,6 +154,65 @@ function withResponsibleAccess(source: DiasporaGaDataSource): DiasporaGaDataSour
   return { ...source, moderationDesk: { ...moderationDesk, useDesk: () => RESPONSIBLE_DESK }, pilotMetrics: { ...pilotMetrics, useAccess: () => PILOT_ALLOWED } }
 }
 
+const ready = <T,>(data: T): Loadable<T> => ({ status: "ready", data })
+const LOADING = { status: "loading" } as const
+const REFUSED = { status: "error", code: "not_found" } as const
+
+/** Une page dont le membre fait partie de l'équipe vivante (AS-10), telle que « Mes pages » la lit. */
+const TEAM_PAGE: TeamPageView = { id: "pages_amicale", handle: "amicale-lyon", name: "Amicale des Gabonais de Lyon", ownerKind: "association", teamRole: "moderator" }
+/** Une page où le membre parle (fournisseur antérieur à AS-10, sans lecture de l'équipe). */
+const SPEAKING_PAGE: ManagedPageView = { id: "pages_atelier", handle: "atelier-lyon", name: "Atelier de Lyon", ownerKind: "company", role: "admin" }
+/** Une page en sommeil de son équipe (AS-11a) : elle ne se lit plus que dans « Mes pages ». */
+const SLEEPING_PAGE: SleepingPageView = {
+  id: "pages_dort",
+  handle: "atelier-endormi",
+  name: "Atelier endormi",
+  ownerKind: "company",
+  badge: "community",
+  country: "FR",
+  teamRole: "admin",
+  sleepEndsAt: NOW + 86_400_000,
+  state: "asleep",
+  canWake: true,
+}
+
+function associationItem(status: MyAssociationItemView["status"]): MyAssociationItemView {
+  return { membershipId: `adhesion-${status}`, status, role: "member", decisionReason: null, statusChangedAt: NOW, page: { id: "pages_amicale", handle: "amicale-lyon", name: "Amicale des Gabonais de Lyon" } }
+}
+
+function associationsPage(...statuses: MyAssociationItemView["status"][]): Loadable<AssociationListPage<MyAssociationItemView>> {
+  return ready({ items: statuses.map(associationItem), continueCursor: null, isDone: true })
+}
+
+/** Ce que les lectures personnelles du membre rendent (équipe des pages, pages en sommeil, adhésions). */
+interface Holdings {
+  readonly teamPages?: Loadable<readonly TeamPageView[]>
+  readonly sleepingPages?: Loadable<readonly SleepingPageView[]>
+  readonly associations?: Loadable<AssociationListPage<MyAssociationItemView>>
+}
+
+/** Un membre qui gère une page et adhère à une association : « Mes pages » et « Mes associations » ont un contenu. */
+const HOLDS_ALL: Holdings = { teamPages: ready([TEAM_PAGE]), sleepingPages: ready([]), associations: associationsPage("accepted") }
+/** Un membre qui n'en a aucune : les deux lectures répondent, vides. */
+const HOLDS_NOTHING: Holdings = { teamPages: ready([]), sleepingPages: ready([]), associations: associationsPage() }
+
+/** Les lectures de la démonstration remplacées par celles du test, capacités servies par le vrai fournisseur. */
+function withHoldings(source: DiasporaGaDataSource, holdings: Holdings): DiasporaGaDataSource {
+  const { pageAdmin, associations } = source
+  if (!pageAdmin || !associations) throw new Error("La démonstration sert la gestion des pages et les associations.")
+  const { teamPages, sleepingPages, associations: mine } = holdings
+  const management = pageAdmin.management
+  return {
+    ...source,
+    pageAdmin: {
+      ...pageAdmin,
+      ...(teamPages ? { useMyTeamPages: () => teamPages } : {}),
+      ...(sleepingPages && management ? { management: { ...management, useMySleepingPages: () => sleepingPages } } : {}),
+    },
+    associations: mine ? { ...associations, useMyAssociations: () => mine } : associations,
+  }
+}
+
 function renderShell(
   options: {
     pathname?: string
@@ -156,6 +220,10 @@ function renderShell(
     icom?: boolean
     network?: boolean
     responsible?: boolean
+    /** Les lectures personnelles du membre (CH-816 : une entrée personnelle n'apparaît qu'avec un contenu). */
+    holdings?: Holdings
+    /** Remplacer une capacité de la source avant la garde (fournisseur antérieur, capacité absente). */
+    overrides?: Partial<DiasporaGaDataSource>
     locale?: "fr" | "en"
     actions?: Partial<DiasporaGaActions>
     /** ADR-0041 du moteur : la source gardée comme l'application la monte (clés ouvertes, ou lecture en cours). */
@@ -167,7 +235,8 @@ function renderShell(
   mocks.network = options.network ?? options.icom ? NETWORK : null
   const demo = createDemoDataSource(new DemoStore(null, () => NOW, 0))
   const responsible = options.responsible ? withResponsibleAccess(demo) : demo
-  const source = options.features === undefined ? responsible : gateSource(responsible, options.features === "loading" ? [] : options.features, options.features !== "loading")
+  const held = { ...(options.holdings ? withHoldings(responsible, options.holdings) : responsible), ...options.overrides }
+  const source = options.features === undefined ? held : gateSource(held, options.features === "loading" ? [] : options.features, options.features !== "loading")
   return render(
     <I18nProvider locale={options.locale ?? "fr"}>
       <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
@@ -250,13 +319,13 @@ function pendingSignOut() {
   return { action, pending, finish: () => finish() }
 }
 
-describe("coque — les cinq destinations (DG-005)", () => {
-  it("pose Fil, Explorer, Services, Communautés et Messages dans cet ordre, au bureau comme au téléphone", () => {
+describe("coque — la barre, cinq entrées au plus (DG-005, menu léger CH-816)", () => {
+  it("tous modules servis : Fil, Membres, Services, Communautés et Messages dans cet ordre, au bureau comme au téléphone", () => {
     renderShell({ icom: true })
     const { rail, bar } = mainNavigations()
     const expected = [
       ["Fil", "/fil"],
-      ["Explorer", "/explorer"],
+      ["Membres", "/explorer"],
       ["Services", "/services"],
       ["Communautés", "/communautes"],
       ["Messages", "/messages"],
@@ -266,12 +335,12 @@ describe("coque — les cinq destinations (DG-005)", () => {
     expect(within(bar).getAllByRole("listitem")).toHaveLength(5)
   })
 
-  it("parle anglais avec les mêmes adresses", () => {
+  it("parle anglais avec les mêmes adresses : « Members » mène toujours à /explorer", () => {
     renderShell({ icom: true, locale: "en" })
     const { bar } = mainNavigations("en")
     expect(linksOf(bar)).toEqual([
       ["Feed", "/fil"],
-      ["Explore", "/explorer"],
+      ["Members", "/explorer"],
       ["Services", "/services"],
       ["Communities", "/communautes"],
       ["Messages", "/messages"],
@@ -282,16 +351,27 @@ describe("coque — les cinq destinations (DG-005)", () => {
     renderShell({ icom: false })
     const { rail, bar } = mainNavigations()
     expect(within(bar).getAllByRole("listitem")).toHaveLength(4)
-    expect(linksOf(bar).map(([label]) => label)).toEqual(["Fil", "Explorer", "Services", "Communautés"])
+    expect(linksOf(bar).map(([label]) => label)).toEqual(["Fil", "Membres", "Services", "Communautés"])
     expect(within(rail).queryByRole("link", { name: "Messages" })).toBeNull()
+  })
+
+  it("Membres et Communautés ne se ressemblent jamais : deux icônes distinctes", () => {
+    renderShell({ icom: true, features: ["pages", "groupsAndEvents"] })
+    const { rail, bar } = mainNavigations()
+    for (const navigation of [rail, bar]) {
+      const icon = (name: string) => within(navigation).getByRole("link", { name }).querySelector("svg")?.innerHTML ?? ""
+      expect(icon("Membres")).not.toBe("")
+      expect(icon("Communautés")).not.toBe("")
+      expect(icon("Membres")).not.toBe(icon("Communautés"))
+    }
   })
 
   it.each([
     ["/fil", "Fil"],
     ["/publication/post-12", "Fil"],
     ["/actus", "Fil"],
-    ["/explorer", "Explorer"],
-    ["/membres", "Explorer"],
+    ["/explorer", "Membres"],
+    ["/membres", "Membres"],
     ["/services", "Services"],
     ["/services/offre-coiffure", "Services"],
     ["/communautes", "Communautés"],
@@ -299,7 +379,7 @@ describe("coque — les cinq destinations (DG-005)", () => {
     ["/pays/ca", "Communautés"],
     ["/messages", "Messages"],
     ["/messages/conversation-7", "Messages"],
-    // Décision 5 du plan 02 (UX-05) : la vie communautaire sous Communautés, les pages et les autres membres sous Explorer.
+    // Décision 5 du plan 02 (UX-05) : la vie communautaire sous Communautés, les pages et les autres membres sous Membres.
     ["/entraide", "Communautés"],
     ["/entraide/question-1", "Communautés"],
     ["/kit-arrivee", "Communautés"],
@@ -309,11 +389,11 @@ describe("coque — les cinq destinations (DG-005)", () => {
     ["/agenda", "Communautés"],
     ["/pages/asso-lyon/groupe", "Communautés"],
     ["/pages/asso-lyon/evenements/evt-42", "Communautés"],
-    ["/pages", "Explorer"],
-    ["/pages/asso-lyon", "Explorer"],
-    ["/pages/asso-lyon/revendiquer", "Explorer"],
-    ["/@autre.membre", "Explorer"],
-    ["/@autre.membre/albums/album-1", "Explorer"],
+    ["/pages", "Membres"],
+    ["/pages/asso-lyon", "Membres"],
+    ["/pages/asso-lyon/revendiquer", "Membres"],
+    ["/@autre.membre", "Membres"],
+    ["/@autre.membre/albums/album-1", "Membres"],
   ])("sur %s, seule la destination « %s » est courante", (pathname, current) => {
     renderShell({ pathname, icom: true })
     const { rail, bar } = mainNavigations()
@@ -332,58 +412,168 @@ describe("coque — les cinq destinations (DG-005)", () => {
   )
 })
 
-describe("coque — l'espace personnel du rail", () => {
-  function personal() {
-    return screen.getByRole("navigation", { name: "Mon espace" })
-  }
+/** Ouvre la feuille du compte (téléphone) et rend sa navigation « Mon compte ». */
+async function openAccountSheet() {
+  await userEvent.setup().click(accountTrigger("dialog"))
+  const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+  return within(sheet).getByRole("navigation", { name: "Mon compte" })
+}
 
-  it("suit les destinations : Mes demandes, Mon activité, Mes associations, Mes candidatures, Mes mentorats, Mes relations, Mes enregistrements, Parrainer", () => {
-    renderShell({ network: true })
-    expect(linksOf(personal())).toEqual([
-      ["Mes demandes", "/mes-demandes"],
-      ["Mon activité", "/mon-activite"],
-      ["Mes associations", "/mes-associations"],
-      ["Mes candidatures", "/mes-candidatures"],
-      ["Mes mentorats", "/mes-mentorats"],
+/** Ouvre le menu du compte (bureau) et rend ses entrées, liens et sortie. */
+async function openAccountMenu() {
+  await userEvent.setup().click(accountTrigger("menu"))
+  return screen.findByRole("menu")
+}
+
+/** Les entrées personnelles et réservées que le rail portait jusqu'au CH-816. */
+const PERSONAL_HREFS = [
+  routes.myServiceRequests(),
+  routes.myActivity(),
+  routes.myAssociations(),
+  routes.myApplications(),
+  routes.myMentoring(),
+  routes.relations(),
+  routes.bookmarks(),
+  routes.sponsor(),
+  routes.moderationDesk(),
+  routes.pilotDashboard(),
+]
+
+describe("coque — les entrées personnelles, dans le menu du compte seulement (CH-816)", () => {
+  it("le rail du bureau n'a plus de groupe « Mon espace » : aucune entrée personnelle hors du menu du compte", () => {
+    renderShell({ icom: true, network: true, responsible: true, holdings: HOLDS_ALL })
+    expect(screen.queryByRole("navigation", { name: "Mon espace" })).toBeNull()
+    expect(screen.queryByText("Mon espace")).toBeNull()
+    const links = screen.getAllByRole("link").map((link) => link.getAttribute("href"))
+    for (const href of PERSONAL_HREFS) expect(links, href).not.toContain(href)
+  })
+
+  it("le menu du compte du bureau porte Mes relations, Mes enregistrements et Parrainer, modules fermés comme ouverts", async () => {
+    renderShell({ network: true, features: ["pages"] })
+    const menu = await openAccountMenu()
+    for (const [label, href] of [
       ["Mes relations", "/relations"],
       ["Mes enregistrements", "/enregistrements"],
       ["Parrainer", "/parrainer"],
-    ])
+    ] as const) {
+      expect(within(menu).getByRole("menuitem", { name: label })).toHaveAttribute("href", href)
+    }
   })
 
-  it("garde la règle d'avant pour les relations : absentes sans réseau du moteur", () => {
+  it("garde la règle d'avant pour les relations : absentes sans réseau du moteur", async () => {
     renderShell({ network: false })
-    expect(within(personal()).queryByRole("link", { name: "Mes relations" })).toBeNull()
+    const account = await openAccountSheet()
+    expect(within(account).queryByRole("link", { name: "Mes relations" })).toBeNull()
+    expect(within(account).getByRole("link", { name: "Parrainer" })).toHaveAttribute("href", "/parrainer")
+  })
+
+  it("Modération (et la mesure du pilote) : dans le menu du compte quand le serveur le dit, absente sinon", async () => {
+    renderShell({ responsible: true, features: ["pages", "pilotMetrics"] })
+    let menu = await openAccountMenu()
+    expect(within(menu).getByRole("menuitem", { name: "Modération" })).toHaveAttribute("href", routes.moderationDesk())
+    expect(within(menu).getByRole("menuitem", { name: t("pilotMetrics.nav") })).toHaveAttribute("href", routes.pilotDashboard())
+    cleanup()
+    renderShell({ features: ["pages", "pilotMetrics"] })
+    menu = await openAccountMenu()
+    expect(within(menu).queryByRole("menuitem", { name: "Modération" })).toBeNull()
+    expect(within(menu).queryByRole("menuitem", { name: t("pilotMetrics.nav") })).toBeNull()
   })
 
   it.each([
     ["/mes-demandes", "Mes demandes"],
     ["/mes-demandes/demande-3", "Mes demandes"],
-    ["/mon-activite", "Mon activité"],
-    ["/mon-activite/demandes/demande-3", "Mon activité"],
-    ["/nouvelle-page", "Mon activité"],
-    ["/pages/asso-lyon/gerer", "Mon activité"],
+    ["/mon-activite", "Mes pages"],
+    ["/mon-activite/demandes/demande-3", "Mes pages"],
+    ["/nouvelle-page", "Mes pages"],
+    ["/pages/asso-lyon/gerer", "Mes pages"],
     ["/mes-associations", "Mes associations"],
     ["/mes-candidatures", "Mes candidatures"],
     ["/mes-mentorats", "Mes mentorats"],
     ["/relations", "Mes relations"],
     ["/enregistrements", "Mes enregistrements"],
     ["/parrainer", "Parrainer"],
-  ])("sur %s, « %s » est courante", (pathname, current) => {
-    renderShell({ pathname, network: true })
-    expect(currentLinks(personal())).toEqual([current])
+  ])("sur %s, « %s » est courante dans le menu du compte", async (pathname, current) => {
+    renderShell({ pathname, network: true, holdings: HOLDS_ALL })
+    expect(currentLinks(await openAccountSheet())).toEqual([current])
   })
 
-  it("lire une page ou la revendiquer ne relève pas de Mon activité", () => {
-    renderShell({ pathname: "/pages/asso-lyon/revendiquer", network: true })
-    expect(currentLinks(personal())).toEqual([])
+  it("lire une page ou la revendiquer ne relève pas de Mes pages", async () => {
+    renderShell({ pathname: "/pages/asso-lyon/revendiquer", network: true, holdings: HOLDS_ALL })
+    expect(currentLinks(await openAccountSheet())).toEqual([])
+  })
+})
+
+describe("coque — « Mes pages » et « Mes associations » n'apparaissent qu'avec un contenu (CH-816)", () => {
+  /** Les libellés de la navigation du compte, au téléphone, le module des pages ouvert. */
+  async function accountLabels(options: Parameters<typeof renderShell>[0]) {
+    renderShell({ network: true, features: ["pages"], ...options })
+    return linksOf(await openAccountSheet()).map(([label]) => label)
+  }
+
+  it("« Mes pages » : absente sans page gérée, présente avec une (modérateur compris), avant « Mes associations »", async () => {
+    expect(await accountLabels({ holdings: HOLDS_NOTHING })).not.toContain("Mes pages")
+    cleanup()
+    const labels = await accountLabels({ holdings: { ...HOLDS_NOTHING, teamPages: ready([TEAM_PAGE]) } })
+    expect(labels).toContain("Mes pages")
+    expect(within(screen.getByRole("dialog", { name: "Mon compte" })).getByRole("link", { name: "Mes pages" })).toHaveAttribute("href", routes.myActivity())
+    expect(labels).not.toContain("Mes associations")
+  })
+
+  it("« Mes pages » : une page en sommeil suffit, elle reste à son équipe", async () => {
+    expect(await accountLabels({ holdings: { ...HOLDS_NOTHING, sleepingPages: ready([SLEEPING_PAGE]) } })).toContain("Mes pages")
+  })
+
+  it("« Mes pages » : un fournisseur sans lecture de l'équipe se lit par les pages où je parle", async () => {
+    expect(await accountLabels({ overrides: { pageAdmin: { useMyPages: () => ready([SPEAKING_PAGE]) } } })).toContain("Mes pages")
+    cleanup()
+    expect(await accountLabels({ overrides: { pageAdmin: { useMyPages: () => ready([]) } } })).not.toContain("Mes pages")
+  })
+
+  it.each([
+    ["en cours de lecture", LOADING],
+    ["refusée", REFUSED],
+  ] as const)("« Mes pages » : rien tant que la lecture est %s (aucun clignement)", async (_state, read) => {
+    expect(await accountLabels({ holdings: { teamPages: read, sleepingPages: read } })).not.toContain("Mes pages")
+  })
+
+  it("« Mes associations » : absente sans adhésion, ni avec un refus, un départ ou une exclusion seuls", async () => {
+    expect(await accountLabels({ holdings: HOLDS_NOTHING })).not.toContain("Mes associations")
+    cleanup()
+    expect(await accountLabels({ holdings: { ...HOLDS_NOTHING, associations: associationsPage("rejected", "left", "removed", "cancelled") } })).not.toContain("Mes associations")
+  })
+
+  it.each(["accepted", "requested"] as const)("« Mes associations » : présente avec une adhésion %s", async (status) => {
+    const labels = await accountLabels({ holdings: { ...HOLDS_NOTHING, associations: associationsPage("left", status) } })
+    expect(labels).toContain("Mes associations")
+    expect(within(screen.getByRole("dialog", { name: "Mon compte" })).getByRole("link", { name: "Mes associations" })).toHaveAttribute("href", routes.myAssociations())
+  })
+
+  it.each([
+    ["en cours de lecture", LOADING],
+    ["refusée", REFUSED],
+  ] as const)("« Mes associations » : rien tant que la lecture est %s", async (_state, read) => {
+    expect(await accountLabels({ holdings: { ...HOLDS_NOTHING, associations: read } })).not.toContain("Mes associations")
+  })
+
+  it("module des pages fermé : ni « Mes pages » ni « Mes associations », même avec un contenu", async () => {
+    const labels = await accountLabels({ holdings: HOLDS_ALL, features: [] })
+    expect(labels).not.toContain("Mes pages")
+    expect(labels).not.toContain("Mes associations")
+  })
+
+  it("parle anglais : « My pages » et « My associations »", async () => {
+    renderShell({ network: true, features: ["pages"], holdings: HOLDS_ALL, locale: "en" })
+    await userEvent.setup().click(accountTrigger("dialog", "Account menu (Awa Ogooué)"))
+    const sheet = await screen.findByRole("dialog", { name: "My account" })
+    const labels = linksOf(within(sheet).getByRole("navigation", { name: "My account" })).map(([label]) => label)
+    expect(labels).toEqual(expect.arrayContaining(["My pages", "My associations"]))
   })
 })
 
 describe("coque — une seule entrée courante pour chaque route de membre (UX-05)", () => {
   const LABEL_KEYS: Readonly<Record<NavDestination, string>> = {
     feed: "nav.feed",
-    explore: "nav.explore",
+    explore: "nav.members",
     services: "nav.services",
     communities: "nav.communities",
     messages: "nav.messages",
@@ -401,7 +591,6 @@ describe("coque — une seule entrée courante pour chaque route de membre (UX-0
     settings: "nav.settings",
   }
   const PRIMARY = new Set<NavDestination>(PRIMARY_DESTINATIONS)
-  const ACCOUNT = new Set<NavDestination>(ACCOUNT_DESTINATIONS)
 
   /** Une adresse de la table, composée en donnant la même valeur à chaque paramètre : la route dit elle-même son chemin. */
   function compose(key: RouteKey, value: string): string {
@@ -421,27 +610,22 @@ describe("coque — une seule entrée courante pour chaque route de membre (UX-0
     expect(CASES.length).toBeGreaterThan(60)
   })
 
-  it.each(CASES)("%s (%s) : seule l'entrée de « %s » est courante, au rail comme à la barre basse", async (_key, pathname, destination) => {
-    renderShell({ pathname, icom: true, network: true, responsible: true })
+  it.each(CASES)("%s (%s) : seule l'entrée de « %s » est courante, à la barre ou dans le menu du compte", async (_key, pathname, destination) => {
+    // Tous modules servis, un membre responsable qui gère une page et adhère à une association : chaque entrée existe.
+    renderShell({ pathname, icom: true, network: true, responsible: true, holdings: HOLDS_ALL })
     const label = t(LABEL_KEYS[destination])
     const { rail, bar } = mainNavigations()
-    const personal = screen.getByRole("navigation", { name: "Mon espace" })
     const marked = () => Array.from(document.querySelectorAll("[aria-current]")).map((element) => element.textContent)
     if (PRIMARY.has(destination)) {
       expect(currentLinks(rail)).toEqual([label])
       expect(currentLinks(bar)).toEqual([label])
-      expect(currentLinks(personal)).toEqual([])
       expect(marked()).toEqual([label, label])
       return
     }
+    // Sous l'avatar (CH-816, plus de « Mon espace » au rail) : ni le rail ni la barre ne marquent
+    // d'entrée, le menu du compte marque la sienne.
     expect(currentLinks(rail)).toEqual([])
     expect(currentLinks(bar)).toEqual([])
-    if (!ACCOUNT.has(destination)) {
-      expect(currentLinks(personal)).toEqual([label])
-      expect(marked()).toEqual([label])
-      return
-    }
-    // Sous l'avatar : ni le rail ni la barre ne marquent d'entrée, le menu du compte marque la sienne.
     expect(marked()).toEqual([])
     await userEvent.setup().click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
@@ -535,11 +719,12 @@ describe("coque — la pastille de non-lus sur Messages (UX-06)", () => {
 })
 
 describe("coque — le menu du compte, sous l'avatar", () => {
+  // Tous modules servis, un membre qui gère une page et adhère à une association (`HOLDS_ALL`).
   const ACCOUNT = [
     ["Profil", "/@awa.demo"],
     ["Réglages", "/parametres"],
     ["Mes demandes", "/mes-demandes"],
-    ["Mon activité", "/mon-activite"],
+    ["Mes pages", "/mon-activite"],
     ["Mes associations", "/mes-associations"],
     ["Mes candidatures", "/mes-candidatures"],
     ["Mes mentorats", "/mes-mentorats"],
@@ -560,7 +745,7 @@ describe("coque — le menu du compte, sous l'avatar", () => {
 
   it("au bureau : un menu au clavier — Entrée l'ouvre, les flèches le parcourent, Échap rend le focus à l'avatar", async () => {
     const user = userEvent.setup()
-    renderShell({ pathname: "/parametres", network: true })
+    renderShell({ pathname: "/parametres", network: true, holdings: HOLDS_ALL })
     const trigger = accountTrigger("menu")
     trigger.focus()
     await user.keyboard("{Enter}")
@@ -585,7 +770,7 @@ describe("coque — le menu du compte, sous l'avatar", () => {
   it("au téléphone : une feuille — Échap la ferme et rend le focus à l'avatar, suivre un lien la referme", async () => {
     mocks.desktop = false
     const user = userEvent.setup()
-    renderShell({ pathname: "/@awa.demo/albums/album-1", network: true })
+    renderShell({ pathname: "/@awa.demo/albums/album-1", network: true, holdings: HOLDS_ALL })
     const trigger = accountTrigger("dialog")
 
     await user.click(trigger)
@@ -813,6 +998,35 @@ describe("coque — le contexte pays", () => {
     expect(screen.getByRole("note")).toHaveTextContent("Area you're viewing: Belgium")
     expect(screen.getByRole("link", { name: "Back to my country" })).toHaveAttribute("href", "/communautes")
   })
+
+  /** Les deux liens « Mon pays » : au rail du bureau et dans l'en-tête du téléphone. */
+  function homeCountryLinks() {
+    const links = screen.getAllByRole("link", { name: /^Mon pays/ })
+    expect(links).toHaveLength(2)
+    return links
+  }
+
+  it.each(["/communautes", "/pays/fr", "/pays/ca"])(
+    "sur %s, sans « Communautés » dans la barre, « Mon pays » est l'entrée courante (CH-816)",
+    (pathname) => {
+      renderShell({ pathname, icom: true, features: ["pages"] })
+      const { rail, bar } = mainNavigations()
+      expect(currentLinks(rail)).toEqual([])
+      expect(currentLinks(bar)).toEqual([])
+      for (const link of homeCountryLinks()) expect(link).toHaveAttribute("aria-current", "page")
+    },
+  )
+
+  it("avec « Communautés » dans la barre, c'est elle l'entrée courante du hub, pas « Mon pays »", () => {
+    renderShell({ pathname: "/pays/fr", icom: true, features: ["pages", "groupsAndEvents"] })
+    expect(currentLinks(mainNavigations().bar)).toEqual(["Communautés"])
+    for (const link of homeCountryLinks()) expect(link).not.toHaveAttribute("aria-current")
+  })
+
+  it("hors des adresses de Communautés, « Mon pays » n'est jamais courant", () => {
+    renderShell({ pathname: "/fil", icom: true, features: ["pages"] })
+    for (const link of homeCountryLinks()) expect(link).not.toHaveAttribute("aria-current")
+  })
 })
 
 describe("coque — « Créer », le menu de création (modèle du réseau de l'administration)", () => {
@@ -858,13 +1072,33 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
 describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les modules ouverts", () => {
   const MODULE_HREFS = [routes.services(), routes.myServiceRequests(), routes.myActivity(), routes.myAssociations(), routes.myApplications(), routes.myMentoring(), routes.pilotDashboard()]
 
-  it("tout fermé : la barre est Fil, Explorer, Communautés, Messages ; « Mon espace » garde le socle", () => {
-    renderShell({ icom: true, responsible: true, features: [] })
+  it("tout fermé : la barre est Fil, Membres, Messages ; le menu du compte garde le socle", async () => {
+    renderShell({ icom: true, network: true, responsible: true, features: [], holdings: HOLDS_ALL })
     const { bar } = mainNavigations()
-    expect(within(bar).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.feed(), routes.explore(), routes.communities(), routes.messages()])
-    const hrefs = within(screen.getByRole("navigation", { name: "Mon espace" })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    expect(within(bar).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.feed(), routes.explore(), routes.messages()])
+    const hrefs = linksOf(await openAccountSheet()).map(([, href]) => href)
     for (const href of MODULE_HREFS) expect(hrefs, href).not.toContain(href)
-    for (const href of [routes.bookmarks(), routes.sponsor(), routes.moderationDesk()]) expect(hrefs, href).toContain(href)
+    for (const href of [routes.relations(), routes.bookmarks(), routes.sponsor(), routes.moderationDesk()]) expect(hrefs, href).toContain(href)
+  })
+
+  // Fiche de lancement, § 4 : trois entrées au jour J, quatre en vague 1, cinq en vague 2.
+  it.each([
+    [[], ["Fil", "Membres", "Messages"]],
+    [["pages"], ["Fil", "Membres", "Messages"]],
+    [["pages", "pilotMetrics"], ["Fil", "Membres", "Messages"]],
+    [["pages", "services"], ["Fil", "Membres", "Services", "Messages"]],
+    [["pages", "services", "groupsAndEvents"], ["Fil", "Membres", "Services", "Communautés", "Messages"]],
+    [["pages", "jobs"], ["Fil", "Membres", "Communautés", "Messages"]],
+  ] as const)("modules ouverts %j : la barre est %j, au rail comme au téléphone", (features, labels) => {
+    renderShell({ icom: true, features })
+    const { rail, bar } = mainNavigations()
+    expect(linksOf(rail).map(([label]) => label)).toEqual(labels)
+    expect(linksOf(bar).map(([label]) => label)).toEqual(labels)
+    // Aucun nombre de colonnes écrit : de trois à cinq onglets se partagent la largeur, sans trou.
+    const items = within(bar).getAllByRole("listitem")
+    expect(items).toHaveLength(labels.length)
+    for (const item of items) expect(item).toHaveClass("flex-auto")
+    expect(bar.querySelector('[class*="grid-cols"]')).toBeNull()
   })
 
   it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation", async () => {
@@ -875,11 +1109,11 @@ describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les module
     expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory()])
   })
 
-  it("un module ouvert retrouve ses entrées, les autres restent fermés", () => {
-    renderShell({ icom: true, features: ["pages", "services"] })
+  it("un module ouvert retrouve ses entrées, les autres restent fermés", async () => {
+    renderShell({ icom: true, network: true, features: ["pages", "services"], holdings: HOLDS_ALL })
     const { bar } = mainNavigations()
     expect(within(bar).getAllByRole("link").map((link) => link.getAttribute("href"))).toContain(routes.services())
-    const hrefs = within(screen.getByRole("navigation", { name: "Mon espace" })).getAllByRole("link").map((link) => link.getAttribute("href"))
+    const hrefs = linksOf(await openAccountSheet()).map(([, href]) => href)
     expect(hrefs).toEqual(expect.arrayContaining([routes.myServiceRequests(), routes.myActivity(), routes.myAssociations()]))
     expect(hrefs).not.toContain(routes.myApplications())
     expect(hrefs).not.toContain(routes.myMentoring())

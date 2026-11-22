@@ -15,14 +15,15 @@ import { hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 // ═══════════════════════════════════════════════════════════════
-// Explorer — le point d'entrée de la découverte (DG-005)
+// Membres — le point d'entrée de la découverte (DG-005)
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * `/explorer` — « Je cherche qui ou quoi ? » : les membres de l'annuaire opt-in
- * (la recherche vit dans `/membres`), les services, l'annuaire des pages et les
- * pays ouverts, chacun menant à son hub. Rien ici n'élargit ce qu'une personne a
- * choisi de montrer : chaque surface garde ses propres gardes.
+ * `/explorer`, l'entrée « Membres » de la barre (CH-816, lot P1 ; l'adresse ne change pas) —
+ * « Je cherche qui ou quoi ? » : la recherche d'une personne dans l'annuaire opt-in (elle vit
+ * dans `/membres`), les services, l'annuaire des pages et les pays ouverts, chacun menant à son
+ * hub. Rien ici n'élargit ce qu'une personne a choisi de montrer : chaque surface garde ses
+ * propres gardes.
  */
 export function ExploreScreen() {
   return (
@@ -52,10 +53,11 @@ function Explore(props: { membership: MembershipView }) {
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
+        {/* Sous le titre « Membres », la carte dit le geste (chercher une personne), pas la rubrique. */}
         <Shortcut
           headingId={`${ids}-membres`}
           icon={<SearchIcon />}
-          title={t("nav.members")}
+          title={t("explore.membersTitle")}
           body={t("explore.membersBody")}
           href={routes.members()}
           action={t("explore.membersAction")}
