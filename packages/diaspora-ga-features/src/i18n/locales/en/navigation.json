@@ -1,13 +1,11 @@
 {
   "nav": {
-    "explore": "Explore",
     "services": "Services",
     "communities": "Communities",
     "myRequests": "My requests",
-    "myActivity": "My activity",
+    "myActivity": "My pages",
     "myAssociations": "My associations",
     "myData": "My data",
-    "personal": "My space",
     "account": {
       "open": "Account menu ({{name}})",
       "title": "My account",
@@ -46,10 +44,11 @@
     }
   },
   "explore": {
-    "title": "Explore",
+    "title": "Members",
     "lead": "Find members, pages and communities across the whole network.",
+    "membersTitle": "Find a person",
     "membersBody": "Search among the members who chose to appear in the directory. Contact goes through messaging.",
-    "membersAction": "Search for a member",
+    "membersAction": "Open the search",
     "servicesBody": "Hairdressing, translation, photography, help settling in: find a diaspora skill near you.",
     "servicesAction": "Browse services",
     "countriesTitle": "Open countries",

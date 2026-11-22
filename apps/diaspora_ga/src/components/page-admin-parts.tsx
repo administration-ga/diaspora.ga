@@ -6,14 +6,39 @@
  * relus par le fournisseur (moteur ou démonstration), jamais déduits ici.
  */
 import { Button, EmptyState, Sheet, SheetContent } from "@diaspora-ga/features"
-import { usePageAdmin, type ActionErrorCode, type PageClaimStatus, type PageManagement, type PageTeamRole } from "@diaspora-ga/features/data"
+import {
+  useFeatureGate,
+  useJobs,
+  usePageAdmin,
+  usePageDecisions,
+  useServiceReviews,
+  type ActionErrorCode,
+  type PageClaimStatus,
+  type PageManagement,
+  type PageTeamRole,
+} from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { BadgeCheckIcon, CircleSlashIcon, ClockIcon, ShieldIcon, UndoIcon, UnplugIcon, type LucideIcon } from "lucide-react"
 import { useRef, useState, type ReactNode } from "react"
 
+import type { PageManageServed } from "@/lib/page-manage-tabs"
+
 /** La gestion des pages du fournisseur, ou `null` : l'écran dit alors « indisponible ». */
 export function usePageManagement(): PageManagement | null {
   return usePageAdmin()?.management ?? null
+}
+
+/**
+ * Ce que le réseau et le fournisseur servent aux onglets de gestion (CH-816) : la garde des modules
+ * pour les services, la présence des capacités pour les avis, les emplois et les décisions. À passer
+ * à `offeredManageTabs` (`@/lib/page-manage-tabs`), la seule règle des onglets et de leurs liens.
+ */
+export function usePageManageServed(): PageManageServed {
+  const servicesOpen = useFeatureGate().isOpen("services")
+  const reviews = !!useServiceReviews()?.usePageReviews
+  const jobs = useJobs() !== null
+  const decisions = usePageDecisions() !== null
+  return { servicesOpen, reviews, jobs, decisions }
 }
 
 export function PageAdminUnavailable() {

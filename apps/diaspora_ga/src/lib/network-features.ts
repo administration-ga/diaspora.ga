@@ -10,10 +10,14 @@
  * pays et les communautés (actus du pays), les personnes, iCom, le compte, la confiance et les
  * pages légales. Les adresses d'une page relèvent des pages ; ses services, ses offres d'emploi,
  * son groupe et ses évènements relèvent de leur fonctionnalité, qui exige les pages.
+ *
+ * Croisée avec la table des destinations, cette table dit aussi quels modules se rangent sous
+ * une entrée de la barre (`featuresUnderDestination`) : « Communautés » n'y entre qu'avec l'un
+ * d'eux ouvert (CH-816, lot P1), sans liste tenue à la main.
  */
-import type { FeatureGate, NetworkFeature } from "@diaspora-ga/features/data"
+import { NETWORK_FEATURES, type FeatureGate, type NetworkFeature } from "@diaspora-ga/features/data"
 
-import { type RouteKey, routeKeyOf } from "./nav-destinations"
+import { type NavDestination, ROUTE_DESTINATIONS, type RouteKey, routeKeyOf } from "./nav-destinations"
 
 const CORE = null
 
@@ -130,4 +134,31 @@ export function featureOfPath(pathname: string): NetworkFeature | null {
 export function hrefServed(gate: FeatureGate, href: string): boolean {
   const feature = featureOfPath(href)
   return feature === null || gate.isOpen(feature)
+}
+
+/**
+ * Les modules dont au moins une adresse se range sous cette entrée de navigation, dans l'ordre
+ * des clés du moteur : dérivés des deux tables (fonctionnalité de l'adresse, destination de
+ * l'adresse), jamais d'une liste écrite à la main. Une adresse du socle n'en apporte aucun.
+ */
+export function featuresUnderDestination(destination: NavDestination): readonly NetworkFeature[] {
+  const found = new Set<NetworkFeature>()
+  for (const key of Object.keys(ROUTE_FEATURES) as RouteKey[]) {
+    const feature = ROUTE_FEATURES[key]
+    const home = ROUTE_DESTINATIONS[key]
+    if (feature !== null && home.kind === "member" && home.destination === destination) found.add(feature)
+  }
+  return NETWORK_FEATURES.filter((feature) => found.has(feature))
+}
+
+/** Les modules rangés sous « Communautés » (groupes et évènements, emploi, entraide, mentorat, kit d'arrivée). */
+export const COMMUNITY_FEATURES: readonly NetworkFeature[] = featuresUnderDestination("communities")
+
+/**
+ * « Communautés » entre-t-elle dans la barre ? Seulement quand un module qui s'y range est
+ * ouvert : ses adresses du socle (`/communautes`, `/pays/…`) restent servies et joignables par
+ * « Mon pays », mais une entrée de barre sans module n'aurait que le hub du pays à montrer.
+ */
+export function communitiesOffered(gate: FeatureGate): boolean {
+  return COMMUNITY_FEATURES.some((feature) => gate.isOpen(feature))
 }

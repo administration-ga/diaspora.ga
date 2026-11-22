@@ -25,6 +25,14 @@ const mocks = vi.hoisted(() => ({
   associationEvents: null as Pick<AssociationEventsCapability, "useCountryEvents"> | null,
   pages: null as Pick<PagesCapability, "useHubPages"> | null,
   canPublish: false,
+  // CH-816 (P2) : la déclaration de l'application ; les scénarios de la découverte la basculent.
+  discoveryOffered: false,
+}))
+vi.mock("@/lib/feed-presentation", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/feed-presentation")>()),
+  get FEED_DISCOVERY_OFFERED() {
+    return mocks.discoveryOffered
+  },
 }))
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(mocks.search), useRouter: () => ({ push: mocks.push }) }))
 // Un lien ordinaire : l'adresse rendue est celle de la table des routes, sans navigation réelle dans jsdom.
@@ -101,6 +109,7 @@ beforeEach(() => {
   mocks.associationEvents = null
   mocks.pages = null
   mocks.canPublish = false
+  mocks.discoveryOffered = false
   mocks.membership = { ...MEMBER }
   mocks.hub = { status: "loading" }
   vi.clearAllMocks()
@@ -125,12 +134,12 @@ describe("/fil — filtre de mot-dièse", () => {
     expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("aria-current", "page")
   })
   it("un jeton Unicode canonique reste entier dans la lecture et les liens de portée", () => {
-    mocks.search = new URLSearchParams({ scope: "recents", tag: "İSTANBUL", country: "CA" }).toString()
+    mocks.search = new URLSearchParams({ scope: "mon_pays", tag: "İSTANBUL", country: "CA" }).toString()
     render(tree())
-    expect(mocks.feed).toHaveBeenLastCalledWith(expect.objectContaining({ scope: "recents", tag: "i̇stanbul", hubCountry: "CA" }))
+    expect(mocks.feed).toHaveBeenLastCalledWith(expect.objectContaining({ scope: "mon_pays", tag: "i̇stanbul", hubCountry: "CA" }))
     expect(screen.getByText("Publications avec #i̇stanbul")).toBeTruthy()
     expect(screen.getByRole("link", { name: "Toute la diaspora" })).toHaveAttribute("href", "/fil?scope=diaspora&tag=i%CC%87stanbul&country=CA")
-    expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=recents&country=CA")
+    expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
   })
   it.each([
     { locale: "fr" as const, title: "Aucune publication avec #été", body: "Essayez une autre portée ou retirez le filtre. Seules les publications que vous pouvez lire apparaissent." },
@@ -146,15 +155,15 @@ describe("/fil — filtre de mot-dièse", () => {
     expect(props.membership.canPublish).toBe(false)
   })
   it.each(["XX", "GA", "<script>"])("ignore le pays invalide %s et conserve le filtre sans modifier la personne", (country) => {
-    mocks.search = new URLSearchParams({ scope: "pour_vous", tag: "gabon", country }).toString()
+    mocks.search = new URLSearchParams({ scope: "diaspora", tag: "gabon", country }).toString()
     render(tree())
     const props = mocks.feed.mock.lastCall![0] as FeedPagesProps
-    expect(props.scope).toBe("pour_vous")
+    expect(props.scope).toBe("diaspora")
     expect(props.tag).toBe("gabon")
     expect(props.hubCountry).toBeUndefined()
     expect(props.membership).toEqual(MEMBER)
     expect(screen.getByRole("link", { name: "France" })).toHaveAttribute("href", "/fil?scope=mon_pays&tag=gabon")
-    expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=pour_vous")
+    expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=diaspora")
   })
   it("ne crée aucun filtre pour une valeur vide et conserve les adresses usuelles", () => {
     mocks.search = new URLSearchParams({ tag: " \t " }).toString()
@@ -182,7 +191,52 @@ describe("/fil — filtre de mot-dièse", () => {
   })
 })
 
-describe("/fil — bascule Liste / Découverte (DG-017)", () => {
+describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascule (CH-816, P2)", () => {
+  const scopes = () => screen.getByRole("navigation", { name: "Portées du fil" })
+
+  it("le pays de résidence et « Toute la diaspora », dans cet ordre, le pays actif par défaut", () => {
+    render(tree())
+    const links = Array.from(scopes().querySelectorAll("a"))
+    expect(links.map((link) => link.textContent)).toEqual(["France", "Toute la diaspora"])
+    expect(screen.getByRole("link", { name: "France" })).toHaveAttribute("aria-current", "page")
+    expect(screen.queryByRole("link", { name: "Récents" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Pour vous" })).toBeNull()
+  })
+
+  it.each(["recents", "pour_vous"])("une adresse `scope=%s` montre le fil du pays, son onglet actif", (scope) => {
+    mocks.search = new URLSearchParams({ scope, country: "CA" }).toString()
+    render(tree())
+    expect(mocks.feed).toHaveBeenLastCalledWith(expect.objectContaining({ scope: "mon_pays", hubCountry: "CA" }))
+    expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("link", { name: "Toute la diaspora" })).not.toHaveAttribute("aria-current")
+  })
+
+  it("aucune bascule Liste / Découverte dans la liste", () => {
+    render(tree())
+    expect(screen.queryByRole("navigation", { name: "Affichage du fil" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Liste" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Découverte" })).toBeNull()
+    expect(mocks.feed).toHaveBeenCalled()
+  })
+
+  it("une adresse de découverte rend la liste, sans bascule ni découverte", () => {
+    mocks.search = "scope=diaspora&country=CA&vue=decouverte"
+    render(tree())
+    expect(mocks.discovery).not.toHaveBeenCalled()
+    expect(mocks.feed).toHaveBeenLastCalledWith(expect.objectContaining({ scope: "diaspora", hubCountry: "CA" }))
+    expect(mocks.stories).toHaveBeenCalled()
+    expect(screen.queryByRole("navigation", { name: "Affichage du fil" })).toBeNull()
+    // Les portées mènent à la liste : l'adresse de découverte ne se propage pas.
+    expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
+  })
+})
+
+describe("/fil — bascule Liste / Découverte (DG-017), la découverte offerte", () => {
+  // Le mode reste écrit et branché : il revient en basculant la déclaration de l'application.
+  beforeEach(() => {
+    mocks.discoveryOffered = true
+  })
+
   it.each([
     { locale: "fr" as const, group: "Affichage du fil", list: "Liste", discovery: "Découverte" },
     { locale: "en" as const, group: "Feed view", list: "List", discovery: "Discovery" },
@@ -220,10 +274,10 @@ describe("/fil — bascule Liste / Découverte (DG-017)", () => {
   })
 
   it("un fil vide montre le même état vide dans la découverte", () => {
-    mocks.search = "scope=recents&vue=decouverte"
+    mocks.search = "scope=diaspora&vue=decouverte"
     mocks.showEmpty = true
     render(tree())
-    expect(screen.getByText("Aucune publication à lire pour l'instant.")).toBeTruthy()
+    expect(screen.getByText("Aucune publication pour toute la diaspora.")).toBeTruthy()
   })
 
   it("Échap revient à la liste et s'y recale sur la publication active, focus compris", () => {
@@ -302,11 +356,15 @@ describe("/fil — le rail du hub ne dit aucun nombre d'évènements non mesuré
     expect(screen.queryByText("Évènements à venir")).toBeNull()
   })
 
-  it("démonstration : les évènements comptés gardent leur compteur", () => {
+  it("démonstration : les évènements comptés gardent leur compteur, jamais à zéro (CH-816)", () => {
     mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo" } }
+    const view = rail()
+    expect(screen.queryByText("Évènements à venir")).toBeNull()
+    expect(screen.getByText("Aucun évènement prévu pour l'instant.")).toBeTruthy()
+    view.unmount()
+    mocks.hub = { status: "ready", data: { ...HUB, countersSource: "demo", eventsSource: "demo", counters: { ...HUB.counters, upcomingEvents: { kind: "value", value: 2 } } } }
     rail()
     expect(screen.getByText("Évènements à venir")).toBeTruthy()
-    expect(screen.getByText("Aucun évènement prévu pour l'instant.")).toBeTruthy()
   })
 })
 
@@ -435,10 +493,11 @@ describe("/fil — le rail montre les pages du pays de résidence (AS-05)", () =
     expect(screen.queryByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeNull()
   })
 
-  it("aucune page inscrite : le rail le dit ; avant la lecture ou sans annuaire, rien", () => {
+  it("aucune page inscrite : aucun bloc (CH-816) ; avant la lecture ou sans annuaire, rien non plus", () => {
     mocks.pages = { useHubPages: () => ({ status: "ready", data: { ...LISTS, associations: [], companies: [] } }) }
     rail()
-    expect(screen.getByText("Aucune page inscrite dans ce pays pour l'instant.")).toBeTruthy()
+    expect(screen.queryByRole("heading", { name: "Pages · France" })).toBeNull()
+    expect(screen.queryByRole("link", { name: "Toutes les pages du pays" })).toBeNull()
     cleanup()
     mocks.pages = { useHubPages: () => ({ status: "loading" }) }
     rail()

@@ -15,14 +15,15 @@
  *     (la lire, s'en retirer) et la modération des commentaires ; ni publication ni gestion.
  *     AS-11a : l'onglet identité porte « Mettre la page en sommeil » pour un administrateur ;
  *     la gestion d'une page endormie dit « en sommeil » à son équipe, et la laisse réactiver.
+ *     CH-816 (P0) : un onglet que la page n'offre pas (module fermé, page qui ne le porte pas)
+ *     n'est pas listé ; demandé par l'adresse, il rend l'identité.
  *
  * Chaque écran dit chargement, erreur, vide, succès, et « indisponible » quand
  * le fournisseur ne sert pas la capacité.
  */
 import { Button, Card, EmptyState, FolderTabsNav, Skeleton, TrustBadge, type FolderNavItem } from "@diaspora-ga/features"
-import { isJobEmployerOwnerKind, isServiceProviderOwnerKind } from "@diaspora-ga/domain"
 import type { ManagedPageDetailView, MemberPageKind, MembershipView, PageClaimView, PageManagement } from "@diaspora-ga/features/data"
-import { myTeamRoleOf, useJobs, usePageDecisions, useServiceReviews } from "@diaspora-ga/features/data"
+import { myTeamRoleOf } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ArrowLeftIcon, BadgeCheckIcon, FlagIcon, MessageSquareXIcon, ShieldOffIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -30,9 +31,8 @@ import type { ReactNode } from "react"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
-import { JobsUnavailable } from "@/components/job-parts"
 import { JobRecruiterPanel } from "@/components/job-recruiter-panel"
-import { ClaimStatusChip, ErrorNotice, PageAdminUnavailable, usePageManagement } from "@/components/page-admin-parts"
+import { ClaimStatusChip, ErrorNotice, PageAdminUnavailable, usePageManageServed, usePageManagement } from "@/components/page-admin-parts"
 import { PageClaimPanel } from "@/components/page-claim-form"
 import { PageCreateForm, VerifiedMembershipRequired } from "@/components/page-create-form"
 import { PageDecisionsPanel } from "@/components/page-decisions-panel"
@@ -42,11 +42,11 @@ import { PagePublicationsPanel } from "@/components/page-publications-panel"
 import { PageServiceManagement } from "@/components/page-service-management"
 import { PageServiceReviews } from "@/components/page-reviews-section"
 import { canOfferPageSleep, ManagedPageUnavailable, PageSleepSection } from "@/components/page-sleep-section"
+import { offeredManageTabs, type PageManageTab } from "@/lib/page-manage-tabs"
 import { routes } from "@/lib/routes"
 
-export type PageManageTab = "identite" | "equipe" | "revendications" | "publications" | "services" | "demandes" | "avis" | "emplois" | "decisions"
-
-const MANAGE_TABS: readonly PageManageTab[] = ["publications", "services", "demandes", "avis", "emplois", "identite", "equipe", "revendications", "decisions"]
+// La route `/pages/<handle>/gerer` lit le type ici ; la règle des onglets vit dans `@/lib/page-manage-tabs`.
+export type { PageManageTab }
 
 const TAB_LABELS: Readonly<Record<PageManageTab, string>> = {
   identite: "pageAdmin.manage.tab.identity",
@@ -209,9 +209,8 @@ export function PageManageScreen(props: { readonly handle: string; readonly tab:
 
 function ManageView(props: { readonly management: PageManagement; readonly page: ManagedPageDetailView; readonly membership: MembershipView; readonly tab: PageManageTab }) {
   const { t } = useDiasporaGaT()
-  const reviews = useServiceReviews()
-  const decisions = usePageDecisions()
-  const jobs = useJobs()
+  // ADR-0041 du moteur : un module fermé ne laisse ni onglet ni écran à la gestion d'une page.
+  const served = usePageManageServed()
   const { page } = props
   const teamRole = myTeamRoleOf(page)
   // Aucun rôle VIVANT dans l'équipe (jamais eu, ou retiré à l'instant) : la gestion se ferme, sans rien montrer de l'équipe.
@@ -232,15 +231,12 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
   // AS-10 : le modérateur ne publie ni ne gère ; il lit l'équipe, s'en retire et modère les commentaires.
   // Sans rôle qui parle au nom de la page (`myRole` nul), jamais d'onglet de publication ni de gestion.
   if (teamRole === "moderator" || page.myRole === null) return <ModeratorView management={props.management} page={page} />
-  const items: FolderNavItem[] = MANAGE_TABS.filter((tab) => {
-    if (tab === "avis") return isServiceProviderOwnerKind(page.ownerKind) && !!reviews?.usePageReviews
-    // P16 · G9 : toute page porte des contenus modérables (missions, offres, ressources, évènements).
-    if (tab === "decisions") return decisions !== null
-    // DG-025 : le recrutement de CETTE page, quand elle peut recruter et que le fournisseur sert les emplois.
-    if (tab === "emplois") return jobs !== null && isJobEmployerOwnerKind(page.ownerKind)
-    return (tab !== "services" && tab !== "demandes") || isServiceProviderOwnerKind(page.ownerKind)
-  })
-    .map((tab) => ({ id: tab, label: t(TAB_LABELS[tab]), href: routes.pageManage(page.handle, tab), active: tab === props.tab }))
+  // CH-816 (P0) : la règle partagée avec les liens rapides de « Mes pages » (`@/lib/page-manage-tabs`).
+  const offered = offeredManageTabs(page.ownerKind, served)
+  // Un onglet que la page n'offre pas (module fermé, page qui ne propose ni services ni emplois) rend
+  // l'identité, l'onglet par défaut de l'adresse : ni onglet ni écran « indisponible » pour un module fermé.
+  const tab: PageManageTab = offered.includes(props.tab) ? props.tab : "identite"
+  const items: FolderNavItem[] = offered.map((item) => ({ id: item, label: t(TAB_LABELS[item]), href: routes.pageManage(page.handle, item), active: item === tab }))
   return (
     <>
       <PageHeading page={page} title={t("pageAdmin.manage.title", { name: page.name })} lead={t(page.myRole === "admin" ? "pageAdmin.manage.roleAdmin" : "pageAdmin.manage.roleSignatory")} />
@@ -253,15 +249,14 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
           </NextLink>
         )}
       />
-      {props.tab === "publications" ? <PagePublicationsPanel pageId={page.id} handle={page.handle} membership={props.membership} />
-        : props.tab === "services" || props.tab === "demandes" ? <PageServiceManagement page={page} membership={props.membership} tab={props.tab} />
-        : props.tab === "avis" ? isServiceProviderOwnerKind(page.ownerKind)
-          ? <PageServiceReviews pageId={page.id} personId={props.membership.personId} mode="manage" />
-          : <EmptyState icon={<ShieldOffIcon />} title={t("pageReviews.unavailableTitle")} description={t("pageReviews.unavailableBody")} />
-        : props.tab === "decisions" ? <PageDecisionsPanel pageId={page.id} />
-        : props.tab === "emplois" ? isJobEmployerOwnerKind(page.ownerKind) ? <JobRecruiterPanel key={page.id} pageId={page.id} pageHandle={page.handle} /> : <JobsUnavailable />
+      {/* Seul un onglet offert se monte : avis et emplois n'y sont que pour la page qui les porte. */}
+      {tab === "publications" ? <PagePublicationsPanel pageId={page.id} handle={page.handle} membership={props.membership} />
+        : tab === "services" || tab === "demandes" ? <PageServiceManagement page={page} membership={props.membership} tab={tab} />
+        : tab === "avis" ? <PageServiceReviews pageId={page.id} personId={props.membership.personId} mode="manage" />
+        : tab === "decisions" ? <PageDecisionsPanel pageId={page.id} />
+        : tab === "emplois" ? <JobRecruiterPanel key={page.id} pageId={page.id} pageHandle={page.handle} />
         : <><Card className="p-5">
-        {props.tab === "identite" ? (
+        {tab === "identite" ? (
           page.myRole === "admin" ? (
             <div className="flex flex-col gap-4">
               <div>
@@ -273,14 +268,14 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
           ) : (
             <IdentitySummary page={page} />
           )
-        ) : props.tab === "equipe" ? (
+        ) : tab === "equipe" ? (
           <PageTeamPanel management={props.management} page={page} />
         ) : (
           <VerificationPanel management={props.management} page={page} />
         )}
       </Card>
       {/* AS-11a : une zone à part, son seul bouton plein, sous l'identité. */}
-      {props.tab === "identite" && canOfferPageSleep(props.management, page) ? (
+      {tab === "identite" && canOfferPageSleep(props.management, page) ? (
         <Card className="p-5">
           <PageSleepSection management={props.management} page={page} />
         </Card>

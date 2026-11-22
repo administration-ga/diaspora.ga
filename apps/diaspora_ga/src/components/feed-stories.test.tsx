@@ -3,6 +3,7 @@ import { useNetwork, useRoutes } from "@antsia/api/network"
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import type { Loadable, MembershipView, SessionView } from "@diaspora-ga/features/data"
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { getFunctionName } from "convex/server"
 import { useState } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -18,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   query: vi.fn(),
   tray: vi.fn(),
+  // Le plateau des actus lu par le moteur : `undefined` tant qu'il n'a pas répondu.
+  trayData: undefined as { groups: readonly unknown[]; truncated: boolean } | undefined,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -45,15 +48,20 @@ vi.mock("@/components/icom", async (importOriginal) => ({
 
 vi.mock("@diaspora-ga/features/data", () => ({ useSession: () => mocks.session }))
 
+// Deux lectures : la personne (`getMyPerson`) et le plateau des actus (`stories.tray`, CH-816).
+const TRAY_QUERY = "modules/stories/stories:tray"
 vi.mock("@antsia/api/hooks", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@antsia/api/hooks")>()),
   useAuthenticatedConvexQuery: (...args: unknown[]) => {
     mocks.query(...args)
+    if (getFunctionName(args[0] as never) === TRAY_QUERY) return { data: mocks.trayData, isError: false }
     return { data: mocks.me, isError: false }
   },
 }))
 
 vi.mock("@antsia/social-features/stories", () => ({
+  // L'instant des lectures du moteur, arrondi au pas : ici un pas de cinq minutes, lisible dans les attentes.
+  storyQueryInstant: (now: number) => now - (now % 300_000),
   StoriesStyles: () => <style data-testid="stories-styles" />,
   StoriesTray: (props: {
     myHandle: string | null
@@ -114,10 +122,14 @@ function memberSession(member: MembershipView | null): Loadable<SessionView> {
   }
 }
 
+/** Une série en ligne : le plateau a quelque chose à montrer. */
+const ONE_STORY = { groups: [{ author: { handle: "kofi.demo" } }], truncated: false }
+
 beforeEach(() => {
   mocks.network = null
   mocks.session = memberSession(membership)
   mocks.me = { published: true, handle: "awa.demo", avatar: { url: "portrait.jpg" } }
+  mocks.trayData = ONE_STORY
   vi.clearAllMocks()
 })
 
@@ -249,5 +261,59 @@ describe("FeedStories — le bandeau des actus du moteur dans le fil", () => {
     rerender(<FeedStories now={123_000} />)
 
     expect(screen.queryByRole("group", { name: "Bandeau moteur" })).not.toBeInTheDocument()
+  })
+})
+
+describe("FeedStories — sans actu, aucun bandeau (CH-816, P2)", () => {
+  const strip = () => screen.queryByRole("group", { name: "Bandeau moteur" })
+
+  it("aucune actu à montrer : ni bandeau, ni tuile « Créer une actu », ni styles", () => {
+    mocks.network = network
+    mocks.trayData = { groups: [], truncated: false }
+    render(<FeedStories now={123_000} />)
+
+    expect(strip()).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: "Créer une actu" })).not.toBeInTheDocument()
+    expect(screen.queryByTestId("stories-styles")).not.toBeInTheDocument()
+    expect(mocks.tray).not.toHaveBeenCalled()
+  })
+
+  it("une actu : le bandeau du moteur, inchangé, tuile de création comprise", () => {
+    mocks.network = network
+    render(<FeedStories now={123_000} />)
+
+    expect(strip()).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Créer une actu" })).toBeInTheDocument()
+    expect(mocks.tray).toHaveBeenLastCalledWith(expect.objectContaining({ canCreate: true }))
+  })
+
+  it("lit le plateau du réseau courant au même instant que le bandeau (un seul abonnement)", () => {
+    mocks.network = network
+    render(<FeedStories now={423_000} />)
+
+    const trayCall = mocks.query.mock.calls.find(([ref]) => getFunctionName(ref as never) === TRAY_QUERY)
+    expect(trayCall?.[1]).toEqual({ networkId: "networks_diaspora-ga", now: 300_000 })
+  })
+
+  it("rien n'est affirmé avant la première lecture : aucun bandeau", () => {
+    mocks.network = network
+    mocks.trayData = undefined
+    render(<FeedStories now={123_000} />)
+
+    expect(strip()).not.toBeInTheDocument()
+  })
+
+  it("d'un pas de lecture à l'autre, le bandeau tient le temps que le pas suivant réponde", () => {
+    mocks.network = network
+    const { rerender } = render(<FeedStories now={123_000} />)
+    expect(strip()).toBeInTheDocument()
+
+    mocks.trayData = undefined
+    rerender(<FeedStories now={123_000} />)
+    expect(strip()).toBeInTheDocument()
+
+    mocks.trayData = { groups: [], truncated: false }
+    rerender(<FeedStories now={123_000} />)
+    expect(strip()).not.toBeInTheDocument()
   })
 })

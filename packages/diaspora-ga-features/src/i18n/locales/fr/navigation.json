@@ -1,13 +1,11 @@
 {
   "nav": {
-    "explore": "Explorer",
     "services": "Services",
     "communities": "Communautés",
     "myRequests": "Mes demandes",
-    "myActivity": "Mon activité",
+    "myActivity": "Mes pages",
     "myAssociations": "Mes associations",
     "myData": "Mes données",
-    "personal": "Mon espace",
     "account": {
       "open": "Menu du compte ({{name}})",
       "title": "Mon compte",
@@ -46,10 +44,11 @@
     }
   },
   "explore": {
-    "title": "Explorer",
+    "title": "Membres",
     "lead": "Trouvez des membres, des pages et des communautés dans tout le réseau.",
+    "membersTitle": "Chercher une personne",
     "membersBody": "Cherchez parmi les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie.",
-    "membersAction": "Chercher un membre",
+    "membersAction": "Ouvrir la recherche",
     "servicesBody": "Coiffure, traduction, photographie, aide à l'installation : trouvez une compétence de la diaspora près de chez vous.",
     "servicesAction": "Parcourir les services",
     "countriesTitle": "Pays ouverts",

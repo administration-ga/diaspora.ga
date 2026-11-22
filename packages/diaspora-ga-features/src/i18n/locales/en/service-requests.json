@@ -108,7 +108,7 @@
     },
     "detail": {
       "backMine": "My requests",
-      "backActivity": "My activity",
+      "backActivity": "My pages",
       "notFoundTitle": "Request not found",
       "notFoundBody": "This request does not exist or is not accessible to you.",
       "fromRequester": "Request from {{name}}",
