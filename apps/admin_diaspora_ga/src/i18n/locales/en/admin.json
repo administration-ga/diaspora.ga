@@ -65,7 +65,8 @@
       "team": "Team and leads",
       "rules": "Rules",
       "journal": "Journal",
-      "institutions": "Institutions and official pages"
+      "institutions": "Institutions and official pages",
+      "founders": "Founders"
     }
   },
   "dashboard": {
@@ -803,6 +804,47 @@
       "sameSignatory": "The chosen person is the one you are removing: choose someone else.",
       "notFound": "The page or the person is no longer in the expected state (active member of the network, active official page). Reload the list.",
       "conflict": "This page is held by a court measure: it cannot be woken up."
+    }
+  },
+  "founders": {
+    "title": "Founders",
+    "lead": "DIASPORA.GA’s founding cohort, capped: members who already joined the network, admitted by a justified decision to seed trust, with or without a seniority waiver for sponsoring. Nobody is admitted automatically; every admission and withdrawal is written to the decision journal.",
+    "cohortTitle": "Founding cohort",
+    "count_one": "{{shown}} founder out of {{max}}",
+    "count_other": "{{shown}} founders out of {{max}}",
+    "full": "The cohort is full ({{max}} admissions in force): withdraw an admission to grant another one.",
+    "emptyTitle": "No founding member",
+    "emptyBody": "Admit the first ones below, among members who already joined the network.",
+    "neutralName": "Member with an unpublished profile",
+    "waiverBadge": "Seniority waiver",
+    "admittedOn": "Admitted on",
+    "admittedBy": "Decided by",
+    "admittedBySeed": "Seed admission, with no named author",
+    "reason": "Reason",
+    "withdraw": "Withdraw the admission",
+    "withdrawFor": "Withdraw the admission of {{name}}",
+    "withdrawTitle": "Withdraw the founding admission of {{name}}",
+    "withdrawBody": "The person stays a member of the network; their status falls back on their other facts (identity, sponsorship). The withdrawal is justified and written to the decision journal.",
+    "withdrawConfirm": "Withdraw the admission",
+    "withdrawn": "The founding admission of {{name}} is withdrawn.",
+    "withdrawnTitle": "Latest withdrawn admissions",
+    "withdrawnOn": "Withdrawn on {{date}}: {{cause}}",
+    "causeDeparture": "left the network",
+    "causeDecision": "justified decision",
+    "causeDecisionBy": "decision by {{name}}",
+    "admitTitle": "Admit a founding member",
+    "admitLead": "Search for the person by their public handle: only someone who is already an active member of the network is found. No membership is created.",
+    "handle": "Member’s public handle",
+    "waiver": "Waive the seniority required for sponsoring",
+    "waiverHint": "Without a waiver, the person sponsors once their seniority allows it, like any member.",
+    "admitConfirm": "Admit to the cohort",
+    "admitted": "{{name}} joins the founding cohort.",
+    "failed": "The decision did not go through. Reload the cohort, then try again.",
+    "refusal": {
+      "notMember": "This person is not an active member of the network: they must have joined on their own before being admitted.",
+      "alreadyAdmitted": "This person is already in the founding cohort.",
+      "cohortFull": "The cohort is full ({{limit}} admissions): withdraw an admission to grant another one.",
+      "notAdmitted": "This person no longer has a founding admission in force: reload the cohort."
     }
   }
 }

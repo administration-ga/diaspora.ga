@@ -65,7 +65,8 @@
       "team": "Équipe et responsables",
       "rules": "Règles",
       "journal": "Journal",
-      "institutions": "Institutions et pages officielles"
+      "institutions": "Institutions et pages officielles",
+      "founders": "Fondateurs"
     }
   },
   "dashboard": {
@@ -803,6 +804,47 @@
       "sameSignatory": "La personne choisie est déjà celle que vous retirez : choisissez quelqu’un d’autre.",
       "notFound": "La page ou la personne n’est plus dans l’état attendu (membre active du réseau, page officielle active). Relisez la liste.",
       "conflict": "Cette page est tenue par une mesure de justice : elle ne peut pas être réveillée."
+    }
+  },
+  "founders": {
+    "title": "Fondateurs",
+    "lead": "La cohorte fondatrice de DIASPORA.GA, plafonnée : des membres déjà entrés dans le réseau, admis par une décision motivée pour amorcer la confiance, avec ou sans dispense d’ancienneté pour parrainer. Personne n’est admis d’office ; chaque admission et chaque retrait est inscrit au journal des décisions.",
+    "cohortTitle": "Cohorte fondatrice",
+    "count_one": "{{shown}} fondateur sur {{max}}",
+    "count_other": "{{shown}} fondateurs sur {{max}}",
+    "full": "La cohorte est complète ({{max}} admissions en vigueur) : retirez une admission pour en prononcer une autre.",
+    "emptyTitle": "Aucun membre fondateur",
+    "emptyBody": "Admettez les premiers ci-dessous, parmi les membres déjà entrés dans le réseau.",
+    "neutralName": "Membre au profil non publié",
+    "waiverBadge": "Dispense d’ancienneté",
+    "admittedOn": "Admis le",
+    "admittedBy": "Décision de",
+    "admittedBySeed": "Admission d’amorçage, sans auteur nommé",
+    "reason": "Motif",
+    "withdraw": "Retirer l’admission",
+    "withdrawFor": "Retirer l’admission de {{name}}",
+    "withdrawTitle": "Retirer l’admission fondatrice de {{name}}",
+    "withdrawBody": "La personne reste membre du réseau ; son statut retombe selon ses autres faits (identité, parrainage). Le retrait est motivé et inscrit au journal des décisions.",
+    "withdrawConfirm": "Retirer l’admission",
+    "withdrawn": "L’admission fondatrice de {{name}} est retirée.",
+    "withdrawnTitle": "Dernières admissions retirées",
+    "withdrawnOn": "Retirée le {{date}} : {{cause}}",
+    "causeDeparture": "départ du réseau",
+    "causeDecision": "décision motivée",
+    "causeDecisionBy": "décision de {{name}}",
+    "admitTitle": "Admettre un membre fondateur",
+    "admitLead": "Cherchez la personne par son identifiant public : seule une personne déjà membre active du réseau est trouvée. Aucune adhésion n’est créée.",
+    "handle": "Identifiant public du membre",
+    "waiver": "Dispenser de l’ancienneté exigée pour parrainer",
+    "waiverHint": "Sans dispense, la personne parraine quand son ancienneté le permet, comme tout membre.",
+    "admitConfirm": "Admettre dans la cohorte",
+    "admitted": "{{name}} rejoint la cohorte fondatrice.",
+    "failed": "La décision n’a pas abouti. Relisez la cohorte, puis réessayez.",
+    "refusal": {
+      "notMember": "Cette personne n’est pas membre active du réseau : elle doit y être entrée d’elle-même avant d’être admise.",
+      "alreadyAdmitted": "Cette personne fait déjà partie de la cohorte fondatrice.",
+      "cohortFull": "La cohorte est complète ({{limit}} admissions) : retirez une admission pour en prononcer une autre.",
+      "notAdmitted": "Cette personne n’a plus d’admission fondatrice en vigueur : relisez la cohorte."
     }
   }
 }

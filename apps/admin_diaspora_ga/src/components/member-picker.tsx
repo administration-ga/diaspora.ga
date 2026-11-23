@@ -3,7 +3,7 @@
 /**
  * Choisir un membre actif du réseau par son identifiant public (signataire d'une page officielle,
  * membre fondateur) — le patron de la recherche de l'équipe (`team-section.tsx`), une lecture
- * ponctuelle du moteur passée par l'appelant (`signatoryCandidate`, `founders.candidate`) : le
+ * ponctuelle du moteur passée par l'appelant (`pages/networkAdmin.signatoryCandidate`, `diaspora/founders.candidate`) : le
  * moteur ne rend qu'un membre actif au profil publié, sinon rien. Une fois trouvé, le membre est
  * présenté par sa carte et peut être changé avant le geste.
  */

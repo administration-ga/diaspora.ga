@@ -44,12 +44,12 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
     }
   })
 
-  it("avec le lot A7 : tableau de bord, mesure et journal (Pilotage), modules et aperçu (Application des membres), institutions (Communauté), recours, équipe et règles (Confiance)", () => {
-    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "metrics", "journal", "modules", "menuPreview", "institutions", "appeals", "team", "rules"])
+  it("avec le lot A7 : tableau de bord, mesure et journal (Pilotage), modules et aperçu (Application des membres), institutions et fondateurs (Communauté), recours, équipe et règles (Confiance)", () => {
+    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "metrics", "journal", "modules", "menuPreview", "institutions", "founders", "appeals", "team", "rules"])
     expect(groupedSections().map((entry) => [entry.group, entry.sections.map((section) => section.href)])).toEqual([
       ["pilotage", [routes.dashboard(), routes.metrics(), routes.journal()]],
       ["membersApp", [routes.modules(), routes.menuPreview()]],
-      ["community", [routes.institutions()]],
+      ["community", [routes.institutions(), routes.founders()]],
       ["trust", [routes.appeals(), routes.team(), routes.rules()]],
     ])
   })
