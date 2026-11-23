@@ -742,6 +742,13 @@ export class DemoStore {
     if (answeredId && answeredId !== postAuthorId) {
       next = this.notified(next, { recipientId: answeredId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
     }
+    // FD-10 : qui suit les commentaires de la publication est avisé, s'il la lit encore (comme la diffusion du moteur).
+    const readable = this.getState()
+    for (const mark of this.state.marks) {
+      if (mark.postId !== post.id || mark.kind !== "notify" || mark.personId === postAuthorId || mark.personId === answeredId) continue
+      if (!canRead(readable, post, mark.personId, now)) continue
+      next = this.notified(next, { recipientId: mark.personId, kind: "post_comment", actorId: viewer.person.id, postId: post.id })
+    }
     this.commit(next)
     // Comme le moteur : l'identifiant du commentaire créé, que l'écran montre aussitôt (FD-03).
     return { ok: true, value: { commentId: id } }
@@ -977,6 +984,67 @@ export class DemoStore {
       marks: this.state.marks.filter((mark) => mark.postId !== postId || mark.kind === "hidden"),
     })
     return OK
+  }
+
+  // ── Gestes de l'auteur (FD-10), comme le moteur ────────────────────────
+  /** MA publication personnelle, hors groupe et publiée ; pour tout autre, elle n'existe pas. */
+  private ownPublishedPost(postId: string, personId: string) {
+    const post = this.state.posts.find((candidate) => candidate.id === postId)
+    if (!post || post.author.kind !== "person" || post.author.id !== personId) return null
+    return post.moderation === "published" && post.audience !== "group" ? post : null
+  }
+
+  /** Épingler MA publication en tête de mon mur : une seule épingle, la nouvelle remplace l'ancienne. */
+  async pinOnMyWall(postId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    if (!capabilitiesOf(deriveMembershipStatus(viewer.membership.grounds, this.clock())).has("publish")) return fail("status_insufficient")
+    if (!this.ownPublishedPost(postId, viewer.person.id)) return fail("not_found")
+    const membership: DemoMembership = { ...viewer.membership, pinnedPostId: postId }
+    this.commit({ ...this.state, memberships: { ...this.state.memberships, [viewer.person.id]: membership } })
+    return OK
+  }
+
+  /** Retirer l'épingle de mon mur ; la publication reste publiée. Sans épingle, rien ne change. */
+  async unpinMyWall(): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    if (viewer.membership.pinnedPostId === undefined) return OK
+    const { pinnedPostId, ...membership } = viewer.membership
+    void pinnedPostId
+    this.commit({ ...this.state, memberships: { ...this.state.memberships, [viewer.person.id]: membership } })
+    return OK
+  }
+
+  /** Ne plus lire MA publication dans ANTSIA ; elle reste ici, pour la même audience. Déjà retirée : rien ne change. */
+  async withdrawFromRoot(postId: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    const post = this.state.posts.find((candidate) => candidate.id === postId)
+    if (!post || post.author.kind !== "person" || post.author.id !== viewer.person.id) return fail("not_found")
+    if (post.visibility !== "root") return OK
+    this.commit({ ...this.state, posts: this.state.posts.map((candidate) => (candidate.id === postId ? { ...candidate, visibility: "network" as const } : candidate)) })
+    return OK
+  }
+
+  /** Recevoir, ou ne plus recevoir, un avis à chaque nouveau commentaire d'une publication lisible (bascule). */
+  async toggleCommentNotifications(postId: string): Promise<ActionResult<{ readonly notifying: boolean }>> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer) return fail("not_signed_in")
+    if (!this.readablePost(postId, viewer.person.id)) return fail("not_found")
+    const me = viewer.person.id
+    const existing = this.state.marks.some((mark) => mark.personId === me && mark.postId === postId && mark.kind === "notify")
+    this.commit({
+      ...this.state,
+      marks: existing
+        ? this.state.marks.filter((mark) => !(mark.personId === me && mark.postId === postId && mark.kind === "notify"))
+        : [...this.state.marks, { personId: me, postId, kind: "notify", createdAt: this.clock() }],
+    })
+    return { ok: true, value: { notifying: !existing } }
   }
 
   // ── Suggestions (EXF-DG-18) ─────────────────────────────────────────────
