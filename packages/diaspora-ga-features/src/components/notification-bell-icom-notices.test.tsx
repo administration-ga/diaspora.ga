@@ -37,6 +37,7 @@ const baseRoutes: FeatureRoutes = {
 const appRoutes: FeatureRoutes = {
   ...baseRoutes,
   groupConversation: (threadId) => `/messages/groupe/${threadId}`,
+  personalConversation: (threadId) => `/messages/chat/${threadId}`,
   callJournal: () => "/messages?brique=iappel",
 }
 
@@ -141,10 +142,41 @@ describe("cloche — les avis d'iCom (IM-04)", () => {
     expect(within(dialog).queryByRole("link", { name: fr("bell.openCallJournal") })).not.toBeInTheDocument()
   })
 
+  it("un message à deux (IC-09) : l'expéditeur par son profil publié, puis la conversation, sans aucun contenu", async () => {
+    mount([notice({ kind: "personal_message", personalThreadId: "fil-12" })])
+    const dialog = await openBell(1)
+    const row = rowOf(dialog, fr("bell.kind.personal_message"))
+    expect(within(row).getByRole("link", { name: AWA.displayName })).toHaveAttribute("href", "/@awa.demo")
+    expect(within(row).getByRole("link", { name: fr("bell.openConversation") })).toHaveAttribute("href", "/messages/chat/fil-12")
+    // Le seul geste de la ligne : la marquer comme lue ; ni aperçu, ni réponse depuis la cloche.
+    expect(within(row).getAllByRole("button").map((button) => button.getAttribute("aria-label"))).toEqual([fr("bell.markRead")])
+    expect(row).toHaveTextContent(`${AWA.displayName} ${fr("bell.kind.personal_message")}`)
+    expect(within(dialog).queryByText(fr("bell.system.other"))).not.toBeInTheDocument()
+  })
+
+  it("un message à deux dont la conversation ne se lit plus, ou sans route fournie : la phrase seule, sans lien inventé", async () => {
+    mount([notice({ id: "sans-fil", kind: "personal_message", personalThreadId: null }), notice({ id: "sans-profil", kind: "personal_message", actor: null, personalThreadId: "fil-13" })], baseRoutes)
+    const dialog = await openBell(2)
+    expect(within(dialog).queryByRole("link", { name: fr("bell.openConversation") })).not.toBeInTheDocument()
+    expect(within(dialog).getByText(`${fr("bell.someone")} ${fr("bell.kind.personal_message")}`)).toBeInTheDocument()
+  })
+
+  it("appels fermés : l'application ne fournit pas le journal, l'appel manqué et le message vocal restent dits, sans lien", async () => {
+    // Ce que fournit l'application quand ses appels sont fermés : iCom, sans le journal d'appels.
+    const withoutCalls: FeatureRoutes = { ...baseRoutes, groupConversation: (threadId) => `/messages/groupe/${threadId}`, personalConversation: (threadId) => `/messages/chat/${threadId}` }
+    mount([notice({ id: "manque", kind: "call_missed" }), notice({ id: "vocal", kind: "voicemail_left" })], withoutCalls)
+    const dialog = await openBell(2)
+    expect(within(dialog).getByText(fr("bell.kind.call_missed"))).toBeInTheDocument()
+    expect(within(dialog).getByText(fr("bell.kind.voicemail_left"))).toBeInTheDocument()
+    expect(within(dialog).queryByRole("link", { name: fr("bell.openCallJournal") })).not.toBeInTheDocument()
+  })
+
   it("en anglais, les mêmes avis", async () => {
-    mount([notice({ kind: "voicemail_left" }), notice({ kind: "group_added", groupThreadId: "fil-3" })], appRoutes, "en")
-    const dialog = await openBell(2, en)
+    mount([notice({ kind: "voicemail_left" }), notice({ kind: "group_added", groupThreadId: "fil-3" }), notice({ kind: "personal_message", personalThreadId: "fil-4" })], appRoutes, "en")
+    const dialog = await openBell(3, en)
     expect(within(dialog).getByText(en("bell.kind.voicemail_left"))).toBeInTheDocument()
+    expect(within(dialog).getByText(en("bell.kind.personal_message"))).toBeInTheDocument()
+    expect(within(dialog).getByRole("link", { name: en("bell.openConversation") })).toHaveAttribute("href", "/messages/chat/fil-4")
     expect(within(dialog).getByRole("link", { name: en("bell.openCallJournal") })).toHaveAttribute("href", "/messages?brique=iappel")
     expect(within(dialog).getByRole("link", { name: en("bell.openGroupInvite") })).toHaveAttribute("href", "/messages/groupe/fil-3")
   })

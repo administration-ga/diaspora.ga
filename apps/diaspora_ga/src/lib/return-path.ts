@@ -81,6 +81,10 @@ const DESTINATIONS: readonly DestinationRule[] = [
   rule(routes.associationGroup(SEGMENT), "read_network"),
   rule(routes.associationEvent(SEGMENT, SEGMENT), "read_network"),
   rule(routes.bookmarks(), "read_network"),
+  // DS-14 : la page des notifications, et la porte d'une notification poussée touchée hors session
+  // (sa référence opaque survit à l'entrée : la porte la relit pour la personne entrée).
+  rule(routes.notifications(), "read_network"),
+  rule(routes.openNotification(), "read_network"),
   rule(routes.members(), "view_directory"),
   rule(routes.relations(), "read_network"),
   rule(routes.messages(), "communicate", true),

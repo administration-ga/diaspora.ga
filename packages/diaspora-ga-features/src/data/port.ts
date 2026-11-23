@@ -84,6 +84,7 @@ import type { CallSettingsCapability } from "./call-settings-port"
 import type { DeviceNotificationsCapability } from "./device-notifications-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 import type { MemberBrowseCapability } from "./member-browse-port"
+import type { NotificationOpeningCapability } from "./notification-opening-port"
 import type { PostSearchCapability } from "./post-search-port"
 
 export type ActionResult<T = null> =
@@ -424,6 +425,12 @@ export interface DiasporaGaDataSource {
    * à côté de la recherche par nom : mêmes membres, même règle, vingt par fenêtre.
    */
   readonly memberBrowse?: MemberBrowseCapability
+  /**
+   * DS-14 (ouverture) : la destination relue d'une notification poussée sur l'appareil
+   * (`notification-opening-port.ts`). Absente (démonstration : rien n'est poussé), la porte
+   * d'ouverture mène à la page des notifications.
+   */
+  readonly notificationOpening?: NotificationOpeningCapability
   /**
    * Chercher dans les publications lisibles du réseau (DS-11, volet recherche, `post-search-port.ts`) :
    * la même garde que le fil, une fenêtre de plus à chaque « Voir plus », jusqu'à la borne.

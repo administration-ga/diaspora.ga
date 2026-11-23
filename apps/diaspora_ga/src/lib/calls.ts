@@ -19,12 +19,19 @@
  *  · le profil d'une relation (« Appeler ») : ce bouton est écrit par DIASPORA.GA, la déclaration
  *    du moteur ne l'atteint pas, il garde donc sa propre condition ;
  *  · la rubrique « Messages et appels » des réglages (IM-02), qui dit, fermé, que DIASPORA.GA ne
- *    propose pas encore d'appel.
+ *    propose pas encore d'appel ;
+ *  · la table des routes des surfaces (`callJournalRoute`) : fermé, le journal d'appels n'y est
+ *    pas, ni la cloche (appel manqué, message vocal) ni la porte d'une notification poussée n'y
+ *    mènent — iCom ne sert plus la brique iAppel, son adresse retomberait sur les conversations.
  *
  * Pourquoi une valeur du dépôt et pas une variable publique de construction : toute variable
  * `NEXT_PUBLIC_*` lue par l'application doit être déclarée au catalogue de déploiement du moteur
  * (`deploy/catalog.json`, cliquet `deploy-catalog`), qui n'est pas dans la zone de DIASPORA.GA.
  */
+import type { FeatureRoutes } from "@diaspora-ga/features"
+
+import { routes } from "./routes"
+
 export const CALL_SWITCH_STATES = ["closed", "open"] as const
 export type CallSwitch = (typeof CALL_SWITCH_STATES)[number]
 
@@ -39,4 +46,12 @@ export function isCallsSwitchOpen(state: CallSwitch): boolean {
 /** Les écrans demandent ici si un geste d'appel peut être proposé. */
 export function callsAreOpen(): boolean {
   return isCallsSwitchOpen(CALLS_SWITCH)
+}
+
+/**
+ * Le journal d'appels d'iCom comme destination des surfaces : fourni seulement quand les appels
+ * sont ouverts. Fermés, aucun lien n'y mène ; la phrase de l'avis reste, sans geste d'appel.
+ */
+export function callJournalRoute(open: boolean = callsAreOpen()): Pick<FeatureRoutes, "callJournal"> {
+  return open ? { callJournal: routes.callJournal } : {}
 }
