@@ -348,7 +348,7 @@
   "team": {
     "title": "Team and leads",
     "lead": "The network's leads, then the teams handling the diaspora.ga moderation queue. Every appointment, addition and removal carries a reason and is written to the decision log.",
-    "countryNote": "A team’s country opens the door to that country (“Open countries” section); it does not narrow the queue yet: reports are still routed by content type.",
+    "countryNote": "A team’s country opens the door to that country (“Open countries” section) and defines its queue: content from that country goes first to that country’s team for its content type, then to that country’s general team, then to teams without a country. Content without a country never goes to a country’s team.",
     "scopeAll": "All content types",
     "scopeOne": "Content type handled: {{surface}}",
     "picker": "Team to compose",
@@ -389,7 +389,7 @@
     "countryRemoved": "The team {{name}} no longer carries a country.",
     "countryChange": "Change the country",
     "countryChangeFor": "Change the country of the team {{name}}",
-    "countryBody": "A team’s country opens the door to that country: a country opens when a team of that country has an active moderator. The change is justified and written to the decision journal."
+    "countryBody": "A team’s country opens the door to that country and sends it the reports on content from that country: a country opens when a team of that country has an active moderator. Cases already received stay with the team. The change is justified and written to the decision journal."
   },
   "responsibles": {
     "title": "Network leads",
@@ -906,7 +906,7 @@
   "countries": {
     "title": "Open countries",
     "lead": "The network’s countries: those that are open, those a moderation team carries and those with a hub. A country opens when a team of that country has at least {{moderators}} active moderator, an active member of the network, which the engine checks, and when the administration attests {{relays}} committed relay associations. Closing is always possible. Every action is justified and written to the decision journal.",
-    "routingNote": "A team’s country is set in “Team and responsibles”. It does not delimit any competence yet: reports are still routed by content type, and a second country first needs routing by country.",
+    "routingNote": "A team’s country is set in “Team and responsibles”. Reports on a piece of content go to the team of its country, then of its content type; without a team for its country, to teams without a country. A second country can therefore open as soon as its team exists.",
     "emptyTitle": "No country to set",
     "emptyBody": "No country is open, carried by a team or has a hub. First give a country to a moderation team.",
     "teamLink": "Go to Team and responsibles",

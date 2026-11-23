@@ -11,8 +11,9 @@
  *   · la file des signalements OUVERTS, filtrée par le pays que porte la CIBLE
  *     (publication locale, page, évènement ou direct d'une page, avis et réponse
  *     d'avis par la zone de l'offre) et par nature ; le pays d'une personne n'est
- *     jamais lu. Le moteur ne rattache pas encore une équipe à un pays : le pays
- *     FILTRE la file, il ne délimite aucune compétence ;
+ *     jamais lu. Le moteur adresse chaque dossier à l'équipe du pays du contenu,
+ *     puis de sa nature (CH-815) : la file d'une équipe ne porte que ses
+ *     dossiers, le pays TRIE la file ;
  *   · l'aperçu est la projection bornée du moteur (contenu signalé seul : ni
  *     auteur, ni déclarant, ni coordonnée, ni pièce privée, ni besoin d'une
  *     demande de service) ;

@@ -9,7 +9,8 @@
  *  · les équipes vivantes du réseau (`diaspora/moderationDesk.myDesk().teams` : l'administration
  *    les lit toutes), leur nature de contenu et leur pays (lot A7, suite d'A3 au moteur) : le pays
  *    se choisit à la création ou se règle ensuite (`setTeamCountry`, motivé) ; il ouvre la porte de
- *    son pays (section « Pays ouverts »), sans délimiter encore la file, routée par nature ;
+ *    son pays (section « Pays ouverts ») et délimite sa file : le moteur lui adresse les dossiers des
+ *    contenus de ce pays, puis de sa nature (`moderation/routing`) ;
  *  · la composition d'une équipe (`teamRoster`), par le profil PUBLIÉ de chacun ; l'ajout par
  *    identifiant public (`teamCandidate`) ; le retrait motivé et confirmé ; la création motivée.
  *    Chaque geste passe par `moderation/networkAdmin` (`createTeam`, `setTeamMember`,

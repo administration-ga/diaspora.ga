@@ -11,8 +11,9 @@
  *    du cahier, que rien ne modélise (case obligatoire, `relayAssociationsAttested`, inscrite au
  *    journal ; `relay_associations_missing`). Fermer est toujours permis. Chaque geste est motivé.
  *  · Un pays ouvert sans modérateur actif est signalé : rien n'empêche d'en retirer le dernier.
- * Le pays d'une équipe se pose dans « Équipe et responsables » ; il ne délimite encore aucune
- * compétence : les signalements restent routés par nature de contenu.
+ * Le pays d'une équipe se pose dans « Équipe et responsables » ; il délimite sa compétence : le moteur
+ * adresse le dossier d'un contenu à l'équipe de son pays, puis de sa nature (`moderation/routing`, ADR-0042,
+ * amendement « Routage des signalements par pays ») ; un deuxième pays s'ouvre dès que son équipe existe.
  */
 import { api } from "@convex/_generated/api"
 import { isResidenceCountry } from "@diaspora-ga/domain"
