@@ -255,6 +255,25 @@ describe("section Institutions — créer une page officielle", () => {
     await waitFor(() => expect(mocks.writes.get(CREATE)).toHaveBeenCalledWith(expect.objectContaining({ handle: "consulat-lyon" })))
   })
 
+  it("après une création réussie, tout le formulaire repart vide : identifiant du signataire, signataire choisi, nom, adresse, pays, motif", async () => {
+    const user = userEvent.setup()
+    mount()
+    await pickSignatory(user)
+    await user.type(form().getByLabelText(t("institutions.name")), "Consulat du Gabon à Lyon")
+    await user.type(form().getByLabelText(t("institutions.handle")), "consulat-lyon")
+    await user.selectOptions(form().getByLabelText(t("institutions.country")), "FR")
+    await user.type(form().getByLabelText(t("decision.reason")), REASON)
+    await user.click(form().getByRole("button", { name: t("institutions.create") }))
+    await waitFor(() => expect(mocks.success).toHaveBeenCalled())
+    // Le signataire choisi a disparu : le champ de recherche est de retour, et vide.
+    expect(await form().findByLabelText(t("institutions.signatoryHandle"))).toHaveValue("")
+    expect(form().queryByText("Jean MBA")).toBeNull()
+    expect(form().getByLabelText(t("institutions.name"))).toHaveValue("")
+    expect(form().getByLabelText(t("institutions.handle"))).toHaveValue("")
+    expect(form().getByLabelText(t("institutions.country"))).toHaveValue("")
+    expect(form().getByLabelText(t("decision.reason"))).toHaveValue("")
+  })
+
   it("sans signataire, sans motif suffisant, sans adresse tirable du nom : rien ne part", async () => {
     const user = userEvent.setup()
     mount()

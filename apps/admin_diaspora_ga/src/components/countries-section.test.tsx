@@ -97,6 +97,13 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe("section Pays ouverts — lecture", () => {
+  it("chaque carte dit le code puis le nom du pays une seule fois (et non deux fois le nom)", () => {
+    mount()
+    const [belgium, france] = screen.getAllByRole("listitem").map((item) => within(item))
+    expect(belgium!.getByRole("heading", { name: "Belgique" })).toHaveTextContent(/^BEBelgique$/)
+    expect(france!.getByRole("heading", { name: "France" })).toHaveTextContent(/^FRFrance$/)
+  })
+
   it("lit les pays du réseau administré ; ouverture, équipes, modérateurs actifs, compteurs présentés", () => {
     mount()
     expect(mocks.args.at(-1)).toEqual({ networkId: NETWORK_ID })

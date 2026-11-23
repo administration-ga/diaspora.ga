@@ -249,7 +249,8 @@ function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: T
             variant={row.enabled ? "outline" : "secondary"}
             className="self-start"
             aria-haspopup="dialog"
-            aria-describedby={blockText !== null ? `${titleId} ${blockId}` : titleId}
+            aria-label={t(row.enabled ? "modules.card.closeFor" : "modules.card.openFor", { module: moduleName(row.feature) })}
+            aria-describedby={blockText !== null ? blockId : undefined}
             disabled={props.block !== null}
             onClick={props.onToggle}
           >

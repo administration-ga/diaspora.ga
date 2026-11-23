@@ -341,3 +341,22 @@ describe("section Modules — la bascule motivée", () => {
     await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("modules.dialog.unchanged", { module: moduleName("mutualAid") })))
   })
 })
+
+describe("section Modules — noms accessibles des gestes de ligne", () => {
+  it("chaque bouton d'ouverture ou de fermeture porte, dans son nom accessible, le module qu'il vise ; le texte visible reste le même", () => {
+    // Un module ouvert (le premier, sans parent), les autres fermés : les deux gestes sont présents.
+    const first = NETWORK_FEATURES.find((feature) => NETWORK_FEATURE_PARENTS[feature] === null)
+    if (first === undefined) throw new Error("aucun module racine")
+    mocks.rows = rowsWith([first])
+    mount()
+    const names = screen.getAllByRole("button", { name: /^(Ouvrir|Fermer) le module / }).map((button) => button.getAttribute("aria-label"))
+    // Un nom par carte, tous distincts : deux boutons ne portent jamais le même nom.
+    expect(names).toHaveLength(NETWORK_FEATURES.length)
+    expect(new Set(names).size).toBe(NETWORK_FEATURES.length)
+    for (const feature of NETWORK_FEATURES) {
+      const key = feature === first ? "close" : "open"
+      const button = card(feature).getByRole("button", { name: t(`modules.card.${key}For`, { module: moduleName(feature) }) })
+      expect(button).toHaveTextContent(t(`modules.card.${key}`))
+    }
+  })
+})

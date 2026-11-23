@@ -127,6 +127,8 @@
       "prerequisites": "Avant d’ouvrir, à relire",
       "open": "Ouvrir le module",
       "close": "Fermer le module",
+      "openFor": "Ouvrir le module {{module}}",
+      "closeFor": "Fermer le module {{module}}",
       "blockedByParent": "S’ouvre une fois {{module}} ouvert.",
       "blockedByChildren": "Se ferme une fois fermés les modules qui vivent sur lui : {{modules}}.",
       "addsNothing": "Rien : ce module ne change pas le menu des membres."
@@ -329,6 +331,8 @@
     "doneOverturned": "Décision annulée : le recours a quitté la file.",
     "ground": "Motif du dossier",
     "view": "Voir le recours",
+    "openFor": "Examiner le recours : {{surface}}",
+    "viewFor": "Voir le recours : {{surface}}",
     "outcomeRequired": "Choisissez une issue.",
     "reasonHint": "Obligatoire. La personne concernée le lira : n’y écrivez ni coordonnée ni donnée privée.",
     "confirmTitle": "Confirmer l’annulation",
@@ -357,6 +361,7 @@
     "outsideNetwork": "N’est plus membre actif du réseau.",
     "remove": "Retirer",
     "removeTitle": "Retirer {{name}} de l’équipe",
+    "removeFor": "Retirer {{name}} de l’équipe",
     "removeBody": "Cette personne ne lira plus la file de l’équipe {{team}}. Le retrait est motivé et inscrit au journal des décisions du moteur.",
     "removeConfirm": "Retirer de l’équipe",
     "removed": "{{name}} ne fait plus partie de l’équipe.",
@@ -397,6 +402,8 @@
     "more": "D’autres responsables existent ; seuls les premiers sont montrés.",
     "change": "Changer le rôle",
     "remove": "Retirer le rôle",
+    "changeFor": "Changer le rôle de {{name}}",
+    "removeFor": "Retirer le rôle de {{name}}",
     "changeTitle": "Changer le rôle {{name, de}}",
     "changeBody": "{{name}} passera de « {{from}} » à « {{to}} » dès son prochain geste. Le changement est motivé et inscrit au journal des décisions du moteur.",
     "changeConfirm": "Confirmer le changement",
@@ -469,7 +476,9 @@
       "writes_one": "Au plus {{count}} écriture en {{window}} ; au-delà, relecture.",
       "writes_other": "Au plus {{count}} écritures en {{window}} ; au-delà, relecture.",
       "set": "Poser un réglage",
-      "change": "Changer le réglage"
+      "change": "Changer le réglage",
+      "setFor": "Poser un réglage pour la rubrique {{surface}}",
+      "changeFor": "Changer le réglage de la rubrique {{surface}}"
     },
     "sheet": {
       "title": "Réglage : {{surface}}",
@@ -501,6 +510,7 @@
       "emptyBody": "Le réseau n’a bloqué aucun mot pour l’instant.",
       "since": "Bloqué le {{date}}",
       "remove": "Débloquer",
+      "removeFor": "Débloquer le mot « {{term}} »",
       "removeTitle": "Débloquer « {{term}} »",
       "removeBody": "Un contenu qui contient ce mot ne partira plus en relecture pour cette raison. Le retrait est motivé et inscrit au journal des décisions du moteur.",
       "removeConfirm": "Débloquer ce mot",

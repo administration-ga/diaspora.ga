@@ -618,6 +618,20 @@ describe("Guichet — ce que le bureau ne décide plus (CH-815, D5, lot A6)", ()
     }
   })
 
+  it("dit à l'administrateur qu'il lit ici toute la file et que les décisions du réseau se prennent dans l'application d'administration, sans adresse", () => {
+    mocks.desk = fakeDesk({ view: ready(ADMIN) }).desk
+    render(tree())
+    const sentence = text("moderationDesk.capacity.role.network_admin")
+    const shown = screen.getByText(sentence)
+    expect(shown).toBeInTheDocument()
+    expect(sentence).toContain("toute la file")
+    for (const decision of ["recours", "équipes", "règles", "modules"]) expect(sentence).toContain(decision)
+    expect(sentence).toContain("application d'administration")
+    // Ni l'ancienne promesse d'examiner les recours ici, ni aucune adresse codée en dur.
+    expect(sentence).not.toContain("examinez")
+    expect(sentence).not.toMatch(/https?:|www\.|\.ga\b/u)
+  })
+
   it("un rôle retiré ferme le guichet au rendu suivant, sans rien révéler (LX-03)", () => {
     const fake = fakeDesk()
     let current: Loadable<ModerationDeskView | null> = ready(ADMIN)

@@ -27,6 +27,15 @@ describe("CountryTag — l'étiquette pays", () => {
     expect(screen.getAllByText("Germany").length).toBeGreaterThan(0)
   })
 
+  it("sans ville, le code puis le nom du pays, une seule fois ; avec une ville, le nom reste annoncé une fois", () => {
+    const plain = renderWithI18n(<CountryTag country="BE" />)
+    expect(plain.container.querySelector('[data-slot="country-tag"]')).toHaveTextContent(/^BEBelgique$/)
+    expect(screen.getAllByText("Belgique")).toHaveLength(1)
+    plain.unmount()
+    const withCity = renderWithI18n(<CountryTag country="BE" city="Bruxelles" />)
+    expect(withCity.container.querySelector('[data-slot="country-tag"]')).toHaveTextContent(/^BEBelgiqueBruxelles$/)
+  })
+
   it("la portée diaspora se lit « Toute la diaspora »", () => {
     renderWithI18n(<ScopeTag />)
     expect(screen.getByText("Toute la diaspora")).toBeInTheDocument()

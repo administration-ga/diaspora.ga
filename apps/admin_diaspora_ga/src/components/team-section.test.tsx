@@ -309,3 +309,18 @@ describe("section Équipe et responsables — responsables", () => {
     expect(await dialog.findByText(n(t("responsibles.refused")))).toBeInTheDocument()
   })
 })
+
+describe("section Équipe et responsables — noms accessibles des gestes de ligne", () => {
+  it("chaque geste d'une personne la nomme : retrait de l'équipe, changement et retrait du rôle ; le texte visible reste le même", () => {
+    mount()
+    const roster = region(t("team.teamsTitle")).getByText("Inès OBAME").closest("li")!
+    const remove = within(roster).getByRole("button", { name: t("team.removeFor", { name: "Inès OBAME" }) })
+    expect(remove).toHaveTextContent(t("team.remove"))
+    const own = region(t("responsibles.title")).getByText("Awa NDONG").closest("li")!
+    expect(within(own).getByRole("button", { name: t("responsibles.changeFor", { name: "Awa NDONG" }) })).toHaveTextContent(t("responsibles.change"))
+    expect(within(own).getByRole("button", { name: t("responsibles.removeFor", { name: "Awa NDONG" }) })).toHaveTextContent(t("responsibles.remove"))
+    // Le rôle en sommeil, au nom neutre : son geste porte lui aussi un nom, distinct des autres.
+    const dormant = region(t("responsibles.title")).getByText(t("team.neutralName")).closest("li")!
+    expect(within(dormant).getByRole("button", { name: t("responsibles.removeFor", { name: t("team.neutralName") }) })).toBeInTheDocument()
+  })
+})

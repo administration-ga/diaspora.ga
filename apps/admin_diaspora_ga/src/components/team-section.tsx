@@ -312,7 +312,7 @@ function MemberLine(props: { readonly member: RosterMemberRow; readonly onRemove
         {member.handle ? <p className="break-words text-sm text-muted-foreground">{`@${member.handle}`}</p> : null}
         {!member.inNetwork ? <p className="text-[13px] text-destructive">{t("team.outsideNetwork")}</p> : null}
       </div>
-      <Button variant="outline" size="sm" aria-describedby={nameId} aria-haspopup="dialog" onClick={props.onRemove}>
+      <Button variant="outline" size="sm" aria-haspopup="dialog" aria-label={t("team.removeFor", { name })} onClick={props.onRemove}>
         <UserMinusIcon aria-hidden="true" />
         {t("team.remove")}
       </Button>

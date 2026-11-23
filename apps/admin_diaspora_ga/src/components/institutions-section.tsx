@@ -472,6 +472,8 @@ function CreateOfficialPage() {
   const [candidate, setCandidate] = useState<MemberCandidate | null>(null)
   const [missingSignatory, setMissingSignatory] = useState(false)
   const [refusal, setRefusal] = useState<string | null>(null)
+  // Change après une création : le sélecteur est remonté, son champ d'identifiant repart vide.
+  const [pickerKey, setPickerKey] = useState(0)
   const form = useForm<CreateValues>({ resolver: zodResolver(createSchema), defaultValues: { name: "", handle: "", country: "", reason: "" } })
   const busy = form.formState.isSubmitting
   const errors = form.formState.errors
@@ -499,8 +501,12 @@ function CreateOfficialPage() {
       })
       toast.success(t("institutions.created", { name: values.name.trim(), handle: created.handle }))
       if (!mounted.current) return
-      form.reset()
+      // Tout le formulaire repart vide : champs, signataire choisi et avis de signataire manquant.
+      form.reset({ name: "", handle: "", country: "", reason: "" })
       setCandidate(null)
+      setMissingSignatory(false)
+      setRefusal(null)
+      setPickerKey((key) => key + 1)
     } catch (error) {
       if (mounted.current) setRefusal(officialPageRefusal(error, t))
     }
@@ -517,6 +523,7 @@ function CreateOfficialPage() {
           <p className="text-[13px] leading-snug text-muted-foreground">{t("institutions.createLead")}</p>
         </div>
         <MemberPicker
+          key={pickerKey}
           label={t("institutions.signatoryHandle")}
           candidate={candidate}
           onChange={(value) => {

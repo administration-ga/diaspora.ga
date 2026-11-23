@@ -127,6 +127,8 @@
       "prerequisites": "Before opening, review",
       "open": "Open the module",
       "close": "Close the module",
+      "openFor": "Open the module {{module}}",
+      "closeFor": "Close the module {{module}}",
       "blockedByParent": "Opens once {{module}} is open.",
       "blockedByChildren": "Closes once the modules that live on it are closed: {{modules}}.",
       "addsNothing": "Nothing: this module does not change the members’ menu."
@@ -329,6 +331,8 @@
     "doneOverturned": "Decision overturned: the appeal has left the queue.",
     "ground": "Case ground",
     "view": "View the appeal",
+    "openFor": "Review the appeal: {{surface}}",
+    "viewFor": "View the appeal: {{surface}}",
     "outcomeRequired": "Choose an outcome.",
     "reasonHint": "Required. The person concerned will read it: do not include contact details or private data.",
     "confirmTitle": "Confirm the overturn",
@@ -357,6 +361,7 @@
     "outsideNetwork": "No longer an active network member.",
     "remove": "Remove",
     "removeTitle": "Remove {{name}} from the team",
+    "removeFor": "Remove {{name}} from the team",
     "removeBody": "This person will no longer read the {{team}} team queue. The removal is reasoned and recorded in the engine's decision log.",
     "removeConfirm": "Remove from the team",
     "removed": "{{name}} is no longer part of the team.",
@@ -397,6 +402,8 @@
     "more": "Other leads exist; only the first ones are shown.",
     "change": "Change role",
     "remove": "Remove role",
+    "changeFor": "Change the role of {{name}}",
+    "removeFor": "Remove the role of {{name}}",
     "changeTitle": "Change {{name}}'s role",
     "changeBody": "{{name}} will move from “{{from}}” to “{{to}}” from their next action. The change is reasoned and recorded in the engine's decision log.",
     "changeConfirm": "Confirm the change",
@@ -469,7 +476,9 @@
       "writes_one": "At most {{count}} write in {{window}}; beyond that, review.",
       "writes_other": "At most {{count}} writes in {{window}}; beyond that, review.",
       "set": "Set a setting",
-      "change": "Change the setting"
+      "change": "Change the setting",
+      "setFor": "Set a setting for the section {{surface}}",
+      "changeFor": "Change the setting of the section {{surface}}"
     },
     "sheet": {
       "title": "Setting: {{surface}}",
@@ -501,6 +510,7 @@
       "emptyBody": "The network has not blocked any word yet.",
       "since": "Blocked on {{date}}",
       "remove": "Unblock",
+      "removeFor": "Unblock the word “{{term}}”",
       "removeTitle": "Unblock “{{term}}”",
       "removeBody": "Content containing this word will no longer go to review for that reason. The removal carries a reason and is written to the engine's decision log.",
       "removeConfirm": "Unblock this word",
