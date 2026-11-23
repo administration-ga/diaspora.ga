@@ -1,0 +1,16 @@
+{
+  "postSearch": {
+    "title": "Search posts",
+    "lead": "A word, a name or a #hashtag: only the posts you can read in DIASPORA.GA are searched.",
+    "label": "Words to search for in posts",
+    "placeholder": "Search posts",
+    "hint": "Type at least two characters.",
+    "resultsLabel": "Posts found",
+    "count_one": "{{count}} post found",
+    "count_other": "{{count}} posts found",
+    "emptyTitle": "No post for “{{query}}”",
+    "emptyBody": "Try another word, or a shorter one.",
+    "loadMore": "Show more posts",
+    "capped": "Only the first posts found are shown. Refine your search to see others."
+  }
+}

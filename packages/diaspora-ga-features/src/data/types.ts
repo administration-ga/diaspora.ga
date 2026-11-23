@@ -107,6 +107,13 @@ export interface PostView {
   readonly edited: boolean
   /** Version d'édition pour les gestes collectifs de page ; absente des anciens fournisseurs. */
   readonly editedAt?: number | null
+  /**
+   * FD-10 : l'épinglée de son auteur, en tête de SON mur dans ce réseau. Seule la lecture du mur
+   * le sait (vrai ou faux) ; absent ailleurs, où le fil ne le dit pas.
+   */
+  readonly pinned?: boolean
+  /** FD-10 : le lecteur reçoit un avis à chaque nouveau commentaire (bascule privée) ; absent des anciens fournisseurs. */
+  readonly notifying?: boolean
 }
 
 /** Curseur opaque du fil : l'instant seul ne départage pas deux publications. */
@@ -608,8 +615,12 @@ export type PageGovernanceNotificationKind = (typeof PAGE_GOVERNANCE_NOTIFICATIO
  * invitation dans un groupe, un appel manqué, un message vocal. Le sujet est le FIL ou l'APPEL,
  * jamais un message ; l'auteur est nommé par son profil publié. Aucun ne propose d'appel (IM-01) :
  * l'appel manqué et le message vocal mènent au journal d'appels d'iCom.
+ *
+ * IC-09 du moteur (antsia#204) : `personal_message`, une relation m'a écrit dans notre conversation
+ * à deux. L'expéditeur est nommé par son profil publié, comme l'auteur d'un message de groupe ;
+ * jamais le texte, une pièce ni un aperçu. Il mène à la conversation, relue pour le lecteur.
  */
-export const ICOM_NOTIFICATION_KINDS = ["group_message", "group_added", "call_missed", "voicemail_left"] as const
+export const ICOM_NOTIFICATION_KINDS = ["group_message", "group_added", "personal_message", "call_missed", "voicemail_left"] as const
 export type IcomNotificationKind = (typeof ICOM_NOTIFICATION_KINDS)[number]
 
 /**
@@ -705,6 +716,34 @@ export interface NotificationView {
   readonly governancePageHandle?: string | null
   /** IM-04 · message ou invitation de groupe : le fil de groupe d'iCom, relu à l'ouverture ; `null` sans sujet. */
   readonly groupThreadId?: string | null
+  /**
+   * IC-09 · message à deux : la conversation de la paire, relue par le moteur pour le lecteur
+   * (active, sans blocage) ; `null` quand elle ne se lit plus. Jamais le message.
+   */
+  readonly personalThreadId?: string | null
+}
+
+/**
+ * Ce qu'un lien d'avis lit (`noticeLink`) : le genre et les références relues de son objet, sans
+ * l'identité de l'avis, sa date ni le nom de qui a agi. Une ligne de la cloche en est une ; l'ouverture
+ * d'une notification poussée (DS-14) en compose une à partir de la destination relue par le moteur.
+ */
+export type NoticeTarget = Pick<
+  NotificationView,
+  | "kind"
+  | "postId"
+  | "associationEvent"
+  | "serviceNotice"
+  | "communityNotice"
+  | "moderationDecision"
+  | "contextualThreadId"
+  | "albumId"
+  | "governancePageHandle"
+  | "groupThreadId"
+  | "personalThreadId"
+> & {
+  /** Qui a agi, par l'adresse de son profil PUBLIÉ seulement ; `null` sans profil publié. */
+  readonly actor: { readonly handle: string } | null
 }
 
 /** NP-04 : les avis lus par page sur la page des notifications ; « Afficher plus » lit la suivante. */

@@ -17,6 +17,7 @@ import {
   type Locale,
 } from "@antsia/social-features/i18n"
 import { PAGE_SLEEP_DAYS } from "@antsia/social-domain/pages"
+import { PUBLISHER_TEXT_VARIABLES } from "@diaspora-ga/domain"
 import type { i18n as I18nInstance } from "i18next"
 
 import { registerFrenchFormats } from "./french-elision"
@@ -65,7 +66,8 @@ export function createAppI18n(options: { locale: Locale; appResources?: AppResou
     locale: options.locale,
     appResources,
     defaultNS: options.defaultNS ?? DIASPORA_GA_NAMESPACE,
-    defaultVariables: { brand: DIASPORA_GA_BRAND, ...MEDIA_LIMIT_VARIABLES, ...PAGE_RULE_VARIABLES },
+    // L'identité de l'éditeur (`{{publisherRccm}}`…) : un fait du domaine, cité par les textes du site.
+    defaultVariables: { brand: DIASPORA_GA_BRAND, ...MEDIA_LIMIT_VARIABLES, ...PAGE_RULE_VARIABLES, ...PUBLISHER_TEXT_VARIABLES },
   }))
 }
 

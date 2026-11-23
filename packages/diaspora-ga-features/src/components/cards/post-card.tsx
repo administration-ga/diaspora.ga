@@ -1,7 +1,7 @@
 "use client"
 
 import type { CountryCode } from "@diaspora-ga/domain"
-import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, type LucideIcon } from "lucide-react"
+import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, PinIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useState } from "react"
 
@@ -95,6 +95,13 @@ export function PostCard(props: {
                 </time>
               </Link>
               {post.edited ? <span>· {t("post.edited")}</span> : null}
+              {/* FD-10 : l'épinglée de son auteur, en tête de son mur (seule la lecture du mur le sait). */}
+              {post.pinned ? (
+                <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                  <PinIcon className="size-3.5" aria-hidden />
+                  {t("post.pinnedOnWall")}
+                </span>
+              ) : null}
               {/* AS-08 : une publication de groupe reste dans le groupe ; « Diaspora » la dirait visible de toute la diaspora. */}
               {post.audience === "group" ? null : <ContentScopeTag scope={post.scope} {...(props.hubCountry ? { hubCountry: props.hubCountry } : {})} />}
             </div>

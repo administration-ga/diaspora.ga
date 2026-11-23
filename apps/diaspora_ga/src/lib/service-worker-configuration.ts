@@ -1,16 +1,14 @@
 import { getFixedT } from "@diaspora-ga/features/i18n"
 
-import { routes } from "./routes"
+import { NOTIFICATION_REFERENCE_PARAM, routes } from "./routes"
 import { OFFLINE_CACHE_PREFIX, SERVICE_WORKER_VERSION } from "./service-worker"
 import type { ServiceWorkerConfiguration } from "./service-worker-script"
 
-/** Paramètre de la future porte d'ouverture (DS-14, MO-06) ; aucune porte n'est posée par MO-05. */
-const NOTIFICATION_REFERENCE_PARAM = "reference"
-
 /**
  * La configuration du script de fond (MO-05) : textes de l'i18n (titre de la marque, phrase
- * neutre en français et en anglais), adresses de la table des routes. Aucune porte d'ouverture
- * tant que DS-14 et MO-06 ne l'ont pas posée : un clic sur une notification ouvre le fil.
+ * neutre en français et en anglais), adresses de la table des routes. DS-14 (ouverture) : un clic
+ * sur une notification ouvre la porte d'ouverture avec la seule référence opaque du moteur ; sans
+ * référence lisible, la page des notifications.
  */
 export function serviceWorkerConfiguration(): ServiceWorkerConfiguration {
   const fr = getFixedT("fr")
@@ -22,8 +20,8 @@ export function serviceWorkerConfiguration(): ServiceWorkerConfiguration {
     title: fr("brand.name"),
     messages: { fr: fr("installableApp.notificationBody"), en: en("installableApp.notificationBody") },
     tagPrefix: "diaspora-ga-notification-",
-    openPath: null,
-    fallbackPath: routes.feed(),
+    openPath: routes.openNotification(),
+    fallbackPath: routes.notifications(),
     referenceParam: NOTIFICATION_REFERENCE_PARAM,
   }
 }

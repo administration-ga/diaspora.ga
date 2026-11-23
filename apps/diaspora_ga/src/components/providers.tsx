@@ -11,6 +11,7 @@ import { useState, type ReactNode } from "react"
 
 import { EngineDataProviders } from "@/data/engine-providers"
 import { APPEARANCE } from "@/lib/appearance"
+import { callJournalRoute } from "@/lib/calls"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
@@ -51,9 +52,11 @@ const featureRoutes: FeatureRoutes = {
   notifications: routes.notifications,
   album: routes.album,
   agenda: routes.agenda,
-  // IM-04 : la conversation de groupe d'iCom, le journal d'appels (aucune route d'appel, IM-01).
+  // IM-04 : la conversation de groupe d'iCom ; IC-09 : la conversation à deux d'un message reçu.
   groupConversation: routes.groupConversation,
-  callJournal: routes.callJournal,
+  personalConversation: routes.personalConversation,
+  // IM-04 : le journal d'appels, seulement quand les appels sont ouverts (aucune route d'appel, IM-01).
+  ...callJournalRoute(),
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,

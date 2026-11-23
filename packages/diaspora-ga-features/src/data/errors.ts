@@ -26,6 +26,7 @@ import { JOB_ERROR_CODES } from "./jobs-port"
 import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
 import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
 import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
+import { DEVICE_NOTIFICATIONS_ERROR_CODES } from "./device-notifications-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -83,6 +84,12 @@ export const DATA_ERROR_CODES = [
   // Vidéo d'une publication (FD-02, SD-03 du moteur) : MP4 ou WebM seulement, durée bornée.
   "media_video_format",
   "media_video_too_long",
+  // FD-02 : la préparation d'une vidéo dans le navigateur (`prepareVideoForUpload` du moteur) —
+  // trop longue à convertir, conversion échouée, convertie mais trop lourde ; et l'ajout annulé.
+  "media_video_too_long_to_convert",
+  "media_video_conversion_failed",
+  "media_video_converted_too_large",
+  "media_cancelled",
   // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
   "share_not_allowed",
   "share_with_media",
@@ -142,6 +149,8 @@ export const ACTION_ERROR_CODES = [
   // Entrée par IDN (EA-02) : départ refusé, retour d'un refus ou d'un échec chez IDN.
   ...ENTRY_DOORS_ERROR_CODES,
   ...CALL_SETTINGS_ERROR_CODES,
+  // DS-14 (volet push) : l'activation des notifications de cet appareil.
+  ...DEVICE_NOTIFICATIONS_ERROR_CODES,
   // Fonctionnalités activables du réseau (ADR-0041 du moteur) : motif et règle de dépendance.
 ] as const
 

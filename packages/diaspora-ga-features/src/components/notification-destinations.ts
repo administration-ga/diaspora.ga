@@ -10,8 +10,12 @@
  *  · `actor` : le profil de qui a agi, par son nom en tête de la phrase (aucun autre lien) ;
  *  · `none` : aucune destination, décision écrite à la ligne du genre ;
  *  · les autres : un lien sous la phrase, vers l'objet de l'avis.
+ *
+ * DS-14 (ouverture) : `openingDestination` dit où mène une notification poussée, touchée sur
+ * l'appareil — la même destination que la ligne de la cloche, sinon un repli neutre.
  */
-import type { CommunityNoticeView, NotificationKind, NotificationView, ServiceNoticeView } from "../data/types"
+import type { NotificationOpeningView } from "../data/notification-opening-port"
+import type { CommunityNoticeView, NoticeTarget, NotificationKind, ServiceNoticeView } from "../data/types"
 import type { FeatureRoutes } from "../routing"
 
 export const BELL_DESTINATION_KINDS = [
@@ -28,6 +32,7 @@ export const BELL_DESTINATION_KINDS = [
   "agenda",
   "settings",
   "groupConversation",
+  "personalConversation",
   "callJournal",
   "none",
 ] as const
@@ -103,6 +108,8 @@ export const BELL_DESTINATIONS: Readonly<Record<NotificationKind, BellDestinatio
   // vocal au journal d'appels — jamais un bouton d'appel (IM-01).
   group_message: "groupConversation",
   group_added: "groupConversation",
+  // IC-09 du moteur : la conversation à deux, relue pour le lecteur ; jamais le message.
+  personal_message: "personalConversation",
   call_missed: "callJournal",
   voicemail_left: "callJournal",
   // Un genre inconnu reste « nouvelle activité » ; il ne mène qu'à la publication qu'il désigne, s'il en désigne une.
@@ -176,7 +183,7 @@ function communityNoticeLink(notice: CommunityNoticeView, routes: FeatureRoutes)
  * Le lien d'un avis de décision de modération : les décisions de la page quand le moteur nomme une
  * page dont je signe à la lecture, sinon « Mes données ».
  */
-function moderationDecisionLink(item: NotificationView, routes: FeatureRoutes): NoticeLink | null {
+function moderationDecisionLink(item: NoticeTarget, routes: FeatureRoutes): NoticeLink | null {
   if (!item.moderationDecision) return null
   const handle = item.moderationDecision.pageHandle
   const href = handle !== null ? routes.pageDecisions?.(handle) : routes.myDecisions?.()
@@ -187,7 +194,7 @@ function moderationDecisionLink(item: NotificationView, routes: FeatureRoutes): 
  * Le lien d'un avis vers son objet, ou `null` : destination `actor` (le nom en tête de la phrase
  * mène au profil) ou `none`, objet qui ne se lit plus, ou route que l'application ne fournit pas.
  */
-export function noticeLink(item: NotificationView, routes: FeatureRoutes): NoticeLink | null {
+export function noticeLink(item: NoticeTarget, routes: FeatureRoutes): NoticeLink | null {
   switch (BELL_DESTINATIONS[item.kind]) {
     case "actor":
     case "none":
@@ -230,9 +237,31 @@ export function noticeLink(item: NotificationView, routes: FeatureRoutes): Notic
       const href = item.groupThreadId ? routes.groupConversation?.(item.groupThreadId) : undefined
       return href ? { href, label: item.kind === "group_added" ? "bell.openGroupInvite" : "bell.openGroup" } : null
     }
+    case "personalConversation": {
+      const href = item.personalThreadId ? routes.personalConversation?.(item.personalThreadId) : undefined
+      return href ? { href, label: "bell.openConversation" } : null
+    }
     case "callJournal": {
+      // Appels fermés (IM-01), l'application ne fournit pas le journal : le lien se tait, la phrase reste.
       const href = routes.callJournal?.()
       return href ? { href, label: "bell.openCallJournal" } : null
     }
   }
+}
+
+/**
+ * DS-14 (ouverture) — où mène une notification poussée touchée sur l'appareil, d'après sa
+ * destination relue par le fournisseur : la même que la ligne de la cloche (`noticeLink`) ; pour un
+ * avis dont le nom mène la phrase, le profil publié de qui a agi ; pour un appel, le journal d'appels
+ * quand l'application le fournit. Tout le reste — référence inconnue, avis d'un autre, objet qui ne
+ * se lit plus, route que l'application ne sert pas — mène au même repli (`fallback`).
+ */
+export function openingDestination(opening: NotificationOpeningView | null, routes: FeatureRoutes, fallback: string): string {
+  if (opening === null) return fallback
+  if (opening.channel === "call") return routes.callJournal?.() ?? fallback
+  const notice = opening.notice
+  const link = noticeLink(notice, routes)
+  if (link) return link.href
+  if (BELL_DESTINATIONS[notice.kind] === "actor" && notice.actor) return routes.profile(notice.actor.handle)
+  return fallback
 }

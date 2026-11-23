@@ -74,6 +74,17 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
     expect(parseReturnPath(`${routes.jobs("FR", "Paris")}&jeton=secret`)?.path).toBe(routes.jobs("FR", "Paris"))
   })
 
+  it("FD-06 : le lien partagé d'une publication survit à l'entrée, sans le traceur qu'une messagerie y colle", () => {
+    const shared = routes.post("k57d2n4q8w3e")
+    expect(parseReturnPath(shared)).toEqual({ path: shared, needs: "read_network" })
+    expect(parseReturnPath(`${shared}?fbclid=traceur&utm_source=whatsapp`)?.path).toBe(shared)
+    // Un compte en attente lit le réseau : il arrive aussi sur la publication.
+    expect(entryExit({ status: "en_attente", country: "FR" }, parseReturnPath(shared))).toBe(shared)
+    // Hors adhésion : l'accueil d'abord, jamais la publication.
+    expect(entryExit(null, parseReturnPath(shared))).toBe(routes.welcome())
+    for (const raw of [`${shared}/autre`, "/publication/..", "/publication/a%2Fb"]) expect(parseReturnPath(raw), raw).toBeNull()
+  })
+
   it("garde une ancre simple et les adresses de la table à segment variable", () => {
     expect(parseReturnPath(routes.pageServices("amicale-lyon"))?.path).toBe(routes.pageServices("amicale-lyon"))
     expect(parseReturnPath(`${EVENT}#<script>`)?.path).toBe(EVENT)
@@ -123,6 +134,8 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
       // IM-04 : le journal d'appels d'iCom, sur sa brique.
       routes.callJournal(),
       routes.sponsorFor("eloise.ndong"),
+      // DS-14 : la porte d'une notification poussée, sa seule référence opaque.
+      routes.openNotification("delivery_demo"),
     ]
     const keys = new Set(hrefs.flatMap((href) => [...new URLSearchParams(href.split("?")[1] ?? "").keys()]))
     expect([...keys].filter((key) => !(ROUTE_FILTER_KEYS as readonly string[]).includes(key))).toEqual([])
@@ -161,6 +174,17 @@ describe("les sorties — porte, code, IDN, fin de l'accueil", () => {
     expect(welcomeExit(pending, messages)).toBe(routes.hubWelcome("CA"))
   })
 
+  it("DS-14 : une notification touchée hors session ramène, une fois entré, à sa porte d'ouverture, référence comprise", () => {
+    const opening = routes.openNotification("delivery_demo")
+    expect(parseReturnPath(opening)).toEqual({ path: opening, needs: "read_network" })
+    expect(parseReturnPath(`${opening}&token=secret&fbclid=traceur`)?.path).toBe(opening)
+    expect(entryExit(declared, parseReturnPath(opening))).toBe(opening)
+    // La page des notifications, repli de la porte, se retient de même.
+    expect(entryExit(declared, parseReturnPath(routes.notifications()))).toBe(routes.notifications())
+    // Une sous-adresse inventée sous la porte n'est pas une page de la table.
+    expect(parseReturnPath(`${routes.openNotification()}/autre`)).toBeNull()
+  })
+
   it("une adhésion partie n'est plus vivante", () => {
     const facet = { countryOfResidence: "FR" as const }
     expect(liveMember({ status: "partie", facet })).toBeNull()
@@ -179,6 +203,13 @@ describe("la mémoire de l'onglet", () => {
     expect(peekReturnPath(NOW + 2000, storage)?.path).toBe(EVENT)
     forgetReturnPath(storage)
     expect(peekReturnPath(NOW + 3000, storage)).toBeNull()
+  })
+
+  it("retient la porte d'une notification poussée telle que la garde l'a arrêtée (DS-14)", () => {
+    const storage = memoryStorage()
+    const opening = routes.openNotification("delivery_demo")
+    rememberReturnPath({ pathname: routes.openNotification(), search: opening.slice(routes.openNotification().length), hash: "" }, NOW, storage)
+    expect(peekReturnPath(NOW + 1000, storage)).toEqual({ path: opening, needs: "read_network" })
   })
 
   it("une page inconnue n'est pas retenue et ne remplace pas la précédente", () => {

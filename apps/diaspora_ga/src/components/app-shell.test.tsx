@@ -44,7 +44,22 @@ const mocks = vi.hoisted(() => ({
   unreadReads: 0,
   /** Le chiffre que le lecteur remonte à la coque, comme le ferait le serveur. */
   reportUnread: null as ((total: number) => void) | null,
+  /** CH-817 : le direct ouvert par le code, posé par un test (la position du dépôt est fermée). */
+  liveOpen: false,
+  /** La demande de création d'une conférence, posée au magasin du moteur. */
+  launch: vi.fn(),
 }))
+
+// Le menu partagé, tel quel ; seul un test du direct l'ouvre par le code (CH-817).
+vi.mock("@diaspora-ga/features/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@diaspora-ga/features/navigation")>()
+  return {
+    ...actual,
+    memberMenu: (input: Parameters<typeof actual.memberMenu>[0]) =>
+      actual.memberMenu(mocks.liveOpen ? { ...input, codeSwitches: { ...actual.MEMBERS_APP_CODE_SWITCH_STATES, live: "open" } } : input),
+  }
+})
+vi.mock("@antsia/social-features/features/iappel/conference-launch-store", () => ({ requestConferenceLaunch: mocks.launch }))
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mocks.pathname,
@@ -291,6 +306,7 @@ beforeEach(() => {
   mocks.desktop = true
   mocks.unreadReads = 0
   mocks.reportUnread = null
+  mocks.liveOpen = false
 })
 
 afterEach(() => {
@@ -1067,6 +1083,54 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
   })
 })
 
+describe("coque — « Créer → Une conférence » (CH-817), derrière l'interrupteur du direct", () => {
+  it("fermé par le code (la position du dépôt) : aucune conférence, au bureau comme au téléphone", async () => {
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: ["pages"] })
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Une conférence/ })).toBeNull()
+    await user.keyboard("{Escape}")
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(within(sheet).queryByRole("button", { name: "Une conférence" })).toBeNull()
+    expect(mocks.launch).not.toHaveBeenCalled()
+  })
+
+  it("ouvert, au bureau : un geste du menu après l'actu, sans adresse, qui demande au moteur la création d'une conférence", async () => {
+    mocks.liveOpen = true
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: ["pages"] })
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null, routes.newPage("association"), routes.newPage("company")])
+    expect(items[1]).toHaveTextContent("Une conférence")
+    expect(items[1]).toHaveTextContent("Préparer un direct dans le réseau, et le lancer quand vous êtes prêt.")
+    await user.click(items[1]!)
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    expect(screen.queryByRole("menu")).toBeNull()
+  })
+
+  it("ouvert, au téléphone : un bouton de la feuille du compte, qui la referme et demande la création", async () => {
+    mocks.liveOpen = true
+    mocks.desktop = false
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: ["pages"] })
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    await user.click(within(within(sheet).getByRole("navigation", { name: "Créer" })).getByRole("button", { name: "Une conférence" }))
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+  })
+
+  it("ouvert, sans iCom (démonstration, membre qui n'écrit pas) : aucune conférence, l'hôte du direct n'étant pas monté", async () => {
+    mocks.liveOpen = true
+    const user = userEvent.setup()
+    renderShell({ features: ["pages"] })
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    expect(within(await screen.findByRole("menu")).getAllByRole("menuitem").map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
+  })
+})
+
 describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les modules ouverts", () => {
   const MODULE_HREFS = [routes.services(), routes.myServiceRequests(), routes.myActivity(), routes.myAssociations(), routes.myApplications(), routes.myMentoring()]
 
@@ -1145,12 +1209,19 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     { name: "un responsable qui gère une page et adhère", icom: true, network: true, responsible: true, holdings: HOLDS_ALL, holds: true },
   ] as const
   const FEATURE_SETS: readonly (readonly NetworkFeature[])[] = [[], ["pages"], NETWORK_FEATURES]
-  const CASES = FEATURE_SETS.flatMap((features) => SITUATIONS.map((situation) => [features, situation.name, situation] as const))
+  // Le direct fermé (la position du dépôt) partout ; ouvert par le code (CH-817) avec tous les modules.
+  const CASES = [
+    ...FEATURE_SETS.flatMap((features) => SITUATIONS.map((situation) => [features, situation.name, situation, false] as const)),
+    ...SITUATIONS.map((situation) => [NETWORK_FEATURES, `${situation.name}, direct ouvert`, situation, true] as const),
+  ]
 
   const entryLink = (entry: MemberMenuEntry) => [t(entry.labelKey), memberMenuHref(entry, MEMBER.handle)]
   const createHrefs = (entries: readonly MemberCreateEntry[]) => entries.map((entry) => memberCreateHref(entry))
+  /** Les formats de la feuille, liens et gestes (la conférence n'a pas d'adresse), dans l'ordre. */
+  const sheetCreateHrefs = (container: HTMLElement) => Array.from(container.querySelectorAll("a, button")).map((item) => item.getAttribute("href"))
 
-  it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation) => {
+  it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation, liveOpen) => {
+    mocks.liveOpen = liveOpen
     const user = userEvent.setup()
     renderShell({ icom: situation.icom, network: situation.network, responsible: situation.responsible, holdings: situation.holdings, features })
     const expected = memberMenu({
@@ -1185,7 +1256,8 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     await user.click(accountTrigger("dialog"))
     const sheet = within(await screen.findByRole("dialog", { name: "Mon compte" }))
     expect(linksOf(sheet.getByRole("navigation", { name: "Mon compte" }))).toEqual(expected.account.map(entryLink))
-    expect(linksOf(sheet.getByRole("navigation", { name: "Créer" })).map(([, href]) => href)).toEqual(createHrefs(expected.create))
+    expect(sheetCreateHrefs(sheet.getByRole("navigation", { name: "Créer" }))).toEqual(createHrefs(expected.create))
+    expect(expected.create.some((entry) => entry.id === "live")).toBe(liveOpen)
     expect(linksOf(sheet.getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
   })
 })

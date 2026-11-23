@@ -1,0 +1,27 @@
+{
+  "settings": {
+    "deviceNotifications": {
+      "title": "Notifications de cet appareil",
+      "lead": "Ce navigateur peut vous prévenir quand quelque chose vous attend dans DIASPORA.GA, même l'onglet fermé. L'avis ne dit ni qui, ni quoi : il ouvre DIASPORA.GA, où vous le lisez.",
+      "consent": "Activer vaut accord « Notifications » pour DIASPORA.GA. Vous pouvez le retirer dans « Consentements » : plus rien ne part, sur aucun appareil.",
+      "demoNotice": "Démonstration : aucune notification n'est envoyée.",
+      "state": {
+        "unsupported": "Ce navigateur ne reçoit pas les notifications. Sur iPhone, ajoutez d'abord DIASPORA.GA à l'écran d'accueil.",
+        "unavailable": "Les notifications de l'appareil sont indisponibles pour le moment.",
+        "denied": "Les notifications de ce site sont bloquées dans votre navigateur. Autorisez-les dans ses réglages, puis revenez ici.",
+        "off": "Cet appareil ne reçoit pas les notifications de DIASPORA.GA.",
+        "on": "Cet appareil reçoit les notifications de DIASPORA.GA."
+      },
+      "enable": "Activer sur cet appareil",
+      "disable": "Désactiver sur cet appareil",
+      "enabled": "Les notifications sont activées sur cet appareil.",
+      "disabled": "Les notifications sont désactivées sur cet appareil."
+    }
+  },
+  "errors": {
+    "push_unavailable": "Les notifications de l'appareil sont indisponibles pour le moment.",
+    "push_denied": "Vous avez refusé les notifications dans votre navigateur. Autorisez-les dans ses réglages pour les activer.",
+    "push_cancelled": "L'activation n'a pas abouti. Réessayez en acceptant la demande du navigateur.",
+    "push_unsupported": "Ce navigateur ne reçoit pas les notifications."
+  }
+}

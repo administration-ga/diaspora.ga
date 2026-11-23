@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   publication: vi.fn(),
   dataRights: vi.fn(),
   callSettings: vi.fn(),
+  deviceNotifications: vi.fn(),
   replace: vi.fn(),
   session: { status: "loading" } as unknown,
   success: vi.fn(),
@@ -60,6 +61,12 @@ vi.mock("@/components/call-settings", () => ({
   CallSettings: (props: { membership: MembershipView }) => {
     mocks.callSettings(props.membership)
     return <section id="messages-et-appels" aria-label="Messages et appels" />
+  },
+}))
+vi.mock("@/components/device-notifications-settings", () => ({
+  DeviceNotificationsSettings: (props: { membership: MembershipView }) => {
+    mocks.deviceNotifications(props.membership)
+    return <section id="notifications-appareil" aria-label="Notifications de cet appareil" />
   },
 }))
 
@@ -219,7 +226,7 @@ describe("Réglages — « Mes données » (DG-026)", () => {
 })
 
 describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () => {
-  it("liste les cinq textes avec leur version, leur date et le repère d'un texte à fournir ou provisoire", () => {
+  it("liste les cinq textes avec leur version et leur date, sans repère : ils sont définitifs", () => {
     render(tree())
     const region = within(screen.getByRole("region", { name: t("nav.account.info") }))
     expect(region.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
@@ -233,11 +240,10 @@ describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () =
       const edition = LEGAL_TEXTS[kind]
       expect(region.getAllByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") }), { exact: false }).length).toBeGreaterThan(0)
     }
-    // Aucun texte n'est définitif : quatre restent à fournir, les règles de la communauté sont provisoires (MD-05).
-    expect(region.getAllByText(t("settings.texts.pending"))).toHaveLength(pendingLegalTexts().length)
-    const provisional = region.getAllByText(t("settings.texts.provisional"))
-    expect(provisional).toHaveLength(1)
-    expect(provisional[0]!.closest("li")).toHaveTextContent(t("footer.community"))
+    // Les cinq textes sont définitifs : aucun repère « à fournir » ni « provisoire ».
+    expect(pendingLegalTexts()).toEqual([])
+    expect(region.queryAllByText(t("settings.texts.pending"))).toHaveLength(0)
+    expect(region.queryAllByText(t("settings.texts.provisional"))).toHaveLength(0)
   })
 })
 
@@ -246,5 +252,17 @@ describe("Réglages — « Messages et appels » (IM-02)", () => {
     render(tree())
     expect(mocks.callSettings).toHaveBeenLastCalledWith(membership)
     expect(screen.getByRole("region", { name: "Messages et appels" })).toHaveAttribute("id", "messages-et-appels")
+  })
+})
+
+describe("Réglages — « Notifications de cet appareil » (DS-14, volet push)", () => {
+  it("monte la rubrique des notifications de l'appareil pour le membre affiché, avant les consentements où l'accord se retire", () => {
+    render(tree())
+    expect(mocks.deviceNotifications).toHaveBeenLastCalledWith(membership)
+    const device = screen.getByRole("region", { name: "Notifications de cet appareil" })
+    expect(device).toHaveAttribute("id", "notifications-appareil")
+    const consents = document.getElementById("consentements")
+    expect(consents).not.toBeNull()
+    expect(device.compareDocumentPosition(consents!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

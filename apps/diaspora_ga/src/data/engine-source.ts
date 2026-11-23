@@ -117,11 +117,14 @@ import { createEngineMentoring } from "./engine-mentoring"
 import { createEngineJobs } from "./engine-jobs"
 import { createEngineModerationDesk } from "./engine-moderation-desk"
 import { createEngineConversations } from "./engine-conversations"
+import { createEngineNotificationOpening } from "./engine-notification-opening"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
+import { createEngineDeviceNotifications } from "./engine-device-notifications"
+import { createEnginePostSearch } from "./engine-post-search"
 import {
   toAccountView,
   toConsentViews,
@@ -265,10 +268,16 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     demoAccounts: createEngineDemoAccounts(deps),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
+    // DS-14 (volet push) : abonner cet appareil aux notifications du navigateur, par les fonctions existantes du moteur.
+    deviceNotifications: createEngineDeviceNotifications(deps),
     // ADR-0041 du moteur : les fonctionnalités activables du réseau (clés ouvertes, réglages de l'administration).
     networkFeatures: createEngineNetworkFeatures(deps),
     // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.
     memberBrowse: createEngineMemberBrowse(deps),
+    // DS-14 (ouverture) : la destination d'une notification poussée, relue par le moteur à l'instant.
+    notificationOpening: createEngineNotificationOpening(deps),
+    // CH-817 (DS-11) : chercher dans les publications lisibles (`posts.search`) ; elles alimentent aussi « retirer ma réaction ».
+    postSearch: createEnginePostSearch(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()
@@ -873,21 +882,33 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     // `media_social`, puis envoi du fichier ; il n'existe pour personne tant
     // qu'une publication ne l'a pas vérifié et embarqué. Une photo part PRÉPARÉE
     // (FD-01) : ré-encodée, 2 048 px au plus, sans métadonnées ; un échec la
-    // refuse avant toute URL de dépôt, et l'original ne part jamais. Ce même
+    // refuse avant toute URL de dépôt, et l'original ne part jamais. Une vidéo
+    // part PRÉPARÉE (FD-02) : convertie en MP4 ou WebM dans le navigateur quand
+    // il le faut (le .mov de l'iPhone), pesée, sa durée bornée ; l'écran en suit
+    // l'avancement et peut l'annuler (`options`) — annulée, rien ne part. Ce même
     // dépôt sert le fil, les publications de page et la galerie d'évènement.
-    uploadMedia: (file) =>
+    uploadMedia: (file, options) =>
       attempt(async () => {
-        const prepared = await prepareMediaFile(file, deps.prepareImage)
+        const signal = options?.signal
+        const prepared = await prepareMediaFile(file, deps.prepareImage, {
+          ...(deps.prepareVideo ? { prepareVideo: deps.prepareVideo } : {}),
+          ...(signal ? { signal } : {}),
+          ...(options?.onPhase ? { onPhase: options.onPhase } : {}),
+        })
         if (!prepared.ok) throw new Refusal(prepared.code)
         const { file: upload, facts } = prepared.value
         const networkId = await diasporaGa()
+        if (signal?.aborted) throw new Refusal("media_cancelled")
         const url = await deps.convex.mutation(api.modules.media.media.generateUploadUrl, { networkId, usage: "media_social" })
+        if (signal?.aborted) throw new Refusal("media_cancelled")
+        options?.onPhase?.({ phase: "uploading" })
         let storageId: string
         try {
-          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload })
+          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload, ...(signal ? { signal } : {}) })
           if (!response.ok) throw new Refusal("media_upload_failed")
           storageId = ((await response.json()) as { storageId: string }).storageId
         } catch (error) {
+          if (signal?.aborted) throw new Refusal("media_cancelled")
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
         return { ref: storageId, ...facts }
@@ -1013,6 +1034,38 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       attempt(async () => {
         await deps.convex.mutation(api.modules.posts.posts.edit, { networkId: await diasporaGa(), postId: postId as Id<"posts">, body })
         return null
+      }),
+
+    // FD-10 : les gestes de l'auteur que le moteur sert déjà ; il garde ses règles (ma publication,
+    // personnelle, hors groupe, publiée) et rend le même « introuvable » pour tout le reste.
+    pinOnMyWall: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.pinOnMyWall, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    unpinMyWall: () =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.unpinMyWall, { networkId: await diasporaGa() })
+        return null
+      }),
+
+    // La lecture dans ANTSIA seulement : la publication reste dans DIASPORA.GA, pour la même audience.
+    withdrawFromRoot: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.withdrawFromRoot, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    // La marque `notify` du moteur : une bascule privée, que l'auteur n'apprend pas.
+    toggleCommentNotifications: (postId) =>
+      attempt(async () => {
+        const result = await deps.convex.mutation(api.modules.marks.marks.toggleMark, {
+          networkId: await diasporaGa(),
+          postId: postId as Id<"posts">,
+          kind: "notify",
+        })
+        return { notifying: result.marked }
       }),
 
     removePost: (postId) =>

@@ -41,5 +41,10 @@
     "loadMore": "Show older notifications",
     "loadingMore": "Loading…",
     "retry": "Try again"
+  },
+  "notificationOpen": {
+    "title": "Open a notification",
+    "loading": "Opening the notification…",
+    "error": "This notification could not be opened right now."
   }
 }

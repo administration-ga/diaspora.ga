@@ -1,0 +1,27 @@
+{
+  "settings": {
+    "deviceNotifications": {
+      "title": "Notifications on this device",
+      "lead": "This browser can let you know when something is waiting for you in DIASPORA.GA, even with the tab closed. The alert never says who or what: it opens DIASPORA.GA, where you read it.",
+      "consent": "Turning this on counts as your \"Notifications\" consent for DIASPORA.GA. You can withdraw it under \"Consents\": nothing is sent any more, to any device.",
+      "demoNotice": "Demo: no notification is sent.",
+      "state": {
+        "unsupported": "This browser does not receive notifications. On iPhone, first add DIASPORA.GA to your home screen.",
+        "unavailable": "Device notifications are unavailable for now.",
+        "denied": "Notifications from this site are blocked in your browser. Allow them in its settings, then come back here.",
+        "off": "This device does not receive DIASPORA.GA notifications.",
+        "on": "This device receives DIASPORA.GA notifications."
+      },
+      "enable": "Turn on for this device",
+      "disable": "Turn off for this device",
+      "enabled": "Notifications are on for this device.",
+      "disabled": "Notifications are off for this device."
+    }
+  },
+  "errors": {
+    "push_unavailable": "Device notifications are unavailable for now.",
+    "push_denied": "You declined notifications in your browser. Allow them in its settings to turn them on.",
+    "push_cancelled": "Turning notifications on did not complete. Try again and accept the browser's request.",
+    "push_unsupported": "This browser does not receive notifications."
+  }
+}

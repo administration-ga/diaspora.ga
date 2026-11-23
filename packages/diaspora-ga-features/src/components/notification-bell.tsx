@@ -33,6 +33,7 @@ import {
   KeyRoundIcon,
   LandmarkIcon,
   MessageSquareMoreIcon,
+  MessageSquareIcon,
   PhoneMissedIcon,
   UserRoundPlusIcon,
   VoicemailIcon,
@@ -152,6 +153,8 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   // IM-04 : message et invitation de groupe, appel manqué, message vocal.
   group_message: MessageSquareMoreIcon,
   group_added: UserRoundPlusIcon,
+  // IC-09 du moteur : une relation m'a écrit dans notre conversation à deux.
+  personal_message: MessageSquareIcon,
   call_missed: PhoneMissedIcon,
   voicemail_left: VoicemailIcon,
   other: BellIcon,
@@ -178,7 +181,8 @@ export const BELL_ACTOR_LED_KINDS = [
   "album_published",
   "thematic_group_invite",
   "event_invite",
-  // IM-04 : l'auteur du message, de l'invitation, de l'appel ou du message vocal, par son profil publié.
+  // IM-04 : l'auteur du message, de l'invitation, de l'appel ou du message vocal, par son profil publié ;
+  // IC-09 : l'expéditeur d'un message à deux, de même.
   ...ICOM_NOTIFICATION_KINDS,
 ] as const satisfies readonly NotificationKind[]
 type ActorLedKind = (typeof BELL_ACTOR_LED_KINDS)[number]

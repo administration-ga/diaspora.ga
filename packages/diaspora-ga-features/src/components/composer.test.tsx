@@ -4,7 +4,7 @@ import { useState } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DataSourceProvider } from "../data/context"
-import type { ActionResult, DiasporaGaDataSource, PublishInput, UploadedMedia } from "../data/port"
+import type { ActionResult, DiasporaGaDataSource, MediaUploadOptions, MediaUploadPhase, PublishInput, UploadedMedia } from "../data/port"
 import type { PagePublicationsCapability } from "../data/page-publications-port"
 import { getFixedT } from "../i18n"
 import { I18nProvider } from "../i18n/client"
@@ -12,7 +12,7 @@ import { PostComposerSheet } from "./composer"
 
 const t = getFixedT("fr")
 const publish = vi.fn<(input: PublishInput) => Promise<ActionResult<{ moderation: "published" }>>>()
-const uploadMedia = vi.fn<(file: File) => Promise<ActionResult<UploadedMedia>>>()
+const uploadMedia = vi.fn<(file: File, options?: MediaUploadOptions) => Promise<ActionResult<UploadedMedia>>>()
 const onClose = vi.fn()
 const pagePublish = vi.fn<PagePublicationsCapability["publish"]>()
 const toasts = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }))
@@ -144,14 +144,12 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     expect(onClose).toHaveBeenCalledOnce()
   })
 
-  it("FD-02 : un .mov choisi est refusé avant tout envoi, avec la marche à suivre et sans promesse de conversion", async () => {
+  it("FD-02 : une vidéo et une photo choisies ensemble sont refusées avant tout envoi ; un autre fichier garde le refus de type", async () => {
     render(<Composer />)
-    choose([new File(["video fictive"], "IMG_0412.MOV", { type: "video/quicktime" })])
-    const alert = await screen.findByRole("alert")
-    expect(alert.textContent).toContain(t("errors.media_video_format"))
-    expect(alert).not.toHaveTextContent(/convert/i)
+    choose([new File(["photo"], "photo.png", { type: "image/png" }), new File(["video fictive"], "IMG_0412.MOV", { type: "video/quicktime" })])
+    expect((await screen.findByRole("alert")).textContent).toContain(t("errors.media_video_alone"))
     expect(uploadMedia).not.toHaveBeenCalled()
-    // Un autre fichier garde le refus de type, qui ne cite plus le .mov parmi les formats admis.
+    // Un autre fichier garde le refus de type, qui ne cite pas le .mov parmi les formats envoyés.
     choose([new File(["%PDF"], "dossier.pdf", { type: "application/pdf" })])
     expect((await screen.findByRole("alert")).textContent).toContain(t("errors.media_type_invalid"))
     expect(t("errors.media_type_invalid")).not.toContain("MOV")
@@ -187,6 +185,163 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(publish).toHaveBeenCalledOnce())
     expect(publish.mock.calls[0]?.[0].media).toHaveLength(1)
+  })
+})
+
+/**
+ * FD-02 — le dépôt d'une vidéo piloté pas à pas : le composeur reçoit les phases (analyse,
+ * conversion, envoi) et le signal d'annulation ; la préparation elle-même (module du moteur) est
+ * jouée par la source et testée avec elle (`media.test.ts`, `engine.test.ts`).
+ */
+function controlledUpload() {
+  const result = deferred<ActionResult<UploadedMedia>>()
+  let given: MediaUploadOptions | undefined
+  uploadMedia.mockImplementationOnce((_file, options) => {
+    given = options
+    return result.promise
+  })
+  return {
+    result,
+    phase: async (phase: MediaUploadPhase) => {
+      await act(async () => {
+        given?.onPhase?.(phase)
+      })
+    },
+    options: () => given,
+  }
+}
+
+const iphoneVideo = () => new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" })
+/** Une phrase telle que Testing Library la lit : les espaces insécables du français deviennent des espaces. */
+const plain = (text: string) => text.replace(/\s+/g, " ")
+/** Ce que la source rend d'un .mov converti : un MP4, sa durée mesurée. */
+const CONVERTED: UploadedMedia = { ref: "stored-IMG_0412.mp4", kind: "video", mimeType: "video/mp4", sizeBytes: 1_024, durationMs: 8_960 }
+const percent = (fraction: number) => new Intl.NumberFormat("fr", { style: "percent", maximumFractionDigits: 0 }).format(fraction)
+
+describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-02)", () => {
+  it("un .mov est préparé : analyse, conversion suivie par une barre nommée, puis envoi ; publié comme toute vidéo", async () => {
+    const upload = controlledUpload()
+    const user = userEvent.setup()
+    render(<Composer />)
+    choose([iphoneVideo()])
+    // Aucun refus : la vidéo part en préparation, avec de quoi la suivre et l'arrêter.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    expect(uploadMedia).toHaveBeenCalledOnce()
+    expect(uploadMedia.mock.calls[0]?.[0].name).toBe("IMG_0412.MOV")
+    expect(upload.options()).toEqual({ signal: expect.any(AbortSignal), onPhase: expect.any(Function) })
+    expect(screen.getByText(plain(t("composer.videoProbing")))).toBeVisible()
+    // La zone vivante annonce la préparation ; la publication attend.
+    expect(screen.getByText(plain(t("composer.videoPreparing")))).toHaveAttribute("aria-live", "polite")
+    const submit = screen.getByRole("button", { name: t("composer.publish") })
+    expect(submit).toBeDisabled()
+
+    await upload.phase({ phase: "converting", progress: 0.429 })
+    const bar = screen.getByRole("progressbar", { name: t("composer.videoProgressLabel", { name: "IMG_0412.MOV" }) })
+    expect(bar).toHaveAttribute("max", "100")
+    expect(bar).toHaveAttribute("value", "42")
+    expect(bar.parentElement?.textContent).toContain(t("composer.videoConverting", { percent: percent(0.42) }))
+    expect(screen.getByText(plain(t("composer.videoKeepVisible")))).toBeVisible()
+    expect(screen.getByRole("button", { name: t("composer.videoCancel") })).toBeEnabled()
+    expect(submit).toBeDisabled()
+
+    await upload.phase({ phase: "uploading" })
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    expect(screen.queryByRole("button", { name: t("composer.videoCancel") })).not.toBeInTheDocument()
+    expect(screen.getByText(plain(t("composer.mediaUploading")))).toBeVisible()
+    expect(screen.getByText(plain(t("composer.mediaWaiting")))).toBeVisible()
+    expect(submit).toBeDisabled()
+
+    await act(async () => { upload.result.resolve({ ok: true, value: CONVERTED }) })
+    await user.type(screen.getByRole("textbox", { name: t("composer.mediaAltLabel") }), "La rive du fleuve")
+    await user.click(submit)
+    await waitFor(() => expect(publish).toHaveBeenCalledOnce())
+    expect(publish.mock.calls[0]?.[0].media).toEqual([{ upload: CONVERTED, altText: "La rive du fleuve" }])
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
+  it("« Annuler la conversion » arrête la préparation : pièce retirée, annulation dite sans alerte, focus rendu ; un résultat tardif est ignoré", async () => {
+    const upload = controlledUpload()
+    const user = userEvent.setup()
+    render(<Composer />)
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Texte gardé")
+    choose([iphoneVideo()])
+    await upload.phase({ phase: "converting", progress: 0.1 })
+    await user.click(screen.getByRole("button", { name: t("composer.videoCancel") }))
+
+    expect(upload.options()?.signal?.aborted).toBe(true)
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument()
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
+    expect(screen.getByText(plain(t("composer.videoCancelled")))).toHaveAttribute("aria-live", "polite")
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:recette-IMG_0412.MOV")
+    // Le bouton d'annulation a disparu : le focus revient au bouton d'ajout, de nouveau actif.
+    const add = screen.getByRole("button", { name: t("composer.mediaAdd") })
+    expect(add).toBeEnabled()
+    expect(add).toHaveFocus()
+
+    // La préparation annulée rend son issue plus tard : elle ne rejoint rien.
+    await act(async () => { upload.result.resolve({ ok: true, value: CONVERTED }) })
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(publish).toHaveBeenCalledOnce())
+    expect(publish.mock.calls[0]?.[0]).toMatchObject({ body: "Texte gardé" })
+    expect(publish.mock.calls[0]?.[0].media).toBeUndefined()
+  })
+
+  it("fermer la feuille arrête la préparation ; rouverte, la vidéo n'y est plus et l'annulation est dite", async () => {
+    const upload = controlledUpload()
+    const user = userEvent.setup()
+    render(<Composer />)
+    choose([iphoneVideo()])
+    await upload.phase({ phase: "converting", progress: 0.3 })
+    await user.click(screen.getByRole("button", { name: t("common.cancel") }))
+    expect(upload.options()?.signal?.aborted).toBe(true)
+    expect(onClose).toHaveBeenCalledOnce()
+    await user.click(screen.getByRole("button", { name: "Reprendre" }))
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
+    expect(screen.getByText(plain(t("composer.videoCancelled")))).toBeVisible()
+  })
+
+  it("quitter le composeur arrête la préparation et libère l'aperçu", () => {
+    const upload = controlledUpload()
+    const { unmount } = render(<Composer />)
+    choose([iphoneVideo()])
+    unmount()
+    expect(upload.options()?.signal?.aborted).toBe(true)
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:recette-IMG_0412.MOV")
+  })
+
+  it("un refus de la préparation ne joint rien et se dit en alerte ; le brouillon gardé ne porte jamais le fichier", async () => {
+    const upload = controlledUpload()
+    const user = userEvent.setup()
+    const view = render(<Composer />)
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Ma vidéo de recette")
+    choose([iphoneVideo()])
+    await upload.phase({ phase: "converting", progress: 0.2 })
+    // Pendant la préparation, le brouillon du navigateur garde le texte et les choix, aucun fichier.
+    await waitFor(() => expect(JSON.parse(window.localStorage.getItem("recette:composeur") ?? "null")).toEqual({ body: "Ma vidéo de recette", reach: "local", audience: "public", alsoOnRoot: false }))
+
+    await act(async () => { upload.result.resolve({ ok: false, code: "media_video_too_long_to_convert" }) })
+    expect(await screen.findByRole("alert")).toHaveTextContent(plain(t("errors.media_video_too_long_to_convert")))
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
+    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
+
+    // Rechargé, le composeur rend le texte, jamais une vidéo à moitié préparée.
+    view.unmount()
+    render(<Composer />)
+    expect(screen.getByRole("textbox", { name: t("composer.bodyLabel") })).toHaveValue("Ma vidéo de recette")
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
+  })
+
+  it("un envoi qui échoue APRÈS la préparation garde la pièce en échec, comme une photo", async () => {
+    const upload = controlledUpload()
+    render(<Composer />)
+    choose([iphoneVideo()])
+    await upload.phase({ phase: "uploading" })
+    await act(async () => { upload.result.resolve({ ok: false, code: "media_upload_failed" }) })
+    expect(await screen.findByRole("alert")).toHaveTextContent(plain(t("errors.media_upload_failed")))
+    expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(1)
+    expect(screen.getByRole("button", { name: t("composer.mediaRemove", { name: "IMG_0412.MOV" }) })).toBeEnabled()
   })
 })
 

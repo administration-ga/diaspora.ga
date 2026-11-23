@@ -35,6 +35,7 @@ import { DEFAULT_CHARTE } from "@/lib/appearance"
 import { callsAreOpen } from "@/lib/calls"
 import { engineRoutes } from "@/lib/engine-routes"
 import { ICOM_DEMO, resolveIcomState, type IcomNetwork, type IcomState } from "@/lib/icom-state"
+import { liveIsOpen } from "@/lib/live"
 import { routes } from "@/lib/routes"
 
 export type { IcomNetwork, IcomOffReason, IcomState } from "@/lib/icom-state"
@@ -70,6 +71,11 @@ export function useIcomNetwork(): IcomNetwork | null {
  * et de groupe de l'en-tête d'une conversation et de la fiche d'un groupe, le rappel du journal,
  * les boutons d'appel des relations et la vue « Nouvel appel », le panneau d'appels et l'accord
  * d'une mise en relation. Une capacité de présentation, jamais un droit : le serveur garde ses gardes.
+ *
+ * `liveAvailable` (CH-817) : l'interrupteur du direct (`lib/live.ts`), transmis de même. Ouvert, la
+ * couche de communication monte l'hôte du direct (salle, carte flottante, création d'une
+ * conférence), le lecteur des actus place les directs en cours en tête, un appel de groupe propose
+ * de lancer une conférence. Fermé, rien de tout cela n'est monté.
  */
 export function IcomIsland(props: { network: IcomNetwork; children: ReactNode }) {
   const appearance = useOptionalAppearance()
@@ -82,6 +88,7 @@ export function IcomIsland(props: { network: IcomNetwork; children: ReactNode })
         charte={appearance?.charte ?? DEFAULT_CHARTE}
         routes={engineRoutes}
         callsAvailable={callsAreOpen()}
+        liveAvailable={liveIsOpen()}
       >
         {props.children}
       </NetworkProvider>

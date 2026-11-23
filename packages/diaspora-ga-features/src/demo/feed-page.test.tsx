@@ -1,6 +1,6 @@
 import type { FeedPageRequest } from "../data/types"
 import { renderHook } from "@testing-library/react"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { createDemoDataSource } from "./source"
 import { createDemoSeed, type DemoPost, type DemoState } from "./state"
@@ -167,9 +167,13 @@ describe("démonstration — pagination du même fil gardé", () => {
 })
 
 describe("démonstration — vidéos d'une publication (FD-02)", () => {
-  it("un .mov est refusé avec la marche à suivre, comme au moteur ; un autre fichier garde le refus de type", async () => {
+  it("aucune vidéo en démonstration, quel qu'en soit le format : rien n'est préparé ni converti ; un autre fichier garde le refus de type", async () => {
     const data = source()
-    expect(await data.actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }))).toEqual({ ok: false, code: "media_video_format" })
+    const onPhase = vi.fn()
+    // Le .mov de l'iPhone ne se prépare pas pour rien : la démonstration dit d'emblée qu'elle ne garde pas de vidéo.
+    expect(await data.actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }), { onPhase })).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(await data.actions.uploadMedia(new File(["clip"], "clip.mp4", { type: "video/mp4" }), { onPhase })).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(onPhase).not.toHaveBeenCalled()
     expect(await data.actions.uploadMedia(new File(["%PDF"], "dossier.pdf", { type: "application/pdf" }))).toEqual({ ok: false, code: "media_type_invalid" })
   })
 })

@@ -99,10 +99,6 @@ const FAMILIES: string[] = [
     `settings.profilePublication.confirm.${command}.body`,
     `settings.profilePublication.confirm.${command}.confirm`,
   ]),
-  ...each(["notice", "privacy"] as const, (kind) => [
-    `legal.${kind}.title`,
-    ...range(4).flatMap((section) => [`legal.${kind}.section${section}.title`, `legal.${kind}.section${section}.body`]),
-  ]),
   ...[...ERROR_CODES].map((errorCode) => `errors.${errorCode}`),
   // Les familles des chantiers du plan global (`./i18n-families/<chantier>.ts`).
   ...LOT_FAMILIES,
