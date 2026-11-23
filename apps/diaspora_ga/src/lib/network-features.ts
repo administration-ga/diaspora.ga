@@ -13,7 +13,8 @@
  *
  * Croisée avec la table des destinations, cette table dit aussi quels modules se rangent sous
  * une entrée de la barre (`featuresUnderDestination`) : « Communautés » n'y entre qu'avec l'un
- * d'eux ouvert (CH-816, lot P1), sans liste tenue à la main.
+ * d'eux ouvert (CH-816, lot P1). Le menu partagé (`@diaspora-ga/features/navigation`, que l'aperçu
+ * d'admin.diaspora.ga lit aussi) déclare ces modules ; un test prouve qu'ils sont ceux de ces tables.
  */
 import { NETWORK_FEATURES, type FeatureGate, type NetworkFeature } from "@diaspora-ga/features/data"
 
@@ -149,16 +150,4 @@ export function featuresUnderDestination(destination: NavDestination): readonly 
     if (feature !== null && home.kind === "member" && home.destination === destination) found.add(feature)
   }
   return NETWORK_FEATURES.filter((feature) => found.has(feature))
-}
-
-/** Les modules rangés sous « Communautés » (groupes et évènements, emploi, entraide, mentorat, kit d'arrivée). */
-export const COMMUNITY_FEATURES: readonly NetworkFeature[] = featuresUnderDestination("communities")
-
-/**
- * « Communautés » entre-t-elle dans la barre ? Seulement quand un module qui s'y range est
- * ouvert : ses adresses du socle (`/communautes`, `/pays/…`) restent servies et joignables par
- * « Mon pays », mais une entrée de barre sans module n'aurait que le hub du pays à montrer.
- */
-export function communitiesOffered(gate: FeatureGate): boolean {
-  return COMMUNITY_FEATURES.some((feature) => gate.isOpen(feature))
 }

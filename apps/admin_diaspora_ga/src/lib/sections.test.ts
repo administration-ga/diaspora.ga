@@ -44,9 +44,12 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
     }
   })
 
-  it("au squelette (A4), seul le tableau de bord existe, au groupe Pilotage", () => {
-    expect(groupedSections()).toEqual([{ group: "pilotage", sections: [SECTIONS[0]] }])
-    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard"])
+  it("avec le lot A5 : le tableau de bord (Pilotage), puis les modules et l'aperçu du menu (Application des membres)", () => {
+    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "modules", "menuPreview"])
+    expect(groupedSections().map((entry) => [entry.group, entry.sections.map((section) => section.href)])).toEqual([
+      ["pilotage", [routes.dashboard()]],
+      ["membersApp", [routes.modules(), routes.menuPreview()]],
+    ])
   })
 
   it("ajouter une section, c'est une ligne : elle prend sa place dans son groupe, les groupes vides restent cachés", () => {

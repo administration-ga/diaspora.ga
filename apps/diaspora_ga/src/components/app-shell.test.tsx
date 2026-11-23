@@ -4,6 +4,7 @@ import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspo
 import {
   DataSourceProvider,
   gateSource,
+  NETWORK_FEATURES,
   type AssociationListPage,
   type DiasporaGaActions,
   type DiasporaGaDataSource,
@@ -20,6 +21,7 @@ import {
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
+import { memberMenu, type MemberCreateEntry, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
 import { act, cleanup, render, screen, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps, ReactNode } from "react"
@@ -27,6 +29,7 @@ import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
+import { memberCreateHref, memberMenuHref } from "@/lib/member-menu"
 import { PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
@@ -1137,5 +1140,58 @@ describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les module
     renderShell({ pathname: routes.mentoring(), features: "loading" })
     expect(screen.queryByRole("heading", { level: 1, name: t("notFound.title") })).toBeNull()
     expect(screen.queryByRole("button", { name: "Quoi de neuf ?" })).toBeNull()
+  })
+})
+
+describe("coque — elle rend exactement le menu partagé, celui que montre l'aperçu d'admin.diaspora.ga (CH-815 A5)", () => {
+  // Deux situations : un membre qui écrit, sans contenu ni rôle ; un responsable qui gère une page et adhère à une association.
+  const SITUATIONS = [
+    { name: "un membre qui écrit", icom: true, network: true, responsible: false, holdings: HOLDS_NOTHING, holds: false },
+    { name: "un responsable qui gère une page et adhère", icom: true, network: true, responsible: true, holdings: HOLDS_ALL, holds: true },
+  ] as const
+  const FEATURE_SETS: readonly (readonly NetworkFeature[])[] = [[], ["pages"], NETWORK_FEATURES]
+  const CASES = FEATURE_SETS.flatMap((features) => SITUATIONS.map((situation) => [features, situation.name, situation] as const))
+
+  const entryLink = (entry: MemberMenuEntry) => [t(entry.labelKey), memberMenuHref(entry, MEMBER.handle)]
+  const createHrefs = (entries: readonly MemberCreateEntry[]) => entries.map((entry) => memberCreateHref(entry))
+
+  it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation) => {
+    const user = userEvent.setup()
+    renderShell({ icom: situation.icom, network: situation.network, responsible: situation.responsible, holdings: situation.holdings, features })
+    const expected = memberMenu({
+      openFeatures: features,
+      icom: situation.icom,
+      engineNetwork: situation.network,
+      canPublish: MEMBER.canPublish,
+      status: MEMBER.status,
+      holdsPageRole: situation.holds,
+      holdsAssociation: situation.holds,
+      moderator: situation.responsible,
+      pilotReader: situation.responsible,
+    })
+
+    // La barre : le rail du bureau et la barre basse du téléphone.
+    const { rail, bar } = mainNavigations()
+    expect(linksOf(rail)).toEqual(expected.rail.map(entryLink))
+    expect(linksOf(bar)).toEqual(expected.phoneBar.map(entryLink))
+
+    // « Créer », au bureau.
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    const create = within(await screen.findByRole("menu")).getAllByRole("menuitem")
+    expect(create.map((item) => item.getAttribute("href"))).toEqual(createHrefs(expected.create))
+    expected.create.forEach((entry, index) => expect(create[index]).toHaveTextContent(t(entry.labelKey)))
+    await user.keyboard("{Escape}")
+
+    // Le menu du compte, au bureau : profil, réglages, « Mon espace », mes données, puis les informations.
+    const account = menuItemsOf(await openAccountMenu()).filter(([, href]) => href !== null)
+    expect(account).toEqual([...expected.account, ...expected.information].map(entryLink))
+    await user.keyboard("{Escape}")
+
+    // La feuille du compte, au téléphone : les mêmes entrées, « Créer » et les informations.
+    await user.click(accountTrigger("dialog"))
+    const sheet = within(await screen.findByRole("dialog", { name: "Mon compte" }))
+    expect(linksOf(sheet.getByRole("navigation", { name: "Mon compte" }))).toEqual(expected.account.map(entryLink))
+    expect(linksOf(sheet.getByRole("navigation", { name: "Créer" })).map(([, href]) => href)).toEqual(createHrefs(expected.create))
+    expect(linksOf(sheet.getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
   })
 })
