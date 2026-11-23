@@ -220,6 +220,48 @@ Le projet d'hébergement de production se désigne par `DIASPORA_GA_PRODUCTION_V
 `DIASPORA_GA_VERCEL_ORG_ID` et `DIASPORA_GA_VERCEL_SCOPE`. Une même ressource déclarée pour la
 démonstration et pour la production est refusée par le script.
 
+### 6.3 Le direct (et les appels) : ce que leur ouverture demande
+
+Le direct du moteur (conférences : studio, antenne, salle, discussion, rediffusion) est monté dans
+diaspora.ga depuis CH-817 et **fermé par le code**, comme les appels (IM-01) : décision du
+propriétaire, rien n'est proposé avant d'avoir été prouvé avec un vrai serveur vidéo. Fermé, la page
+du direct répond « introuvable », « Créer » n'offre pas « Une conférence », et l'îlot des surfaces du
+moteur déclare `liveAvailable` faux (ni hôte du direct, ni directs en tête du lecteur des actus, ni
+conférence lancée depuis un appel). La démonstration de ce navigateur ne sert jamais le direct.
+
+Ouvrir demande, dans l'ordre :
+
+1. **Le serveur vidéo du backend du moteur** (geste du propriétaire, noms seulement) :
+   `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_WS_URL` (requises ; absentes, le moteur répond
+   « non configuré », jamais un faux succès) ; facultatives : `LIVEKIT_WAKE_URL` et
+   `LIVEKIT_WAKE_TOKEN` (réveil d'un serveur qui se suspend), `LIVEKIT_EGRESS_URL` (service
+   d'enregistrement hébergé ailleurs que le serveur vidéo), `LIVEKIT_WEBHOOK_SECRET` (secret d'un
+   relais du webhook d'enregistrement, jamais requis). Ce sont les mêmes variables pour les appels.
+2. **L'origine du serveur vidéo dans la politique de sécurité du site.** La configuration commune du
+   moteur (`@antsia/api/next-config`, que `apps/diaspora_ga/next.config.ts` emploie) ajoute à
+   `connect-src` l'origine tirée de `LIVEKIT_WS_URL` **lue à la construction du site**. Aujourd'hui ni
+   le catalogue de publication du moteur (`build_args` de `diaspora_ga`) ni `scripts/release.mjs` ne
+   la passent : sans elle, la page s'ouvre mais le navigateur refuse la connexion au serveur vidéo.
+   L'ajouter est un lot à part (catalogue du moteur d'abord, puis le script et le Dockerfile de
+   diaspora.ga) ; le contrôle public (`scripts/release-check.mjs`) ne juge que les origines Convex.
+3. **L'interrupteur, une valeur** : `MEMBERS_APP_CODE_SWITCH_STATES.live = "open"` dans
+   `packages/diaspora-ga-features/src/navigation/code-switches.ts` (celle que lisent
+   `apps/diaspora_ga/src/lib/live.ts`, le menu des membres et admin.diaspora.ga). Les tests qui
+   verrouillent la position fermée (ils le disent : « fermé par le code », « la position du
+   dépôt ») se mettent à jour dans le même lot. Les appels ont leur propre valeur (`CALLS_SWITCH`,
+   `apps/diaspora_ga/src/lib/calls.ts`, et sa ligne `calls` du même tableau).
+4. **La recette réelle à deux comptes**, sur le déploiement visé, avant toute annonce : un membre
+   qui peut publier ouvre « Créer → Une conférence », prépare puis lance le direct ; un second membre
+   de l'audience le voit en tête du lecteur des actus, entre dans la salle, voit et entend l'hôte,
+   écrit dans la discussion, sort et revient (la carte flottante tient la salle hors de sa page) ;
+   l'hôte exclut puis réintègre, ferme la discussion, termine. Consigner le rapport daté dans
+   `docs/recette/` (deux comptes réels, aucun identifiant).
+5. **L'enregistrement et l'accord** : décoché par défaut (formulaire et serveur). Coché, chaque
+   intervenant accepte l'enregistrement, horodaté, avant de monter à l'antenne ; la copie n'est
+   lisible que de l'hôte tant qu'il n'a pas décidé de la publier, jamais au-delà de l'audience du
+   direct, puis se purge à son échéance. La recette le rejoue une fois avec l'enregistrement coché.
+   Les durées et plafonds (décisions 6 à 9 du plan 04 du moteur) restent au propriétaire.
+
 ## 7. Le domaine
 
 **Qui** : le propriétaire. Le catalogue de publication du moteur prévoit `diaspora.ga`.
@@ -308,3 +350,6 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
     sous-traitants et lieux d'hébergement (§ 11).
 11. **Pilote France** : zone, volontaires, deux associations relais (décision 7, lot DG-029).
 12. **L'accord écrit de chaque publication** : commits, cible, ordre, retour arrière.
+13. **Le direct et les appels** : les clés du serveur vidéo, puis l'ouverture par le code après la
+    recette à deux comptes ; tous deux restent fermés au lancement tant qu'elle n'est pas faite
+    (§ 6.3).

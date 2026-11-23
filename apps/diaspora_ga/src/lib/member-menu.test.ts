@@ -43,7 +43,8 @@ describe("menu partagé — parité avec les tables de diaspora.ga", () => {
     }
     for (const id of MEMBER_CREATE_FORMATS) {
       const rule = MEMBER_CREATE_RULES[id]
-      expect(featureOfPath(memberCreateHref(rule)), id).toBe(rule.feature)
+      // La conférence n'a pas d'adresse : elle mène, une fois créée, à la page du direct (CH-817).
+      expect(featureOfPath(memberCreateHref(rule) ?? routes.conference("s-1")), id).toBe(rule.feature)
     }
   })
 
@@ -58,7 +59,7 @@ describe("menu partagé — parité avec les tables de diaspora.ga", () => {
     expect(MEMBER_ACCOUNT_ENTRIES).toEqual(ACCOUNT_DESTINATIONS)
   })
 
-  it("« Créer » mène à une actu, puis à l'inscription d'une association et d'une entreprise", () => {
-    expect(MEMBER_CREATE_FORMATS.map((id) => memberCreateHref(MEMBER_CREATE_RULES[id]))).toEqual([routes.newStory(), routes.newPage("association"), routes.newPage("company")])
+  it("« Créer » mène à une actu, ouvre en place la conférence, puis mène à l'inscription d'une association et d'une entreprise", () => {
+    expect(MEMBER_CREATE_FORMATS.map((id) => memberCreateHref(MEMBER_CREATE_RULES[id]))).toEqual([routes.newStory(), null, routes.newPage("association"), routes.newPage("company")])
   })
 })

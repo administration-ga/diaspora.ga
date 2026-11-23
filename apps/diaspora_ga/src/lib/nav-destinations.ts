@@ -118,7 +118,9 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   pageServices: member("explore", routes.pageServices(SEGMENT)),
   pageOpenJobs: member("explore", routes.pageOpenJobs(SEGMENT)),
   pageClaim: member("explore", routes.pageClaim(SEGMENT)),
-  // Pas encore servie ici : rangée comme le volet des conférences de la coque du moteur (Découvrir).
+  // La page d'un direct (CH-817, servie l'interrupteur du direct ouvert) : rangée comme le volet des
+  // conférences de la coque du moteur (Découvrir). Elle s'ouvre sans coque ; la coque ne paraît
+  // autour d'elle que pour dire pourquoi elle est fermée à ce membre.
   conference: member("explore", routes.conference(SEGMENT)),
   // Un profil : le sien relève du compte, celui d'un autre membre de Membres.
   profile: person(routes.profile(SEGMENT)),

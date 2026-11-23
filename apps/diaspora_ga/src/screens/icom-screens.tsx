@@ -1,5 +1,7 @@
 "use client"
 
+import type { Id } from "@antsia/api/engine"
+import { DirectPage } from "@antsia/social-features/direct"
 import { MessagesRoute } from "@antsia/social-features/messagerie"
 import { StoriesViewerPage } from "@antsia/social-features/stories"
 import { EmptyState } from "@diaspora-ga/features"
@@ -15,7 +17,7 @@ import { IcomIsland, useEngineNetwork, useIcomState, type IcomOffReason } from "
 import type { MessagesRouteTarget } from "@/lib/messages-route"
 
 // ═══════════════════════════════════════════════════════════════
-// iCom en pages (PD7) — la messagerie et les statuts du moteur
+// iCom en pages (PD7) — la messagerie, les statuts et le direct du moteur
 // ═══════════════════════════════════════════════════════════════
 
 /**
@@ -74,6 +76,28 @@ function StoriesPageBody(props: { membership: MembershipView; openCreate: boolea
         <StoriesViewerPage canCreate={canCreate} openCreate={props.openCreate && canCreate} />
       </main>
     </IcomIsland>
+  )
+}
+
+/**
+ * `/direct/<id>` — la page d'un direct du moteur (CH-817), montée telle quelle, comme la page
+ * de conférence d'antsia.ga (`DirectPage`) : studio et antenne pour l'hôte, salle et discussion
+ * pour le spectateur, rediffusion après la fin. La page de route ne la sert que l'interrupteur du
+ * direct ouvert et le moteur branché (`conferenceRouteServed`).
+ *
+ * Sans coque, comme le lecteur des actus : la salle prend la page (le moteur retire de même sa
+ * navigation sur la page d'un direct). Les conditions sont celles d'iCom (`IcomPage`) : une adhésion
+ * qui peut écrire, car l'hôte du direct qui tient la salle vit dans la couche de communication
+ * d'iCom (`EngineIcom`) ; sinon la page dit pourquoi. Une session inconnue, d'un autre réseau ou
+ * hors audience reçoit du moteur le même refus indistinct.
+ */
+export function ConferenceScreen(props: { sessionId: string }) {
+  return (
+    <IcomPage titleKey="live.title">
+      <main id="contenu" className="mx-auto min-h-dvh w-full max-w-7xl bg-background px-4 py-6 sm:px-5">
+        <DirectPage sessionId={props.sessionId as Id<"liveSessions">} />
+      </main>
+    </IcomPage>
   )
 }
 

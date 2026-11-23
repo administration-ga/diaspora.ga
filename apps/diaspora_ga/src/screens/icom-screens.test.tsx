@@ -11,7 +11,7 @@ import type { IcomNetwork, IcomState } from "@/components/icom"
 import type { MessagesRouteTarget } from "@/lib/messages-route"
 import { routes } from "@/lib/routes"
 
-import { MessagesScreen, StoriesScreen } from "./icom-screens"
+import { ConferenceScreen, MessagesScreen, StoriesScreen } from "./icom-screens"
 
 const mocks = vi.hoisted(() => ({
   // CC-6 : l'injection contextuelle rendue par `useContextualMessages` (sonde, aucune connexion).
@@ -22,6 +22,7 @@ const mocks = vi.hoisted(() => ({
   gate: vi.fn(),
   viewer: vi.fn(),
   messages: vi.fn(),
+  direct: vi.fn(),
 }))
 
 vi.mock("next/navigation", () => ({
@@ -59,6 +60,15 @@ vi.mock("@/components/icom", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/components/icom")>()),
   useEngineNetwork: () => mocks.network,
   useIcomState: () => mocks.icom,
+}))
+// CH-817 : la page d'un direct du moteur, sonde montée sans salle ni serveur vidéo.
+vi.mock("@antsia/social-features/direct", () => ({
+  DirectPage: (props: { sessionId: string }) => {
+    const network = useNetwork()
+    const engineRoutes = useRoutes()
+    mocks.direct({ ...props, network, conferenceHref: engineRoutes.conference(props.sessionId) })
+    return <section aria-label="Page du direct du moteur" />
+  },
 }))
 vi.mock("@antsia/social-features/stories", () => ({
   StoriesViewerPage: (props: { canCreate?: boolean; openCreate?: boolean }) => {
@@ -219,5 +229,46 @@ describe("Les statuts en pages — lecture et création distinctes", () => {
     expect(screen.getByRole("group", { name: "Messagerie du moteur" })).toBeInTheDocument()
     // CC-6 : la messagerie reçoit aussi nos conversations de mise en relation.
     expect(mocks.messages).toHaveBeenLastCalledWith({ compose: "personne", contextual: mocks.contextual })
+  })
+})
+
+describe("La page d'un direct (CH-817) — l'écran du moteur, aux conditions d'iCom, sans coque", () => {
+  function conferenceTree(sessionId = "sessions_1") {
+    return <I18nProvider locale="fr"><ConferenceScreen sessionId={sessionId} /></I18nProvider>
+  }
+
+  it("un membre qui écrit : la page du direct du moteur, sur la session et le réseau de DIASPORA.GA", () => {
+    render(conferenceTree())
+
+    expect(mocks.gate).toHaveBeenLastCalledWith("member")
+    expect(screen.getByRole("main")).toHaveAttribute("id", "contenu")
+    expect(screen.getByRole("region", { name: "Page du direct du moteur" })).toBeInTheDocument()
+    expect(mocks.direct).toHaveBeenLastCalledWith({
+      sessionId: "sessions_1",
+      conferenceHref: routes.conference("sessions_1"),
+      network: expect.objectContaining({ networkId: network.networkId, slug: "diaspora-ga", personId: membership.personId, charte: "diaspora-ga" }),
+    })
+  })
+
+  it.each([
+    ["membre en attente", { status: "off", reason: "not_allowed" }],
+    ["démonstration", { status: "off", reason: "demo" }],
+  ] as const)("iCom fermé (%s) : la page dit pourquoi, sans monter le direct", (_name, icom) => {
+    mocks.icom = icom
+    if (icom.reason === "not_allowed") mocks.membership = { ...membership, status: "en_attente", canPublish: false }
+    render(conferenceTree())
+
+    expect(screen.getByRole("heading", { level: 1, name: "Conférence en direct" })).toBeInTheDocument()
+    expect(screen.getByText("Messagerie indisponible")).toBeInTheDocument()
+    expect(mocks.direct).not.toHaveBeenCalled()
+  })
+
+  it("attend la résolution d'iCom sans monter le direct ni annoncer une indisponibilité", () => {
+    mocks.icom = { status: "loading" }
+    render(conferenceTree())
+
+    expect(screen.getByRole("status", { name: "Chargement du réseau" })).toBeInTheDocument()
+    expect(screen.queryByText("Messagerie indisponible")).not.toBeInTheDocument()
+    expect(mocks.direct).not.toHaveBeenCalled()
   })
 })
