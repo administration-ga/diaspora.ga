@@ -843,45 +843,7 @@
     "footer": "One request per 24 hours. Your consent is recorded before the request."
   },
   "legal": {
-    "todoLawyer": "TODO LAWYER — provisional text awaiting legal validation; blocking for going live.",
-    "notice": {
-      "title": "Legal notice",
-      "section1": {
-        "title": "Publisher",
-        "body": "DIASPORA.GA is published by NTSAGUI Digital. The publisher's full details will be published after legal validation."
-      },
-      "section2": {
-        "title": "Publication director",
-        "body": "To be appointed by the publisher."
-      },
-      "section3": {
-        "title": "Hosting",
-        "body": "The hosting provider and region will be stated here once chosen and contracted."
-      },
-      "section4": {
-        "title": "Intellectual property",
-        "body": "Content published by members remains theirs; they allow it to be shared in the network they choose."
-      }
-    },
-    "privacy": {
-      "title": "Privacy",
-      "section1": {
-        "title": "Data controller",
-        "body": "To be confirmed by the lawyer. Applicable law: Gabonese law no. 001/2011 as amended by law no. 025/2023 (APDPVP); the GDPR for residents of the European Union."
-      },
-      "section2": {
-        "title": "What we process",
-        "body": "Your profile (display name, handle, country of residence), your content and your consents. No consular data: a consular attestation is limited to a yes or no, a country, a post and a date."
-      },
-      "section3": {
-        "title": "Your choices",
-        "body": "Each consent is separate, time-stamped and can be withdrawn in your settings. The directory is hidden by default."
-      },
-      "section4": {
-        "title": "Your rights",
-        "body": "You download your data and erase your account from your settings. The competent authority in Gabon is the APDPVP."
-      }
-    }
+    "todoLawyer": "TODO LAWYER — provisional text awaiting legal validation; blocking for going live."
   },
   "notFound": {
     "title": "This page doesn't exist.",

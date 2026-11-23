@@ -843,45 +843,7 @@
     "footer": "Une demande par 24 heures. Votre consentement est enregistré avant la demande."
   },
   "legal": {
-    "todoLawyer": "TODO JURISTE — texte provisoire en attente de validation juridique ; bloquant pour la mise en ligne.",
-    "notice": {
-      "title": "Mentions légales",
-      "section1": {
-        "title": "Éditeur",
-        "body": "DIASPORA.GA est édité par NTSAGUI Digital. Les coordonnées complètes de l'éditeur seront publiées après validation juridique."
-      },
-      "section2": {
-        "title": "Directeur de la publication",
-        "body": "À désigner par l'éditeur."
-      },
-      "section3": {
-        "title": "Hébergement",
-        "body": "Le prestataire et la région d'hébergement seront indiqués ici une fois choisis et contractualisés."
-      },
-      "section4": {
-        "title": "Propriété intellectuelle",
-        "body": "Les contenus publiés par les membres restent leur propriété ; ils en accordent la diffusion dans le réseau qu'ils choisissent."
-      }
-    },
-    "privacy": {
-      "title": "Confidentialité",
-      "section1": {
-        "title": "Responsable de traitement",
-        "body": "À confirmer par le juriste. Droit applicable : loi gabonaise n° 001/2011 modifiée par la loi n° 025/2023 (APDPVP) ; le RGPD pour les résidents de l'Union européenne."
-      },
-      "section2": {
-        "title": "Ce que nous traitons",
-        "body": "Votre profil (nom affiché, identifiant, pays de résidence), vos contenus et vos consentements. Aucune donnée consulaire : une attestation consulaire se limite à un oui ou non, un pays, un poste et une date."
-      },
-      "section3": {
-        "title": "Vos choix",
-        "body": "Chaque consentement est séparé, horodaté et révocable dans vos réglages. L'annuaire est masqué par défaut."
-      },
-      "section4": {
-        "title": "Vos droits",
-        "body": "Vous téléchargez vos données et effacez votre compte depuis vos réglages. L'autorité compétente au Gabon est l'APDPVP."
-      }
-    }
+    "todoLawyer": "TODO JURISTE — texte provisoire en attente de validation juridique ; bloquant pour la mise en ligne."
   },
   "notFound": {
     "title": "Cette page n'existe pas.",
