@@ -30,6 +30,7 @@ import {
   type ConsentView,
   type CountryHubView,
   maskDestination,
+  type MemberBrowsePage,
   type MemberHitView,
   type MembershipView,
   type OpenCountryView,
@@ -419,6 +420,18 @@ export function toMemberHitView(hit: DirectoryHit): MemberHitView {
     badges: hit.badges,
     facet: toFacetProjection(hit.facet),
   }
+}
+
+type DirectoryBrowsePage = FunctionReturnType<typeof api.modules.diaspora.directory.browseMembers>
+
+/**
+ * CH-816 P3 — une fenêtre du parcours de l'annuaire : les mêmes cartes que la recherche
+ * (`toMemberHitView`), et la suite du serveur. Une suite sans curseur se lit comme une fin :
+ * jamais une lecture sans fin.
+ */
+export function toMemberBrowsePage(dto: DirectoryBrowsePage): MemberBrowsePage {
+  const isDone = dto.isDone || dto.continueCursor.length === 0
+  return { items: dto.page.map(toMemberHitView), continueCursor: isDone ? null : dto.continueCursor, isDone }
 }
 
 type EngineSuggestion = FunctionReturnType<typeof api.modules.diaspora.suggestions.forMe>[number]

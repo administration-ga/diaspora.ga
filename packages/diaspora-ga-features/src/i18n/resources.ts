@@ -94,6 +94,7 @@ import enInstallableApp from "./locales/en/installable-app.json"
 import enNotificationsCenter from "./locales/en/notifications-center.json"
 import enIcomNotices from "./locales/en/icom-notices.json"
 import enFeedRail from "./locales/en/feed-rail.json"
+import enMemberBrowse from "./locales/en/member-browse.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -177,6 +178,7 @@ import frInstallableApp from "./locales/fr/installable-app.json"
 import frNotificationsCenter from "./locales/fr/notifications-center.json"
 import frIcomNotices from "./locales/fr/icom-notices.json"
 import frFeedRail from "./locales/fr/feed-rail.json"
+import frMemberBrowse from "./locales/fr/member-browse.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -269,6 +271,8 @@ export const LOCALE_PARTS = {
     "icom-notices": frIcomNotices,
     // CH-816 (P2) : le rappel du parrainage en fin de rail du fil.
     "feed-rail": frFeedRail,
+    // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
+    "member-browse": frMemberBrowse,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -354,6 +358,8 @@ export const LOCALE_PARTS = {
     "notifications-center": enNotificationsCenter,
     "icom-notices": enIcomNotices,
     "feed-rail": enFeedRail,
+    // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
+    "member-browse": enMemberBrowse,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

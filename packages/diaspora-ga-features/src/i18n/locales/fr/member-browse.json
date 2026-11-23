@@ -1,0 +1,21 @@
+{
+  "memberBrowse": {
+    "filtersLabel": "Parcourir l’annuaire des membres",
+    "country": "Pays",
+    "city": "Ville",
+    "cityHint": "Facultative. Seuls les membres qui vous montrent leur ville apparaissent ici.",
+    "verifiedOnly": "Vérifiés seulement",
+    "verifiedOnlyHint": "Les membres qui portent le badge « Vérifié ».",
+    "apply": "Afficher",
+    "resultsTitle": "Membres : {{country}}",
+    "resultsTitleCity": "Membres : {{city}}, {{country}}",
+    "resultsLabel": "Membres de l’annuaire",
+    "loadMore": "Voir plus",
+    "emptyTitle": "Aucun membre visible dans ce pays pour l’instant.",
+    "emptyCityTitle": "Aucun membre visible dans cette ville pour l’instant.",
+    "emptyVerifiedTitle": "Aucun membre vérifié visible ici pour l’instant.",
+    "emptyBody": "Seuls les membres qui ont choisi d’apparaître dans l’annuaire, et dont le niveau vous inclut, sont visibles.",
+    "noOpenCountry": "Aucun pays n’est encore ouvert dans DIASPORA.GA : la recherche par nom reste possible.",
+    "notYet": "L’annuaire se consulte dès que votre adhésion est déclarée ou vérifiée."
+  }
+}

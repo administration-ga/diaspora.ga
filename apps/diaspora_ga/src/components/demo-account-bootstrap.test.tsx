@@ -106,7 +106,8 @@ describe("Amorçage d'un compte de démonstration", () => {
       directoryVisibility: "network",
     })
     expect(mocks.demoAccounts?.equip).toHaveBeenCalledExactlyOnceWith("entreprise")
-    expect(mocks.createServiceOffer).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ pageId: "pages_saveurs", publish: true, country: "FR", city: "Paris" }))
+    // Le traiteur fictif publie sous « Restauration et traiteur » (CH-816, lot P4).
+    expect(mocks.createServiceOffer).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ pageId: "pages_saveurs", publish: true, country: "FR", city: "Paris", category: "catering" }))
     expect(mocks.createJobOffer).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ pageId: "pages_saveurs", publish: true, country: "FR", city: "Paris" }))
     expect(mocks.becomeMentor).not.toHaveBeenCalled()
     expect(mocks.createMission).not.toHaveBeenCalled()
