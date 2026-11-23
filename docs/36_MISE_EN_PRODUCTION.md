@@ -346,8 +346,10 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
 7. **Natures de mise en relation ouvertes au lancement** (étape 5, avec DS-04).
 8. **Adresse d'envoi propre à DIASPORA.GA ou commune (décision 13)**.
 9. **Indexation de la vitrine (décision 5)** (étape 8).
-10. **Textes légaux** : juriste, droit applicable, entité éditrice (décision 6, lots LX-05 et DS-07) ;
-    sous-traitants et lieux d'hébergement (§ 11).
+10. **Textes légaux** : rédigés et dits définitifs par le propriétaire le 23/11/2026 (version 1.0,
+    `LEGAL_TEXTS` ; décision 6, lots LX-05 et DS-07). Restent la déclaration du traitement à
+    l'APDPVP et l'autorisation des transferts hors du Gabon, les contrats des sous-traitants et les
+    lieux d'hébergement (§ 11).
 11. **Pilote France** : zone, volontaires, deux associations relais (décision 7, lot DG-029).
 12. **L'accord écrit de chaque publication** : commits, cible, ordre, retour arrière.
 13. **Le direct et les appels** : les clés du serveur vidéo, puis l'ouverture par le code après la

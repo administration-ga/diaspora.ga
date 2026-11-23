@@ -8,11 +8,12 @@
  * identifiants de clés de texte, jamais un contenu.
  *
  * Le fond est au propriétaire et à son conseil juridique (porte A11, lot DS-07). Trois états
- * (`LEGAL_TEXT_STATUSES`) : à fournir, provisoire, définitif. Les cinq textes sont RÉDIGÉS
+ * (`LEGAL_TEXT_STATUSES`) : à fournir, provisoire, définitif. Les cinq textes sont rédigés
  * depuis le 23/11/2026, sur demande du propriétaire, d'après ce que le service fait et
  * d'après les textes en vigueur (loi n° 001/2011 modifiée par la loi n° 025/2023, ordonnance
- * n° 0011/PR/2026 ratifiée par la loi n° 003/2026) ; ils restent PROVISOIRES tant que leur
- * relecture n'est pas faite. Seul un texte définitif lève la porte de mise en ligne.
+ * n° 0011/PR/2026 ratifiée par la loi n° 003/2026). Le propriétaire les a dits DÉFINITIFS le
+ * même jour : version 1.0, plus aucun marqueur. Seul un texte définitif lève la porte de mise
+ * en ligne ; toute modification d'un texte change sa version et sa date.
  */
 
 export const LEGAL_TEXT_KINDS = ["notice", "privacy", "terms", "community", "contact"] as const
@@ -86,24 +87,23 @@ export interface LegalTextEdition {
 }
 
 /**
- * L'édition en vigueur de chaque texte. Les cinq textes sont rédigés depuis le 23/11/2026 et
- * PROVISOIRES : aucun passage n'attend plus une réponse (`awaiting` vide), mais aucun n'est
- * définitif tant que le propriétaire et son conseil ne l'ont pas relu. Les mentions légales
- * suivent l'article 25 de l'ordonnance n° 0011/PR/2026 ; la confidentialité, les articles 70 à
- * 73, 98, 104 et 171 de la loi n° 001/2011 modifiée.
+ * L'édition en vigueur de chaque texte : les cinq sont DÉFINITIFS, en version 1.0 du
+ * 23/11/2026, sur décision du propriétaire. Aucun passage n'attend une réponse (`awaiting`
+ * vide). Les mentions légales suivent l'article 25 de l'ordonnance n° 0011/PR/2026 ; la
+ * confidentialité, les articles 70 à 73, 98, 104 et 171 de la loi n° 001/2011 modifiée.
  */
 const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
   notice: {
-    version: "0.2",
+    version: "1.0",
     date: "2026-11-23",
-    status: "provisional",
+    status: "final",
     sections: ["publisher", "director", "hosting", "service", "intellectualProperty", "illegalContent", "rightOfReply", "personalData", "contact", "law"],
     awaiting: {},
   },
   privacy: {
-    version: "0.2",
+    version: "1.0",
     date: "2026-11-23",
-    status: "provisional",
+    status: "final",
     sections: [
       "controller",
       "framework",
@@ -128,9 +128,9 @@ const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
     awaiting: {},
   },
   terms: {
-    version: "0.2",
+    version: "1.0",
     date: "2026-11-23",
-    status: "provisional",
+    status: "final",
     sections: [
       "purpose",
       "acceptance",
@@ -155,16 +155,16 @@ const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
     awaiting: {},
   },
   community: {
-    version: "0.3",
+    version: "1.0",
     date: "2026-11-23",
-    status: "provisional",
+    status: "final",
     sections: COMMUNITY_RULES,
     awaiting: {},
   },
   contact: {
-    version: "0.2",
+    version: "1.0",
     date: "2026-11-23",
-    status: "provisional",
+    status: "final",
     sections: ["report", "emergency", "messages", "data", "publisher", "dataProtection", "legalRequests", "regulators", "consular"],
     awaiting: {},
   },

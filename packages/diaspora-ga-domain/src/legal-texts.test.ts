@@ -33,14 +33,14 @@ describe("textes du site (LX-05)", () => {
     expect(LEGAL_TEXT_STATUSES).toEqual(["missing", "provisional", "final"])
   })
 
-  test("aucun texte n'est définitif : chacun tient fermée la porte de mise en ligne", () => {
-    expect(legalTextsBlockingRelease()).toEqual([...LEGAL_TEXT_KINDS])
-    for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].status, kind).not.toBe("final")
+  test("les cinq textes sont définitifs : plus aucun ne tient fermée la porte de mise en ligne", () => {
+    for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].status, kind).toBe("final")
+    expect(legalTextsBlockingRelease()).toEqual([])
+    expect(pendingLegalTexts()).toEqual([])
   })
 
-  test("les cinq textes sont rédigés et provisoires : plus aucun ne reste à fournir", () => {
-    for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].status, kind).toBe("provisional")
-    expect(pendingLegalTexts()).toEqual([])
+  test("un texte définitif porte une version à partir de 1.0", () => {
+    for (const kind of LEGAL_TEXT_KINDS) expect(Number.parseInt(LEGAL_TEXTS[kind].version, 10), kind).toBeGreaterThanOrEqual(1)
   })
 
   test("les mentions légales portent les rubriques qu'impose l'identification de l'éditeur", () => {
