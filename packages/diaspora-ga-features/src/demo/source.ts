@@ -78,6 +78,7 @@ import { createDemoPilotMetrics } from "./pilot-metrics"
 import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
 import { createDemoNetworkFeatures } from "./network-features"
+import { createDemoMemberBrowse } from "./member-browse"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -181,6 +182,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
     callSettings: createDemoCallSettings(store),
     // ADR-0041 : les fonctionnalités activables du réseau fictif, fermées tant que rien n'est décidé.
     networkFeatures: createDemoNetworkFeatures(store),
+    // CH-816 P3 : parcourir l'annuaire fictif par pays et par ville, même règle que la recherche.
+    memberBrowse: createDemoMemberBrowse(store),
 
     useSession() {
       const version = useVersion()
