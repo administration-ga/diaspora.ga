@@ -157,12 +157,12 @@ function ResponsibleLine(props: { readonly member: ResponsibleRow; readonly onCh
       <div className="flex flex-wrap gap-2">
         {/* Un rôle en sommeil ne se change pas (le moteur refuse de nommer une adhésion qui ne l'exerce pas) ; il se retire toujours. */}
         {member.active ? (
-          <Button variant="outline" size="sm" aria-describedby={nameId} aria-haspopup="dialog" onClick={props.onChange}>
+          <Button variant="outline" size="sm" aria-haspopup="dialog" aria-label={t("responsibles.changeFor", { name })} onClick={props.onChange}>
             <UserCogIcon aria-hidden="true" />
             {t("responsibles.change")}
           </Button>
         ) : null}
-        <Button variant="outline" size="sm" aria-describedby={nameId} aria-haspopup="dialog" onClick={props.onRemove}>
+        <Button variant="outline" size="sm" aria-haspopup="dialog" aria-label={t("responsibles.removeFor", { name })} onClick={props.onRemove}>
           <UserMinusIcon aria-hidden="true" />
           {t("responsibles.remove")}
         </Button>

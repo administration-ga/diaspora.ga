@@ -14,8 +14,7 @@ import { useTranslation } from "react-i18next"
 
 import { APP_NAMESPACE } from "@/i18n/resources"
 import {
-  DECISION_LOOKUP_WINDOW,
-  decisionsOf,
+  decisionsByFeature,
   moduleCardState,
   servedFeatures,
   toggleBlockOf,
@@ -34,7 +33,7 @@ import { useNetworkAdmin } from "./network-admin-context"
  * Section « Modules » (groupe « Application des membres », fiche CH-815 § 4.2 et § 4.3) : une
  * carte par module que le moteur rend (`modules/networks/features.settings`) — son état, le module
  * qu'il exige, ce qu'il ajoute au menu des membres (dérivé de la règle partagée du menu, jamais
- * recopié), sa dernière décision et son motif quand le journal la porte, la liste des prérequis à
+ * recopié), sa dernière décision et son motif (`features.lastDecisions`), la liste des prérequis à
  * relire avant de l'ouvrir. La bascule passe par une fenêtre motivée. Appels, direct et iCom Pro,
  * fermés par le code de l'application des membres, se lisent à part, sans geste.
  */
@@ -70,7 +69,7 @@ export function ModulesSection() {
       ) : rows.length === 0 ? (
         <p className="rounded-xl bg-muted p-4 text-sm text-muted-foreground">{t("modules.empty")}</p>
       ) : (
-        <DecisionsReader networkId={admin.networkId} rows={rows}>
+        <DecisionsReader networkId={admin.networkId}>
           {(decisions) => <ModuleList rows={rows} served={served} decisions={decisions} onToggle={setEditing} />}
         </DecisionsReader>
       )}
@@ -82,35 +81,32 @@ export function ModulesSection() {
   )
 }
 
-/** Les décisions retrouvées, ou `null` tant que le journal se lit (aucune phrase n'est alors affirmée). */
+/** Les décisions retrouvées, ou `null` tant que la lecture est en cours (aucune phrase n'est alors affirmée). */
 type Decisions = ReadonlyMap<NetworkFeature, FeatureDecision> | null
 
 const NO_DECISIONS: ReadonlyMap<NetworkFeature, FeatureDecision> = new Map()
 
 interface DecisionsProps {
   readonly networkId: Id<"networks">
-  readonly rows: readonly FeatureState[]
   readonly children: (decisions: Decisions) => ReactNode
 }
 
 /**
- * Le motif de la dernière décision de chaque module, lu dans le journal du réseau
- * (`modules/platform/audit.paginateNetworkAudit`, ses administrateurs et ses modérateurs), sur
- * ses dernières lignes. Une lecture en échec ne retire rien aux cartes : elles disent la date seule.
+ * La dernière décision de chaque module (date, motif, auteur), lue en une requête
+ * (`modules/networks/features.lastDecisions`). Une lecture en échec ne retire rien aux cartes :
+ * elles disent la date seule.
  */
 function DecisionsReader(props: DecisionsProps) {
   return (
     <QuietBoundary fallback={props.children(NO_DECISIONS)}>
-      <DecisionsFromJournal networkId={props.networkId} rows={props.rows}>
-        {props.children}
-      </DecisionsFromJournal>
+      <LastDecisions networkId={props.networkId}>{props.children}</LastDecisions>
     </QuietBoundary>
   )
 }
 
-function DecisionsFromJournal(props: DecisionsProps) {
-  const journal = useQuery(api.modules.platform.audit.paginateNetworkAudit, { networkId: props.networkId, paginationOpts: { numItems: DECISION_LOOKUP_WINDOW, cursor: null } })
-  return <>{props.children(journal === undefined ? null : decisionsOf(props.rows, journal.page))}</>
+function LastDecisions(props: DecisionsProps) {
+  const decisions = useQuery(api.modules.networks.features.lastDecisions, { networkId: props.networkId })
+  return <>{props.children(decisions === undefined ? null : decisionsByFeature(decisions))}</>
 }
 
 /** Une lecture facultative qui échoue laisse la place à son repli, sans remonter jusqu'à la garde. */
@@ -181,7 +177,7 @@ function StateBadge(props: { state: ModuleCardState }) {
 /** Les prérequis à relire avant d'ouvrir (fiche CH-815 § 4.3, étape 2) : une liste à lire, rien n'est coché ni gardé. */
 const PREREQUISITE_KEYS = ["modules.prerequisite.team", "modules.prerequisite.texts", "modules.prerequisite.rehearsal"] as const
 
-/** `decision` : retrouvée au journal, `null` hors de la fenêtre lue, `undefined` pendant la lecture. */
+/** `decision` : rendue par `features.lastDecisions`, `null` si le module n'y figure pas, `undefined` pendant la lecture. */
 function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: ToggleBlock | null; decision: FeatureDecision | null | undefined; onToggle: () => void }) {
   const { t } = useTranslation(APP_NAMESPACE)
   const { t: members, locale } = useDiasporaGaT()
@@ -222,9 +218,7 @@ function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: T
             <>
               <p>{decision?.actorName ? t("modules.card.lastDecisionBy", { date, name: decision.actorName }) : t("modules.card.lastDecision", { date })}</p>
               {decision?.viaConsole ? <p>{t("modules.card.viaConsole")}</p> : null}
-              {decision === undefined ? null : (
-                <p className="break-words">{decision?.reason ? t("modules.card.reason", { reason: decision.reason }) : t("modules.card.reasonInJournal")}</p>
-              )}
+              {decision ? <p className="break-words">{t("modules.card.reason", { reason: decision.reason })}</p> : null}
             </>
           )}
           {row.enabled && !row.open && row.requires !== null ? <p>{t("modules.card.decidedButBlocked", { module: moduleName(row.requires) })}</p> : null}
@@ -255,7 +249,8 @@ function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: T
             variant={row.enabled ? "outline" : "secondary"}
             className="self-start"
             aria-haspopup="dialog"
-            aria-describedby={blockText !== null ? `${titleId} ${blockId}` : titleId}
+            aria-label={t(row.enabled ? "modules.card.closeFor" : "modules.card.openFor", { module: moduleName(row.feature) })}
+            aria-describedby={blockText !== null ? blockId : undefined}
             disabled={props.block !== null}
             onClick={props.onToggle}
           >

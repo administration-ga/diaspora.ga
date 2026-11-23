@@ -292,7 +292,8 @@ describe("HubScreen — à propos du hub (HB-05)", () => {
     expect(summary).toHaveTextContent("À propos du hub — Canada")
     expect(details).not.toHaveAttribute("open")
     expect(details).toHaveTextContent("Pays ouvert : les membres qui y résident peuvent publier dans ce hub. Tout membre de DIASPORA.GA le lit, quel que soit son pays.")
-    expect(details).toHaveTextContent(`Un pays est ouvert par l'administration de la plateforme. Le réseau s'est donné pour règle de l'ouvrir avec ${COUNTRY_OPENING_REQUIREMENTS.relayAssociations} associations relais et ${COUNTRY_OPENING_REQUIREMENTS.activeModerators} modérateur ; l'application ne vérifie pas encore cette condition d'elle-même.`)
+    // CH-815 A7 : l'administration du réseau ouvre un pays, modérateur vérifié par l'application, relais attestés.
+    expect(details).toHaveTextContent(`Un pays est ouvert par l'administration du réseau, quand une équipe de modération de ce pays compte au moins ${COUNTRY_OPENING_REQUIREMENTS.activeModerators} modérateur actif, ce que l'application vérifie, et que ${COUNTRY_OPENING_REQUIREMENTS.relayAssociations} associations relais se sont engagées, ce que l'administration atteste.`)
     expect(details).toHaveTextContent("l'équipe de modération du réseau l'examine, et son auteur ne sait pas qui l'a signalé.")
     expect(within(details).getByRole("link", { name: "Lire les règles de la communauté", hidden: true })).toHaveAttribute("href", "/regles-communaute")
     expect(within(details).getByRole("link", { name: "Suivre mes signalements", hidden: true })).toHaveAttribute("href", "/parametres#mes-signalements")

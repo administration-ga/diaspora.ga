@@ -17,7 +17,7 @@
     },
     "capacity": {
       "role": {
-        "network_admin": "Vous administrez le réseau : vous lisez toute la file, examinez les recours et composez les équipes.",
+        "network_admin": "Vous administrez le réseau : vous lisez ici toute la file. Les décisions du réseau (recours, équipes, règles, modules) se prennent dans l'application d'administration du réseau.",
         "network_moderator": "Vous modérez le réseau : vous lisez toute la file accessible et tranchez ses dossiers.",
         "team_member": "Vous modérez au sein d'une équipe : vous lisez la file de vos équipes et tranchez leurs dossiers."
       },

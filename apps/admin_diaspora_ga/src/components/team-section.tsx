@@ -7,19 +7,22 @@
  *
  *  · les responsables du réseau (`responsibles-panel.tsx`) ;
  *  · les équipes vivantes du réseau (`diaspora/moderationDesk.myDesk().teams` : l'administration
- *    les lit toutes), leur nature de contenu ; le moteur ne rattache pas encore une équipe à un
- *    pays : le nom peut le dire, il ne délimite rien, et l'écran l'annonce ;
+ *    les lit toutes), leur nature de contenu et leur pays (lot A7, suite d'A3 au moteur) : le pays
+ *    se choisit à la création ou se règle ensuite (`setTeamCountry`, motivé) ; il ouvre la porte de
+ *    son pays (section « Pays ouverts »), sans délimiter encore la file, routée par nature ;
  *  · la composition d'une équipe (`teamRoster`), par le profil PUBLIÉ de chacun ; l'ajout par
  *    identifiant public (`teamCandidate`) ; le retrait motivé et confirmé ; la création motivée.
- *    Chaque geste passe par `moderation/networkAdmin` (`createTeam`, `setTeamMember`), qui le
- *    journalise à titre de `network_admin`.
+ *    Chaque geste passe par `moderation/networkAdmin` (`createTeam`, `setTeamMember`,
+ *    `setTeamCountry`), qui le journalise à titre de `network_admin`.
  */
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
-import { Avatar, Button, Card, Field, HANDLE_MAX_LENGTH, Input, Sheet, SheetContent, Skeleton } from "@diaspora-ga/features"
+import { isResidenceCountry } from "@diaspora-ga/domain"
+import { Avatar, Button, Card, CountryTag, Field, HANDLE_MAX_LENGTH, Input, residenceCountryOptions, Sheet, SheetContent, Skeleton } from "@diaspora-ga/features"
+import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery } from "convex/react"
-import { UserMinusIcon, UserPlusIcon, UsersIcon } from "lucide-react"
+import { GlobeIcon, UserMinusIcon, UserPlusIcon, UsersIcon } from "lucide-react"
 import { useId, useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { useTranslation } from "react-i18next"
@@ -38,6 +41,7 @@ import { SectionBoundary } from "./section-boundary"
 const createSchema = z.object({
   name: z.string().trim().min(TEAM_NAME_BOUNDS.min, "team.nameLength").max(TEAM_NAME_BOUNDS.max, "team.nameLength"),
   scope: z.string(),
+  country: z.string(),
   reason: reasonSchema,
 })
 type CreateValues = z.infer<typeof createSchema>
@@ -120,6 +124,7 @@ function Teams() {
                   ))}
                 </select>
               </div>
+              <TeamCountryLine key={`pays-${managed.teamId}`} team={managed} />
               <SectionBoundary key={managed.teamId}>
                 <TeamRoster team={managed} />
               </SectionBoundary>
@@ -139,9 +144,124 @@ function TeamLine(props: { readonly team: TeamRow }) {
   const { team } = props
   return (
     <li className="flex min-w-0 flex-col gap-0.5 rounded-xl border border-border p-3">
-      <p className="break-words font-medium">{team.name}</p>
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <p className="min-w-0 break-words font-medium">{team.name}</p>
+        <TeamCountry country={team.country} />
+      </div>
       <p className="break-words text-[13px] text-muted-foreground">{team.scope === null ? t("team.scopeAll") : t("team.scopeOne", { surface: labels.surface(team.scope) })}</p>
     </li>
+  )
+}
+
+/** Le pays d'une équipe, ou « sans pays ». */
+function TeamCountry(props: { readonly country: string | null }) {
+  const { t } = useTranslation(APP_NAMESPACE)
+  if (props.country !== null && isResidenceCountry(props.country)) return <CountryTag country={props.country} />
+  return <span className="inline-flex shrink-0 items-center rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium">{t("team.noCountry")}</span>
+}
+
+const countrySchema = z.object({ country: z.string(), reason: reasonSchema })
+type CountryValues = z.infer<typeof countrySchema>
+
+/**
+ * Le pays de l'équipe composée, et le geste qui le pose, le change ou le retire, motif à l'appui,
+ * dans une feuille (`moderation/networkAdmin.setTeamCountry`).
+ */
+function TeamCountryLine(props: { readonly team: TeamRow }) {
+  const { t } = useTranslation(APP_NAMESPACE)
+  const [editing, setEditing] = useState(false)
+  const busy = useRef(false)
+  const { team } = props
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-3 border-t border-border pt-4">
+      <p className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
+        <GlobeIcon aria-hidden="true" className="size-4 shrink-0" />
+        <span className="font-medium">{t("team.country")}</span>
+        <TeamCountry country={team.country} />
+      </p>
+      <Button variant="outline" size="sm" aria-haspopup="dialog" aria-label={t("team.countryChangeFor", { name: team.name })} onClick={() => setEditing(true)}>
+        {t("team.countryChange")}
+      </Button>
+      <Sheet
+        open={editing}
+        onOpenChange={(open) => {
+          if (!open && !busy.current) setEditing(false)
+        }}
+      >
+        {editing ? (
+          <SheetContent title={t("team.countryTitle", { name: team.name })} description={t("team.countryBody")} closeLabel={t("decision.close")}>
+            <TeamCountryForm
+              team={team}
+              onBusyChange={(value) => {
+                busy.current = value
+              }}
+              onDone={() => setEditing(false)}
+            />
+          </SheetContent>
+        ) : null}
+      </Sheet>
+    </div>
+  )
+}
+
+function TeamCountryForm(props: { readonly team: TeamRow; readonly onBusyChange: (busy: boolean) => void; readonly onDone: () => void }) {
+  const { t } = useTranslation(APP_NAMESPACE)
+  const { locale } = useDiasporaGaT()
+  const admin = useNetworkAdmin()
+  const setTeamCountry = useMutation(api.modules.moderation.networkAdmin.setTeamCountry)
+  const id = useId()
+  const mounted = useMounted()
+  const [refusal, setRefusal] = useState<string | null>(null)
+  const current = props.team.country ?? ""
+  const form = useForm<CountryValues>({ resolver: zodResolver(countrySchema), defaultValues: { country: current, reason: "" } })
+  const busy = form.formState.isSubmitting
+  const countries = residenceCountryOptions(locale)
+
+  const submit = async (values: CountryValues) => {
+    setRefusal(null)
+    if (values.country === current) {
+      setRefusal(t("team.countryUnchanged"))
+      return
+    }
+    const chosen = countries.find((option) => option.code === values.country) ?? null
+    props.onBusyChange(true)
+    try {
+      await setTeamCountry({ networkId: admin.networkId, teamId: props.team.teamId, country: chosen?.code ?? null, reason: values.reason.trim() })
+      toast.success(chosen === null ? t("team.countryRemoved", { name: props.team.name }) : t("team.countrySet", { name: props.team.name, country: chosen.name }))
+      props.onBusyChange(false)
+      props.onDone()
+    } catch (error) {
+      props.onBusyChange(false)
+      if (mounted.current) setRefusal(teamRefusal(error, t))
+    }
+  }
+
+  return (
+    <form noValidate onSubmit={(event) => void form.handleSubmit(submit)(event)} className="flex min-w-0 flex-col gap-3">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <label htmlFor={`${id}-pays`} className="text-sm font-medium">
+          {t("team.country")}
+        </label>
+        <select id={`${id}-pays`} className={SELECT_CLASS} disabled={busy} {...form.register("country")}>
+          <option value="">{t("team.countryNone")}</option>
+          {countries.map((option) => (
+            <option key={option.code} value={option.code}>
+              {option.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <ReasonField id={`${id}-motif`} error={form.formState.errors.reason?.message} disabled={busy} registration={form.register("reason")} />
+      <RefusalLine text={refusal} />
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={busy}>
+          {busy ? t("decision.pending") : t("team.countrySave")}
+        </Button>
+        <Button type="button" variant="ghost" disabled={busy} onClick={props.onDone}>
+          {t("decision.cancel")}
+        </Button>
+      </div>
+    </form>
   )
 }
 
@@ -192,7 +312,7 @@ function MemberLine(props: { readonly member: RosterMemberRow; readonly onRemove
         {member.handle ? <p className="break-words text-sm text-muted-foreground">{`@${member.handle}`}</p> : null}
         {!member.inNetwork ? <p className="text-[13px] text-destructive">{t("team.outsideNetwork")}</p> : null}
       </div>
-      <Button variant="outline" size="sm" aria-describedby={nameId} aria-haspopup="dialog" onClick={props.onRemove}>
+      <Button variant="outline" size="sm" aria-haspopup="dialog" aria-label={t("team.removeFor", { name })} onClick={props.onRemove}>
         <UserMinusIcon aria-hidden="true" />
         {t("team.remove")}
       </Button>
@@ -328,16 +448,19 @@ function CreateTeam(props: { readonly onCreated: (teamId: Id<"moderationTeams">)
   const id = useId()
   const mounted = useMounted()
   const [refusal, setRefusal] = useState<string | null>(null)
-  const form = useForm<CreateValues>({ resolver: zodResolver(createSchema), defaultValues: { name: "", scope: "", reason: "" } })
+  const { locale } = useDiasporaGaT()
+  const countries = residenceCountryOptions(locale)
+  const form = useForm<CreateValues>({ resolver: zodResolver(createSchema), defaultValues: { name: "", scope: "", country: "", reason: "" } })
   const busy = form.formState.isSubmitting
   const errors = form.formState.errors
 
   const create = async (values: CreateValues) => {
     setRefusal(null)
     const scope = SURFACES.find((surface) => surface === values.scope)
+    const country = countries.find((option) => option.code === values.country)?.code
     const name = values.name.trim()
     try {
-      const created = await createTeam({ networkId: admin.networkId, name, ...(scope ? { scope } : {}), reason: values.reason.trim() })
+      const created = await createTeam({ networkId: admin.networkId, name, ...(scope ? { scope } : {}), ...(country ? { country } : {}), reason: values.reason.trim() })
       toast.success(t("team.created", { name }))
       if (!mounted.current) return
       form.reset()
@@ -369,6 +492,19 @@ function CreateTeam(props: { readonly onCreated: (teamId: Id<"moderationTeams">)
             {SURFACES.map((surface) => (
               <option key={surface} value={surface}>
                 {labels.surface(surface)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <label htmlFor={`${id}-pays`} className="text-sm font-medium">
+            {t("team.country")}
+          </label>
+          <select id={`${id}-pays`} className={SELECT_CLASS} disabled={busy} {...form.register("country")}>
+            <option value="">{t("team.countryNone")}</option>
+            {countries.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.name}
               </option>
             ))}
           </select>

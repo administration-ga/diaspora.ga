@@ -49,10 +49,9 @@ export function CountryTag(props: {
       <span aria-hidden className="font-mono text-[11px] font-semibold uppercase tracking-[0.06em] text-tag-code">
         {props.country}
       </span>
-      <span className="sr-only">{name}</span>
-      <span className="truncate" aria-hidden={props.city === undefined}>
-        {props.city ?? name}
-      </span>
+      {/* Sans ville, le nom s'affiche et s'annonce une seule fois ; avec une ville, le nom du pays reste annoncé et la ville s'affiche. */}
+      {props.city === undefined ? null : <span className="sr-only">{name}</span>}
+      <span className="truncate">{props.city ?? name}</span>
     </span>
   )
 }

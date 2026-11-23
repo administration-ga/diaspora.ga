@@ -43,6 +43,13 @@ export interface CursorPagerProps<Query extends FunctionReference<"query">, Row>
   readonly children: (rows: readonly Row[]) => ReactNode
   /** Ce qui s'affiche quand la liste est vide et close. */
   readonly empty: ReactNode
+  /**
+   * Ce qui s'affiche quand aucune ligne n'est encore retenue mais que la suite reste à lire (une
+   * fenêtre filtrée revenue vide) : jamais « aucun résultat » tant que la liste n'est pas close.
+   */
+  readonly pending?: ReactNode
+  /** Le libellé du geste qui lit la fenêtre suivante (par défaut « Afficher plus »). */
+  readonly loadMoreLabel?: string
 }
 
 export function CursorPager<Query extends FunctionReference<"query">, Row>(props: CursorPagerProps<Query, Row>) {
@@ -57,6 +64,7 @@ export function CursorPager<Query extends FunctionReference<"query">, Row>(props
   const loadingMore = pages.mounts.length > 1 && (!last?.data || last.isPending)
   const hasMore = nextCursor(pages) !== null
   const empty = rows.length === 0 && !initialLoading && !hasMore && !loadingMore
+  const pending = rows.length === 0 && !initialLoading && (hasMore || loadingMore)
   return (
     <>
       {pages.mounts.map((mount) => (
@@ -69,10 +77,11 @@ export function CursorPager<Query extends FunctionReference<"query">, Row>(props
         </div>
       ) : null}
       {empty ? props.empty : null}
+      {pending ? (props.pending ?? null) : null}
       {rows.length > 0 ? props.children(rows) : null}
       {hasMore || loadingMore ? (
         <Button variant="outline" className="self-start" disabled={loadingMore} aria-busy={loadingMore} onClick={() => setPages((current) => appendCursorPage(current))}>
-          {loadingMore ? t("section.loadingMore") : t("section.loadMore")}
+          {loadingMore ? t("section.loadingMore") : (props.loadMoreLabel ?? t("section.loadMore"))}
         </Button>
       ) : null}
     </>

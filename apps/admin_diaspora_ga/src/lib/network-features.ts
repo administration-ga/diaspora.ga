@@ -1,7 +1,7 @@
 /**
  * Les modules du réseau tels que l'administration les lit (ADR-0041 du moteur, fiche CH-815
  * § 4.2 et § 4.3) — module PUR : l'état d'une carte, le refus de dépendance dit avant le
- * geste, la dernière décision retrouvée au journal, et la situation de membre de l'aperçu.
+ * geste, la dernière décision de chaque module, et la situation de membre de l'aperçu.
  * Les règles de dépendance sont celles du domaine du moteur (`networkFeatureToggleRefusal`),
  * jamais réécrites ici ; le menu, celui de `@diaspora-ga/features/navigation`.
  */
@@ -13,11 +13,8 @@ import type { FunctionReturnType } from "convex/server"
 /** L'état d'un module, tel que `modules/networks/features.settings` le rend. */
 export type FeatureState = FunctionReturnType<typeof api.modules.networks.features.settings>[number]
 
-/** Une ligne du journal du réseau (`modules/platform/audit.paginateNetworkAudit`). */
-export type NetworkAuditEntry = FunctionReturnType<typeof api.modules.platform.audit.paginateNetworkAudit>["page"][number]
-
-/** La fenêtre du journal où l'on cherche la dernière décision de chaque module (les plus récentes d'abord). */
-export const DECISION_LOOKUP_WINDOW = 100
+/** La dernière décision d'un module, telle que `modules/networks/features.lastDecisions` la rend (un module jamais décidé n'y figure pas). */
+export type LastDecision = FunctionReturnType<typeof api.modules.networks.features.lastDecisions>[number]
 
 /** Les modules SERVIS (décision ouverte et module exigé ouvert), dans l'ordre des clés. */
 export function servedFeatures(rows: readonly FeatureState[]): NetworkFeature[] {
@@ -52,36 +49,28 @@ export function toggleBlockOf(row: FeatureState, served: readonly NetworkFeature
   return null
 }
 
-/** La dernière décision d'un module, retrouvée au journal : motif, auteur, et si elle vient de la console de la plateforme. */
+/** La dernière décision d'un module, prête à l'affichage : motif, auteur, et si elle vient de la console de la plateforme. */
 export interface FeatureDecision {
-  readonly reason: string | null
+  readonly reason: string
   readonly actorName: string | null
   readonly viaConsole: boolean
 }
 
 /**
- * Les décisions retrouvées dans une page du journal du réseau : une ligne `network.feature_set`
- * du même module, du même sens, au même instant que la décision posée (`updatedAt`, écrit dans
- * la même transaction que la ligne du journal). Hors de la fenêtre lue, rien n'est inventé :
- * le module n'a pas d'entrée, la carte dit la date seule.
+ * Les décisions rendues par `features.lastDecisions`, indexées par module. Un module absent de la
+ * lecture n'a pas de décision au journal (jamais décidé, ou posé hors bascule) : rien n'est inventé.
  */
-export function decisionsOf(rows: readonly FeatureState[], entries: readonly NetworkAuditEntry[]): ReadonlyMap<NetworkFeature, FeatureDecision> {
-  const found = new Map<NetworkFeature, FeatureDecision>()
-  for (const row of rows) {
-    if (row.updatedAt === null) continue
-    const entry = entries.find(
-      (candidate) =>
-        candidate.action === "network.feature_set" && candidate.at === row.updatedAt && candidate.details?.feature === row.feature && candidate.details?.enabled === row.enabled,
-    )
-    if (entry === undefined) continue
-    const reason = entry.details?.reason
-    found.set(row.feature, {
-      reason: typeof reason === "string" && reason.length > 0 ? reason : null,
-      actorName: entry.actor?.displayName ?? null,
-      viaConsole: entry.capacity === "platform_admin" || entry.capacity === "platform_operator",
-    })
-  }
-  return found
+export function decisionsByFeature(entries: readonly LastDecision[]): ReadonlyMap<NetworkFeature, FeatureDecision> {
+  return new Map(
+    entries.map((entry) => [
+      entry.feature,
+      {
+        reason: entry.reason,
+        actorName: entry.actor?.displayName ?? entry.actor?.handle ?? null,
+        viaConsole: entry.capacity === "platform_admin" || entry.capacity === "platform_operator",
+      },
+    ]),
+  )
 }
 
 // ═══════════════════════════════════════════════════════════════

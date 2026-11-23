@@ -28,7 +28,6 @@ vi.mock("@/lib/env", () => ({
 }))
 
 import { AdminShell } from "./admin-shell"
-import { DashboardSection } from "./dashboard-section"
 import { NetworkAdminProvider } from "./network-admin-context"
 
 function mount(admin = ADMIN) {
@@ -37,7 +36,8 @@ function mount(admin = ADMIN) {
     <I18nextProvider i18n={i18n}>
       <NetworkAdminProvider admin={admin}>
         <AdminShell admin={admin}>
-          <DashboardSection />
+          {/* La section montée sous la coque (le tableau de bord a ses propres tests, lot A7). */}
+          <h1>Section</h1>
         </AdminShell>
       </NetworkAdminProvider>
     </I18nextProvider>,
@@ -57,15 +57,15 @@ describe("coque d'admin.diaspora.ga", () => {
     mount()
     const nav = screen.getByRole("navigation", { name: "Sections de l’administration" })
     const links = within(nav).getAllByRole("link")
-    expect(links.map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Modules", "Aperçu du menu", "Recours", "Équipe et responsables", "Règles"])
+    expect(links.map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Institutions et pages officielles", "Fondateurs", "Pays ouverts", "Recours", "Équipe et responsables", "Règles"])
     expect(links.map((link) => link.getAttribute("href"))).toEqual(SECTIONS.map((section) => section.href))
-    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual(["page", null, null, null, null, null, null])
-    expect(within(within(nav).getByRole("list", { name: "Pilotage" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure"])
+    expect(links.map((link) => link.getAttribute("aria-current"))).toEqual(["page", ...SECTIONS.slice(1).map(() => null)])
+    expect(within(within(nav).getByRole("list", { name: "Pilotage" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal"])
     expect(within(within(nav).getByRole("list", { name: "Application des membres" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Modules", "Aperçu du menu"])
     // CH-815 A6 : les décisions du réseau, déménagées du bureau de diaspora.ga.
     expect(within(within(nav).getByRole("list", { name: "Confiance" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Recours", "Équipe et responsables", "Règles"])
-    // Un groupe sans section présente n'est pas affiché.
-    for (const empty of ["Communauté"]) expect(within(nav).queryByText(empty)).toBeNull()
+    // CH-815 A7 : la communauté du réseau.
+    expect(within(within(nav).getByRole("list", { name: "Communauté" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Institutions et pages officielles", "Fondateurs", "Pays ouverts"])
   })
 
   it("sur une section, son entrée seule est marquée", () => {
@@ -112,24 +112,16 @@ describe("coque d'admin.diaspora.ga", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ouvrir le menu" }))
     const sheet = await screen.findByRole("dialog", { name: "Menu de l’administration" })
     const nav = within(sheet).getByRole("navigation", { name: "Sections de l’administration" })
-    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Modules", "Aperçu du menu", "Recours", "Équipe et responsables", "Règles"])
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Institutions et pages officielles", "Fondateurs", "Pays ouverts", "Recours", "Équipe et responsables", "Règles"])
     expect(within(sheet).getByRole("link", { name: "Ouvrir diaspora.ga (nouvel onglet)" })).toBeDefined()
     expect(within(sheet).getByRole("button", { name: "Se déconnecter partout" })).toBeDefined()
     await userEvent.click(within(nav).getByRole("link", { name: "Tableau de bord" }))
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
-  it("le tableau de bord accueille l'administrateur sans aucun compteur inventé", () => {
-    mount()
-    const main = screen.getByRole("main")
-    expect(within(main).getByRole("heading", { level: 1 }).textContent).toBe("Bonjour Awa NDONG")
-    expect(main.textContent).toBe("Bonjour Awa NDONGVous administrez le réseau DIASPORA.GA.")
-    expect(main.textContent).not.toMatch(/\d/)
-  })
-
-  it("sans nom affiché : un accueil sans nom, rien d'inventé", () => {
+  it("sans nom affiché : l'en-tête ne dit aucun nom, rien d'inventé", () => {
     mount({ ...(ADMIN as object), displayName: null } as never)
-    expect(within(screen.getByRole("main")).getByRole("heading", { level: 1 }).textContent).toBe("Bonjour")
+    expect(within(screen.getByRole("main")).getByRole("heading", { level: 1 }).textContent).toBe("Section")
     expect(screen.queryByText(/Connecté en tant que/)).toBeNull()
   })
 })

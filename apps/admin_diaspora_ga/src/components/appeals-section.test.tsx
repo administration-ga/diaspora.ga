@@ -91,7 +91,7 @@ function mount() {
 
 async function openFirstAppeal() {
   const user = userEvent.setup()
-  await user.click(screen.getByRole("button", { name: t("appeals.open") }))
+  await user.click(screen.getByRole("button", { name: t("appeals.openFor", { surface: members("moderationDesk.surface.post") }) }))
   const dialog = await screen.findByRole("dialog")
   return { user, dialog: within(dialog) }
 }
@@ -155,7 +155,7 @@ describe("section Recours — la file", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(i18n.getFixedT("fr", "errors")("notFound"))
     mocks.readFailure = null
     await user.click(screen.getByRole("button", { name: t("section.retry") }))
-    expect(screen.getByRole("button", { name: t("appeals.open") })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: t("appeals.openFor", { surface: members("moderationDesk.surface.post") }) })).toBeInTheDocument()
   })
 })
 
@@ -217,10 +217,21 @@ describe("section Recours — l'examen", () => {
     mocks.window = windowOf([appeal({ party: "decider" })])
     mount()
     const user = userEvent.setup()
-    await user.click(screen.getByRole("button", { name: t("appeals.view") }))
+    await user.click(screen.getByRole("button", { name: t("appeals.viewFor", { surface: members("moderationDesk.surface.post") }) }))
     const dialog = within(await screen.findByRole("dialog"))
     expect(dialog.getByText(t("appeals.party.title"))).toBeInTheDocument()
     expect(dialog.getByText(members("moderationDesk.party.decider"))).toBeInTheDocument()
     expect(dialog.queryByRole("button", { name: t("appeals.submit") })).toBeNull()
+  })
+})
+
+describe("section Recours — noms accessibles des gestes de ligne", () => {
+  it("le geste d'un recours en nomme la rubrique, qu'on l'examine ou qu'on le voie seulement ; le texte visible reste le même", () => {
+    mocks.window = windowOf([appeal(), appeal({ appealId: "appeal-2" as AppealRow["appealId"], surface: "comment", party: "decider" })])
+    mount()
+    const post = screen.getByRole("button", { name: t("appeals.openFor", { surface: members("moderationDesk.surface.post") }) })
+    expect(post).toHaveTextContent(t("appeals.open"))
+    const comment = screen.getByRole("button", { name: t("appeals.viewFor", { surface: members("moderationDesk.surface.comment") }) })
+    expect(comment).toHaveTextContent(t("appeals.view"))
   })
 })

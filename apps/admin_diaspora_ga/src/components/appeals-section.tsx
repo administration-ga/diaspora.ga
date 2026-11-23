@@ -198,7 +198,7 @@ function AppealCard(props: { readonly row: AppealRow; readonly onOpen: () => voi
         </div>
         <AppealFacts row={row} />
         {row.party !== null ? <p className="break-words text-xs text-muted-foreground">{labels.party(row.party)}</p> : null}
-        <Button variant="outline" size="sm" className="self-start" aria-describedby={titleId} aria-haspopup="dialog" onClick={props.onOpen}>
+        <Button variant="outline" size="sm" className="self-start" aria-haspopup="dialog" aria-label={t(row.party === null ? "appeals.openFor" : "appeals.viewFor", { surface: labels.surface(row.surface) })} onClick={props.onOpen}>
           {t(row.party === null ? "appeals.open" : "appeals.view")}
         </Button>
       </Card>

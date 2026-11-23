@@ -17,7 +17,7 @@
     },
     "capacity": {
       "role": {
-        "network_admin": "You administer the network: you read the whole queue, review appeals and compose teams.",
+        "network_admin": "You administer the network: you read the whole queue here. The network's decisions (appeals, teams, rules, modules) are taken in the network's administration application.",
         "network_moderator": "You moderate the network: you read the whole accessible queue and decide its cases.",
         "team_member": "You moderate within a team: you read your teams' queue and decide their cases."
       },

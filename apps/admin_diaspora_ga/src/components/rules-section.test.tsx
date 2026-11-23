@@ -197,11 +197,23 @@ describe("section Règles — mots bloqués", () => {
   it("débloquer un mot : une feuille, un motif, l'appel exact au moteur", async () => {
     const user = userEvent.setup()
     mount()
-    await user.click(screen.getByRole("button", { name: t("rules.terms.remove") }))
+    await user.click(screen.getByRole("button", { name: t("rules.terms.removeFor", { term: "arnaque" }) }))
     const dialog = within(await screen.findByRole("dialog"))
     await user.type(dialog.getByLabelText(t("decision.reason")), "Le mot visait une association légitime.")
     await user.click(dialog.getByRole("button", { name: t("rules.terms.removeConfirm") }))
     await waitFor(() => expect(mocks.writes.get(SET_TERM)).toHaveBeenCalledWith({ networkId: NETWORK_ID, term: "arnaque", active: false, reason: "Le mot visait une association légitime." }))
     expect(mocks.success).toHaveBeenCalledWith(t("rules.terms.removed", { term: "arnaque" }))
+  })
+})
+
+describe("section Règles — noms accessibles des gestes de ligne", () => {
+  it("chaque réglage et chaque mot bloqué est nommé dans son geste ; le texte visible reste le même", () => {
+    mount()
+    const post = members("moderationDesk.surface.post")
+    const review = members("moderationDesk.surface.serviceReview")
+    // Une rubrique réglée se change, une rubrique sans réglage s'en pose un : chaque bouton nomme sa rubrique.
+    expect(surfaceCard("post").getByRole("button", { name: t("rules.policy.changeFor", { surface: post }) })).toHaveTextContent(t("rules.policy.change"))
+    expect(surfaceCard("serviceReview").getByRole("button", { name: t("rules.policy.setFor", { surface: review }) })).toHaveTextContent(t("rules.policy.set"))
+    expect(screen.getByRole("button", { name: t("rules.terms.removeFor", { term: "arnaque" }) })).toHaveTextContent(t("rules.terms.remove"))
   })
 })

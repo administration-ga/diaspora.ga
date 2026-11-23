@@ -284,7 +284,7 @@ function SurfaceLine(props: { readonly row: SurfacePolicyRow; readonly onEdit: (
             {heldNote !== undefined && row.withoutPolicy === "defaults" ? <p className="text-[13px] leading-snug text-muted-foreground">{t(heldNote)}</p> : null}
           </>
         )}
-        <Button variant="outline" size="sm" className="mt-auto self-start" aria-describedby={titleId} aria-haspopup="dialog" onClick={props.onEdit}>
+        <Button variant="outline" size="sm" className="mt-auto self-start" aria-haspopup="dialog" aria-label={t(row.policy ? "rules.policy.changeFor" : "rules.policy.setFor", { surface: labels.surface(row.surface) })} onClick={props.onEdit}>
           <SlidersHorizontalIcon aria-hidden="true" />
           {t(row.policy ? "rules.policy.change" : "rules.policy.set")}
         </Button>
@@ -538,7 +538,7 @@ function TermLine(props: { readonly row: BlockedTermRow; readonly onRemove: () =
         </p>
         <p className="text-xs text-muted-foreground">{t("rules.terms.since", { date: dateTime(props.row.updatedAt, locale) })}</p>
       </div>
-      <Button variant="ghost" size="sm" aria-describedby={termId} aria-haspopup="dialog" onClick={props.onRemove}>
+      <Button variant="ghost" size="sm" aria-haspopup="dialog" aria-label={t("rules.terms.removeFor", { term: props.row.term })} onClick={props.onRemove}>
         {t("rules.terms.remove")}
       </Button>
     </li>
