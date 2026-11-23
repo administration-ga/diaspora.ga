@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "title": "Administration de {{brand}}",
+    "titleTemplate": "%s · Administration de {{brand}}",
+    "description": "Application d’administration du réseau {{brand}}, réservée à son administration."
+  },
+  "a11y": {
+    "skipToContent": "Aller au contenu"
+  },
+  "brand": {
+    "eyebrow": "Administration du réseau",
+    "title": "Administration de {{brand}}"
+  },
+  "signIn": {
+    "title": "Administration de {{brand}}",
+    "lead": "Accès réservé à l’administration du réseau, par l’identité numérique.",
+    "idn": "Se connecter avec l’identité numérique",
+    "connecting": "Ouverture de l’identité numérique…",
+    "loading": "Vérification de la disponibilité de l’identité numérique…",
+    "help": "La connexion passe par votre identité numérique (IDN). Aucun code par courriel ni par SMS.",
+    "unavailable": "La connexion par l’identité numérique n’est pas disponible pour le moment.",
+    "minimum": "Identité numérique de niveau {{level}} au moins. Une connexion seule n’ouvre aucun droit d’administration.",
+    "configurationFailed": "La disponibilité de la connexion ne peut pas être vérifiée."
+  },
+  "session": {
+    "loading": "Vérification de la session…",
+    "recording": "Enregistrement de votre accès au journal…",
+    "signedOut": "Connexion requise. Ouverture de la page de connexion…",
+    "failed": "La vérification n’a pas abouti. Aucun accès n’a été ouvert.",
+    "backendMissing": "Le moteur n’est pas configuré pour cette application.",
+    "retry": "Réessayer",
+    "signIn": "Se connecter"
+  },
+  "access": {
+    "refusedTitle": "Accès réservé à l’administration du réseau",
+    "refusedLead": "Cette application est réservée aux administrateurs du réseau, connectés par leur identité numérique."
+  },
+  "exit": {
+    "action": "Se déconnecter partout",
+    "pending": "Déconnexion…",
+    "failed": "La déconnexion n’a pas pu être terminée sur cet appareil. Rechargez la page, puis réessayez."
+  },
+  "shell": {
+    "navLabel": "Sections de l’administration",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu",
+    "menuTitle": "Menu de l’administration",
+    "membersSite": "Ouvrir diaspora.ga",
+    "newTab": "(nouvel onglet)",
+    "signedInAs": "Connecté en tant que {{name}}"
+  },
+  "nav": {
+    "group": {
+      "pilotage": "Pilotage",
+      "membersApp": "Application des membres",
+      "community": "Communauté",
+      "trust": "Confiance"
+    },
+    "section": {
+      "dashboard": "Tableau de bord"
+    }
+  },
+  "dashboard": {
+    "greeting": "Bonjour {{name}}",
+    "greetingWithoutName": "Bonjour",
+    "lead": "Vous administrez le réseau {{network}}."
+  },
+  "notice": {
+    "region": "Avis",
+    "close": "Fermer cet avis"
+  },
+  "health": {
+    "title": "État du service",
+    "overall": {
+      "ok": "En service",
+      "degraded": "Service dégradé"
+    },
+    "lead": {
+      "ok": "L’application d’administration et son moteur répondent.",
+      "degraded": "Le moteur ne répond pas normalement : des fonctions peuvent être indisponibles."
+    },
+    "application": "Application",
+    "version": "Version de l’application",
+    "backend": "Moteur",
+    "engine": {
+      "reachable": "répond",
+      "slow": "répond lentement",
+      "error": "répond en erreur",
+      "timeout": "ne répond pas dans le délai",
+      "unreachable": "injoignable",
+      "missing": "non configuré"
+    },
+    "engineVersion": "Version du moteur",
+    "undeclared": "non déclarée",
+    "unknown": "inconnue",
+    "serverTime": "Heure du moteur",
+    "latency": "Temps de réponse du moteur",
+    "latencyValue": "{{latency}} ms",
+    "notMeasured": "non mesuré",
+    "backHome": "Retour au tableau de bord"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "lead": "Cette adresse ne correspond à aucune section de l’administration.",
+    "back": "Retour au tableau de bord"
+  }
+}
