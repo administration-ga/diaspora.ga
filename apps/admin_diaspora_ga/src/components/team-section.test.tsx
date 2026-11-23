@@ -135,6 +135,19 @@ describe("section Équipe et responsables — lectures", () => {
     expect(responsibles.getAllByRole("button", { name: new RegExp(t("responsibles.change")) })).toHaveLength(1)
   })
 
+  it("dit que le pays d'une équipe délimite sa file : les contenus de ce pays lui reviennent, jamais un contenu sans pays", () => {
+    mount()
+    const note = region(t("team.teamsTitle")).getByText(n(t("team.countryNote")))
+    expect(note).toHaveTextContent(/et délimite sa file/)
+    expect(note).toHaveTextContent(/Un contenu sans pays ne va jamais à l.équipe d.un pays/)
+    expect(t("team.countryBody")).toMatch(/lui adresse les signalements des contenus de ce pays/)
+    const english = i18n.getFixedT("en", APP_NAMESPACE)
+    expect(english("team.countryNote")).toMatch(/and defines its queue/)
+    expect(english("team.countryBody")).toMatch(/sends it the reports on content from that country/)
+    // CH-815 : plus rien ne dit que la file reste routée par nature seule.
+    for (const copy of [t("team.countryNote"), english("team.countryNote")]) expect(copy).not.toMatch(/pas encore|not narrow the queue yet/)
+  })
+
   it("choisir une autre équipe relit sa composition", async () => {
     const user = userEvent.setup()
     mount()

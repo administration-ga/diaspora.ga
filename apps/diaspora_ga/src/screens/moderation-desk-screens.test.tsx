@@ -265,6 +265,17 @@ describe("Guichet — la file par pays", () => {
     await user.selectOptions(screen.getByLabelText(text("moderationDesk.filters.team")), "team-fr")
     expect(fake.queueReads.at(-1)).toMatchObject({ teamId: "team-fr" })
   })
+
+  it("dit que le moteur adresse chaque dossier à l'équipe du pays du contenu : le filtre trie, il ne range pas (CH-815)", () => {
+    mocks.desk = fakeDesk().desk
+    render(tree())
+    const note = screen.getByText(text("moderationDesk.filters.countryNote"))
+    expect(note).toHaveTextContent(/jamais celui d'une personne/)
+    expect(note).toHaveTextContent(/à l'équipe du pays du contenu, puis de sa nature/)
+    const english = String(getFixedT("en")("moderationDesk.filters.countryNote"))
+    expect(english).toMatch(/to the team of the content's country, then of its content type/)
+    for (const copy of [text("moderationDesk.filters.countryNote"), english]) expect(copy).not.toMatch(/ne rattache pas encore|does not yet attach/)
+  })
 })
 
 describe("Guichet — délais légaux en tête (SU01d du moteur)", () => {
