@@ -319,10 +319,11 @@ publication d'admin.diaspora.ga, le propriétaire, ou l'opérateur qu'il désign
 4. **fait publier le moteur** depuis un commit d'ANTSIA dont le catalogue porte l'entrée
    `admin_diaspora_ga` (le plan le vérifie, § 4.1), par la session du moteur, avant les sites ; pour la
    démonstration, l'origine choisie au point 2 s'ajoute aux origines de confiance du moteur de
-   démonstration (`TRUSTED_ORIGINS`, variable du backend). **Non vérifié** : le moteur reconnaît
-   l'application d'une session par l'adresse du catalogue (`site_url`) ; qu'une session d'administration
-   soit admise sur une autre origine que celle-ci, en démonstration, reste à établir avec la session du
-   moteur avant toute publication de démonstration ;
+   démonstration (`TRUSTED_ORIGINS`, variable du backend). Si l'administration de démonstration n'est pas servie à l'adresse du catalogue (`site_url`), son origine se
+   déclare aussi dans `APPLICATION_EXTRA_ORIGINS_JSON` du moteur (`{"admin_diaspora_ga": ["<origine>"]}`, variable du
+   backend, posée par le propriétaire) : sans elle, aucune session n'est scellée pour l'application et personne n'entre
+   (ADR-0042 du moteur, durcissement A1b). La console du moteur, liée de même à sa seule application (F3,
+   antsia#201), se publie avant le moteur ou avec lui ; chaque opérateur s'y reconnecte une fois ;
 5. **tape les phrases** de chaque porte, après avoir donné son accord écrit (§ 1) ;
 6. **nomme le premier administrateur du réseau** à la console du moteur, sur un compte déjà membre
    (fiche de l'application d'administration, § 7) : sans lui, le site publié ne laisse entrer personne.
