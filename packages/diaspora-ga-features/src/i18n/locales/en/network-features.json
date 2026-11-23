@@ -19,29 +19,6 @@
       "mentoring": "The network's mentors and mentoring requests.",
       "arrivalKit": "Practical guides for settling in a country.",
       "pilotMetrics": "The pilot metrics dashboard, for the network's leads."
-    },
-    "settings": {
-      "title": "Network features",
-      "lead": "The network serves the essentials from day one: post, comment, react, share, talk in iCom. The modules below stay closed until the network administration opens them. Each opening and each closing is justified and recorded in the engine's decision log; closing deletes no data.",
-      "loading": "Loading features…",
-      "restricted": "Network features are reserved for the network administration.",
-      "open": "Open",
-      "closed": "Closed",
-      "requires": "Requires: {{feature}}",
-      "since": "Decided on {{date}}",
-      "openAction": "Open",
-      "closeAction": "Close",
-      "sheet": {
-        "openTitle": "Open: {{feature}}",
-        "closeTitle": "Close: {{feature}}",
-        "openDescription": "The feature will appear for every member of the network, and the engine will serve its pages.",
-        "closeDescription": "The feature will disappear for every member of the network, and the engine will refuse its pages. The data stays: reopening brings it back.",
-        "confirmOpen": "Open the feature",
-        "confirmClose": "Close the feature",
-        "opened": "{{feature}}: feature opened.",
-        "closedDone": "{{feature}}: feature closed.",
-        "unchanged": "{{feature}}: nothing changed."
-      }
     }
   },
   "errors": {

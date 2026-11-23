@@ -33,6 +33,7 @@ import type {
   ModerationDeskCapability,
   ModerationDeskView,
 } from "@diaspora-ga/features/data"
+import { NETWORK_FEATURES } from "@diaspora-ga/features/data"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { act, cleanup, getDefaultNormalizer, render, screen, waitFor, within } from "@testing-library/react"
@@ -54,6 +55,8 @@ const mocks = vi.hoisted(() => ({
   params: new URLSearchParams(),
   desk: null as unknown,
   success: vi.fn(),
+  /** La source montée, telle qu'un écran facultatif la lit ; aucune par défaut (le guichet est rendu seul). */
+  source: null as unknown,
 }))
 
 vi.mock("next/navigation", () => ({
@@ -67,6 +70,7 @@ vi.mock("@/components/app-shell", () => ({ AppShell: ({ children }: { children: 
 vi.mock("@diaspora-ga/features/data", async (original) => ({
   ...(await original<typeof import("@diaspora-ga/features/data")>()),
   useModerationDesk: () => mocks.desk,
+  useOptionalDataSource: () => mocks.source,
   useOpenCountries: () => ({ status: "ready", data: [{ country: "FR" }] }),
 }))
 
@@ -268,6 +272,7 @@ const tree = () => <I18nProvider locale="fr"><ModerationDesk membership={MEMBER}
 beforeEach(() => {
   mocks.params = new URLSearchParams()
   mocks.desk = null
+  mocks.source = null
   mocks.success.mockReset()
 })
 afterEach(cleanup)
@@ -798,6 +803,23 @@ describe("Guichet — pages à vérifier (AS-01)", () => {
 })
 
 describe("Guichet — réglages de modération (MD-04)", () => {
+  it("ne propose plus d'ouvrir ni de fermer les modules du réseau : admin.diaspora.ga les décide (CH-815, D5)", () => {
+    mocks.params = new URLSearchParams("onglet=reglages")
+    const fake = fakeDesk({ view: ready(ADMIN) })
+    mocks.desk = fake.desk
+    // Une source qui servirait encore la bascule : le guichet ne la lit plus.
+    const useSettings = vi.fn(() => ready([]))
+    const setFeature = vi.fn()
+    mocks.source = { networkFeatures: { useOpen: () => ready(NETWORK_FEATURES), useSettings, setFeature } }
+    render(tree())
+    expect(fake.settingsReads).toContain(ME)
+    expect(useSettings).not.toHaveBeenCalled()
+    expect(setFeature).not.toHaveBeenCalled()
+    for (const feature of NETWORK_FEATURES) {
+      expect(screen.queryByRole("heading", { name: text(`networkFeatures.names.${feature}`) })).toBeNull()
+    }
+  })
+
   it("n'offre pas l'onglet « Réglages » à un modérateur, et ne lit rien pour lui même par l'adresse", () => {
     mocks.params = new URLSearchParams("onglet=reglages")
     const fake = fakeDesk()

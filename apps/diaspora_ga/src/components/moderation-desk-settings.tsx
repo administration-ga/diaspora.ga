@@ -11,9 +11,9 @@
  *  · par rubrique : relecture avant publication, plafond de liens, cadence ; un
  *    réglage se pose ou se change dans une feuille, motif obligatoire ; il ne se
  *    retire pas ;
- *  · les mots bloqués : la liste, l'ajout et le retrait motivés ;
- *  · en tête, les fonctionnalités du réseau (ADR-0041 du moteur), ouvertes ou fermées
- *    par l'administration du réseau (`network-features-settings.tsx`).
+ *  · les mots bloqués : la liste, l'ajout et le retrait motivés.
+ * Les modules du réseau (ADR-0041 du moteur) ne s'ouvrent plus ici : l'application
+ * d'administration du réseau les décide (fiche CH-815, D5, section « Modules »).
  * Chaque geste passe par le moteur (`cases.setPolicy`, `cases.setBlockedTerm`),
  * qui le journalise. Aucune valeur n'est posée d'office.
  * PROPRIÉTAIRE : chantier « modération par pays ».
@@ -47,7 +47,6 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { DESK_ACCESS_ERRORS, DESK_ERROR_VALUES, DeskErrorLine, DeskReasonField, DeskReasonForm, deskDateTime, deskReasonSchema, useDeskLabels, useMounted } from "./moderation-desk-parts"
-import { NetworkFeaturesSettings } from "./network-features-settings"
 import { ServicePager } from "./service-pager"
 
 /** Les contenus relus d'office, dits en clair (règle vérifiée dans le moteur, `DESK_HELD_CONTENTS`). */
@@ -153,8 +152,6 @@ export function ModerationDeskSettings(props: { readonly desk: ModerationDeskCap
         <h2 id={`${id}-titre`} className="font-display text-xl font-bold">{t("moderationDesk.settings.title")}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">{t("moderationDesk.settings.lead")}</p>
       </div>
-      {/* ADR-0041 du moteur : les modules du réseau, ouverts ou fermés par son administration. */}
-      <NetworkFeaturesSettings />
       {body}
       {settings.status === "ready" ? (
         <PolicySheet desk={props.desk} personId={props.personId} defaults={settings.data.defaults} row={editing} onClose={() => setEditing(null)} />
