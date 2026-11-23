@@ -7,9 +7,15 @@ import { PassThrough } from "node:stream"
 
 import {
   agreementNotice,
+  ALL_APPS_ORDER,
   ANTSIA_ROOT,
+  appReleaseKeys,
+  appsOf,
+  appVariableNames,
   assertPublicOnly,
+  catalogProblems,
   CHECK_KEYS,
+  DEFAULT_RELEASE_APP,
   confirmationPhrase,
   confirmPhrase,
   contextFingerprint,
@@ -24,12 +30,16 @@ import {
   isInside,
   isPublishedCommit,
   otherTarget,
+  parseApp,
   parseInspect,
   parseOptions,
   parseTarget,
   parseVersionLabel,
   PUBLIC_RELEASE_VARIABLES,
   readTargetEnv,
+  RELEASE_APPS,
+  releaseApp,
+  releasePrerequisites,
   releaseVariables,
   releaseVersion,
   renderArg,
@@ -42,6 +52,8 @@ import {
   runtimeRef,
   targetVariableNames,
   VERCELIGNORE,
+  versionLabelApp,
+  versionProblems,
   writeRecord,
 } from "./release-lib.mjs"
 
@@ -405,5 +417,258 @@ describe("ligne de commande", () => {
       ],
     })
     expect(parseOptions(["--target"], { values: ["target"], flags: [] }).problems).toEqual(["--target attend une valeur"])
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════
+// La dimension --app (CH-815, lot A8) : diaspora.ga et admin.diaspora.ga
+// ═══════════════════════════════════════════════════════════════
+
+const ADMIN = "admin_diaspora_ga"
+
+/** Valeurs FICTIVES (RFC 2606) : la démonstration des deux applications, sur un même moteur. */
+const BOTH_DEMO_ENV = Object.freeze({
+  ...DEMO_ENV,
+  ADMIN_DIASPORA_GA_DEMO_SITE_URL: "https://admin-demo.example.org",
+  ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: "projet_fictif_admin_demo",
+})
+
+/** L'entrée du catalogue telle que le contrat du chantier la fixe (CH-815, entrée admin_diaspora_ga). */
+const CONTRACT_CATALOG = Object.freeze({
+  applications: {
+    diaspora_ga: {
+      path: "../DIASPORA_GA/apps/diaspora_ga",
+      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL"],
+      runtime_env: ["CONVEX_SITE_URL"],
+    },
+    admin_diaspora_ga: {
+      path: "../DIASPORA_GA/apps/admin_diaspora_ga",
+      administers_network: "diaspora-ga",
+      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_MEMBERS_SITE_URL"],
+      runtime_env: ["CONVEX_SITE_URL"],
+    },
+  },
+})
+
+const diskCatalog = JSON.parse(readFileSync(join(ANTSIA_ROOT, "deploy", "catalog.json"), "utf8"))
+
+describe("applications : une ligne chacune", () => {
+  test("deux applications ; sans --app, diaspora.ga seule ; all = admin.diaspora.ga puis diaspora.ga", () => {
+    expect(Object.keys(RELEASE_APPS)).toEqual(["diaspora_ga", ADMIN])
+    expect(DEFAULT_RELEASE_APP).toBe("diaspora_ga")
+    expect(appsOf()).toEqual(["diaspora_ga"])
+    expect(appsOf(undefined)).toEqual(["diaspora_ga"])
+    expect(appsOf(ADMIN)).toEqual([ADMIN])
+    expect(appsOf("all")).toEqual(ALL_APPS_ORDER)
+    expect(ALL_APPS_ORDER).toEqual([ADMIN, "diaspora_ga"])
+    expect(() => releaseApp("autre_site")).toThrow("Application inconnue : autre_site")
+    expect(() => appsOf("autre_site")).toThrow("Application inconnue")
+    expect(Object.isFrozen(RELEASE_APPS.admin_diaspora_ga.siteVariables[0])).toBe(true)
+  })
+
+  test("--app : absente, connue, all seulement pour publier, inconnue refusée en français", () => {
+    expect(parseApp(undefined)).toEqual({ app: undefined, problem: null })
+    expect(parseApp("diaspora_ga")).toEqual({ app: "diaspora_ga", problem: null })
+    expect(parseApp(ADMIN)).toEqual({ app: ADMIN, problem: null })
+    expect(parseApp("all", { allowAll: true })).toEqual({ app: "all", problem: null })
+    expect(parseApp("all")).toEqual({
+      app: undefined,
+      problem: "--app all ne vaut que pour la publication : chaque application se contrôle et se remet en arrière par sa propre commande",
+    })
+    expect(parseApp("admin", { allowAll: true })).toEqual({
+      app: undefined,
+      problem: "--app inconnue (« admin ») : valeurs admises diaspora_ga (par défaut), admin_diaspora_ga, all (les deux, dans la même séance)",
+    })
+    expect(parseApp("toString").problem).toContain("--app inconnue")
+  })
+
+  test("les variables d'admin.diaspora.ga : son site et son projet ; le moteur et le site des membres, ceux de la cible", () => {
+    expect(appVariableNames(ADMIN, "demo")).toEqual({
+      siteUrl: "ADMIN_DIASPORA_GA_DEMO_SITE_URL",
+      convexUrl: "DIASPORA_GA_DEMO_CONVEX_URL",
+      convexSiteUrl: "DIASPORA_GA_DEMO_CONVEX_SITE_URL",
+      projectId: "ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID",
+      membersSiteUrl: "DIASPORA_GA_DEMO_SITE_URL",
+    })
+    expect(Object.values(appVariableNames(ADMIN, "production")).every((name) => name.includes("_PRODUCTION_"))).toBe(true)
+    expect(appVariableNames(ADMIN, "demo").membersSiteUrl).toBe(targetVariableNames("demo").siteUrl)
+    expect(appReleaseKeys(ADMIN)).toEqual([...appReleaseKeys(), "membersSiteUrl"])
+    expect(appReleaseKeys()).toEqual(RELEASE_APPS.diaspora_ga.releaseKeys)
+  })
+
+  test("un environnement complet d'admin.diaspora.ga se lit sans défaut", () => {
+    const { values, problems } = readTargetEnv("demo", BOTH_DEMO_ENV, appReleaseKeys(ADMIN), ADMIN)
+    expect(problems).toEqual([])
+    expect(values).toEqual({
+      siteUrl: "https://admin-demo.example.org",
+      convexUrl: DEMO_ENV.DIASPORA_GA_DEMO_CONVEX_URL,
+      convexSiteUrl: DEMO_ENV.DIASPORA_GA_DEMO_CONVEX_SITE_URL,
+      projectId: "projet_fictif_admin_demo",
+      orgId: DEMO_ENV.DIASPORA_GA_VERCEL_ORG_ID,
+      scope: DEMO_ENV.DIASPORA_GA_VERCEL_SCOPE,
+      membersSiteUrl: DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL,
+    })
+  })
+
+  test("les défauts d'admin.diaspora.ga nomment ses variables, jamais leur valeur ; ni lien IDN ni consulat.ga", () => {
+    const { problems } = readTargetEnv(
+      "production",
+      { ADMIN_DIASPORA_GA_PRODUCTION_SITE_URL: "https://admin.localhost", DIASPORA_GA_PRODUCTION_SITE_URL: "https://site.example.org/chemin", DIASPORA_GA_PRODUCTION_IDN_PORTAL_URL: "ftp://idn.example.org" },
+      appReleaseKeys(ADMIN),
+      ADMIN,
+    )
+    expect(problems).toEqual([
+      "ADMIN_DIASPORA_GA_PRODUCTION_SITE_URL doit désigner un domaine public : un poste de développement ne se publie pas",
+      "DIASPORA_GA_PRODUCTION_CONVEX_URL manque",
+      "DIASPORA_GA_PRODUCTION_CONVEX_SITE_URL manque",
+      "ADMIN_DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID manque",
+      "DIASPORA_GA_VERCEL_ORG_ID manque",
+      "DIASPORA_GA_VERCEL_SCOPE manque",
+      "DIASPORA_GA_PRODUCTION_SITE_URL doit être une origine https, sans chemin ni barre finale",
+    ])
+    expect(problems.join(" ")).not.toContain("example")
+  })
+
+  test("une application ne se publie jamais sur le site ni sur le projet de l'autre, dans les deux sens", () => {
+    const same = { ...BOTH_DEMO_ENV, ADMIN_DIASPORA_GA_DEMO_SITE_URL: DEMO_ENV.DIASPORA_GA_DEMO_SITE_URL, ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: DEMO_ENV.DIASPORA_GA_DEMO_VERCEL_PROJECT_ID }
+    expect(readTargetEnv("demo", same, appReleaseKeys(ADMIN), ADMIN).problems).toEqual([
+      "ADMIN_DIASPORA_GA_DEMO_SITE_URL et DIASPORA_GA_DEMO_SITE_URL désignent la même ressource : une application ne se publie jamais sur l'autre",
+      "ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID et DIASPORA_GA_DEMO_VERCEL_PROJECT_ID désignent la même ressource : une application ne se publie jamais sur l'autre",
+    ])
+    expect(readTargetEnv("demo", same).problems).toEqual([
+      "DIASPORA_GA_DEMO_SITE_URL et ADMIN_DIASPORA_GA_DEMO_SITE_URL désignent la même ressource : une application ne se publie jamais sur l'autre",
+      "DIASPORA_GA_DEMO_VERCEL_PROJECT_ID et ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID désignent la même ressource : une application ne se publie jamais sur l'autre",
+    ])
+    expect(readTargetEnv("demo", BOTH_DEMO_ENV).problems).toEqual([])
+  })
+
+  test("admin.diaspora.ga ne se publie jamais sur la ressource de l'autre cible", () => {
+    const { problems } = readTargetEnv("demo", { ...BOTH_DEMO_ENV, ADMIN_DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID: "projet_fictif_admin_demo" }, appReleaseKeys(ADMIN), ADMIN)
+    expect(problems).toEqual([
+      "ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID et ADMIN_DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID désignent la même ressource : une cible ne se publie jamais sur l'autre",
+    ])
+  })
+
+  test("le contrôle et le retour arrière d'admin.diaspora.ga lisent SON site", () => {
+    expect(readTargetEnv("demo", {}, CHECK_KEYS, ADMIN).problems).toEqual(["ADMIN_DIASPORA_GA_DEMO_SITE_URL manque", "DIASPORA_GA_DEMO_CONVEX_URL manque"])
+  })
+})
+
+describe("variables publiques d'admin.diaspora.ga", () => {
+  test("sa liste est celle du contrat du catalogue : jamais la source de données, jamais les liens d'élévation", () => {
+    const entry = CONTRACT_CATALOG.applications.admin_diaspora_ga
+    expect([...releaseApp(ADMIN).publicVariables].sort()).toEqual([...entry.build_args, ...entry.runtime_env].sort())
+    expect(releaseApp(ADMIN).publicVariables).not.toContain("NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE")
+  })
+
+  test.if(Boolean(diskCatalog.applications.admin_diaspora_ga))("quand le catalogue du moteur porte l'entrée, elle est celle des scripts", () => {
+    expect(catalogProblems(diskCatalog, ADMIN)).toEqual([])
+  })
+
+  test("le site d'administration reçoit son origine, le moteur de la cible, l'étiquette et l'adresse du site des membres", () => {
+    const version = releaseVersion({ diasporaGaCommit: DIASPORA_GA_COMMIT, antsiaCommit: ANTSIA_COMMIT, target: "demo", app: ADMIN })
+    expect(releaseVariables("demo", version, { idnPortalUrl: "x", consulateUrl: "y" }, ADMIN)).toEqual([
+      ["NEXT_PUBLIC_SITE_URL", envRef("ADMIN_DIASPORA_GA_DEMO_SITE_URL")],
+      ["NEXT_PUBLIC_CONVEX_URL", envRef("DIASPORA_GA_DEMO_CONVEX_URL")],
+      ["CONVEX_SITE_URL", envRef("DIASPORA_GA_DEMO_CONVEX_SITE_URL")],
+      ["NEXT_PUBLIC_BUILD_SHA", version],
+      ["NEXT_PUBLIC_MEMBERS_SITE_URL", envRef("DIASPORA_GA_DEMO_SITE_URL")],
+    ])
+  })
+
+  test("chaque application a SA liste : une variable des membres est refusée au site d'administration, et l'inverse", () => {
+    expect(() => assertPublicOnly([["NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "engine"]], ADMIN)).toThrow("NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE")
+    expect(() => assertPublicOnly([["NEXT_PUBLIC_MEMBERS_SITE_URL", "x"]])).toThrow("NEXT_PUBLIC_MEMBERS_SITE_URL")
+    expect(() => assertPublicOnly([["BETTER_AUTH_SECRET", "x"]], ADMIN)).toThrow("BETTER_AUTH_SECRET")
+    expect(assertPublicOnly([["NEXT_PUBLIC_MEMBERS_SITE_URL", "x"]], ADMIN)).toEqual([["NEXT_PUBLIC_MEMBERS_SITE_URL", "x"]])
+  })
+})
+
+describe("étiquettes de version par application", () => {
+  const admin = releaseVersion({ diasporaGaCommit: DIASPORA_GA_COMMIT, antsiaCommit: ANTSIA_COMMIT, target: "production", app: ADMIN })
+  const members = releaseVersion({ diasporaGaCommit: DIASPORA_GA_COMMIT, antsiaCommit: ANTSIA_COMMIT, target: "production" })
+
+  test("même forme, préfixe de l'application ; une étiquette ne se lit que pour SON application", () => {
+    expect(admin).toBe("admin-diaspora-ga-dddddddddddd-antsia-aaaaaaaaaaaa-production")
+    expect(parseVersionLabel(admin, ADMIN)).toEqual({ diasporaGa: "dddddddddddd", antsia: "aaaaaaaaaaaa", target: "production" })
+    expect(parseVersionLabel(admin)).toBeNull()
+    expect(parseVersionLabel(members, ADMIN)).toBeNull()
+    expect(versionLabelApp(admin)).toBe(ADMIN)
+    expect(versionLabelApp(members)).toBe("diaspora_ga")
+    expect(versionLabelApp("main-0123456789ab-demo")).toBeNull()
+    expect(() => releaseVersion({ diasporaGaCommit: DIASPORA_GA_COMMIT, antsiaCommit: ANTSIA_COMMIT, target: "demo", app: "autre" })).toThrow("Application inconnue")
+  })
+
+  test("--version : la forme d'avant pour diaspora.ga, l'autre application nommée comme telle", () => {
+    expect(versionProblems(members, { target: "production" })).toEqual([])
+    expect(versionProblems("main-abc", { target: "demo" })).toEqual(["--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>"])
+    expect(versionProblems("main-abc", { app: ADMIN, target: "demo" })).toEqual(["--version doit être une étiquette admin-diaspora-ga-<12>-antsia-<12>-<cible>"])
+    expect(versionProblems(admin, { target: "production" })).toEqual(["--version désigne une autre application que --app : admin_diaspora_ga, pas diaspora_ga"])
+    expect(versionProblems(members, { app: ADMIN, target: "production" })).toEqual(["--version désigne une autre application que --app : diaspora_ga, pas admin_diaspora_ga"])
+    expect(versionProblems(admin, { app: ADMIN, target: "demo" })).toEqual(["--version désigne une autre cible que --target"])
+  })
+
+  test("les motifs d'identifiants du dépôt ne prennent pas une étiquette d'administration pour un nom de déploiement", () => {
+    expect(/(?<![\w./-])[a-z]{3,}-[a-z]{3,}-\d{3}(?![\w-]|\.\w)/.test(admin)).toBe(false)
+  })
+})
+
+describe("préalables aux commits publiés : le catalogue et l'application, en couple", () => {
+  test("le catalogue du contrat convient aux deux applications", () => {
+    expect(catalogProblems(CONTRACT_CATALOG, "diaspora_ga")).toEqual([])
+    expect(catalogProblems(CONTRACT_CATALOG, ADMIN)).toEqual([])
+  })
+
+  test("le catalogue du moteur sur le disque convient à diaspora.ga", () => {
+    expect(catalogProblems(diskCatalog, "diaspora_ga")).toEqual([])
+  })
+
+  test("chaque écart du catalogue se dit, sans valeur de la machine", () => {
+    const admin = CONTRACT_CATALOG.applications.admin_diaspora_ga
+    const withAdmin = (entry) => ({ applications: { ...CONTRACT_CATALOG.applications, admin_diaspora_ga: entry } })
+    expect(catalogProblems(null, ADMIN)).toEqual(["catalogue de publication du moteur illisible au commit d'ANTSIA publié (deploy/catalog.json)"])
+    expect(catalogProblems({ applications: { diaspora_ga: CONTRACT_CATALOG.applications.diaspora_ga } }, ADMIN)).toEqual([
+      "l'entrée admin_diaspora_ga manque au catalogue du moteur au commit d'ANTSIA publié : publier un moteur qui la porte",
+    ])
+    expect(catalogProblems(withAdmin({ ...admin, path: "apps/admin_diaspora_ga" }), ADMIN)).toEqual(["le catalogue du moteur place admin_diaspora_ga ailleurs que DIASPORA_GA/apps/admin_diaspora_ga"])
+    expect(catalogProblems(withAdmin({ ...admin, administers_network: undefined }), ADMIN)).toEqual([
+      "le catalogue du moteur ne dit pas que admin_diaspora_ga administre le réseau diaspora-ga (administers_network) : aucune session d'administration n'y serait admise",
+    ])
+    expect(catalogProblems(withAdmin({ ...admin, build_args: [...admin.build_args.slice(0, 3), "NEXT_PUBLIC_POSTHOG_KEY"] }), ADMIN)).toEqual([
+      "la liste publique de admin_diaspora_ga diffère du catalogue du moteur (absente du catalogue : NEXT_PUBLIC_MEMBERS_SITE_URL, absente des scripts : NEXT_PUBLIC_POSTHOG_KEY)",
+    ])
+    const membersAdministering = { applications: { diaspora_ga: { ...CONTRACT_CATALOG.applications.diaspora_ga, administers_network: "diaspora-ga" } } }
+    expect(catalogProblems(membersAdministering, "diaspora_ga")).toEqual([
+      "le catalogue du moteur fait administrer un réseau par diaspora_ga (administers_network), que les scripts publient comme l'application des membres",
+    ])
+  })
+
+  test("relevé par les dépôts locaux seulement : le catalogue du commit d'ANTSIA, le dossier du commit de DIASPORA_GA", () => {
+    const calls = []
+    const run = (argv) => {
+      calls.push(argv)
+      if (argv.includes("show")) return { status: 0, stdout: JSON.stringify(CONTRACT_CATALOG) }
+      return { status: 0, stdout: argv.at(-1).includes("admin_diaspora_ga") ? "" : `${argv.at(-1)}\n` }
+    }
+    const repos = { ANTSIA: "/depots/ANTSIA", DIASPORA_GA: "/depots/DIASPORA_GA" }
+    expect(releasePrerequisites({ apps: ALL_APPS_ORDER, antsiaCommit: ANTSIA_COMMIT, diasporaGaCommit: DIASPORA_GA_COMMIT, repos, run })).toEqual([
+      "apps/admin_diaspora_ga absent du commit de DIASPORA_GA publié",
+    ])
+    expect(calls).toEqual([
+      ["git", "-C", "/depots/ANTSIA", "show", `${ANTSIA_COMMIT}:deploy/catalog.json`],
+      ["git", "-C", "/depots/DIASPORA_GA", "ls-tree", "--name-only", DIASPORA_GA_COMMIT, "--", "apps/admin_diaspora_ga/package.json"],
+      ["git", "-C", "/depots/DIASPORA_GA", "ls-tree", "--name-only", DIASPORA_GA_COMMIT, "--", "apps/diaspora_ga/package.json"],
+    ])
+  })
+
+  test("un catalogue illisible se dit une seule fois, pour les deux applications", () => {
+    const run = (argv) => (argv.includes("show") ? { status: 128, stdout: "" } : { status: 0, stdout: `${argv.at(-1)}\n` })
+    expect(releasePrerequisites({ apps: ALL_APPS_ORDER, antsiaCommit: ANTSIA_COMMIT, diasporaGaCommit: DIASPORA_GA_COMMIT, repos: { ANTSIA: "/a", DIASPORA_GA: "/d" }, run })).toEqual([
+      "catalogue de publication du moteur illisible au commit d'ANTSIA publié (deploy/catalog.json)",
+    ])
+  })
+
+  test("le vrai dépôt : diaspora.ga existe au HEAD et le catalogue du moteur à son HEAD la déclare", () => {
+    expect(releasePrerequisites({ apps: ["diaspora_ga"], antsiaCommit: "HEAD", diasporaGaCommit: "HEAD" })).toEqual([])
   })
 })
