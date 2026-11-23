@@ -59,8 +59,29 @@ console.
 - La feuille de partage native n'a pas été vue : le navigateur de recette ne l'offre pas.
 - Largeur de 834 px et thème clair non revus pour ces lots.
 
+## Moteur : cloche d'un message à deux et porte des comptes de démonstration (23/11, 19 h 35)
+
+Sur accord écrit du propriétaire (« Oui, fusionne »), les deux PR du moteur sont entrées dans son `main` :
+
+| PR du moteur | Contenu |
+|---|---|
+| 204 | iCom : onglet iAppel masqué quand l'application ne propose pas d'appel ; cloche neutre d'un message à deux (IC-09) |
+| 205 | Porte des comptes de démonstration (code de 6 chiffres et 1 lettre par WhatsApp, session courte, catalogue par règle, publications d'exemple), durcie après une relecture de sécurité indépendante : verrou sur la connexion, quatre routes d'authentification sans appelant fermées, surface d'authentification figée par un cliquet |
+
+Chaque PR avait d'abord passé seule la vérification commune avec DIASPORA.GA `089f4c1`. Elles n'avaient jamais
+été vérifiées ensemble : leur union a donc été assemblée (`main` `967e731b` + 204 + 205, assemblage `3463086a`)
+et vérifiée avant toute fusion. `bun run --cwd ../ANTSIA verify`, sous le verrou commun, à 19 h 31 : **verte**
+(code 0, aucun écart). Tests du moteur 4 115 ; cliquets 189 ; domaine social 1 114 ; contrats 104 ; surfaces
+sociales 4 624 ; diaspora.ga 2 547.
+
+Les deux PR ont été fusionnées à leur tête relue ; le `main` du moteur est `a06c0ea5`, et son arbre est
+identique à l'arbre de l'assemblage vérifié. Le couple inscrit dans `engine-compat.json` devient donc
+DIASPORA.GA `089f4c1` et moteur `a06c0ea5`.
+
+La porte n'est pas armée et rien n'est publié : sans son secret, le moteur se comporte comme avant.
+
 ## Suite
 
-Le moteur porte deux PR ouvertes qui attendent un accord écrit : la cloche d'un message à deux et l'onglet
-iAppel masqué ; la porte des comptes de démonstration, en brouillon, durcie après une relecture de sécurité
-indépendante. La pastille « Compte démo » du site suit la porte.
+La pastille « Compte démo » du site (PR 120) suit la porte : elle attend la déclaration d'une variable de
+construction au catalogue de déploiement du moteur. Ordre à tenir ensuite : publier le moteur et le site, puis
+armer la porte.
