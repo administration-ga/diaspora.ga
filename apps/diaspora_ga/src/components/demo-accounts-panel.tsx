@@ -115,6 +115,8 @@ function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: D
   // Le défi en cours et les demandes faites restent en mémoire de la pastille : refermer la feuille ne les perd pas.
   const [challenge, setChallenge] = useState<PendingDemoGateChallenge | null>(null)
   const [requests, setRequests] = useState<readonly number[]>([])
+  // Porte armée, un code illisible ramène au numéro avec la phrase neutre de l'échec (CH-817 E5).
+  const [unreadable, setUnreadable] = useState(false)
   const step = demoGateSheetStep({ state: props.state, session: session !== null, challenge: challenge !== null }) ?? "unavailable"
   // Une étape qui arrive après un geste prend le focus ; à l'ouverture, la feuille garde le sien.
   const previous = useRef(step)
@@ -126,12 +128,18 @@ function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: D
 
   const requested = (next: PendingDemoGateChallenge, at: number) => {
     setRequests((done) => [...done, at])
+    setUnreadable(false)
     setChallenge(next)
   }
 
   return (
     <PillStrip>
-      <Sheet onOpenChange={() => setArrived(false)}>
+      <Sheet
+        onOpenChange={(open) => {
+          setArrived(false)
+          if (!open) setUnreadable(false)
+        }}
+      >
         <SheetTrigger asChild>
           <PillButton />
         </SheetTrigger>
@@ -139,6 +147,12 @@ function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: D
           {step === "unavailable" ? (
             <p role="status" className="rounded-lg bg-muted p-3 text-sm">
               {t("demoGate.unavailable")}
+            </p>
+          ) : null}
+          {step === "phone" && unreadable ? (
+            // La phrase neutre de tout échec de connexion : rien ne dit qu'une porte a refusé.
+            <p role="alert" className="mb-4 rounded-lg bg-muted p-3 text-sm text-destructive">
+              {t("demoAccounts.failed")}
             </p>
           ) : null}
           {step === "phone" ? <DemoGatePhoneStep gate={props.gate} requests={requests} focusOnMount={arrived} onRequested={requested} /> : null}
@@ -164,6 +178,11 @@ function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: D
                 props.gate.forget()
                 setChallenge(null)
               }}
+              onUnreadable={() => {
+                setUnreadable(true)
+                props.gate.forget()
+                setChallenge(null)
+              }}
             />
           ) : null}
         </SheetContent>
@@ -172,8 +191,19 @@ function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: D
   )
 }
 
-/** Les acteurs proposés, groupés comme le panneau d'origine ; porte armée, l'échéance de l'accès et sa fermeture. */
-function DemoActorsStep(props: { capability: DemoAccountsCapability; session: DemoGateSessionView | null; focusOnMount: boolean; onForget: () => void }) {
+/**
+ * L'issue de la connexion d'un acteur : entrée (la page se recharge), échec ordinaire, ou code
+ * illisible — aucun code relu après l'envoi, ou le code refusé à la connexion. Porte armée, ces deux
+ * derniers sont le refus INDISTINCT du moteur (CH-817 E5) : sa session de porte ne vaut plus.
+ */
+type ActorSignIn = "entered" | "failed" | "unreadable"
+
+/**
+ * Les acteurs proposés, groupés comme le panneau d'origine ; porte armée, l'échéance de l'accès et sa
+ * fermeture. `onUnreadable` : porte armée, le code est illisible ; la feuille oublie la session de
+ * porte et revient au numéro.
+ */
+function DemoActorsStep(props: { capability: DemoAccountsCapability; session: DemoGateSessionView | null; focusOnMount: boolean; onForget: () => void; onUnreadable: () => void }) {
   const { t, locale } = useDiasporaGaT()
   const catalogue = props.capability.useCatalogue()
   const actions = useActions()
@@ -187,23 +217,31 @@ function DemoActorsStep(props: { capability: DemoAccountsCapability; session: De
     if (focusOnMount && ready) intro.current?.focus()
   }, [focusOnMount, ready])
 
+  async function signIn(entry: DemoAccountEntry): Promise<ActorSignIn> {
+    const destination = { kind: "email", value: entry.email } as const
+    // L'adresse vient du catalogue : porte armée, la source y joint le jeton de la session de porte (CH-817 E5).
+    const options = { demoActor: true } as const
+    const sent = await actions.requestCode(destination, options)
+    if (!sent.ok) return "failed"
+    const code = sent.value.demoCode ?? (await props.capability.readLocalCode(entry.email))
+    if (code === null) return "unreadable"
+    const verified = await actions.verifyCode(code, destination, options)
+    if (verified.ok) return "entered"
+    return verified.code === "code_invalid" ? "unreadable" : "failed"
+  }
+
   async function enter(entry: DemoAccountEntry) {
     setPending(entry.actor)
     setFailed(false)
-    try {
-      rememberDemoActor(entry.actor)
-      const sent = await actions.requestCode({ kind: "email", value: entry.email })
-      if (!sent.ok) throw new Error(sent.code)
-      const code = sent.value.demoCode ?? (await props.capability.readLocalCode(entry.email))
-      if (code === null) throw new Error("code")
-      const verified = await actions.verifyCode(code)
-      if (!verified.ok) throw new Error(verified.code)
-      // Le moteur recharge la page vers l'accueil : l'amorçage reprend l'acteur mémorisé.
-    } catch {
-      forgetDemoActor()
-      setPending(null)
-      setFailed(true)
-    }
+    rememberDemoActor(entry.actor)
+    const outcome = await signIn(entry).catch((): ActorSignIn => "failed")
+    // Le moteur recharge la page vers l'accueil : l'amorçage reprend l'acteur mémorisé.
+    if (outcome === "entered") return
+    forgetDemoActor()
+    setPending(null)
+    // Porte armée, un code illisible ne se réessaie pas ici : retour au numéro, sans dire pourquoi.
+    if (outcome === "unreadable" && props.session !== null) props.onUnreadable()
+    else setFailed(true)
   }
 
   if (catalogue.status === "loading") {

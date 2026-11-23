@@ -146,7 +146,7 @@ describe("porte de démonstration — demander un code", () => {
     [503, { ok: false, error: "unavailable" }, "demo_gate_unavailable"],
     [404, { ok: false, error: "not_found" }, "demo_gate_unavailable"],
     [400, { ok: false, error: "invalid_request" }, "phone_invalid"],
-    [429, { ok: false, error: "rate_limited" }, "rate_limited"],
+    [429, undefined, "rate_limited"],
     [500, undefined, "unknown"],
     [202, { ok: true, challengeId: "court", expiresInSeconds: 300 }, "unknown"],
     [202, { ok: true, challengeId: CHALLENGE, expiresInSeconds: 0 }, "unknown"],
@@ -160,6 +160,15 @@ describe("porte de démonstration — demander un code", () => {
     const { gate, fetch } = setup()
     fetch.mockRejectedValue(new TypeError("Failed to fetch"))
     expect(await gate.requestCode(PHONE, "fr")).toEqual({ ok: false, code: "network_unavailable" })
+  })
+
+  it.each([
+    [{ ok: false, error: "rate_limited", retryAfterMs: 90_000 }, {}, 90_000],
+    [{ ok: false, error: "rate_limited" }, { "retry-after": "120" }, 120_000],
+  ] as const)("CH-817 E5 — 429 : l'adresse a trop demandé, l'attente du moteur passe à l'écran", async (body, headers, retryAfterMs) => {
+    const { gate, fetch } = setup()
+    fetch.mockResolvedValue(reply(429, body, headers))
+    expect(await gate.requestCode(PHONE, "fr")).toEqual({ ok: false, code: "rate_limited", retryAfterMs })
   })
 })
 
@@ -320,13 +329,15 @@ describe("porte de démonstration — le jeton accompagne les deux lectures qui 
     sleep: async () => undefined,
   })
 
-  it("seulement pour une adresse réservée, et seulement avec une session valide", () => {
+  it("seulement pour l'adresse déclarée d'un acteur, et seulement avec une session valide", () => {
     const { tokens } = setup()
     expect(demoGateTokenFor("verifie@demo.diaspora-ga.test", tokens)).toBeNull()
     tokens.save({ token: TOKEN, expiresAt: 1_500_000 })
     expect(demoGateTokenFor(" Verifie@Demo.Diaspora-GA.test ", tokens)).toBe(TOKEN)
     expect(demoGateTokenFor("ada@exemple.test", tokens)).toBeNull()
     expect(demoGateTokenFor("verifie@demo.diaspora-ga.test.exemple.test", tokens)).toBeNull()
+    // CH-817 E5 : une autre adresse de la famille réservée n'est celle d'aucun acteur du catalogue.
+    expect(demoGateTokenFor("inconnu@demo.diaspora-ga.test", tokens)).toBeNull()
   })
 
   it("le catalogue : sans session, aucun jeton ; avec elle, le jeton ; l'abonnement suit la session", () => {

@@ -39,9 +39,13 @@ autorisé. Les comptes ne proposent plus que les fonctions ouvertes, avec des pu
      arrive sur WhatsApp ; sans message après une minute, l'envoi n'a pas abouti. » Le champ accepte
      6 chiffres puis une lettre, en majuscules, groupés (`482 913 K`) ; l'échéance du code se
      décompte ; « Renvoyer un code » attend une minute après chaque demande, et trois demandes au
-     plus par quart d'heure (reflet du seau du moteur par numéro) ; « Changer de numéro » revient au
-     premier temps. Un code faux ou expiré a un seul message ; trop d'essais dit l'attente du moteur
-     (`retryAfterMs`) ; une panne du réseau se reprend ;
+     plus par quart d'heure (reflet du seau du moteur par numéro). Un renvoi n'annule pas le code
+     déjà parti : jusqu'à trois restent valables, et la feuille vérifie le code saisi contre le plus
+     récent, puis contre les précédents encore valables (le premier code arrivé en retard reste
+     bon). « Changer de numéro » revient au premier temps. Un code faux ou expiré a un seul
+     message ; trop d'appels depuis cette adresse (429, à la demande, au renvoi comme à la
+     vérification) dit l'attente du moteur (`retryAfterMs`) et fait attendre le bouton ; une panne
+     du réseau se reprend ;
   3. **les acteurs** : la feuille d'avant, groupée en Membres, Pages, Rôles et services, Accès
      restreints (les groupes vides ne s'affichent pas), l'heure de fin de l'accès, et « Fermer
      l'accès ».
@@ -55,28 +59,50 @@ autorisé. Les comptes ne proposent plus que les fonctions ouvertes, avec des pu
 - Échap referme la feuille et rend le focus à la pastille ; le défi en cours survit à la feuille
   refermée.
 
-## La porte (moteur, lots E1 à E4 ; site, lot A1)
+## La porte (moteur, lots E1 à E5 ; site, lot A1 et sa suite)
 
-- **Le verrou réel est la lecture du code**, `devTools.latestOtp` : les adresses réservées ne
-  reçoivent aucun courriel, qui ne lit pas leur code n'entre pas. Porte armée, `latestOtp` (pour la
-  famille `…@demo.diaspora-ga.test` seulement) et `demoAccounts.catalogue` exigent un jeton de
-  session de porte (`gateToken`). Le site le passe aux deux lectures, pour les seules adresses
-  réservées ; le formulaire de code ordinaire de la porte le passe aussi, une adresse ordinaire ne le
-  reçoit jamais.
+- **Le verrou réel est la connexion** (lot E5 du moteur, après la relecture de sécurité ; fiche,
+  § 7) : porte armée, le moteur refuse d'envoyer un code de connexion à une adresse de la famille
+  `…@demo.diaspora-ga.test`, et de s'y connecter, sans un jeton de session de porte valide dans
+  l'en-tête `X-Demo-Gate-Token` (constante `DEMO_GATE_TOKEN_HEADER` du contrat
+  `@antsia/social-contracts/demoGate`, jamais recopiée). Le refus est indistinct : l'envoi répond
+  comme un envoi réel, mais aucun code n'existe ; la connexion répond comme un code faux
+  (`INVALID_OTP`).
+- **Le site pose l'en-tête sur les deux requêtes** (`sendVerificationOtp` puis `signIn.emailOtp`,
+  par `fetchOptions.headers`, relayées telles quelles par `/api/auth/*`) pour un acteur choisi dans
+  la feuille seulement (option `demoActor` du port, `apps/diaspora_ga/src/data/engine-source.ts`),
+  à l'adresse déclarée de l'acteur et avec une session de porte dans l'onglet. Jamais pour une
+  adresse saisie au formulaire ordinaire, jamais pour une adresse ordinaire, jamais dans une adresse
+  ni un journal.
+- **Second verrou, les deux lectures** : `demoAccounts.catalogue` et `devTools.latestOtp` exigent
+  aussi le jeton (`gateToken`), que le site leur passe pour les seules adresses déclarées des
+  acteurs. Porte armée, la feuille est la SEULE à relire un code : le formulaire de code ordinaire
+  ne relit `latestOtp` que si la porte n'est pas armée (`demoGate` à `open`, développement local
+  compris) ; sinon il n'affiche aucun code.
+- **Un refus indistinct se traite comme un code illisible** : aucun code relu après l'envoi, ou le
+  code refusé à la connexion. La feuille oublie la session de porte et revient au numéro, avec la
+  phrase de tout échec de connexion (« La connexion de démonstration n'a pas abouti… ») : aucun
+  nouveau code d'erreur, aucun mot qui révèle la garde. Une autre panne (débit, réseau) garde la
+  session et la feuille des acteurs. Porte non armée, rien ne change.
 - **Les deux routes HTTP** du moteur (`POST /demo-gate/request` et `POST /demo-gate/verify`), sur
   l'origine des actions HTTP, sont appelées DIRECTEMENT par le navigateur
   (`apps/diaspora_ga/src/data/engine-demo-gate.ts`) : le relais d'authentification du site retire
   l'adresse du visiteur, dont la porte a besoin pour ses seaux. Corps JSON, sans témoin, sans cache,
-  sans redirection. La demande répond pareil pour un numéro autorisé, refusé ou limité.
+  sans redirection. La demande répond pareil pour un numéro autorisé, refusé ou limité ; seul le
+  seau de l'ADRESSE refuse de façon visible et immédiate (429 et `retryAfterMs`, pour la demande
+  comme pour la vérification), un refus qui ne dépend pas du numéro.
 - **La session de porte** dure trente minutes, non renouvelable. Son jeton ne vit que dans le
   `sessionStorage` de l'onglet (clé `diaspora-ga:demo-gate`), ou dans la mémoire de la page quand ce
   stockage est refusé ; jamais dans une adresse, un journal, un témoin ni le `localStorage`. Le site
   l'oublie lui-même à l'échéance (une requête du moteur fige son horloge). Elle survit à la sortie
   d'un acteur, pour en essayer un autre sans nouveau code, et disparaît avec l'onglet.
-- **La liste des numéros** est une table d'empreintes du moteur, alimentée par la fonction interne
-  `allowPhones` que le propriétaire lance ; aucun numéro dans un dépôt.
+- **La liste des numéros** est une table d'empreintes du moteur, que le propriétaire tient par le
+  script du moteur `scripts/demo-gate-list.mjs` (`reset` puis `allow`, à l'armement et à chaque
+  rotation du secret) ; aucun numéro dans un dépôt.
 - La porte s'arme par la seule présence de `ANTSIA_DEMO_GATE_SECRET` sur le déploiement de
-  démonstration ; les variables (noms seuls) sont au `docs/36`, § 6.4.
+  démonstration ; les variables (noms seuls) sont au `docs/36`, § 6.4. **Ordre : publier le moteur
+  et le site, PUIS armer la porte.** Porte non armée, toute combinaison fonctionne ; un site d'avant
+  l'en-tête face à un moteur armé ne connecterait plus aucun acteur.
 
 ## Le catalogue par règle (`packages/diaspora-ga-domain/src/demo-accounts.ts`)
 
@@ -138,10 +164,11 @@ Gestes réels, joués par l'application à la première entrée, si leur module 
    Elle est vide hors des comptes de démonstration ouverts (`demoAccountsAllowed` : outils de
    développement locaux, ou déploiement de démonstration déclaré), et, porte armée, sans session de
    porte valide (`gateToken`). Elle applique la règle d'offre du domaine.
-2. **Connexion** : `requestCode` puis `verifyCode` du port. Le code se lit par
-   `devTools.latestOtp` (avec le jeton de porte pour une adresse réservée), avec jusqu'à 8 lectures
-   espacées de 250 ms. L'acteur choisi est mémorisé sous la clé `antsia:diaspora-ga:demo-account`,
-   que la déconnexion de partout purge.
+2. **Connexion** : `requestCode` puis `verifyCode` du port, avec l'option `demoActor` (porte
+   armée, l'en-tête de la porte sur les deux requêtes). Porte non armée, l'envoi rend le code ;
+   sinon la feuille le relit par `devTools.latestOtp` avec le jeton de porte, avec jusqu'à 8
+   lectures espacées de 250 ms. L'acteur choisi est mémorisé sous la clé
+   `antsia:diaspora-ga:demo-account`, que la déconnexion de partout purge.
 3. **Accueil réel** : `actions.join`, qui pose le profil publié, les consentements (profil,
    annuaire) et l'adhésion, avec le pays et la ville de l'acteur. L'utilisateur extérieur au
    réseau ne rejoue que l'accueil d'ANTSIA, `demoAccounts.welcomeOutsider` : le consentement au
@@ -202,7 +229,9 @@ Gestes réels, joués par l'application à la première entrée, si leur module 
 - Pendant la préparation, quelques secondes, l'adhésion est encore « en attente » : la carte de
   statut peut s'afficher, puis se retire.
 - Porte : les sessions déjà ouvertes sur des comptes de démonstration durent 7 jours ; armer la
-  porte ne les ferme pas. Qui connaît un numéro autorisé peut lui faire recevoir 10 codes par jour
+  porte ne les ferme pas, `reset` (script de la liste) ferme celles des acteurs déclarés. Un invité
+  dont le numéro reste inscrit garde la sienne tant qu'il revient dans les sept jours. Qui connaît
+  un numéro autorisé peut lui faire recevoir 10 codes par jour
   (accepté pour une démonstration). Sans `x-forwarded-for` sur les actions HTTP du déploiement, tous
   les visiteurs partagent le seau d'adresse `unknown` : à constater en recette.
 - La règle d'offre change aussi le panneau en développement local : un acteur d'un module ou d'un
@@ -211,10 +240,15 @@ Gestes réels, joués par l'application à la première entrée, si leur module 
 ## Vérifications
 
 - Tests :
-  - CH-817 (lot A1) : pastille et feuille (27, `components/demo-accounts-panel.test.tsx` : chaque
-    état et chaque étape, refus, noms accessibles, focus, Échap), adaptateur de la porte (36,
-    `data/engine-demo-gate.test.ts` : chaque statut HTTP, session de l'onglet et son échéance,
-    stockage refusé, jeton passé aux deux lectures), amorçage (22, dont 6 pour les modules
+  - CH-817 (lot A1 et sa suite d'après E5) : pastille et feuille (36,
+    `components/demo-accounts-panel.test.tsx` : chaque état et chaque étape, refus, noms
+    accessibles, focus, Échap ; code illisible ou refusé porte armée, retour au numéro et session
+    oubliée ; 429 à la demande et au renvoi ; premier code encore bon après un renvoi), adaptateur
+    de la porte (38, `data/engine-demo-gate.test.ts` : chaque statut HTTP dont le 429 de la demande,
+    session de l'onglet et son échéance, stockage refusé, jeton passé aux deux lectures, adresses
+    déclarées seulement), source moteur (3 dans `data/engine.test.ts` : l'en-tête sur l'envoi et la
+    connexion d'un acteur de la feuille avec une session, jamais ailleurs ; le code ordinaire relu
+    seulement porte non armée), amorçage (22, dont 6 pour les modules
     fermés et les deux temps), règles de l'écran (4, `diaspora-ga-features/src/data/demo-gate-port.test.ts`),
     porte d'accueil sans l'ancien bouton (2, `screens/landing-screen.test.tsx`) ;
   - avant CH-817 : panneau (8), amorçage (16 depuis EV-01, dont 4 pour les événements de

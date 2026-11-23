@@ -11,6 +11,9 @@
  * CH-817 (lot A1) : porte armée, le catalogue et le code d'une adresse réservée ne se lisent
  * qu'avec le jeton de la session de porte de cet onglet (`engine-demo-gate.ts`), passé ici aux
  * deux lectures ; il change avec la session (ouverte, échue, oubliée) et l'abonnement suit.
+ * CH-817 E5 : porte armée, `readLocalCode` est le SEUL lecteur du code (le formulaire ordinaire ne
+ * le relit qu'avec la porte non armée) ; l'envoi et la connexion portent le jeton par l'en-tête
+ * de la source moteur (`requestCode` et `verifyCode` avec `demoActor`).
  */
 import { api } from "@convex/_generated/api"
 import type { DemoAccountEntry, DemoAccountsCapability, Loadable } from "@diaspora-ga/features/data"

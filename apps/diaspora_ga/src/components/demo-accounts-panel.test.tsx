@@ -187,8 +187,10 @@ describe("Porte — porte non armée : les acteurs directement", () => {
     await user.click(pill())
     await user.click(actorButton(t("demoAccounts.actors.entreprise.title")))
 
-    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456"))
-    expect(requestCode).toHaveBeenCalledExactlyOnceWith({ kind: "email", value: "entreprise@demo.diaspora-ga.test" })
+    const destination = { kind: "email", value: "entreprise@demo.diaspora-ga.test" }
+    // L'adresse vient du catalogue : les deux requêtes le disent à la source (CH-817 E5).
+    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456", destination, { demoActor: true }))
+    expect(requestCode).toHaveBeenCalledExactlyOnceWith(destination, { demoActor: true })
     expect(window.sessionStorage.getItem(DEMO_ACCOUNT_KEY)).toBe("entreprise")
   })
 
@@ -199,8 +201,23 @@ describe("Porte — porte non armée : les acteurs directement", () => {
     await user.click(pill())
     await user.click(actorButton(t("demoAccounts.actors.mentor.title")))
 
-    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("654321"))
+    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("654321", { kind: "email", value: "mentor@demo.diaspora-ga.test" }, { demoActor: true }))
     expect(demoAccounts.readLocalCode).toHaveBeenCalledExactlyOnceWith("mentor@demo.diaspora-ga.test")
+  })
+
+  it("aucun code lisible, porte non armée : l'échec ordinaire, la feuille reste aux acteurs", async () => {
+    const demoAccounts = accounts()
+    demoAccounts.readLocalCode.mockResolvedValue(null)
+    const demoGate = gate({ state: "open" })
+    const { user, requestCode, verifyCode } = setup({ demoAccounts: demoAccounts.value, demoGate: demoGate.value })
+    requestCode.mockResolvedValue({ ok: true, value: { demoCode: null } })
+    await user.click(pill())
+    await user.click(actorButton(t("demoAccounts.actors.verifie.title")))
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(flat(t("demoAccounts.failed")))
+    expect(verifyCode).not.toHaveBeenCalled()
+    expect(demoGate.forget).not.toHaveBeenCalled()
+    expect(actorButton(t("demoAccounts.actors.verifie.title"))).toBeEnabled()
   })
 
   it("annonce l'échec, oublie l'acteur et rend la main", async () => {
@@ -424,5 +441,161 @@ describe("Porte — porte armée : numéro WhatsApp, code, puis acteurs", () => 
     const { user } = setup({ demoAccounts: accounts([]).value, demoGate: gate({ session: true }).value })
     await user.click(pill())
     expect(within(sheet()).getAllByRole("status").some((node) => node.textContent === t("demoGate.actors.empty"))).toBe(true)
+  })
+})
+
+describe("Porte — porte armée : refus du moteur (CH-817 E5)", () => {
+  const VERIFIE = { kind: "email", value: "verifie@demo.diaspora-ga.test" } as const
+
+  it("l'acteur entre par le code relu par la feuille, l'envoi et la connexion marqués comme venant du catalogue", async () => {
+    const demoAccounts = accounts()
+    const { user, requestCode, verifyCode } = setup({ demoAccounts: demoAccounts.value, demoGate: gate({ session: true }).value })
+    // Porte armée, la source ne rend jamais le code : la feuille le relit avec son jeton.
+    requestCode.mockResolvedValue({ ok: true, value: { demoCode: null } })
+    await user.click(pill())
+    await user.click(actorButton(t("demoAccounts.actors.verifie.title")))
+    await waitFor(() => expect(verifyCode).toHaveBeenCalledExactlyOnceWith("654321", VERIFIE, { demoActor: true }))
+    expect(requestCode).toHaveBeenCalledExactlyOnceWith(VERIFIE, { demoActor: true })
+    expect(demoAccounts.readLocalCode).toHaveBeenCalledExactlyOnceWith(VERIFIE.value)
+  })
+
+  it.each([
+    ["aucun code lisible après l'envoi", "unreadable"],
+    ["le code refusé à la connexion (INVALID_OTP)", "refused"],
+  ] as const)("%s : la session de porte s'oublie, retour au numéro avec la phrase neutre", async (_label, kind) => {
+    const demoAccounts = accounts()
+    if (kind === "unreadable") demoAccounts.readLocalCode.mockResolvedValue(null)
+    const demoGate = gate({ session: true })
+    const { user, requestCode, verifyCode } = setup({ demoAccounts: demoAccounts.value, demoGate: demoGate.value })
+    requestCode.mockResolvedValue({ ok: true, value: { demoCode: null } })
+    if (kind === "refused") verifyCode.mockResolvedValue({ ok: false, code: "code_invalid" })
+    await user.click(pill())
+    await user.click(actorButton(t("demoAccounts.actors.verifie.title")))
+
+    const phone = await screen.findByRole("textbox", { name: t("demoGate.phone.label") })
+    await waitFor(() => expect(phone).toHaveFocus())
+    expect(demoGate.forget).toHaveBeenCalledOnce()
+    const dialog = sheet()
+    expect(descriptionOf(dialog)).toBe(flat(t("demoGate.step.phone.lead")))
+    // La phrase de tout échec de connexion : aucun nouveau message, rien ne dit qu'une porte a refusé.
+    expect(within(dialog).getByRole("alert")).toHaveTextContent(flat(t("demoAccounts.failed")))
+    expect(dialog.textContent ?? "").not.toMatch(/porte|refus|jeton|session/i)
+    expect(window.sessionStorage.getItem(DEMO_ACCOUNT_KEY)).toBeNull()
+    if (kind === "unreadable") expect(verifyCode).not.toHaveBeenCalled()
+
+    // Un nouveau code demandé efface la phrase.
+    await user.type(phone, PHONE)
+    await user.click(within(dialog).getByRole("button", { name: t("demoGate.phone.submit") }))
+    await screen.findByRole("textbox", { name: t("demoGate.code.label") })
+    expect(within(sheet()).queryByText(flat(t("demoAccounts.failed")))).toBeNull()
+  })
+
+  it("une autre panne de connexion garde la session de porte et la feuille des acteurs", async () => {
+    const demoGate = gate({ session: true })
+    const { user, requestCode } = setup({ demoAccounts: accounts().value, demoGate: demoGate.value })
+    requestCode.mockResolvedValue({ ok: false, code: "rate_limited" })
+    await user.click(pill())
+    await user.click(actorButton(t("demoAccounts.actors.verifie.title")))
+    expect(await screen.findByRole("alert")).toHaveTextContent(flat(t("demoAccounts.failed")))
+    expect(demoGate.forget).not.toHaveBeenCalled()
+    expect(actorButton(t("demoAccounts.actors.verifie.title"))).toBeEnabled()
+  })
+
+  it("trop de demandes depuis cette adresse (429) : l'attente du moteur se dit sous le numéro, la demande attend", async () => {
+    const demoGate = gate()
+    demoGate.requestCode.mockResolvedValueOnce({ ok: false, code: "rate_limited", retryAfterMs: 125_000 })
+    const { user } = setup({ demoAccounts: accounts().value, demoGate: demoGate.value })
+    await user.click(pill())
+    await user.type(screen.getByRole("textbox", { name: t("demoGate.phone.label") }), PHONE)
+    await user.click(screen.getByRole("button", { name: t("demoGate.phone.submit") }))
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(/Trop d.essais/)
+    expect(alert).toHaveTextContent(/2 min 0[4-6] s/)
+    expect(screen.getByRole("button", { name: t("demoGate.phone.submit") })).toBeDisabled()
+    // Le champ du numéro est décrit par l'attente : le lecteur d'écran l'entend au focus.
+    expect(screen.getByRole("textbox", { name: t("demoGate.phone.label") }).getAttribute("aria-describedby")?.split(" ")).toContain(alert.id)
+    expect(screen.queryByRole("textbox", { name: t("demoGate.code.label") })).toBeNull()
+    expect(demoGate.requestCode).toHaveBeenCalledOnce()
+  })
+
+  it("trop de demandes au renvoi (429) : l'attente se dit près du renvoi, qui attend ; le code en cours reste saisissable", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const demoGate = gate()
+    setup({ demoAccounts: accounts().value, demoGate: demoGate.value })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    await reachCodeStep(user)
+    demoGate.requestCode.mockResolvedValueOnce({ ok: false, code: "rate_limited", retryAfterMs: 125_000 })
+    const resend = screen.getByRole("button", { name: t("demoGate.code.resend") })
+    await act(async () => {
+      vi.advanceTimersByTime(61_000)
+    })
+    await waitFor(() => expect(resend).toBeEnabled())
+    await user.click(resend)
+    const alert = await screen.findByRole("alert")
+    expect(alert).toHaveTextContent(/Trop d.essais/)
+    expect(alert).toHaveTextContent(/2 min 0[4-6] s/)
+    expect(resend).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("demoGate.code.submit") })).toBeEnabled()
+  })
+
+  it("après un renvoi, le premier code reste bon : rien ne le dit annulé, et il ouvre la démonstration", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const demoGate = gate()
+    const FIRST = "a".repeat(32)
+    const SECOND = "b".repeat(32)
+    demoGate.requestCode
+      .mockResolvedValueOnce({ ok: true, value: { challengeId: FIRST, expiresAt: Date.now() + 5 * 60_000 } })
+      .mockResolvedValueOnce({ ok: true, value: { challengeId: SECOND, expiresAt: Date.now() + 6 * 60_000 } })
+    setup({ demoAccounts: accounts().value, demoGate: demoGate.value })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const code = await reachCodeStep(user)
+    await act(async () => {
+      vi.advanceTimersByTime(61_000)
+    })
+    const resend = screen.getByRole("button", { name: t("demoGate.code.resend") })
+    await waitFor(() => expect(resend).toBeEnabled())
+    await user.click(resend)
+    await screen.findByText(t("demoGate.code.resent"))
+    for (const locale of ["fr", "en"] as const) {
+      expect(getFixedT(locale)("demoGate.code.resent")).not.toMatch(/annul|remplac|invalid|ne vaut plus|cancel|replac|void|no longer/i)
+    }
+    expect(sheet().textContent ?? "").not.toMatch(/annul|remplac|ne vaut plus/i)
+
+    // Le premier code, arrivé en retard : refusé par le défi le plus récent, accepté par le premier.
+    demoGate.verifyCode.mockResolvedValueOnce({ ok: false, code: "demo_gate_code_invalid" })
+    await user.type(code, "123456K")
+    await user.click(screen.getByRole("button", { name: t("demoGate.code.submit") }))
+    await waitFor(() => expect(demoGate.verifyCode).toHaveBeenCalledTimes(2))
+    expect(demoGate.verifyCode.mock.calls.map(([challengeId]) => challengeId)).toEqual([SECOND, FIRST])
+    expect(await screen.findByRole("heading", { name: t("demoAccounts.groups.members") })).toBeInTheDocument()
+  })
+
+  it("un code faux contre tous les défis valables : un seul message ; trop d'essais arrête la recherche", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const demoGate = gate()
+    demoGate.requestCode
+      .mockResolvedValueOnce({ ok: true, value: { challengeId: "a".repeat(32), expiresAt: Date.now() + 5 * 60_000 } })
+      .mockResolvedValueOnce({ ok: true, value: { challengeId: "b".repeat(32), expiresAt: Date.now() + 6 * 60_000 } })
+    setup({ demoAccounts: accounts().value, demoGate: demoGate.value })
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+    const code = await reachCodeStep(user)
+    await act(async () => {
+      vi.advanceTimersByTime(61_000)
+    })
+    const resend = screen.getByRole("button", { name: t("demoGate.code.resend") })
+    await waitFor(() => expect(resend).toBeEnabled())
+    await user.click(resend)
+    await screen.findByText(t("demoGate.code.resent"))
+
+    demoGate.verifyCode.mockResolvedValueOnce({ ok: false, code: "demo_gate_code_invalid" }).mockResolvedValueOnce({ ok: false, code: "demo_gate_code_invalid" })
+    await user.type(code, "123456K")
+    await user.click(screen.getByRole("button", { name: t("demoGate.code.submit") }))
+    expect(await screen.findByRole("alert")).toHaveTextContent(flat(t("errors.demo_gate_code_invalid")))
+    expect(demoGate.verifyCode).toHaveBeenCalledTimes(2)
+
+    demoGate.verifyCode.mockResolvedValueOnce({ ok: false, code: "too_many_attempts", retryAfterMs: 60_000 })
+    await user.click(screen.getByRole("button", { name: t("demoGate.code.submit") }))
+    await waitFor(() => expect(screen.getByRole("button", { name: t("demoGate.code.submit") })).toBeDisabled())
+    expect(demoGate.verifyCode).toHaveBeenCalledTimes(3)
   })
 })

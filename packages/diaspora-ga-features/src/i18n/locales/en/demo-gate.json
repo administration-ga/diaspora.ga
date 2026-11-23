@@ -30,9 +30,9 @@
       "submit": "Enter the demo",
       "resend": "Send a new code",
       "resent": "New code requested.",
-      "changeNumber": "Change number",
-      "tooManyAttempts": "Too many attempts: try again in {{duration}}."
+      "changeNumber": "Change number"
     },
+    "tooManyAttempts": "Too many attempts: try again in {{duration}}.",
     "wait": "New request possible in {{duration}}.",
     "waitOver": "You can request a new code.",
     "actors": {

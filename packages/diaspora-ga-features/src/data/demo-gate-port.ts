@@ -55,7 +55,9 @@ export interface DemoGateChallengeView {
 
 /**
  * Le résultat d'un geste de la porte : celui de toute action, plus le délai à attendre quand le
- * moteur refuse pour trop d'essais (`too_many_attempts`, `retryAfterMs`).
+ * moteur refuse aussitôt pour trop d'appels de cette adresse (429, `retryAfterMs`) — trop d'essais
+ * de code (`too_many_attempts`) ou trop de demandes (`rate_limited`, CH-817 E5). Ce refus ne dépend
+ * pas du numéro : l'écran dit l'attente.
  */
 export type DemoGateResult<T> =
   | { readonly ok: true; readonly value: T }
@@ -71,7 +73,11 @@ export interface DemoGateCapability {
   readonly reachable: boolean
   /** La session de porte valide de cet onglet, ou `null` ; elle disparaît d'elle-même à son échéance. */
   useSession(): DemoGateSessionView | null
-  /** Demande un code pour ce numéro (E.164). La réponse est la même, que le numéro soit autorisé ou non. */
+  /**
+   * Demande un code pour ce numéro (E.164). La réponse est la même, que le numéro soit autorisé ou
+   * non. Un nouveau code ne remplace pas le précédent : jusqu'à trois restent valables
+   * (`DEMO_GATE_ACTIVE_CHALLENGES_MAX`), chacun avec son défi.
+   */
   requestCode(phone: string, locale: DemoGateLocale): Promise<DemoGateResult<DemoGateChallengeView>>
   /** Échange le code contre une session de porte, gardée dans cet onglet seulement. */
   verifyCode(challengeId: string, code: string): Promise<DemoGateResult<DemoGateSessionView>>

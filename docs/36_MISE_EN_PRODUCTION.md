@@ -293,17 +293,29 @@ s'affiche pas quand la porte est armée. La politique de sécurité du site auto
 actions HTTP : elle se dérive de `NEXT_PUBLIC_CONVEX_URL` (`.convex.cloud` vers `.convex.site`). Un
 domaine personnalisé du backend ne serait pas dérivé : à ajouter à la politique avant de s'en servir.
 
+Porte armée, le verrou réel est la **connexion** (lot E5 du moteur) : le moteur refuse d'envoyer un
+code à une adresse de démonstration de DIASPORA.GA, et de s'y connecter, sans le jeton de session de
+porte que le site pose dans un en-tête (`docs/34`, « La porte »). Un site d'avant cet en-tête, face à
+un moteur armé, ne connecterait plus aucun acteur : **on publie le moteur et le site, PUIS on arme
+la porte**, jamais l'inverse. Porte non armée, toute combinaison fonctionne.
+
 Gestes du propriétaire, dans l'ordre :
 
 1. **Le compte du fournisseur WhatsApp** (Bird ; Meta demanderait d'abord son adaptateur dans le moteur) : WhatsApp disponible,
    un modèle d'authentification qui accepte un code de 7 caractères avec une lettre, le nom de
    l'expéditeur, le tarif.
-2. **Les six variables** ci-dessus sur le déploiement de démonstration du moteur.
-3. **La liste des numéros** : lancer la fonction interne `allowPhones` (portée `diaspora-ga`, 20
-   numéros actifs au plus), jamais un numéro dans un dépôt ; `revokePhones` pour en retirer,
-   `allowlistSummary` pour le nombre et les dates.
-4. **La publication** du moteur de démonstration, puis du site de démonstration ; puis un premier
-   envoi réel avec le propriétaire (modèle, code avec lettre, délai).
+2. **La publication** du moteur de démonstration (avec le lot E5), puis du site de démonstration
+   (avec l'en-tête de la porte), la porte encore NON armée. Les variables `WHATSAPP_*` peuvent être
+   posées avant : sans le secret, elles n'arment rien. En recette, avant d'armer : présence de
+   `X-Forwarded-For` sur les actions HTTP, latence du fournisseur, code avec lettre.
+3. **L'armement** : `ANTSIA_DEMO_GATE_SECRET` sur le déploiement de démonstration du moteur, en
+   dernier des six variables.
+4. **La liste des numéros**, par le script du moteur `scripts/demo-gate-list.mjs` (seule voie
+   documentée ; numéros sur l'entrée standard, jamais un numéro dans un dépôt ni en argument) :
+   `reset` d'abord, puis `allow` (portée `diaspora-ga`, 20 numéros actifs au plus) ; `revoke` pour
+   en retirer. À refaire, `reset` puis `allow`, à chaque rotation du secret.
+5. **Une première entrée sur chaque acteur** juste après l'armement (elle réserve identifiants et
+   pages), puis un premier envoi réel avec le propriétaire (modèle, code avec lettre, délai).
 
 ## 7. Le domaine
 
@@ -398,4 +410,5 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
     recette à deux comptes ; tous deux restent fermés au lancement tant qu'elle n'est pas faite
     (§ 6.3).
 14. **La porte des comptes de démonstration** (démonstration seulement, § 6.4) : compte et modèle du
-    fournisseur WhatsApp, six variables, liste des numéros par `allowPhones`.
+    fournisseur WhatsApp ; publication du moteur et du site, PUIS armement (six variables) ; liste
+    des numéros par le script du moteur `scripts/demo-gate-list.mjs` (`reset` puis `allow`).

@@ -17,9 +17,17 @@
  *   mémoire de la page quand ce stockage est refusé), jamais dans une adresse, un journal, un témoin
  *   ni le `localStorage`. Il est oublié à son échéance, que la page tient elle-même : une requête du
  *   moteur fige son horloge, un abonnement ne se rouvre pas seul à l'échéance.
- * - Ce jeton accompagne les deux lectures qui ouvrent un compte de démonstration : le catalogue (tranche
- *   des comptes de démonstration du moteur) et le code affiché (`devTools.latestOtp`), pour les seules adresses
- *   réservées (`…@demo.diaspora-ga.test`). Une adresse ordinaire ne le reçoit jamais.
+ * - CH-817 E5 : le verrou réel du moteur est la CONNEXION. Porte armée, il refuse d'envoyer un code de
+ *   connexion à une adresse de la famille réservée (`…@demo.diaspora-ga.test`), et de s'y connecter,
+ *   sans ce jeton dans l'en-tête `X-Demo-Gate-Token` (constante du contrat). Le refus est indistinct :
+ *   l'envoi répond comme un envoi réel (aucun code n'existe), la connexion comme un code faux. La source
+ *   moteur pose l'en-tête sur ces DEUX requêtes pour un acteur choisi dans la feuille seulement
+ *   (`engine-source.ts`, option `demoActor`).
+ * - Le jeton accompagne aussi les deux lectures, second verrou : le catalogue (tranche des comptes de
+ *   démonstration du moteur) et le code relu par la feuille (`devTools.latestOtp`), pour les seules
+ *   adresses déclarées des acteurs. Une adresse ordinaire ne le reçoit jamais.
+ * - Un 429 (`request` comme `verify`) est un refus de l'ADRESSE, visible et immédiat : son délai
+ *   (`retryAfterMs`, ou `Retry-After`) passe à l'écran, qui dit l'attente.
  *
  * Aucun numéro n'est gardé ici : il part dans la demande, puis seule la feuille le garde en mémoire
  * le temps de renvoyer un code.
@@ -36,7 +44,7 @@ import {
   type DemoGateState,
 } from "@antsia/social-contracts/demoGate"
 import { api } from "@convex/_generated/api"
-import { DIASPORA_GA_DEMO_EMAIL_DOMAIN } from "@diaspora-ga/domain"
+import { diasporaGaDemoActorOfEmail } from "@diaspora-ga/domain"
 import type { DemoGateCapability, DemoGateChallengeView, DemoGateResult, DemoGateSessionView, Loadable } from "@diaspora-ga/features/data"
 import { useMemo, useSyncExternalStore } from "react"
 
@@ -53,7 +61,7 @@ export const DEMO_GATE_SCOPE: DemoGateScope = "diaspora-ga"
  */
 export const DEMO_GATE_STORAGE_KEY = "diaspora-ga:demo-gate"
 
-/** Une demande admise répond après deux secondes au moins, un envoi WhatsApp prend jusqu'à huit : vingt suffisent. */
+/** Une demande admise répond après quatre secondes (plancher du moteur, l'envoi WhatsApp borné à trois) : vingt suffisent. */
 const REQUEST_TIMEOUT_MS = 20_000
 /** Le plus long délai qu'accepte `setTimeout` (au-delà, il partirait aussitôt). */
 const MAX_TIMER_MS = 2_147_483_647
@@ -194,11 +202,12 @@ export function useDemoGateTokenSession(tokens: DemoGateTokenStore): StoredDemoG
 }
 
 /**
- * Le jeton de porte qui accompagne la lecture du code de cette adresse, ou `null` : seulement pour
- * une adresse réservée aux comptes de démonstration de DIASPORA.GA, et une session valide.
+ * Le jeton de porte qui accompagne les requêtes d'un compte de démonstration de cette adresse, ou
+ * `null` : seulement pour l'adresse DÉCLARÉE d'un acteur de DIASPORA.GA (celles du catalogue), et
+ * une session valide. Une autre adresse de la famille réservée, ou une adresse ordinaire, jamais.
  */
 export function demoGateTokenFor(email: string, tokens: DemoGateTokenStore): string | null {
-  if (!email.trim().toLowerCase().endsWith(`@${DIASPORA_GA_DEMO_EMAIL_DOMAIN}`)) return null
+  if (diasporaGaDemoActorOfEmail(email) === null) return null
   return tokens.current()?.token ?? null
 }
 
@@ -308,7 +317,11 @@ export function createEngineDemoGate(options: EngineDemoGateOptions): DemoGateCa
         return { ok: false, code: "unknown" }
       }
       if (reply.status === 400) return { ok: false, code: "phone_invalid" }
-      if (reply.status === 429) return { ok: false, code: "rate_limited" }
+      // CH-817 E5 : l'adresse a épuisé son seau — refus visible et immédiat, qui ne dépend pas du numéro.
+      if (reply.status === 429) {
+        const retryAfterMs = retryAfterMsOf(reply)
+        return retryAfterMs === undefined ? { ok: false, code: "rate_limited" } : { ok: false, code: "rate_limited", retryAfterMs }
+      }
       // 404 (porte fermée ou non armée entre-temps) et 503 (indisponible) : la même phrase.
       if (reply.status === 404 || reply.status === 503) return { ok: false, code: "demo_gate_unavailable" }
       return { ok: false, code: "unknown" }

@@ -30,9 +30,9 @@
       "submit": "Entrer dans la démonstration",
       "resend": "Renvoyer un code",
       "resent": "Nouveau code demandé.",
-      "changeNumber": "Changer de numéro",
-      "tooManyAttempts": "Trop d'essais : réessayez dans {{duration}}."
+      "changeNumber": "Changer de numéro"
     },
+    "tooManyAttempts": "Trop d'essais : réessayez dans {{duration}}.",
     "wait": "Nouvelle demande possible dans {{duration}}.",
     "waitOver": "Vous pouvez demander un nouveau code.",
     "actors": {
