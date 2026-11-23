@@ -104,7 +104,8 @@ describe("le document de publication dit ce que font les scripts", () => {
     const section = doc.slice(doc.indexOf("## 9."), doc.indexOf("## 10."))
     expect(section).toContain(`\`DIASPORA_GA/${releaseApp("admin_diaspora_ga").directory}\``)
     for (const word of ["projet d'hébergement", "`admin.diaspora.ga`", "DNS", "`TRUSTED_ORIGINS`", "phrases", "premier administrateur du réseau"]) expect(section).toContain(word)
-    expect(section).toContain("**Non vérifié**")
+    // Établi par le moteur (ADR-0042, durcissement A1b) : une origine hors catalogue se déclare, jamais devinée.
+    expect(section).toContain("`APPLICATION_EXTRA_ORIGINS_JSON`")
   })
 
   test("la porte y est écrite : accord écrit, quatre points, aucune option qui la contourne", () => {
