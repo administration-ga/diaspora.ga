@@ -118,6 +118,7 @@ import { createEngineJobs } from "./engine-jobs"
 import { createEngineModerationDesk } from "./engine-moderation-desk"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
+import { createEngineDemoGate, demoGateTokenFor, demoGateTokens } from "./engine-demo-gate"
 import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
@@ -265,6 +266,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     conversations: createEngineConversations(deps),
     // Comptes de démonstration par acteur : développement local du moteur seulement.
     demoAccounts: createEngineDemoAccounts(deps),
+    // CH-817 (lot A1) : la porte des comptes de démonstration (numéro WhatsApp, code, session de l'onglet).
+    demoGate: createEngineDemoGate({ siteUrl: deps.convexSiteUrl ?? null, tokens: deps.demoGateTokens ?? demoGateTokens, ...(deps.fetch ? { fetch: deps.fetch } : {}) }),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
     // DS-14 (volet push) : abonner cet appareil aux notifications du navigateur, par les fonctions existantes du moteur.
@@ -802,7 +805,10 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       if (sent.error) return { ok: false, code: authActionErrorCode(sent.error) }
       pendingEmail = email
       // En développement LOCAL seulement (outils ouverts et backend local), le moteur rend le code ; ailleurs, `null`.
-      const dev = await deps.convex.query(api.modules.platform.devTools.latestOtp, { email }).catch(() => null)
+      // Sur la démonstration déclarée, porte armée (CH-817) : le code d'une adresse réservée ne se relit qu'avec
+      // le jeton de la session de porte de l'onglet ; une adresse ordinaire ne le reçoit jamais.
+      const gateToken = demoGateTokenFor(email, deps.demoGateTokens ?? demoGateTokens)
+      const dev = await deps.convex.query(api.modules.platform.devTools.latestOtp, gateToken ? { email, gateToken } : { email }).catch(() => null)
       return { ok: true, value: { demoCode: dev?.code ?? null } }
     },
 

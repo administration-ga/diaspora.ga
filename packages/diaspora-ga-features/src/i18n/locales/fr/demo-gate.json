@@ -1,0 +1,57 @@
+{
+  "demoGate": {
+    "pill": "Compte démo",
+    "step": {
+      "phone": {
+        "lead": "Saisissez votre numéro WhatsApp : s'il est autorisé pour la démonstration, vous recevez un code pour y entrer."
+      },
+      "code": {
+        "lead": "Saisissez le code reçu sur WhatsApp : 6 chiffres puis une lettre."
+      },
+      "actors": {
+        "lead": "Chaque compte entre par le vrai code à usage unique, lu ici pour vous, puis son accueil et son équipement se font tout seuls. Personnes, pages et adresses sont fictives ; en ligne, chaque compte est partagé par tous les visiteurs."
+      },
+      "unavailable": {
+        "lead": "La démonstration est indisponible pour le moment."
+      }
+    },
+    "phone": {
+      "label": "Numéro WhatsApp",
+      "hint": "Avec l'indicatif du pays, par exemple +33 6 00 00 00 00.",
+      "submit": "Recevoir le code"
+    },
+    "code": {
+      "delivery": "Si ce numéro est autorisé, le code arrive sur WhatsApp ; sans message après une minute, l'envoi n'a pas abouti.",
+      "number": "Numéro : {{number}}",
+      "label": "Code reçu sur WhatsApp",
+      "hint": "6 chiffres puis une lettre.",
+      "expiresIn": "Ce code reste valable {{duration}}.",
+      "expired": "Ce code a expiré : demandez-en un nouveau.",
+      "submit": "Entrer dans la démonstration",
+      "resend": "Renvoyer un code",
+      "resent": "Nouveau code demandé.",
+      "changeNumber": "Changer de numéro",
+      "tooManyAttempts": "Trop d'essais : réessayez dans {{duration}}."
+    },
+    "wait": "Nouvelle demande possible dans {{duration}}.",
+    "waitOver": "Vous pouvez demander un nouveau code.",
+    "actors": {
+      "openUntil": "Accès à la démonstration ouvert jusqu'à {{time}}.",
+      "forget": "Fermer l'accès",
+      "loading": "Chargement des comptes…",
+      "unreadable": "Les comptes de démonstration ne se lisent pas pour le moment.",
+      "empty": "Aucun compte de démonstration n'est proposé pour le moment."
+    },
+    "unavailable": "Aucun code ne peut être demandé tant que la démonstration n'est pas rétablie. Réessayez plus tard.",
+    "opened": "Accès à la démonstration ouvert pour {{minutes}} minutes.",
+    "duration": {
+      "minutes": "{{minutes}} min {{seconds}} s",
+      "seconds": "{{seconds}} s"
+    }
+  },
+  "errors": {
+    "demo_gate_unavailable": "La démonstration est indisponible pour le moment. Réessayez plus tard.",
+    "demo_gate_code_invalid": "Code incorrect ou expiré. Vérifiez-le, ou demandez-en un nouveau.",
+    "demo_gate_code_format": "Le code compte 6 chiffres puis une lettre."
+  }
+}

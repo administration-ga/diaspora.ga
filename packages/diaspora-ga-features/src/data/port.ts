@@ -78,6 +78,7 @@ import type { JobsCapability } from "./jobs-port"
 import type { ModerationDeskCapability } from "./moderation-desk-port"
 import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
+import type { DemoGateCapability } from "./demo-gate-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
@@ -407,6 +408,12 @@ export interface DiasporaGaDataSource {
   readonly conversations?: ConversationsCapability
   /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
   readonly demoAccounts?: DemoAccountsCapability
+  /**
+   * CH-817 (lot A1) : la porte des comptes de démonstration du moteur (numéro WhatsApp autorisé,
+   * code de 6 chiffres et 1 lettre, session courte de cet onglet ; `demo-gate-port.ts`). Absente
+   * en démonstration, qui garde ses propres comptes fictifs sans porte.
+   */
+  readonly demoGate?: DemoGateCapability
   /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
   readonly callSettings?: CallSettingsCapability
   /**

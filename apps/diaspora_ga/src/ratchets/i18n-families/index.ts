@@ -17,6 +17,7 @@ import { FAMILIES as MODERATION_DESK } from "./moderation-desk"
 import { FAMILIES as MODERATION_DEADLINES } from "./moderation-deadlines"
 import { FAMILIES as SERVICE_NOTIFICATIONS } from "./service-notifications"
 import { FAMILIES as DEMO_ACCOUNTS } from "./demo-accounts"
+import { FAMILIES as DEMO_GATE } from "./demo-gate"
 import { FAMILIES as REPORTER_NOTICES } from "./reporter-notices"
 import { FAMILIES as LEGAL_TEXTS } from "./legal-texts"
 import { FAMILIES as NETWORK_FEATURES } from "./network-features"
@@ -40,6 +41,7 @@ export const LOT_FAMILIES: readonly string[] = [
   ...MODERATION_DEADLINES,
   ...SERVICE_NOTIFICATIONS,
   ...DEMO_ACCOUNTS,
+  ...DEMO_GATE,
   ...REPORTER_NOTICES,
   ...LEGAL_TEXTS,
   ...NETWORK_FEATURES,

@@ -1,84 +1,191 @@
 "use client"
 
+import { DEMO_GATE_SESSION_TTL_SECONDS } from "@antsia/social-contracts/demoGate"
 import { DIASPORA_GA_DEMO_ACTOR_SPECS, DIASPORA_GA_DEMO_GROUPS, diasporaGaDemoDisplayName } from "@diaspora-ga/domain"
-import { Avatar, CountryTag, Sheet, SheetContent, SheetTrigger } from "@diaspora-ga/features"
-import { useActions, useDataSource, useDemoAccounts, type DemoAccountEntry, type DemoAccountsCapability } from "@diaspora-ga/features/data"
+import { Avatar, Button, CountryTag, Sheet, SheetContent, SheetTrigger } from "@diaspora-ga/features"
+import {
+  demoGateSheetStep,
+  useActions,
+  useDataSource,
+  useDemoAccounts,
+  useDemoGate,
+  type DemoAccountEntry,
+  type DemoAccountsCapability,
+  type DemoGateCapability,
+  type DemoGateSessionView,
+  type DemoGateState,
+} from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { ChevronRightIcon, FlaskConicalIcon, LoaderCircleIcon } from "lucide-react"
+import { FlaskConicalIcon, LoaderCircleIcon } from "lucide-react"
 import NextLink from "next/link"
-import { forwardRef, useId, useState, type ComponentPropsWithoutRef, type ReactNode } from "react"
+import { forwardRef, useEffect, useId, useRef, useState, type ComponentPropsWithoutRef, type ReactNode } from "react"
+import { toast } from "sonner"
 
 import { forgetDemoActor, rememberDemoActor } from "@/lib/demo-account-pending"
 import { routes } from "@/lib/routes"
 
-const TRIGGER =
-  "flex min-h-12 w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-[var(--esp-neutral-hover)] focus-visible:shadow-focus"
+import { DemoGateCodeStep, DemoGatePhoneStep, type PendingDemoGateChallenge } from "./demo-gate-steps"
 
-/** Le contenu du déclencheur : pastille de démonstration, libellé, mention du développement local. */
-function TriggerBody() {
+/**
+ * La cible de la pastille : 44 px de haut (charte §10) autour d'une pastille de 28 px, le focus
+ * visible sur toute la cible.
+ */
+const PILL_TARGET = "group inline-flex min-h-11 items-center rounded-full px-1 focus-visible:shadow-focus"
+
+/** La pastille elle-même : les jetons du repère de démonstration (`--dg-demo-bg`, `--dg-demo-fg`), comme `DemoChip`. */
+function PillBody() {
   const { t } = useDiasporaGaT()
   return (
-    <>
-      <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-[var(--dg-demo-bg)] text-[var(--dg-demo-fg)] [&_svg]:size-4">
-        <FlaskConicalIcon />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold">{t("demoAccounts.open")}</span>
-        <span className="block text-[13px] text-muted-foreground">{t("demoAccounts.openHint")}</span>
-      </span>
-      <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-    </>
+    <span className="inline-flex h-7 items-center gap-1.5 rounded-full bg-demo px-3 text-[12px] font-semibold text-demo-foreground decoration-1 underline-offset-2 group-hover:underline [&_svg]:size-3.5">
+      <FlaskConicalIcon aria-hidden />
+      {t("demoGate.pill")}
+    </span>
   )
 }
 
-const TriggerButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<"button">>(function TriggerButton(props, ref) {
+const PillButton = forwardRef<HTMLButtonElement, ComponentPropsWithoutRef<"button">>(function PillButton(props, ref) {
   return (
-    <button ref={ref} type="button" {...props} className={TRIGGER}>
-      <TriggerBody />
+    <button ref={ref} type="button" data-slot="demo-pill" {...props} className={PILL_TARGET}>
+      <PillBody />
     </button>
   )
 })
 
+/** Tout en bas de la porte, sous le pied de page compact, dans son fond. */
+function PillStrip(props: { children: ReactNode }) {
+  return <div className="flex justify-center bg-card px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">{props.children}</div>
+}
+
 /**
- * Le bouton des comptes de démonstration, sous la carte d'accès de la porte.
- * - Moteur, développement local : il ouvre la feuille des acteurs ; chacun entre
- *   par le vrai code à usage unique, lu ici, puis l'amorçage (`DemoAccountBootstrap`)
- *   rejoue l'accueil et équipe le compte.
- * - Démonstration (données fictives de ce navigateur) : il mène aux comptes fictifs.
- * - Ailleurs (catalogue vide, production comprise) : rien ne s'affiche.
+ * La pastille « Compte démo », discrète, tout en bas de la porte (CH-817, lot A1) :
+ * - démonstration (données fictives de ce navigateur) : elle mène aux comptes fictifs (`/demo`),
+ *   sans porte ;
+ * - moteur, porte fermée (production comprise) : rien ne s'affiche ;
+ * - porte non armée (`open`, développement local par exemple) : elle ouvre la liste des acteurs,
+ *   comme l'ancien bouton, et seulement si le catalogue en propose ;
+ * - porte incomplète (`unavailable`) : la feuille le dit, sans formulaire ;
+ * - porte armée (`gated`) : numéro WhatsApp, code de 6 chiffres et 1 lettre, puis les acteurs ;
+ *   sans origine des actions HTTP du moteur (variable absente), la pastille ne s'affiche pas.
+ * Chaque acteur entre par le vrai code à usage unique, lu ici, puis l'amorçage
+ * (`DemoAccountBootstrap`) rejoue l'accueil et équipe le compte.
  */
-export function DemoAccountsButton() {
+export function DemoAccountsPill() {
   const source = useDataSource()
   const demoAccounts = useDemoAccounts()
+  const gate = useDemoGate()
   if (source.kind === "demo") {
     return (
-      <DemoAccountsBlock>
-        <NextLink href={routes.demo()} className={TRIGGER}>
-          <TriggerBody />
+      <PillStrip>
+        <NextLink href={routes.demo()} data-slot="demo-pill" className={PILL_TARGET}>
+          <PillBody />
         </NextLink>
-      </DemoAccountsBlock>
+      </PillStrip>
     )
   }
-  if (demoAccounts === null) return null
-  return <EngineDemoAccounts capability={demoAccounts} />
+  if (demoAccounts === null || gate === null) return null
+  return <EngineDemoPill gate={gate} accounts={demoAccounts} />
 }
 
-function DemoAccountsBlock(props: { children: ReactNode }) {
-  return <div className="mt-4 border-t border-border pt-3 min-[960px]:mt-5">{props.children}</div>
+function EngineDemoPill(props: { gate: DemoGateCapability; accounts: DemoAccountsCapability }) {
+  const state = props.gate.useGateState()
+  if (state.status !== "ready") return null
+  switch (state.data) {
+    case "closed":
+      return null
+    case "open":
+      return <OpenGatePill gate={props.gate} accounts={props.accounts} />
+    case "unavailable":
+      return <DemoGateSheet state="unavailable" gate={props.gate} accounts={props.accounts} />
+    case "gated":
+      // Sans l'origine des actions HTTP du moteur, le formulaire serait mort : rien ne s'affiche.
+      return props.gate.reachable ? <DemoGateSheet state="gated" gate={props.gate} accounts={props.accounts} /> : null
+  }
 }
 
-function EngineDemoAccounts(props: { capability: DemoAccountsCapability }) {
-  const catalogue = props.capability.useCatalogue()
+/** Porte non armée : la pastille ne s'affiche que si le catalogue propose au moins un acteur. */
+function OpenGatePill(props: { gate: DemoGateCapability; accounts: DemoAccountsCapability }) {
+  const catalogue = props.accounts.useCatalogue()
   if (catalogue.status !== "ready" || catalogue.data.length === 0) return null
-  return <DemoAccountsSheet capability={props.capability} entries={catalogue.data} />
+  return <DemoGateSheet state="open" gate={props.gate} accounts={props.accounts} />
 }
 
-function DemoAccountsSheet(props: { capability: DemoAccountsCapability; entries: readonly DemoAccountEntry[] }) {
+function DemoGateSheet(props: { state: Exclude<DemoGateState, "closed">; gate: DemoGateCapability; accounts: DemoAccountsCapability }) {
   const { t } = useDiasporaGaT()
+  const session = props.gate.useSession()
+  // Le défi en cours et les demandes faites restent en mémoire de la pastille : refermer la feuille ne les perd pas.
+  const [challenge, setChallenge] = useState<PendingDemoGateChallenge | null>(null)
+  const [requests, setRequests] = useState<readonly number[]>([])
+  const step = demoGateSheetStep({ state: props.state, session: session !== null, challenge: challenge !== null }) ?? "unavailable"
+  // Une étape qui arrive après un geste prend le focus ; à l'ouverture, la feuille garde le sien.
+  const previous = useRef(step)
+  const [arrived, setArrived] = useState(false)
+  useEffect(() => {
+    if (previous.current !== step) setArrived(true)
+    previous.current = step
+  }, [step])
+
+  const requested = (next: PendingDemoGateChallenge, at: number) => {
+    setRequests((done) => [...done, at])
+    setChallenge(next)
+  }
+
+  return (
+    <PillStrip>
+      <Sheet onOpenChange={() => setArrived(false)}>
+        <SheetTrigger asChild>
+          <PillButton />
+        </SheetTrigger>
+        <SheetContent title={t("demoAccounts.title")} description={t(`demoGate.step.${step}.lead`)} closeLabel={t("demoAccounts.close")}>
+          {step === "unavailable" ? (
+            <p role="status" className="rounded-lg bg-muted p-3 text-sm">
+              {t("demoGate.unavailable")}
+            </p>
+          ) : null}
+          {step === "phone" ? <DemoGatePhoneStep gate={props.gate} requests={requests} focusOnMount={arrived} onRequested={requested} /> : null}
+          {step === "code" && challenge !== null ? (
+            <DemoGateCodeStep
+              gate={props.gate}
+              challenge={challenge}
+              requests={requests}
+              onResent={requested}
+              onChangeNumber={() => setChallenge(null)}
+              onVerified={() => {
+                setChallenge(null)
+                toast.success(t("demoGate.opened", { minutes: DEMO_GATE_SESSION_TTL_SECONDS / 60 }))
+              }}
+            />
+          ) : null}
+          {step === "actors" ? (
+            <DemoActorsStep
+              capability={props.accounts}
+              session={props.state === "gated" ? session : null}
+              focusOnMount={arrived}
+              onForget={() => {
+                props.gate.forget()
+                setChallenge(null)
+              }}
+            />
+          ) : null}
+        </SheetContent>
+      </Sheet>
+    </PillStrip>
+  )
+}
+
+/** Les acteurs proposés, groupés comme le panneau d'origine ; porte armée, l'échéance de l'accès et sa fermeture. */
+function DemoActorsStep(props: { capability: DemoAccountsCapability; session: DemoGateSessionView | null; focusOnMount: boolean; onForget: () => void }) {
+  const { t, locale } = useDiasporaGaT()
+  const catalogue = props.capability.useCatalogue()
   const actions = useActions()
   const ids = useId()
   const [pending, setPending] = useState<DemoAccountEntry["actor"] | null>(null)
   const [failed, setFailed] = useState(false)
+  const intro = useRef<HTMLParagraphElement>(null)
+  const { focusOnMount } = props
+  const ready = catalogue.status === "ready"
+  useEffect(() => {
+    if (focusOnMount && ready) intro.current?.focus()
+  }, [focusOnMount, ready])
 
   async function enter(entry: DemoAccountEntry) {
     setPending(entry.actor)
@@ -99,39 +206,64 @@ function DemoAccountsSheet(props: { capability: DemoAccountsCapability; entries:
     }
   }
 
+  if (catalogue.status === "loading") {
+    return (
+      <p role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
+        <LoaderCircleIcon className="size-4 shrink-0 motion-safe:animate-spin" aria-hidden />
+        {t("demoGate.actors.loading")}
+      </p>
+    )
+  }
+  if (catalogue.status === "error") {
+    return (
+      <p role="alert" className="rounded-lg bg-muted p-3 text-sm">
+        {t("demoGate.actors.unreadable")}
+      </p>
+    )
+  }
+
+  const until = props.session === null ? null : new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit" }).format(props.session.expiresAt)
   return (
-    <DemoAccountsBlock>
-      <Sheet>
-        <SheetTrigger asChild>
-          <TriggerButton />
-        </SheetTrigger>
-        <SheetContent title={t("demoAccounts.title")} description={t("demoAccounts.lead")} closeLabel={t("demoAccounts.close")}>
-          {failed ? (
-            <p role="alert" className="mb-4 rounded-lg bg-muted p-3 text-sm text-destructive">
-              {t("demoAccounts.failed")}
-            </p>
-          ) : null}
-          {DIASPORA_GA_DEMO_GROUPS.map((group) => {
-            const members = props.entries.filter((entry) => DIASPORA_GA_DEMO_ACTOR_SPECS[entry.actor].group === group)
-            if (members.length === 0) return null
-            return (
-              <section key={group} aria-labelledby={`${ids}-${group}`} className="mt-5 first:mt-0">
-                <h3 id={`${ids}-${group}`} className="mb-2 text-[13px] font-semibold text-muted-foreground">
-                  {t(`demoAccounts.groups.${group}`)}
-                </h3>
-                <ul className="flex flex-col gap-2">
-                  {members.map((entry) => (
-                    <li key={entry.actor}>
-                      <ActorChoice entry={entry} pending={pending === entry.actor} disabled={pending !== null} onEnter={() => void enter(entry)} />
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )
-          })}
-        </SheetContent>
-      </Sheet>
-    </DemoAccountsBlock>
+    <>
+      {until !== null ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
+          <p ref={intro} tabIndex={-1} role="status" className="rounded-md text-[13px] focus-visible:shadow-focus">
+            {t("demoGate.actors.openUntil", { time: until })}
+          </p>
+          <Button variant="ghost" onClick={props.onForget}>
+            {t("demoGate.actors.forget")}
+          </Button>
+        </div>
+      ) : null}
+      {catalogue.data.length === 0 ? (
+        <p role="status" className="rounded-lg bg-muted p-3 text-sm">
+          {t("demoGate.actors.empty")}
+        </p>
+      ) : null}
+      {failed ? (
+        <p role="alert" className="mb-4 rounded-lg bg-muted p-3 text-sm text-destructive">
+          {t("demoAccounts.failed")}
+        </p>
+      ) : null}
+      {DIASPORA_GA_DEMO_GROUPS.map((group) => {
+        const members = catalogue.data.filter((entry) => DIASPORA_GA_DEMO_ACTOR_SPECS[entry.actor].group === group)
+        if (members.length === 0) return null
+        return (
+          <section key={group} aria-labelledby={`${ids}-${group}`} className="mt-5 first:mt-0">
+            <h3 id={`${ids}-${group}`} className="mb-2 text-[13px] font-semibold text-muted-foreground">
+              {t(`demoAccounts.groups.${group}`)}
+            </h3>
+            <ul className="flex flex-col gap-2">
+              {members.map((entry) => (
+                <li key={entry.actor}>
+                  <ActorChoice entry={entry} pending={pending === entry.actor} disabled={pending !== null} onEnter={() => void enter(entry)} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )
+      })}
+    </>
   )
 }
 

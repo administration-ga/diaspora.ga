@@ -7,11 +7,16 @@
  * l'équipement refusé. Le code à usage unique se relit par `devTools.latestOtp`, comme
  * l'écran de connexion le fait déjà en développement local. L'accueil d'ANTSIA de
  * l'utilisateur extérieur passe par les mutations de l'écran d'accueil, comme `join`.
+ *
+ * CH-817 (lot A1) : porte armée, le catalogue et le code d'une adresse réservée ne se lisent
+ * qu'avec le jeton de la session de porte de cet onglet (`engine-demo-gate.ts`), passé ici aux
+ * deux lectures ; il change avec la session (ouverte, échue, oubliée) et l'abonnement suit.
  */
 import { api } from "@convex/_generated/api"
 import type { DemoAccountEntry, DemoAccountsCapability, Loadable } from "@diaspora-ga/features/data"
 import { useMemo } from "react"
 
+import { demoGateTokenFor, demoGateTokens, useDemoGateTokenSession } from "./engine-demo-gate"
 import { attemptAction, failed, LOADING, ready, Refusal, useLoaded, type EngineSourceDeps } from "./engine-kit"
 
 /** Le code enregistré par l'envoi se relit aussitôt ; quelques essais couvrent le délai du backend local. */
@@ -24,9 +29,12 @@ function wait(ms: number): Promise<void> {
 
 export function createEngineDemoAccounts(deps: EngineSourceDeps): DemoAccountsCapability {
   const sleep = deps.sleep ?? wait
+  const tokens = deps.demoGateTokens ?? demoGateTokens
   return {
     useCatalogue(): Loadable<readonly DemoAccountEntry[]> {
-      const loaded = useLoaded(api.modules.diaspora.demoAccounts.catalogue, {})
+      // La session de porte de l'onglet : avec elle, le catalogue d'une porte armée s'ouvre.
+      const session = useDemoGateTokenSession(tokens)
+      const loaded = useLoaded(api.modules.diaspora.demoAccounts.catalogue, session ? { gateToken: session.token } : {})
       const value = loaded.state === "ready" ? loaded.value : null
       const code = loaded.state === "error" ? loaded.code : null
       // Une projection mémorisée : un Loadable neuf à chaque rendu relancerait ses lecteurs sans fin.
@@ -38,7 +46,9 @@ export function createEngineDemoAccounts(deps: EngineSourceDeps): DemoAccountsCa
     },
     async readLocalCode(email) {
       for (let read = 0; read < CODE_READS; read++) {
-        const latest = await deps.convex.query(api.modules.platform.devTools.latestOtp, { email }).catch(() => null)
+        // Relu à chaque essai : une session échue entre deux lectures n'est plus envoyée.
+        const gateToken = demoGateTokenFor(email, tokens)
+        const latest = await deps.convex.query(api.modules.platform.devTools.latestOtp, gateToken ? { email, gateToken } : { email }).catch(() => null)
         if (latest) return latest.code
         if (read < CODE_READS - 1) await sleep(CODE_READ_DELAY_MS)
       }

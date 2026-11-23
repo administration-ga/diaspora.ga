@@ -27,6 +27,7 @@ import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
 import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
 import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
 import { DEVICE_NOTIFICATIONS_ERROR_CODES } from "./device-notifications-port"
+import { DEMO_GATE_ERROR_CODES, DEMO_GATE_FORM_ERROR_CODES } from "./demo-gate-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -112,6 +113,8 @@ export const FORM_ERROR_CODES = [
   "sponsor_acquaintance_required",
   // EV-03 : annuler un évènement exige un motif de la liste fermée.
   "association_event_cancel_reason_required",
+  // CH-817 (lot A1) : le code de la porte de démonstration compte 6 chiffres puis une lettre.
+  ...DEMO_GATE_FORM_ERROR_CODES,
 ] as const
 
 export const ACTION_ERROR_CODES = [
@@ -145,6 +148,8 @@ export const ACTION_ERROR_CODES = [
   ...CALL_SETTINGS_ERROR_CODES,
   // DS-14 (volet push) : l'activation des notifications de cet appareil.
   ...DEVICE_NOTIFICATIONS_ERROR_CODES,
+  // CH-817 (lot A1) : la porte des comptes de démonstration (indisponible ; code faux ou expiré, sans distinction).
+  ...DEMO_GATE_ERROR_CODES,
   // Fonctionnalités activables du réseau (ADR-0041 du moteur) : motif et règle de dépendance.
 ] as const
 

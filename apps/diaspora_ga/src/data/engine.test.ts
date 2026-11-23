@@ -9,6 +9,7 @@ import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { describe, expect, it, vi } from "vitest"
 
+import { createDemoGateTokenStore } from "./engine-demo-gate"
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions, feedRequest } from "./engine-source"
 import {
@@ -244,6 +245,22 @@ describe("écritures de la source « moteur »", () => {
     expect(calls).toEqual([{ name: "modules/platform/devTools:latestOtp", args: { email: "ada@exemple.test" } }])
     expect(await actions.verifyCode("654321")).toEqual({ ok: true, value: null })
     expect(auth.signIn).toHaveBeenCalledWith({ email: "ada@exemple.test", otp: "654321" })
+  })
+
+  it("CH-817 : porte armée, le code d'une adresse réservée se relit avec le jeton de la session de porte ; une adresse ordinaire, jamais", async () => {
+    const { convex, calls } = fakeConvex({ "modules/platform/devTools:latestOtp": () => ({ code: "123456", expiresAt: 2 }) })
+    const tokens = createDemoGateTokenStore({ storage: () => null, now: () => 1_000 })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client, demoGateTokens: tokens })
+    // Sans session de porte : la lecture d'avant, sans jeton.
+    await actions.requestCode({ kind: "email", value: "verifie@demo.diaspora-ga.test" })
+    tokens.save({ token: "t".repeat(43), expiresAt: 5_000 })
+    await actions.requestCode({ kind: "email", value: " Verifie@Demo.Diaspora-GA.test " })
+    await actions.requestCode({ kind: "email", value: "ada@exemple.test" })
+    expect(calls.map((call) => call.args)).toEqual([
+      { email: "verifie@demo.diaspora-ga.test" },
+      { email: "verifie@demo.diaspora-ga.test", gateToken: "t".repeat(43) },
+      { email: "ada@exemple.test" },
+    ])
   })
 
   it("après un rechargement, la vérification reprend l'adresse gardée par l'écran, sans nouvel envoi (EA-08, MO-04)", async () => {
