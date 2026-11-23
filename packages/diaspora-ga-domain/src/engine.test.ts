@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs"
+
 import { describe, expect, it } from "bun:test"
 
 import { LIGHT_ACCOUNT_GROUNDS, type MembershipGrounds } from "./eligibility"
@@ -5,8 +7,12 @@ import {
   DIASPORA_GA_FACET_SCHEMA,
   DIASPORA_GA_NETWORK_SEED,
   DIASPORA_GA_SLICE,
+  ENGINE_COMMENT_MAX_LENGTH,
   ENGINE_FACET_FIELD_KINDS,
   ENGINE_FACET_VISIBILITIES,
+  ENGINE_NETWORK_FEATURES,
+  ENGINE_POST_MAX_LENGTH,
+  ENGINE_REACTION_KINDS,
   engineVerificationSource,
   facetFromEngine,
   GABONESE_NATIONALITY_CODES,
@@ -15,6 +21,49 @@ import {
   toEngineFacetVisibility,
 } from "./engine"
 import { DEFAULT_FACET_VISIBILITY, FACET_FIELDS, type DiasporaFacet } from "./facet"
+
+/**
+ * Le domaine du moteur voisin (DIASPORA.GA vit à côté d'ANTSIA), relu comme TEXTE :
+ * aucun module du moteur n'est chargé, le domaine reste sans dépendance et sa
+ * couverture ne compte que ses propres fichiers.
+ */
+const ENGINE_DOMAIN = new URL("../../../../ANTSIA/packages/social-domain/src/", import.meta.url)
+
+function engineSource(file: string): string {
+  return readFileSync(new URL(file, ENGINE_DOMAIN), "utf8")
+}
+
+/** Les chaînes d'une liste `export const NOM = [ … ] as const`, ou `null` si elle n'y est pas. */
+function declaredList(source: string, name: string): string[] | null {
+  const found = new RegExp(`export const ${name} = \\[([^\\]]*)\\] as const`).exec(source)
+  return found ? [...(found[1] ?? "").matchAll(/"([A-Za-z_]+)"/g)].map((match) => match[1] ?? "") : null
+}
+
+/** La valeur d'une constante numérique `export const NOM = 123`, ou `null`. */
+function declaredNumber(source: string, name: string): number | null {
+  const found = new RegExp(`export const ${name} = (\\d+)\\b`).exec(source)
+  return found ? Number(found[1]) : null
+}
+
+describe("miroirs des listes du moteur (le domaine ne dépend de rien)", () => {
+  it("les modules activables d'un réseau sont ceux du moteur, dans le même ordre", () => {
+    expect(declaredList(engineSource("networkFeatures.ts"), "NETWORK_FEATURES")).toEqual([...ENGINE_NETWORK_FEATURES])
+  })
+
+  it("les réactions et les longueurs des publications et des commentaires sont celles du moteur", () => {
+    const content = engineSource("content.ts")
+    expect(declaredList(content, "PERSONAL_REACTION_KINDS")).toEqual([...ENGINE_REACTION_KINDS])
+    expect(declaredNumber(content, "PERSONAL_POST_MAX_LENGTH")).toBe(ENGINE_POST_MAX_LENGTH)
+    expect(declaredNumber(content, "PERSONAL_COMMENT_MAX_LENGTH")).toBe(ENGINE_COMMENT_MAX_LENGTH)
+  })
+
+  it("test du test : la lecture voit une liste et un nombre, et rend `null` sans déclaration", () => {
+    expect(declaredList('export const A = ["x", "y_z"] as const', "A")).toEqual(["x", "y_z"])
+    expect(declaredList("export const B = 1", "A")).toBeNull()
+    expect(declaredNumber("export const N = 2000", "N")).toBe(2000)
+    expect(declaredNumber("export const M = 1", "N")).toBeNull()
+  })
+})
 
 describe("projection des visibilités vers le moteur", () => {
   it("seul « tout le réseau » reste lisible par le moteur générique ; jamais la racine", () => {
