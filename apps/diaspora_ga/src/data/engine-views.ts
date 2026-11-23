@@ -48,7 +48,9 @@ import {
   SERVICE_NOTIFICATION_KINDS,
   type CommunityNoticeView,
   type InviteOutcome,
+  type NoticeTarget,
   type NotificationKind,
+  type NotificationOpeningView,
   type NotificationView,
   type ProfileImageView,
   type ProfileView,
@@ -505,6 +507,13 @@ const GROUP_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["group_message",
 /** NP-04 · PG-01 : les avis de gouvernance d'une page, menés à la page relue pour le lecteur. */
 const PAGE_GOVERNANCE_NOTICE_KINDS: ReadonlySet<string> = new Set(PAGE_GOVERNANCE_NOTIFICATION_KINDS)
 
+/**
+ * IC-09 du moteur (antsia#204) : un message à deux, mené à SA conversation (destination typée
+ * `personalThread`). Comparé comme chaîne : un moteur qui ne déclare pas encore ce genre ne casse
+ * pas le typage, et l'avis ne s'y présente simplement jamais.
+ */
+const PERSONAL_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["personal_message"])
+
 /** L'issue d'une invitation d'après la résolution du serveur ; annulée ou expirée, elle n'est plus d'actualité. */
 function resolutionOutcome(resolution: EngineNotification["resolution"]): InviteOutcome | null {
   switch (resolution?.kind) {
@@ -530,6 +539,16 @@ function pageTargetHandle(target: unknown): string | null {
   if (typeof target !== "object" || target === null) return null
   const typed = target as { readonly kind?: unknown; readonly pageHandle?: unknown }
   return typed.kind === "page" && typeof typed.pageHandle === "string" && typed.pageHandle !== "" ? typed.pageHandle : null
+}
+
+/**
+ * Le fil d'une destination typée `personalThread` (IC-09 du moteur), lu sans dépendre de sa
+ * déclaration : tant que ce moteur ne la sert pas, aucun fil.
+ */
+function personalThreadTarget(target: unknown): string | null {
+  if (typeof target !== "object" || target === null) return null
+  const typed = target as { readonly kind?: unknown; readonly threadId?: unknown }
+  return typed.kind === "personalThread" && typeof typed.threadId === "string" && typed.threadId !== "" ? typed.threadId : null
 }
 
 /**
@@ -578,7 +597,54 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     ...(PAGE_GOVERNANCE_NOTICE_KINDS.has(item.kind) ? { governancePageHandle: pageTargetHandle(item.target) } : {}),
     // IM-04 : le fil de groupe d'iCom, relu avec sa garde à l'ouverture (jamais un message).
     ...(GROUP_THREAD_NOTICE_KINDS.has(item.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
+    // IC-09 : la conversation à deux de l'expéditeur, relue pour le destinataire (jamais le message).
+    ...(PERSONAL_THREAD_NOTICE_KINDS.has(item.kind) ? { personalThreadId: personalThreadTarget(item.target) } : {}),
   }
+}
+
+type EngineOpening = FunctionReturnType<typeof api.modules.notifications.open.resolveOpenTarget>
+type EngineOpenTarget = Extract<NonNullable<EngineOpening>, { channel: "notification" }>["target"]
+
+/** La page des décisions d'un avis de modération (destination typée relue), ou rien sans destination de décision. */
+function openedModerationDecision(target: EngineOpenTarget): NoticeTarget["moderationDecision"] {
+  if (target?.kind === "pageModerationDecisions") return { pageHandle: target.pageHandle }
+  if (target?.kind === "personalDecisions") return { pageHandle: null }
+  return undefined
+}
+
+/**
+ * DS-14 (ouverture) : la destination d'une notification poussée, relue par le moteur à l'instant
+ * (`notifications/open:resolveOpenTarget`), dans la forme qu'un lien d'avis lit (`NoticeTarget`).
+ * Mêmes sujets que la ligne de la cloche ; les destinations typées relues pour le lecteur (mise en
+ * relation, vie communautaire, décisions, page, message à deux). Un avis d'évènement d'association
+ * n'y porte pas l'adresse de sa page : il retombe sur le repli neutre. `null` reste `null`.
+ */
+export function toNotificationOpeningView(opening: EngineOpening): NotificationOpeningView | null {
+  if (opening === null) return null
+  if (opening.channel === "call") return { channel: "call", ringing: opening.ringing }
+  const kind = (SPOKEN_KINDS.has(opening.kind) ? opening.kind : "other") as NotificationKind
+  const { subject, target } = opening
+  const decision = opening.kind === "moderation_decision" ? openedModerationDecision(target) : undefined
+  const notice: NoticeTarget = {
+    kind,
+    actor: opening.actorHandle ? { handle: opening.actorHandle } : null,
+    postId: subject?.kind === "post" ? subject.id : null,
+    ...(ASSOCIATION_EVENT_NOTICE_KINDS.has(opening.kind) ? { associationEvent: null } : {}),
+    ...(SERVICE_NOTICE_KINDS.has(opening.kind)
+      ? { serviceNotice: target?.kind === "diasporaServiceNotice" ? { audience: target.audience, requestId: target.requestId, pageHandle: target.pageHandle } : null }
+      : {}),
+    ...(COMMUNITY_NOTICE_KINDS.has(opening.kind)
+      ? { communityNotice: target?.kind === "diasporaCommunityNotice" ? { audience: target.audience, opens: target.opens, objectId: target.objectId, pageHandle: target.pageHandle } : null }
+      : {}),
+    // P16 · G9 : les décisions de la page dont je signe, ou les miennes ; sans destination de décision, le repli.
+    ...(decision !== undefined ? { moderationDecision: decision } : {}),
+    ...(CONTEXTUAL_NOTICE_KINDS.has(opening.kind) ? { contextualThreadId: subject?.kind === "contextualThread" ? subject.id : null } : {}),
+    ...(opening.kind === "album_published" ? { albumId: subject?.kind === "album" ? subject.id : null } : {}),
+    ...(PAGE_GOVERNANCE_NOTICE_KINDS.has(opening.kind) ? { governancePageHandle: pageTargetHandle(target) } : {}),
+    ...(GROUP_THREAD_NOTICE_KINDS.has(opening.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
+    ...(PERSONAL_THREAD_NOTICE_KINDS.has(opening.kind) ? { personalThreadId: personalThreadTarget(target) } : {}),
+  }
+  return { channel: "notice", notice }
 }
 
 type EngineComment = FunctionReturnType<typeof api.modules.engagement.engagement.paginateComments>["page"][number]

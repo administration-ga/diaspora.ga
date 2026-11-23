@@ -39,6 +39,8 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   story: CORE,
   newStory: CORE,
   notifications: CORE,
+  // DS-14 : la porte d'ouverture d'une notification poussée (elle mène à la destination relue, ou à la page des notifications).
+  openNotification: CORE,
   // Les personnes.
   explore: CORE,
   members: CORE,
@@ -62,6 +64,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   messages: CORE,
   contextualConversation: CORE,
   groupConversation: CORE,
+  personalConversation: CORE,
   callJournal: CORE,
   // La confiance et le compte.
   moderationDesk: CORE,

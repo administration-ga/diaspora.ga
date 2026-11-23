@@ -83,6 +83,7 @@ import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 import type { MemberBrowseCapability } from "./member-browse-port"
+import type { NotificationOpeningCapability } from "./notification-opening-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -402,6 +403,12 @@ export interface DiasporaGaDataSource {
    * à côté de la recherche par nom : mêmes membres, même règle, vingt par fenêtre.
    */
   readonly memberBrowse?: MemberBrowseCapability
+  /**
+   * DS-14 (ouverture) : la destination relue d'une notification poussée sur l'appareil
+   * (`notification-opening-port.ts`). Absente (démonstration : rien n'est poussé), la porte
+   * d'ouverture mène à la page des notifications.
+   */
+  readonly notificationOpening?: NotificationOpeningCapability
   /**
    * Posés par `gateSource` seulement : les fonctionnalités ouvertes de la source montée, et
    * si leur lecture a répondu. Absents : la source n'est pas gardée (elle sert tout ce qu'elle porte).

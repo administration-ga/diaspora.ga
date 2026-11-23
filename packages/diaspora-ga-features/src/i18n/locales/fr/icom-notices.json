@@ -6,6 +6,7 @@
     "kind": {
       "group_message": "a écrit dans un groupe de discussion.",
       "group_added": "vous invite dans un groupe de discussion.",
+      "personal_message": "vous a écrit.",
       "call_missed": "a essayé de vous appeler.",
       "voicemail_left": "vous a laissé un message vocal."
     }

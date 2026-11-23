@@ -117,6 +117,7 @@ import { createEngineMentoring } from "./engine-mentoring"
 import { createEngineJobs } from "./engine-jobs"
 import { createEngineModerationDesk } from "./engine-moderation-desk"
 import { createEngineConversations } from "./engine-conversations"
+import { createEngineNotificationOpening } from "./engine-notification-opening"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
@@ -269,6 +270,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     networkFeatures: createEngineNetworkFeatures(deps),
     // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.
     memberBrowse: createEngineMemberBrowse(deps),
+    // DS-14 (ouverture) : la destination d'une notification poussée, relue par le moteur à l'instant.
+    notificationOpening: createEngineNotificationOpening(deps),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()

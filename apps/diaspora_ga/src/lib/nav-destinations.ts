@@ -110,6 +110,8 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   // La page des notifications (NP-04) relève du fil, comme le relevé des notifications du moteur
   // (`reseau-agent-nav` : « notifications » aboutit au fil) ; la cloche, elle, reste dans l'en-tête.
   notifications: member("feed", routes.notifications()),
+  // DS-14 : la porte d'ouverture d'une notification poussée, sous la page des notifications.
+  openNotification: member("feed", routes.openNotification()),
   // Membres (destination `explore`) : l'annuaire des membres et des pages, une page et ce qu'on y fait sans la gérer.
   explore: member("explore", routes.explore()),
   members: member("explore", routes.members()),
@@ -151,6 +153,8 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   contextualConversation: member("messages", routes.contextualConversation(SEGMENT)),
   // IM-04 : une conversation de groupe et le journal d'appels d'iCom.
   groupConversation: member("messages", routes.groupConversation(SEGMENT)),
+  // IC-09 du moteur : une conversation à deux, ouverte depuis l'avis d'un message reçu.
+  personalConversation: member("messages", routes.personalConversation(SEGMENT)),
   callJournal: member("messages", routes.callJournal()),
   // Les entrées personnelles (menu du compte). `myActivity` s'affiche « Mes pages ».
   myServiceRequests: member("myRequests", routes.myServiceRequests()),
