@@ -10,6 +10,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Component, Fragment, useEffect, useRef, useState, type ReactNode } from "react"
 
 import { publicEnv } from "@/lib/env"
+import { rememberRequestedSection } from "@/lib/requested-section"
 import { routes } from "@/lib/routes"
 import { sectionHrefOf } from "@/lib/sections"
 
@@ -57,15 +58,18 @@ function admissionFailure(error: unknown, retry: () => void): ReactNode {
   return isAdmissionRefusal(error) ? <AdmissionScreen kind="refused" connected /> : <AdmissionScreen kind="failed" connected retry={retry} />
 }
 
-/** Aucune session : l'entrée, avec la section demandée (relue contre le registre au retour). */
+/**
+ * Aucune session : l'entrée nue. La section demandée est retenue dans l'onglet, jamais
+ * dans l'adresse (revue A1, F2) ; l'entrée la relit contre le registre après la connexion.
+ */
 function SignedOutRedirect() {
   const router = useRouter()
   const pathname = usePathname()
-  const target = routes.signIn(sectionHrefOf(pathname))
   useEffect(() => {
-    router.replace(target)
-  }, [router, target])
-  return <AdmissionScreen kind="signedOut" signInHref={target} />
+    rememberRequestedSection(sectionHrefOf(pathname))
+    router.replace(routes.signIn())
+  }, [router, pathname])
+  return <AdmissionScreen kind="signedOut" signInHref={routes.signIn()} />
 }
 
 /**

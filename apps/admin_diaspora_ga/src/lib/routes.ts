@@ -6,9 +6,6 @@
  * ajoutant la sienne.
  */
 
-/** Paramètre de la page d'entrée : la section demandée avant la connexion, relue contre le registre. */
-export const RETURN_PARAM = "retour"
-
 /** Paramètre posé après une sortie de session dont la révocation ou le nettoyage ne sont pas confirmés. */
 const SIGN_OUT_PARAM = "deconnexion"
 const SIGN_OUT_INCOMPLETE = "incomplete"
@@ -17,9 +14,12 @@ const DASHBOARD = "/"
 const SIGN_IN = "/entrer"
 
 export const routes = {
-  /** Connexion par identité numérique seule (D3). `returnTo` : la section à rouvrir après la connexion. */
-  signIn: (returnTo?: string) =>
-    returnTo && returnTo !== DASHBOARD ? `${SIGN_IN}?${new URLSearchParams({ [RETURN_PARAM]: returnTo }).toString()}` : SIGN_IN,
+  /**
+   * Connexion par identité numérique seule (D3), et seule adresse de retour d'IDN
+   * (revue A1, F2) : nue, sans paramètre ni fragment. La section demandée avant la
+   * connexion n'est jamais portée par une adresse (`requested-section.ts`).
+   */
+  signIn: () => SIGN_IN,
   signedOut: (incomplete: boolean) =>
     incomplete ? `${SIGN_IN}?${new URLSearchParams({ [SIGN_OUT_PARAM]: SIGN_OUT_INCOMPLETE }).toString()}` : SIGN_IN,
   // Pilotage

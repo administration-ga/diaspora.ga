@@ -1,6 +1,6 @@
 import { Blocks, LayoutDashboard, MonitorSmartphone, type LucideIcon } from "lucide-react"
 
-import { RETURN_PARAM, routes } from "./routes"
+import { routes } from "./routes"
 
 /**
  * Le registre des sections de l'administration (fiche CH-815 § 4.2) : le menu est du
@@ -57,16 +57,7 @@ export function isSectionActive(section: AdminSection, pathname: string | null):
   return pathname === section.href || pathname.startsWith(`${section.href}/`)
 }
 
-/**
- * La section à rouvrir après la connexion : une adresse du registre, telle quelle,
- * sinon le tableau de bord. Rien d'autre n'est suivi (aucune redirection ouverte).
- */
-export function returnPathFrom(search: string, sections: readonly AdminSection[] = SECTIONS): string {
-  const requested = new URLSearchParams(search).get(RETURN_PARAM)
-  return sections.find((section) => section.href === requested)?.href ?? routes.dashboard()
-}
-
-/** La section qui porte une adresse du registre (pour la renvoyer à la page d'entrée), sinon `undefined`. */
+/** La section qui porte une adresse du registre (retenue avant la page d'entrée), sinon `undefined`. */
 export function sectionHrefOf(pathname: string | null, sections: readonly AdminSection[] = SECTIONS): string | undefined {
   return sections.find((section) => isSectionActive(section, pathname))?.href
 }

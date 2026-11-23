@@ -29,10 +29,10 @@ describe("table des routes d'admin.diaspora.ga", () => {
     )
   })
 
-  it("l'entrée porte la section à rouvrir, sauf le tableau de bord", () => {
+  it("l'entrée est nue : aucune section à rouvrir ne voyage dans l'adresse (revue A1, F2)", () => {
     expect(routes.signIn()).toBe("/entrer")
-    expect(routes.signIn(routes.dashboard())).toBe("/entrer")
-    expect(routes.signIn(routes.journal())).toBe("/entrer?retour=%2Fjournal")
+    // Aucun argument n'est accepté : la section retenue vit dans l'onglet (`requested-section.ts`).
+    expect(routes.signIn.length).toBe(0)
   })
 
   it("une sortie non confirmée se dit à l'entrée, et se relit", () => {
