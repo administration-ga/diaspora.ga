@@ -21,6 +21,7 @@ const mocks = vi.hoisted(() => ({
   publication: vi.fn(),
   dataRights: vi.fn(),
   callSettings: vi.fn(),
+  deviceNotifications: vi.fn(),
   replace: vi.fn(),
   session: { status: "loading" } as unknown,
   success: vi.fn(),
@@ -60,6 +61,12 @@ vi.mock("@/components/call-settings", () => ({
   CallSettings: (props: { membership: MembershipView }) => {
     mocks.callSettings(props.membership)
     return <section id="messages-et-appels" aria-label="Messages et appels" />
+  },
+}))
+vi.mock("@/components/device-notifications-settings", () => ({
+  DeviceNotificationsSettings: (props: { membership: MembershipView }) => {
+    mocks.deviceNotifications(props.membership)
+    return <section id="notifications-appareil" aria-label="Notifications de cet appareil" />
   },
 }))
 
@@ -246,5 +253,17 @@ describe("Réglages — « Messages et appels » (IM-02)", () => {
     render(tree())
     expect(mocks.callSettings).toHaveBeenLastCalledWith(membership)
     expect(screen.getByRole("region", { name: "Messages et appels" })).toHaveAttribute("id", "messages-et-appels")
+  })
+})
+
+describe("Réglages — « Notifications de cet appareil » (DS-14, volet push)", () => {
+  it("monte la rubrique des notifications de l'appareil pour le membre affiché, avant les consentements où l'accord se retire", () => {
+    render(tree())
+    expect(mocks.deviceNotifications).toHaveBeenLastCalledWith(membership)
+    const device = screen.getByRole("region", { name: "Notifications de cet appareil" })
+    expect(device).toHaveAttribute("id", "notifications-appareil")
+    const consents = document.getElementById("consentements")
+    expect(consents).not.toBeNull()
+    expect(device.compareDocumentPosition(consents!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 })

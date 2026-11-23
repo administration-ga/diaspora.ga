@@ -122,6 +122,7 @@ import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
+import { createEngineDeviceNotifications } from "./engine-device-notifications"
 import { createEnginePostSearch } from "./engine-post-search"
 import {
   toAccountView,
@@ -266,6 +267,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     demoAccounts: createEngineDemoAccounts(deps),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
+    // DS-14 (volet push) : abonner cet appareil aux notifications du navigateur, par les fonctions existantes du moteur.
+    deviceNotifications: createEngineDeviceNotifications(deps),
     // ADR-0041 du moteur : les fonctionnalités activables du réseau (clés ouvertes, réglages de l'administration).
     networkFeatures: createEngineNetworkFeatures(deps),
     // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.

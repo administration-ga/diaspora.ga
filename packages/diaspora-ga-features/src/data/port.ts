@@ -81,6 +81,7 @@ import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
+import type { DeviceNotificationsCapability } from "./device-notifications-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 import type { MemberBrowseCapability } from "./member-browse-port"
 import type { PostSearchCapability } from "./post-search-port"
@@ -408,6 +409,11 @@ export interface DiasporaGaDataSource {
   readonly demoAccounts?: DemoAccountsCapability
   /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
   readonly callSettings?: CallSettingsCapability
+  /**
+   * DS-14 (volet push) : abonner CET appareil aux notifications du navigateur, et l'en retirer
+   * (`device-notifications-port.ts`). En démonstration : rien n'est envoyé, l'état le dit.
+   */
+  readonly deviceNotifications?: DeviceNotificationsCapability
   /**
    * Les fonctionnalités activables du réseau (ADR-0041 du moteur, `network-features-port.ts`) :
    * les clés ouvertes, et pour l'administration du réseau, leur état et la bascule.
