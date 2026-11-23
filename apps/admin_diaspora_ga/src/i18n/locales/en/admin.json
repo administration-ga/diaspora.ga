@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "title": "{{brand}} administration",
+    "titleTemplate": "%s · {{brand}} administration",
+    "description": "Administration application of the {{brand}} network, restricted to its administrators."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content"
+  },
+  "brand": {
+    "eyebrow": "Network administration",
+    "title": "{{brand}} administration"
+  },
+  "signIn": {
+    "title": "{{brand}} administration",
+    "lead": "Restricted to the network’s administrators, through the digital identity.",
+    "idn": "Sign in with the digital identity",
+    "connecting": "Opening the digital identity…",
+    "loading": "Checking whether the digital identity is available…",
+    "help": "Sign-in goes through your digital identity (IDN). No code by email or text message.",
+    "unavailable": "Sign-in with the digital identity is not available at the moment.",
+    "minimum": "Digital identity of level {{level}} or higher. Signing in alone grants no administration right.",
+    "configurationFailed": "The availability of sign-in cannot be checked."
+  },
+  "session": {
+    "loading": "Checking the session…",
+    "recording": "Recording your access in the log…",
+    "signedOut": "Sign-in required. Opening the sign-in page…",
+    "failed": "The check did not complete. No access was opened.",
+    "backendMissing": "The engine is not configured for this application.",
+    "retry": "Try again",
+    "signIn": "Sign in"
+  },
+  "access": {
+    "refusedTitle": "Restricted to the network’s administration",
+    "refusedLead": "This application is restricted to the network’s administrators, signed in with their digital identity."
+  },
+  "exit": {
+    "action": "Sign out everywhere",
+    "pending": "Signing out…",
+    "failed": "Sign-out could not be completed on this device. Reload the page, then try again."
+  },
+  "shell": {
+    "navLabel": "Administration sections",
+    "openMenu": "Open the menu",
+    "closeMenu": "Close the menu",
+    "menuTitle": "Administration menu",
+    "membersSite": "Open diaspora.ga",
+    "newTab": "(new tab)",
+    "signedInAs": "Signed in as {{name}}"
+  },
+  "nav": {
+    "group": {
+      "pilotage": "Oversight",
+      "membersApp": "Members’ application",
+      "community": "Community",
+      "trust": "Trust"
+    },
+    "section": {
+      "dashboard": "Dashboard"
+    }
+  },
+  "dashboard": {
+    "greeting": "Hello {{name}}",
+    "greetingWithoutName": "Hello",
+    "lead": "You administer the {{network}} network."
+  },
+  "notice": {
+    "region": "Notices",
+    "close": "Close this notice"
+  },
+  "health": {
+    "title": "Service status",
+    "overall": {
+      "ok": "In service",
+      "degraded": "Degraded service"
+    },
+    "lead": {
+      "ok": "The administration application and its engine are responding.",
+      "degraded": "The engine is not responding normally: some functions may be unavailable."
+    },
+    "application": "Application",
+    "version": "Application version",
+    "backend": "Engine",
+    "engine": {
+      "reachable": "responding",
+      "slow": "responding slowly",
+      "error": "responding with an error",
+      "timeout": "not responding in time",
+      "unreachable": "unreachable",
+      "missing": "not configured"
+    },
+    "engineVersion": "Engine version",
+    "undeclared": "not declared",
+    "unknown": "unknown",
+    "serverTime": "Engine time",
+    "latency": "Engine response time",
+    "latencyValue": "{{latency}} ms",
+    "notMeasured": "not measured",
+    "backHome": "Back to the dashboard"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "lead": "This address does not match any administration section.",
+    "back": "Back to the dashboard"
+  }
+}

@@ -1,0 +1,15 @@
+@import "tailwindcss";
+/* Charte de base du moteur (polices Familjen Grotesk, Inter et DM Mono, famille
+   shadcn, rayons, base), puis le thème de DIASPORA.GA (D6 : celui de l'application
+   des membres, seul), puis les rôles et la couche propres à DIASPORA.GA. L'ordre
+   compte : même spécificité, le dernier l'emporte. */
+@import "@antsia/ui/styles.css";
+@import "@antsia/ui/themes/diaspora-ga.css";
+@import "@diaspora-ga/features/styles/extras.css";
+@import "@diaspora-ga/features/styles/tailwind-theme.css";
+
+/* Tailwind ne parcourt que le dossier de l'application : les primitives de
+   @diaspora-ga/features et le tiroir du moteur doivent être lus pour générer leurs
+   classes. Chemins EXPLICITES par paquet (piège Tailwind 4 du moteur). */
+@source "../../../../packages/diaspora-ga-features/src";
+@source "../../../../../ANTSIA/packages/ui/src";
