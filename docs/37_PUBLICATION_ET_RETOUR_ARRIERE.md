@@ -82,10 +82,11 @@ démonstration ne peuvent pas servir la production par mégarde.
 |---|---|---|
 | `DIASPORA_GA_<CIBLE>_SITE_URL` | origine https du site de la cible | `NEXT_PUBLIC_SITE_URL` |
 | `DIASPORA_GA_<CIBLE>_CONVEX_URL` | origine du backend du moteur de la cible | `NEXT_PUBLIC_CONVEX_URL` |
-| `DIASPORA_GA_<CIBLE>_CONVEX_SITE_URL` | origine des actions HTTP du même backend | `CONVEX_SITE_URL` |
+| `DIASPORA_GA_<CIBLE>_CONVEX_SITE_URL` | origine des actions HTTP du même backend | `CONVEX_SITE_URL`, et `NEXT_PUBLIC_CONVEX_SITE_URL` pour le navigateur (porte des comptes de démonstration, CH-817) |
 | `DIASPORA_GA_<CIBLE>_VERCEL_PROJECT_ID` | projet d'hébergement de la cible | `VERCEL_PROJECT_ID` (ligne de commande seulement) |
 | `DIASPORA_GA_<CIBLE>_IDN_PORTAL_URL` (facultative) | portail IDN ; absente, le lien d'élévation ne s'affiche pas | `NEXT_PUBLIC_IDN_PORTAL_URL` |
 | `DIASPORA_GA_<CIBLE>_CONSULATE_URL` (facultative) | consulat.ga ; absente, le lien ne s'affiche pas | `NEXT_PUBLIC_CONSULATE_URL` |
+| `DIASPORA_GA_<CIBLE>_LIVEKIT_WS_URL` (facultative) | origine `wss://` exacte du serveur vidéo ; absente, la politique de sécurité n'ouvre aucune origine média | `LIVEKIT_WS_URL` (lue à la construction) |
 | `DIASPORA_GA_VERCEL_ORG_ID` | équipe d'hébergement | `VERCEL_ORG_ID` (ligne de commande seulement) |
 | `DIASPORA_GA_VERCEL_SCOPE` | portée des commandes de l'hébergeur | option `--scope` |
 | `DIASPORA_GA_RELEASE_WORKDIR` (facultative) | dossier parent du dossier de travail, hors des dépôts | — |
