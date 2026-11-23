@@ -7,19 +7,39 @@
       "offer": {
         "country": {
           "title": "Votre pays, votre communauté",
-          "body": "Un espace par pays d'accueil — actualités, évènements, associations, entreprises — et ce qui concerne toute la diaspora."
+          "body": "Le fil et les actualités de votre pays de résidence, dès qu'il est ouvert, et ce qui concerne toute la diaspora."
         },
-        "settle": {
-          "title": "S'installer et s'entraider",
-          "body": "Un kit d'arrivée aux ressources datées, des questions pratiques entre membres et des mentors bénévoles."
+        "people": {
+          "title": "Retrouver les Gabonais de la diaspora",
+          "body": "Cherchez un membre par son nom ou son identifiant. L'annuaire est sur option : on n'y figure que si on l'a choisi."
         },
-        "work": {
-          "title": "Travailler et entreprendre",
-          "body": "Des offres d'emploi, des talents visibles par choix et les services de la diaspora, de la demande au rendez-vous."
+        "pages": {
+          "title": "Associations, entreprises, institutions",
+          "body": "Leurs pages, ce qu'elles publient en leur nom, et l'adhésion à une association."
         },
-        "associations": {
-          "title": "Les associations, de près",
-          "body": "Leurs pages, leurs adhésions, leur agenda et leurs missions bénévoles."
+        "groupsAndEvents": {
+          "title": "Groupes et évènements",
+          "body": "Les groupes des membres d'une association, et ses évènements à l'agenda."
+        },
+        "services": {
+          "title": "Les services de la diaspora",
+          "body": "Des services proposés par les pages du réseau, de la demande au rendez-vous."
+        },
+        "jobs": {
+          "title": "Emploi et talents",
+          "body": "Des offres d'emploi, et des talents visibles par choix."
+        },
+        "mutualAid": {
+          "title": "S'entraider",
+          "body": "Des questions pratiques entre membres, et des missions bénévoles."
+        },
+        "mentoring": {
+          "title": "Le mentorat",
+          "body": "Des mentors bénévoles, à qui demander conseil."
+        },
+        "arrivalKit": {
+          "title": "S'installer",
+          "body": "Un kit d'arrivée aux ressources datées, pour s'installer dans votre pays de résidence."
         },
         "contact": {
           "title": "Échanger sans exposer ses coordonnées",
@@ -41,6 +61,10 @@
           "title": "Vérifié avec votre accord",
           "body": "consulat.ga confirme une inscription consulaire, et rien d'autre : ni passeport, ni état civil, ni dossier."
         },
+        "verifiedSoon": {
+          "title": "Bientôt : vérifié avec votre accord",
+          "body": "La vérification par l'identité numérique IDN et par consulat.ga arrive. consulat.ga confirmera une inscription consulaire, et rien d'autre : ni passeport, ni état civil, ni dossier."
+        },
         "sponsored": {
           "title": "Ou parrainé",
           "body": "Un membre vérifié qui vous connaît peut vous parrainer ; chaque parrainage est tracé."
@@ -58,7 +82,8 @@
       "steps": {
         "account": "Créez votre compte avec un code reçu par e-mail, sans mot de passe.",
         "residence": "Dites où vous vivez : votre pays de résidence, puis vos consentements, un par un.",
-        "publish": "Lisez tout de suite ; publiez après la vérification consulaire ou un parrainage."
+        "publish": "Lisez tout de suite ; publiez après la vérification consulaire ou un parrainage.",
+        "publishSponsored": "Lisez tout de suite ; publiez dès qu'un membre vérifié vous parraine."
       },
       "join": "Rejoindre DIASPORA.GA"
     }

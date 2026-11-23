@@ -71,9 +71,10 @@
     "title": "Entrer dans DIASPORA.GA",
     "signUpTitle": "Créer votre compte DIASPORA.GA",
     "signUpLead": "Compte léger : vous lisez tout de suite, vous publiez après un parrainage ou la vérification de votre inscription consulaire.",
+    "signUpLeadSponsored": "Compte léger : vous lisez tout de suite, vous publiez dès qu’un membre vérifié vous parraine.",
     "existingAccount": "J’ai déjà un compte : me connecter",
     "smsInstead": "Recevoir plutôt le code par SMS",
-    "noPassword": "Aucun mot de passe : IDN ou un code à usage unique. Vos coordonnées ne sont jamais montrées aux autres membres."
+    "noPassword": "Aucun mot de passe à créer ni à retenir. Vos coordonnées ne sont jamais montrées aux autres membres."
   },
   "idn": {
     "title": "Connexion avec IDN",

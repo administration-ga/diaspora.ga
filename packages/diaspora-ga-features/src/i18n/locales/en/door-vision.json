@@ -7,19 +7,39 @@
       "offer": {
         "country": {
           "title": "Your country, your community",
-          "body": "A space for each host country (news, events, associations, businesses) and what matters to the whole diaspora."
+          "body": "The feed and news of your country of residence, once it is open, and what matters to the whole diaspora."
         },
-        "settle": {
-          "title": "Settle in and help each other",
-          "body": "An arrival kit with dated resources, practical questions between members and volunteer mentors."
+        "people": {
+          "title": "Find Gabonese people of the diaspora",
+          "body": "Search for a member by name or username. The directory is opt-in: you only appear in it if you chose to."
         },
-        "work": {
-          "title": "Work and do business",
-          "body": "Job offers, talents visible by choice and the diaspora's services, from the request to the appointment."
+        "pages": {
+          "title": "Associations, businesses, institutions",
+          "body": "Their pages, what they post in their own name, and joining an association."
         },
-        "associations": {
-          "title": "Associations, up close",
-          "body": "Their pages, their memberships, their calendar and their volunteer missions."
+        "groupsAndEvents": {
+          "title": "Groups and events",
+          "body": "Groups for an association's members, and its events on the calendar."
+        },
+        "services": {
+          "title": "The diaspora's services",
+          "body": "Services offered by the network's pages, from the request to the appointment."
+        },
+        "jobs": {
+          "title": "Jobs and talent",
+          "body": "Job offers, and talents visible by choice."
+        },
+        "mutualAid": {
+          "title": "Help each other",
+          "body": "Practical questions between members, and volunteer missions."
+        },
+        "mentoring": {
+          "title": "Mentoring",
+          "body": "Volunteer mentors you can ask for advice."
+        },
+        "arrivalKit": {
+          "title": "Settle in",
+          "body": "An arrival kit with dated resources, to settle in your country of residence."
         },
         "contact": {
           "title": "Talk without exposing your contact details",
@@ -41,6 +61,10 @@
           "title": "Verified with your consent",
           "body": "consulat.ga confirms a consular registration and nothing else: no passport, no civil records, no file."
         },
+        "verifiedSoon": {
+          "title": "Soon: verified with your consent",
+          "body": "Verification through the IDN digital identity and through consulat.ga is on its way. consulat.ga will confirm a consular registration and nothing else: no passport, no civil records, no file."
+        },
         "sponsored": {
           "title": "Or sponsored",
           "body": "A verified member who knows you can sponsor you; every sponsorship is recorded."
@@ -58,7 +82,8 @@
       "steps": {
         "account": "Create your account with a code received by email, no password.",
         "residence": "Tell us where you live: your country of residence, then your consents, one by one.",
-        "publish": "Read right away; post after the consular verification or a sponsorship."
+        "publish": "Read right away; post after the consular verification or a sponsorship.",
+        "publishSponsored": "Read right away; post as soon as a verified member sponsors you."
       },
       "join": "Join DIASPORA.GA"
     }

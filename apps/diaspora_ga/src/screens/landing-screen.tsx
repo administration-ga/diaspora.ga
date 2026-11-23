@@ -11,6 +11,7 @@ import { DemoAccountsButton } from "@/components/demo-accounts-panel"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { forgetIdnReturnError } from "@/lib/idn-return"
+import { CONSULAR_ATTESTATION_ANNOUNCED } from "@/lib/public-offer"
 import { routes } from "@/lib/routes"
 
 import { CodeForm, useLeaveEntryWhenSignedIn } from "./enter-screens"
@@ -48,7 +49,10 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           <h2 id="acces-titre" className="text-xl font-semibold">
             {t("entry.signUpTitle")}
           </h2>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("entry.signUpLead")}</p>
+          {/* Sans vérification consulaire annoncée (`lib/public-offer.ts`), on publie après un parrainage seulement. */}
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            {t(CONSULAR_ATTESTATION_ANNOUNCED ? "entry.signUpLead" : "entry.signUpLeadSponsored")}
+          </p>
         </div>
       ) : (
         <h2

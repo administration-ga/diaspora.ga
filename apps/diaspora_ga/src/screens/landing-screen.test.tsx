@@ -20,6 +20,18 @@ import { LandingScreen } from "./landing-screen"
 const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }))
 
+/** La vérification consulaire annoncée (`lib/public-offer.ts`), remplacée le temps d'un essai ; `null` garde la vraie. */
+const offer = vi.hoisted(() => ({ consular: null as boolean | null }))
+vi.mock("@/lib/public-offer", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/public-offer")>()
+  return {
+    ...actual,
+    get CONSULAR_ATTESTATION_ANNOUNCED() {
+      return offer.consular ?? actual.CONSULAR_ATTESTATION_ANNOUNCED
+    },
+  }
+})
+
 const t = getFixedT("fr")
 
 /** Avec le moteur, la porte suit la configuration du déploiement : ici, IDN fermée et code par e-mail ouvert. */
@@ -48,6 +60,7 @@ function setup(kind: DiasporaGaDataSource["kind"] = "demo") {
 afterEach(() => {
   cleanup()
   vi.clearAllMocks()
+  offer.consular = null
   // L'adresse en attente d'un code vit dans l'onglet (EA-08) : chaque essai part d'un onglet neuf.
   window.sessionStorage.clear()
 })
@@ -57,7 +70,8 @@ describe("Accueil — accès au réseau personnel", () => {
     const { mount } = setup("engine")
     mount(<LandingScreen intent="sign-up" />)
     expect(screen.getByRole("heading", { level: 2, name: t("entry.signUpTitle") })).toBeInTheDocument()
-    expect(screen.getByText(t("entry.signUpLead").replace(/\s+/g, " "))).toBeInTheDocument()
+    // Au lancement, la vérification consulaire n'est pas annoncée : on publie après un parrainage.
+    expect(screen.getByText(t("entry.signUpLeadSponsored").replace(/\s+/g, " "))).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: t("landing.idnContinue") })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: t("landing.idnContinue") })).toBeDisabled()
     expect(screen.getByText(t("landing.idnUnavailable"))).toBeInTheDocument()
@@ -67,6 +81,25 @@ describe("Accueil — accès au réseau personnel", () => {
     expect(screen.queryByRole("link", { name: t("landing.createAccount") })).not.toBeInTheDocument()
     // Le moteur n'expose que l'e-mail : aucun SMS proposé, ni ici ni par un lien.
     expect(screen.queryByRole("link", { name: t("entry.smsInstead") })).not.toBeInTheDocument()
+  })
+
+  it("la carte d'inscription ne présente la vérification consulaire que si elle est annoncée, et ne promet pas IDN", () => {
+    const { mount } = setup("engine")
+    const flat = (text: string) => text.replace(/\s+/g, " ")
+    offer.consular = false
+    const first = mount(<LandingScreen intent="sign-up" />)
+    expect(screen.getByText(flat(t("entry.signUpLeadSponsored")))).toBeInTheDocument()
+    expect(screen.queryByText(flat(t("entry.signUpLead")))).not.toBeInTheDocument()
+    expect(flat(first.container.textContent ?? "")).not.toMatch(/vérification de votre inscription consulaire|après la vérification consulaire/)
+    // « Aucun mot de passe » vaut quelle que soit la porte ouverte : il ne nomme pas IDN, dite « prochainement » ici.
+    expect(screen.getByText(flat(t("entry.noPassword")))).toBeInTheDocument()
+    expect(t("entry.noPassword")).not.toMatch(/IDN/)
+    cleanup()
+
+    offer.consular = true
+    mount(<LandingScreen intent="sign-up" />)
+    expect(screen.getByText(flat(t("entry.signUpLead")))).toBeInTheDocument()
+    expect(screen.queryByText(flat(t("entry.signUpLeadSponsored")))).not.toBeInTheDocument()
   })
 
   it("propose l'inscription et l'IDN de démonstration avec la connexion par code intégrée", () => {
