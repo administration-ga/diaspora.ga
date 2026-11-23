@@ -1,4 +1,4 @@
-import { Blocks, ChartColumn, LayoutDashboard, MonitorSmartphone, Scale, ScrollText, SlidersHorizontal, Users, type LucideIcon } from "lucide-react"
+import { Blocks, ChartColumn, Landmark, LayoutDashboard, MonitorSmartphone, Scale, ScrollText, SlidersHorizontal, Users, type LucideIcon } from "lucide-react"
 
 import { routes } from "./routes"
 
@@ -40,6 +40,8 @@ export const SECTIONS: readonly AdminSection[] = [
   // Application des membres (lot A5) : les modules, puis l'aperçu du menu qu'ils composent.
   { id: "modules", group: "membersApp", href: routes.modules(), labelKey: "nav.section.modules", icon: Blocks },
   { id: "menuPreview", group: "membersApp", href: routes.menuPreview(), labelKey: "nav.section.menuPreview", icon: MonitorSmartphone },
+  // Communauté (lot A7) : les pages officielles des institutions du réseau.
+  { id: "institutions", group: "community", href: routes.institutions(), labelKey: "nav.section.institutions", icon: Landmark },
   // Confiance (lot A6) : les décisions du réseau, déménagées du bureau de diaspora.ga (D5).
   { id: "appeals", group: "trust", href: routes.appeals(), labelKey: "nav.section.appeals", icon: Scale },
   { id: "team", group: "trust", href: routes.team(), labelKey: "nav.section.team", icon: Users },

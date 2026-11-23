@@ -64,7 +64,8 @@
       "appeals": "Recours",
       "team": "Équipe et responsables",
       "rules": "Règles",
-      "journal": "Journal"
+      "journal": "Journal",
+      "institutions": "Institutions et pages officielles"
     }
   },
   "dashboard": {
@@ -719,6 +720,89 @@
       "sleepUntil": "En sommeil jusqu’au {{date}}",
       "role": "De « {{from}} » à « {{to}} »",
       "roleMember": "Membre"
+    }
+  },
+  "picker": {
+    "change": "Choisir une autre personne",
+    "changeFor": "Choisir une autre personne que {{name}}"
+  },
+  "institutions": {
+    "title": "Institutions et pages officielles",
+    "lead": "Les pages d’institution portant le badge « Officiel » dans ce réseau, leur signataire et leur état. Le badge ne vaut que dans DIASPORA.GA : ces pages ne se lisent pas depuis ANTSIA. Chaque création, chaque désignation et chaque mise en sommeil est motivée et inscrite au journal des décisions ; le retrait du badge reste à la plateforme.",
+    "closed": {
+      "title": "Le module « Pages » est fermé",
+      "body": "Tant que le module « Pages » n’est pas ouvert, le moteur ne rend ni ne crée aucune page officielle : les membres n’en verraient d’ailleurs aucune. Ouvrez-le dans la section « Modules », motif à l’appui.",
+      "link": "Aller aux modules"
+    },
+    "listTitle": "Pages officielles du réseau",
+    "statusFilter": "Pages à afficher",
+    "statusActive": "Pages actives",
+    "statusInactive": "Pages en sommeil ou retirées",
+    "emptyActiveTitle": "Aucune page officielle active",
+    "emptyActiveBody": "Créez la première ci-dessous : elle portera le badge « Officiel » dans ce réseau.",
+    "emptyInactiveTitle": "Aucune page en sommeil ni retirée",
+    "emptyInactiveBody": "Les pages mises en sommeil, ou retirées par la plateforme ou sur décision de justice, apparaîtront ici.",
+    "state": {
+      "active": "Active",
+      "asleep": "En sommeil",
+      "expired": "Sommeil échu",
+      "withdrawn": "Retirée"
+    },
+    "signatory": "Signataire",
+    "noSignatory": "Aucun signataire : désignez-en un.",
+    "invitationPending": "{{name}}, invitation en attente d’acceptation",
+    "neutralName": "Membre au profil non publié",
+    "createdAt": "Créée le",
+    "sleep": "Sommeil",
+    "sleepUntil": "Jusqu’au {{date}}",
+    "sleepExpired": "Échu depuis le {{date}} : la page attend une décision pour revenir.",
+    "withdrawnNote": "Retirée par la plateforme ou sur décision de justice : elle ne se réveille pas depuis l’administration du réseau.",
+    "designate": "Désigner un signataire",
+    "designateFor": "Désigner un signataire pour {{name}}",
+    "replace": "Changer de signataire",
+    "replaceFor": "Changer de signataire pour {{name}}",
+    "designateTitle": "Signataire de la page {{name}}",
+    "designateBody": "La personne choisie, membre active du réseau, est invitée à administrer la page ; elle accepte de son côté. Une identité vérifiée par l’identité numérique est exigée. La désignation est motivée et inscrite au journal des décisions.",
+    "signatoryHandle": "Identifiant public du signataire",
+    "replaceCurrent": "Retirer {{name}} de l’équipe de la page dans la même décision",
+    "designateConfirm": "Désigner ce signataire",
+    "invited": "Invitation envoyée à {{name}} pour signer au nom de {{page}}.",
+    "replaced": "{{name}} ne signe plus pour {{page}}.",
+    "unchanged": "Rien n’a changé : {{name}} administre déjà cette page.",
+    "sleepAction": "Mettre en sommeil",
+    "sleepFor": "Mettre en sommeil {{name}}",
+    "sleepTitle": "Mettre en sommeil la page {{name}}",
+    "sleepBody": "La page se ferme pendant {{days}} jours, comme un retrait, ses directs compris ; rien n’est effacé et elle revient d’un coup au réveil. La décision est motivée et inscrite au journal.",
+    "sleepConfirm": "Mettre la page en sommeil",
+    "slept": "{{name}} est en sommeil jusqu’au {{date}}.",
+    "wakeAction": "Réveiller la page",
+    "wakeFor": "Réveiller la page {{name}}",
+    "wakeTitle": "Réveiller la page {{name}}",
+    "wakeBody": "La page, ses publications et son équipe reviennent d’un coup. Le réveil est motivé et inscrit au journal des décisions.",
+    "wakeConfirm": "Réveiller la page",
+    "woken": "{{name}} est de nouveau active.",
+    "createTitle": "Créer une page officielle",
+    "createLead": "Une page d’institution « Officiel » de ce réseau, visible des seuls membres de DIASPORA.GA. Choisissez d’abord son signataire, puis nommez la page.",
+    "name": "Nom de l’institution",
+    "nameLength": "Le nom compte de 1 à {{nameMax}} caractères.",
+    "handle": "Adresse de la page (facultative)",
+    "handleHint": "Laissée vide, l’adresse est tirée du nom : de {{handleMin}} à {{handleMax}} lettres non accentuées, chiffres, point, tiret ou souligné.",
+    "handlePreview": "Adresse retenue : @{{handle}}",
+    "handleRequired": "Le nom ne donne pas d’adresse valable : saisissez-en une, de {{handleMin}} à {{handleMax}} caractères.",
+    "handleLength": "L’adresse compte de {{handleMin}} à {{handleMax}} caractères.",
+    "handleCharset": "L’adresse n’accepte que des lettres non accentuées, des chiffres, un point, un tiret ou un souligné.",
+    "country": "Pays de l’institution (facultatif)",
+    "countryNone": "Aucun pays",
+    "signatoryRequired": "Choisissez d’abord le signataire de la page.",
+    "create": "Créer la page officielle",
+    "created": "La page {{name}} est créée (@{{handle}}) ; son signataire est invité.",
+    "failed": "Le geste n’a pas abouti. Relisez la liste, puis réessayez.",
+    "refusal": {
+      "signatoryIdentity": "Cette personne n’a pas encore d’identité vérifiée par l’identité numérique : elle ne peut pas signer pour une page officielle. Elle doit d’abord vérifier son identité.",
+      "handleTaken": "Cette adresse est déjà prise : choisissez-en une autre.",
+      "sameSignatory": "La personne choisie est déjà celle que vous retirez : choisissez quelqu’un d’autre.",
+      "notFound": "La page ou la personne n’est plus dans l’état attendu (membre active du réseau, page officielle active). Relisez la liste.",
+      "conflict": "Cette page est tenue par une mesure de justice : elle ne peut pas être réveillée."
     }
   }
 }

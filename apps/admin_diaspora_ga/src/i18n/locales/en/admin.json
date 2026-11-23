@@ -64,7 +64,8 @@
       "appeals": "Appeals",
       "team": "Team and leads",
       "rules": "Rules",
-      "journal": "Journal"
+      "journal": "Journal",
+      "institutions": "Institutions and official pages"
     }
   },
   "dashboard": {
@@ -719,6 +720,89 @@
       "sleepUntil": "Asleep until {{date}}",
       "role": "From “{{from}}” to “{{to}}”",
       "roleMember": "Member"
+    }
+  },
+  "picker": {
+    "change": "Choose someone else",
+    "changeFor": "Choose someone other than {{name}}"
+  },
+  "institutions": {
+    "title": "Institutions and official pages",
+    "lead": "Institution pages with the “Official” badge in this network, their signatory and their state. The badge only counts in DIASPORA.GA: these pages cannot be read from ANTSIA. Every creation, designation and sleep is justified and written to the decision journal; removing the badge stays with the platform.",
+    "closed": {
+      "title": "The “Pages” module is closed",
+      "body": "Until the “Pages” module is open, the engine neither returns nor creates any official page: members would not see any anyway. Open it in the “Modules” section, with a reason.",
+      "link": "Go to modules"
+    },
+    "listTitle": "The network’s official pages",
+    "statusFilter": "Pages to show",
+    "statusActive": "Active pages",
+    "statusInactive": "Asleep or withdrawn pages",
+    "emptyActiveTitle": "No active official page",
+    "emptyActiveBody": "Create the first one below: it will carry the “Official” badge in this network.",
+    "emptyInactiveTitle": "No asleep or withdrawn page",
+    "emptyInactiveBody": "Pages put to sleep, or withdrawn by the platform or by court order, will appear here.",
+    "state": {
+      "active": "Active",
+      "asleep": "Asleep",
+      "expired": "Sleep ended",
+      "withdrawn": "Withdrawn"
+    },
+    "signatory": "Signatory",
+    "noSignatory": "No signatory: designate one.",
+    "invitationPending": "{{name}}, invitation awaiting acceptance",
+    "neutralName": "Member with an unpublished profile",
+    "createdAt": "Created on",
+    "sleep": "Sleep",
+    "sleepUntil": "Until {{date}}",
+    "sleepExpired": "Ended on {{date}}: the page is waiting for a decision to come back.",
+    "withdrawnNote": "Withdrawn by the platform or by court order: it cannot be woken up from the network administration.",
+    "designate": "Designate a signatory",
+    "designateFor": "Designate a signatory for {{name}}",
+    "replace": "Change signatory",
+    "replaceFor": "Change signatory for {{name}}",
+    "designateTitle": "Signatory of the page {{name}}",
+    "designateBody": "The chosen person, an active member of the network, is invited to administer the page and accepts on their side. An identity verified with the digital identity is required. The designation is justified and written to the decision journal.",
+    "signatoryHandle": "Signatory’s public handle",
+    "replaceCurrent": "Remove {{name}} from the page team in the same decision",
+    "designateConfirm": "Designate this signatory",
+    "invited": "Invitation sent to {{name}} to sign for {{page}}.",
+    "replaced": "{{name}} no longer signs for {{page}}.",
+    "unchanged": "Nothing changed: {{name}} already administers this page.",
+    "sleepAction": "Put to sleep",
+    "sleepFor": "Put {{name}} to sleep",
+    "sleepTitle": "Put the page {{name}} to sleep",
+    "sleepBody": "The page closes for {{days}} days, like a withdrawal, its live streams included; nothing is erased and everything comes back at once when it wakes up. The decision is justified and written to the journal.",
+    "sleepConfirm": "Put the page to sleep",
+    "slept": "{{name}} is asleep until {{date}}.",
+    "wakeAction": "Wake the page up",
+    "wakeFor": "Wake the page {{name}} up",
+    "wakeTitle": "Wake the page {{name}} up",
+    "wakeBody": "The page, its posts and its team come back at once. Waking it up is justified and written to the decision journal.",
+    "wakeConfirm": "Wake the page up",
+    "woken": "{{name}} is active again.",
+    "createTitle": "Create an official page",
+    "createLead": "An “Official” institution page of this network, visible to DIASPORA.GA members only. Choose its signatory first, then name the page.",
+    "name": "Institution name",
+    "nameLength": "The name has 1 to {{nameMax}} characters.",
+    "handle": "Page address (optional)",
+    "handleHint": "Left empty, the address comes from the name: {{handleMin}} to {{handleMax}} unaccented letters, digits, dot, hyphen or underscore.",
+    "handlePreview": "Address used: @{{handle}}",
+    "handleRequired": "The name does not give a valid address: type one, {{handleMin}} to {{handleMax}} characters.",
+    "handleLength": "The address has {{handleMin}} to {{handleMax}} characters.",
+    "handleCharset": "The address only accepts unaccented letters, digits, a dot, a hyphen or an underscore.",
+    "country": "Institution country (optional)",
+    "countryNone": "No country",
+    "signatoryRequired": "Choose the page’s signatory first.",
+    "create": "Create the official page",
+    "created": "The page {{name}} is created (@{{handle}}); its signatory is invited.",
+    "failed": "The action did not go through. Reload the list, then try again.",
+    "refusal": {
+      "signatoryIdentity": "This person does not have an identity verified with the digital identity yet: they cannot sign for an official page. They must verify their identity first.",
+      "handleTaken": "This address is already taken: choose another one.",
+      "sameSignatory": "The chosen person is the one you are removing: choose someone else.",
+      "notFound": "The page or the person is no longer in the expected state (active member of the network, active official page). Reload the list.",
+      "conflict": "This page is held by a court measure: it cannot be woken up."
     }
   }
 }

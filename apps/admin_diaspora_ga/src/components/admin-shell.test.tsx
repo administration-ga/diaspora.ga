@@ -57,15 +57,15 @@ describe("coque d'admin.diaspora.ga", () => {
     mount()
     const nav = screen.getByRole("navigation", { name: "Sections de l’administration" })
     const links = within(nav).getAllByRole("link")
-    expect(links.map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Recours", "Équipe et responsables", "Règles"])
+    expect(links.map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Institutions et pages officielles", "Recours", "Équipe et responsables", "Règles"])
     expect(links.map((link) => link.getAttribute("href"))).toEqual(SECTIONS.map((section) => section.href))
     expect(links.map((link) => link.getAttribute("aria-current"))).toEqual(["page", ...SECTIONS.slice(1).map(() => null)])
     expect(within(within(nav).getByRole("list", { name: "Pilotage" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal"])
     expect(within(within(nav).getByRole("list", { name: "Application des membres" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Modules", "Aperçu du menu"])
     // CH-815 A6 : les décisions du réseau, déménagées du bureau de diaspora.ga.
     expect(within(within(nav).getByRole("list", { name: "Confiance" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Recours", "Équipe et responsables", "Règles"])
-    // Un groupe sans section présente n'est pas affiché.
-    for (const empty of ["Communauté"]) expect(within(nav).queryByText(empty)).toBeNull()
+    // CH-815 A7 : la communauté du réseau.
+    expect(within(within(nav).getByRole("list", { name: "Communauté" })).getAllByRole("link").map((link) => link.textContent)).toEqual(["Institutions et pages officielles"])
   })
 
   it("sur une section, son entrée seule est marquée", () => {
@@ -112,7 +112,7 @@ describe("coque d'admin.diaspora.ga", () => {
     await userEvent.click(screen.getByRole("button", { name: "Ouvrir le menu" }))
     const sheet = await screen.findByRole("dialog", { name: "Menu de l’administration" })
     const nav = within(sheet).getByRole("navigation", { name: "Sections de l’administration" })
-    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Recours", "Équipe et responsables", "Règles"])
+    expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Institutions et pages officielles", "Recours", "Équipe et responsables", "Règles"])
     expect(within(sheet).getByRole("link", { name: "Ouvrir diaspora.ga (nouvel onglet)" })).toBeDefined()
     expect(within(sheet).getByRole("button", { name: "Se déconnecter partout" })).toBeDefined()
     await userEvent.click(within(nav).getByRole("link", { name: "Tableau de bord" }))
