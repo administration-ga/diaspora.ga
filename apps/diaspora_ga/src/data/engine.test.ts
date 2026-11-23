@@ -1,9 +1,12 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
+import { prepareVideoForUpload, type PrepareVideo, type VideoRuntime } from "@antsia/social-features/features/video-upload/video-preparation"
+import { TRANSCODE_ABORTED } from "@antsia/social-features/features/video-upload/video-upload-probe"
 import { isPreparedImage } from "@antsia/social-features/media-upload"
 import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
+import type { MediaUploadPhase } from "@diaspora-ga/features/data"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
@@ -1112,13 +1115,15 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     }
   })
 
-  it("FD-02 : un .mov est refusé avec la marche à suivre avant toute URL de dépôt ; la durée refusée par le serveur se dit par le même code", async () => {
+  it("FD-02 : un .mov que ce navigateur ne sait pas lire est refusé avec la marche à suivre avant toute URL de dépôt ; la durée refusée par le serveur se dit par le même code", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
     const deposit = vi.fn()
     vi.stubGlobal("fetch", deposit)
     try {
-      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      const browser = simulatedBrowser({ decodable: false, durationMs: null })
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(), prepareVideo: browser.prepareVideo })
       expect(await actions.uploadMedia(new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" }))).toEqual({ ok: false, code: "media_video_format" })
+      expect(browser.prepareVideo).toHaveBeenCalledOnce()
       expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
       expect(deposit).not.toHaveBeenCalled()
     } finally {
@@ -1126,7 +1131,122 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     }
     expect(engineActionErrorCode(engineError({ code: "invalidArgument", rule: "POST_VIDEO_TOO_LONG", params: { maxMinutes: 5 } }))).toBe("media_video_too_long")
   })
+
+  it("FD-02 : un .mov d'iPhone est CONVERTI dans le navigateur, puis le MP4 rendu part au dépôt et se déclare avec sa durée ; l'avancement suit l'ordre analyse, conversion, envoi", async () => {
+    const { convex, calls } = fakeConvex({
+      ...NETWORK,
+      "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }],
+      "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement",
+      "modules/posts/posts:publish": () => ({ postId: "post-video", created: true }),
+    })
+    const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-video" }), { status: 200 }))
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const browser = simulatedBrowser()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(), prepareVideo: browser.prepareVideo })
+      const phases: MediaUploadPhase[] = []
+      const controller = new AbortController()
+      const mov = new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" })
+      const uploaded = await actions.uploadMedia(mov, { signal: controller.signal, onPhase: (phase) => phases.push(phase) })
+      if (!uploaded.ok) throw new Error(`dépôt refusé : ${uploaded.code}`)
+      expect(phases).toEqual([{ phase: "probing" }, { phase: "converting", progress: 0 }, { phase: "converting", progress: 0.5 }, { phase: "converting", progress: 1 }, { phase: "uploading" }])
+      // Le fichier envoyé est le MP4 converti, jamais le .mov ; il voyage avec l'annulation de l'écran.
+      const init = deposit.mock.calls[0]?.[1]
+      const sent = init?.body as File
+      expect(sent).not.toBe(mov)
+      expect(sent.name).toBe("IMG_0412.mp4")
+      expect(init).toEqual({ method: "POST", headers: { "Content-Type": "video/mp4" }, body: sent, signal: controller.signal })
+      expect(uploaded.value).toMatchObject({ ref: "kg-video", kind: "video", mimeType: "video/mp4", sizeBytes: sent.size, durationMs: 8_960 })
+      expect(calls.find((call) => call.name === "modules/media/media:generateUploadUrl")?.args).toEqual({ networkId: "n-diaspora-ga", usage: "media_social" })
+      expect(await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: "" }] })).toEqual({ ok: true, value: { moderation: null } })
+      expect(calls.find((call) => call.name === "modules/posts/posts:publish")?.args).toMatchObject({
+        media: [{ storageId: "kg-video", kind: "video", mimeType: "video/mp4", sizeBytes: sent.size, durationMs: 8_960 }],
+      })
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it("FD-02 : annulé pendant la conversion ou pendant l'envoi, le dépôt rend `media_cancelled` ; annulé avant, rien ne part", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const deposit = vi.fn((_url: string, init: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        init.signal?.addEventListener("abort", () => reject(new DOMException("annulé", "AbortError")), { once: true })
+      }),
+    )
+    vi.stubGlobal("fetch", deposit)
+    try {
+      const mov = () => new File(["mov"], "IMG_0412.MOV", { type: "video/quicktime" })
+      // Pendant la conversion : le module s'arrête, aucune URL de dépôt n'est demandée.
+      const converting = new AbortController()
+      const stalled = simulatedBrowser({
+        transcode: (_url, options) =>
+          new Promise((_resolve, reject) => {
+            if (options.signal?.aborted) return reject(new Error(TRANSCODE_ABORTED))
+            options.signal?.addEventListener("abort", () => reject(new Error(TRANSCODE_ABORTED)), { once: true })
+          }),
+      })
+      const duringConversion = createEngineActions({ convex, authClient: fakeAuth().client, prepareVideo: stalled.prepareVideo })
+        .uploadMedia(mov(), { signal: converting.signal, onPhase: (phase) => { if (phase.phase === "converting") queueMicrotask(() => converting.abort()) } })
+      expect(await duringConversion).toEqual({ ok: false, code: "media_cancelled" })
+      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(stalled.revoked).toEqual(stalled.created)
+
+      // Pendant l'envoi : la requête est interrompue, le fichier converti ne reste pas en mémoire.
+      const sending = new AbortController()
+      const duringUpload = createEngineActions({ convex, authClient: fakeAuth().client, prepareVideo: simulatedBrowser().prepareVideo })
+        .uploadMedia(mov(), { signal: sending.signal, onPhase: (phase) => { if (phase.phase === "uploading") queueMicrotask(() => sending.abort()) } })
+      expect(await duringUpload).toEqual({ ok: false, code: "media_cancelled" })
+      expect(deposit).toHaveBeenCalledOnce()
+
+      // Déjà annulé : ni préparation, ni URL, ni envoi.
+      const before = calls.length
+      const untouched = simulatedBrowser()
+      expect(await createEngineActions({ convex, authClient: fakeAuth().client, prepareVideo: untouched.prepareVideo }).uploadMedia(mov(), { signal: AbortSignal.abort() })).toEqual({ ok: false, code: "media_cancelled" })
+      expect(untouched.created).toEqual([])
+      expect(calls.slice(before).some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      expect(deposit).toHaveBeenCalledOnce()
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
 })
+
+/**
+ * FD-02 — un navigateur SIMULÉ pour la préparation des vidéos : le vrai module du moteur
+ * (`prepareVideoForUpload`, sa politique et ses refus) sur un environnement qui dit ce qu'il
+ * sait lire et encoder. Aucune conversion réelle : jsdom n'a ni décodeur ni `MediaRecorder`.
+ */
+function simulatedBrowser(options: {
+  readonly decodable?: boolean
+  readonly durationMs?: number | null
+  readonly transcode?: VideoRuntime["transcode"]
+} = {}) {
+  const created: string[] = []
+  const revoked: string[] = []
+  const runtime: VideoRuntime = {
+    createObjectUrl: () => {
+      const url = `blob:sonde-${created.length + 1}`
+      created.push(url)
+      return url
+    },
+    revokeObjectUrl: (url) => {
+      revoked.push(url)
+    },
+    probe: async () => ({ decodable: options.decodable ?? true, durationMs: options.durationMs === undefined ? 9_000 : options.durationMs }),
+    sniffMp4Codecs: async () => null,
+    recorderTargets: () => ["video/mp4"],
+    transcode:
+      options.transcode ??
+      (async (_url, _options, onProgress) => {
+        onProgress?.(0.5)
+        onProgress?.(1)
+        return { blob: new Blob([new Uint8Array(1_024)], { type: "video/mp4" }), mimeType: "video/mp4", durationMs: 8_960 }
+      }),
+  }
+  const prepareVideo = vi.fn<PrepareVideo>((file, prepareOptions) => prepareVideoForUpload(file, prepareOptions, runtime))
+  return { prepareVideo, created, revoked }
+}
 
 describe("partage cité par le moteur (EXF-DG-10)", () => {
   it("l'original re-gardé : la page parle en son nom, sinon la personne ; indisponible, il ne dit que cela", () => {

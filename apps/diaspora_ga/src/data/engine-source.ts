@@ -882,21 +882,33 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     // `media_social`, puis envoi du fichier ; il n'existe pour personne tant
     // qu'une publication ne l'a pas vérifié et embarqué. Une photo part PRÉPARÉE
     // (FD-01) : ré-encodée, 2 048 px au plus, sans métadonnées ; un échec la
-    // refuse avant toute URL de dépôt, et l'original ne part jamais. Ce même
+    // refuse avant toute URL de dépôt, et l'original ne part jamais. Une vidéo
+    // part PRÉPARÉE (FD-02) : convertie en MP4 ou WebM dans le navigateur quand
+    // il le faut (le .mov de l'iPhone), pesée, sa durée bornée ; l'écran en suit
+    // l'avancement et peut l'annuler (`options`) — annulée, rien ne part. Ce même
     // dépôt sert le fil, les publications de page et la galerie d'évènement.
-    uploadMedia: (file) =>
+    uploadMedia: (file, options) =>
       attempt(async () => {
-        const prepared = await prepareMediaFile(file, deps.prepareImage)
+        const signal = options?.signal
+        const prepared = await prepareMediaFile(file, deps.prepareImage, {
+          ...(deps.prepareVideo ? { prepareVideo: deps.prepareVideo } : {}),
+          ...(signal ? { signal } : {}),
+          ...(options?.onPhase ? { onPhase: options.onPhase } : {}),
+        })
         if (!prepared.ok) throw new Refusal(prepared.code)
         const { file: upload, facts } = prepared.value
         const networkId = await diasporaGa()
+        if (signal?.aborted) throw new Refusal("media_cancelled")
         const url = await deps.convex.mutation(api.modules.media.media.generateUploadUrl, { networkId, usage: "media_social" })
+        if (signal?.aborted) throw new Refusal("media_cancelled")
+        options?.onPhase?.({ phase: "uploading" })
         let storageId: string
         try {
-          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload })
+          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload, ...(signal ? { signal } : {}) })
           if (!response.ok) throw new Refusal("media_upload_failed")
           storageId = ((await response.json()) as { storageId: string }).storageId
         } catch (error) {
+          if (signal?.aborted) throw new Refusal("media_cancelled")
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
         return { ref: storageId, ...facts }

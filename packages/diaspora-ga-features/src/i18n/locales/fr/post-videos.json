@@ -1,6 +1,19 @@
 {
   "errors": {
     "media_video_format": "Seules les vidéos {{postVideoFormats}} sont acceptées, pour qu’elles se lisent sur tous les téléphones : celle-ci n’est pas envoyée. Enregistrez-la ou exportez-la dans l’un de ces formats, puis choisissez-la de nouveau.",
-    "media_video_too_long": "Cette vidéo est trop longue : elle doit durer {{postVideoMaxMinutes}} min au plus. Raccourcissez-la, puis choisissez-la de nouveau."
+    "media_video_too_long": "Cette vidéo est trop longue : elle doit durer {{postVideoMaxMinutes}} min au plus. Raccourcissez-la, puis choisissez-la de nouveau.",
+    "media_video_too_long_to_convert": "Cette vidéo doit être convertie pour se lire sur tous les téléphones, et la conversion se fait ici, en temps réel : au-delà de {{postVideoConvertMaxMinutes}} min, elle serait trop longue à attendre. Celle-ci n’est pas envoyée. Enregistrez-la ou exportez-la dans l’un des formats {{postVideoFormats}}, puis choisissez-la de nouveau.",
+    "media_video_conversion_failed": "La conversion de cette vidéo a échoué : elle n’est pas envoyée. Enregistrez-la ou exportez-la dans l’un des formats {{postVideoFormats}}, puis choisissez-la de nouveau.",
+    "media_video_converted_too_large": "Même convertie, cette vidéo dépasse {{postVideoMaxMegabytes}} Mo : elle n’est pas envoyée. Raccourcissez-la, puis choisissez-la de nouveau.",
+    "media_cancelled": "Ajout annulé : ce fichier n’est pas joint à la publication."
+  },
+  "composer": {
+    "videoProbing": "Analyse de la vidéo…",
+    "videoConverting": "Conversion : {{percent}}",
+    "videoProgressLabel": "Conversion {{name, de}}",
+    "videoKeepVisible": "La vidéo est convertie ici, en temps réel, pour se lire sur tous les téléphones : gardez cet onglet visible jusqu’au bout.",
+    "videoCancel": "Annuler la conversion",
+    "videoPreparing": "Préparation de la vidéo en cours : la publication attend.",
+    "videoCancelled": "Conversion annulée : la vidéo n’a pas été ajoutée."
   }
 }
