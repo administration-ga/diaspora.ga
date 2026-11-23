@@ -76,6 +76,7 @@ import { createDemoJobs } from "./jobs"
 import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
+import { createDemoDeviceNotifications } from "./device-notifications"
 import { createDemoNetworkFeatures } from "./network-features"
 import { createDemoMemberBrowse } from "./member-browse"
 import type { DemoStore } from "./store"
@@ -178,6 +179,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
     pageDecisions: createDemoPageDecisions(store, demoPageTeams),
     // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
     callSettings: createDemoCallSettings(store),
+    // DS-14 (volet push) : aucune notification n'est envoyée en démonstration ; l'état le dit.
+    deviceNotifications: createDemoDeviceNotifications(),
     // ADR-0041 : les fonctionnalités activables du réseau fictif, fermées tant que rien n'est décidé.
     networkFeatures: createDemoNetworkFeatures(store),
     // CH-816 P3 : parcourir l'annuaire fictif par pays et par ville, même règle que la recherche.

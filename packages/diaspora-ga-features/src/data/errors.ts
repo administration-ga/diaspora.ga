@@ -26,6 +26,7 @@ import { JOB_ERROR_CODES } from "./jobs-port"
 import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
 import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
 import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
+import { DEVICE_NOTIFICATIONS_ERROR_CODES } from "./device-notifications-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -142,6 +143,8 @@ export const ACTION_ERROR_CODES = [
   // Entrée par IDN (EA-02) : départ refusé, retour d'un refus ou d'un échec chez IDN.
   ...ENTRY_DOORS_ERROR_CODES,
   ...CALL_SETTINGS_ERROR_CODES,
+  // DS-14 (volet push) : l'activation des notifications de cet appareil.
+  ...DEVICE_NOTIFICATIONS_ERROR_CODES,
   // Fonctionnalités activables du réseau (ADR-0041 du moteur) : motif et règle de dépendance.
 ] as const
 

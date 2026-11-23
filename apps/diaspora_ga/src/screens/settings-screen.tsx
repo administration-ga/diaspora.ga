@@ -42,6 +42,7 @@ import { z } from "zod"
 import { AppShell } from "@/components/app-shell"
 import { CallSettings } from "@/components/call-settings"
 import { DataRightsSettings } from "@/components/data-rights-settings"
+import { DeviceNotificationsSettings } from "@/components/device-notifications-settings"
 import { Gate } from "@/components/gate"
 import { PendingRoom } from "@/components/pending-room"
 import { ProfileImagesSettings } from "@/components/profile-images-settings"
@@ -97,6 +98,8 @@ function Settings(props: { membership: MembershipView }) {
       <DirectorySection membership={props.membership} />
       {/* « Messages et appels » (IM-02) : réglages d'appel et de présence du compte, valables aussi dans ANTSIA. */}
       <CallSettings membership={props.membership} />
+      {/* « Notifications de cet appareil » (DS-14, volet push) : abonner ce navigateur, d'un geste ; l'accord se retire ci-dessous. */}
+      <DeviceNotificationsSettings membership={props.membership} />
       <ConsentsSection />
       <SponsorHelpSection membership={props.membership} />
       {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;
