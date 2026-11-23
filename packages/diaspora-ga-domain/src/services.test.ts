@@ -57,10 +57,26 @@ const OFFER: ServiceOfferInput = {
 
 describe("listes du catalogue (contrat des tables du moteur)", () => {
   it("gardent les membres posés par le coordinateur", () => {
-    expect(SERVICE_CATEGORIES).toEqual(["beauty", "digital_creation", "photography", "translation", "settling_in"])
+    // Les cinq du pilote restent en tête et à leur place : la première est la valeur par défaut du formulaire.
+    expect(SERVICE_CATEGORIES.slice(0, 5)).toEqual(["beauty", "digital_creation", "photography", "translation", "settling_in"])
     expect(SERVICE_DELIVERY_MODES).toEqual(["onsite", "remote", "both"])
     expect(SERVICE_PRICING_MODES).toEqual(["fixed", "from", "quote"])
     expect(SERVICE_OFFER_STATUSES).toEqual(["draft", "active", "paused", "withdrawn"])
+  })
+
+  it("s'élargissent aux métiers des entrepreneurs (22/11/2026), ajoutés à la suite du pilote, sans doublon", () => {
+    expect(SERVICE_CATEGORIES.slice(5)).toEqual(["engineering", "catering", "fashion", "building", "events", "it_support"])
+    expect(new Set(SERVICE_CATEGORIES).size).toBe(SERVICE_CATEGORIES.length)
+    for (const category of SERVICE_CATEGORIES) expect(category).toMatch(/^[a-z]+(_[a-z]+)*$/)
+    expect(parseServiceOffer({ ...OFFER, category: "catering" })).toMatchObject({ ok: true, value: { category: "catering" } })
+    expect(parseServiceSearch({ category: "it_support" })).toMatchObject({ ok: true, value: { category: "it_support" } })
+  })
+
+  it("laissent dehors les professions réglementées, qui attendent leur politique propre", () => {
+    for (const regulated of ["health", "medical", "law", "legal", "finance", "insurance"]) {
+      expect(isServiceCategory(regulated)).toBe(false)
+      expect(parseServiceOffer({ ...OFFER, category: regulated })).toEqual({ ok: false, code: "service_category_invalid" })
+    }
   })
 
   it("n'admettent comme fournisseurs que les entreprises et les associations", () => {
