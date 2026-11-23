@@ -45,10 +45,11 @@ const TALENT_PROFILE = {
   visibility: "network",
 } as const satisfies Omit<TalentProfileInputView, "country">
 
+/** L'offre du traiteur fictif : rangée, depuis l'élargissement du 22/11/2026 (CH-816, lot P4), sous « Restauration et traiteur ». */
 const SERVICE_OFFER = {
   title: "Repas d'accueil pour les nouveaux arrivants",
   description: "Un repas gabonais pour faire connaissance et trouver ses repères en arrivant (offre de démonstration).",
-  category: "settling_in",
+  category: "catering",
   delivery: "onsite",
   languages: ["fr"],
   durationMinutes: 120,

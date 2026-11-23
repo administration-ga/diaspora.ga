@@ -168,6 +168,26 @@ function servicesHref(filters?: ServiceSearchParams): string {
   return search ? `/services?${search}` : "/services"
 }
 
+/**
+ * CH-816 P3 — le parcours de l'annuaire porté par l'adresse (partageable, rechargé à
+ * l'identique) : le pays, la ville saisie (sans GPS), « vérifiés seulement ».
+ */
+export interface MemberBrowseParams {
+  readonly country?: CountryCode
+  readonly city?: string
+  readonly verifiedOnly?: boolean
+}
+
+/** Le paramètre de `/membres` qui restreint le parcours aux membres vérifiés. */
+export const MEMBERS_VERIFIED_PARAM = "verifies"
+
+function membersHref(filters?: MemberBrowseParams): string {
+  const query = new URLSearchParams(zoneHref("/membres", filters?.country, filters?.city).split("?")[1] ?? "")
+  if (filters?.verifiedOnly) query.set(MEMBERS_VERIFIED_PARAM, "1")
+  const search = query.toString()
+  return search ? `/membres?${search}` : "/membres"
+}
+
 /** Le segment « nouveau statut » de la route des statuts (lu aussi par la page des statuts). */
 export const STORIES_NEW_SEGMENT = "nouvelle"
 
@@ -233,7 +253,8 @@ export const routes = {
   /** Tous mes avis de la cloche, page après page, avec le filtre « Non lues » (NP-04). */
   notifications: () => "/notifications",
   /** L'annuaire opt-in des membres (EXF-DG-19). */
-  members: () => "/membres",
+  /** L'annuaire : la recherche par nom, et le parcours par pays, ville et confiance (CH-816 P3). */
+  members: (filters?: MemberBrowseParams) => membersHref(filters),
   /** Mes liens dans le réseau, sans recherche d'annuaire générique. */
   relations: (kind?: "accepted" | "received" | "sent" | "following" | "blocked" | "dismissed") => kind === "received"
     ? "/relations?onglet=demandes"

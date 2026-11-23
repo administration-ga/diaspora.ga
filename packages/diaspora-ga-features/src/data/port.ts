@@ -83,6 +83,7 @@ import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
+import type { MemberBrowseCapability } from "./member-browse-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -399,6 +400,11 @@ export interface DiasporaGaDataSource {
    * les clés ouvertes, et pour l'administration du réseau, leur état et la bascule.
    */
   readonly networkFeatures?: NetworkFeaturesCapability
+  /**
+   * Parcourir l'annuaire par pays ouvert, ville et confiance (CH-816 P3, `member-browse-port.ts`),
+   * à côté de la recherche par nom : mêmes membres, même règle, vingt par fenêtre.
+   */
+  readonly memberBrowse?: MemberBrowseCapability
   /**
    * Posés par `gateSource` seulement : les fonctionnalités ouvertes de la source montée, et
    * si leur lecture a répondu. Absents : la source n'est pas gardée (elle sert tout ce qu'elle porte).

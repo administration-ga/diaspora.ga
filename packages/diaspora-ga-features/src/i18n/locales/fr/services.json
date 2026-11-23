@@ -51,7 +51,13 @@
       "digital_creation": "Création numérique",
       "photography": "Photographie",
       "translation": "Traduction",
-      "settling_in": "Aide à l'installation"
+      "settling_in": "Aide à l'installation",
+      "engineering": "Ingénierie et conseil technique",
+      "catering": "Restauration et traiteur",
+      "fashion": "Couture et mode",
+      "building": "Bâtiment et rénovation",
+      "events": "Événementiel",
+      "it_support": "Informatique et dépannage"
     },
     "delivery": {
       "onsite": "Présentiel",

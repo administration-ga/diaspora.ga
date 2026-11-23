@@ -136,3 +136,87 @@ describe("exécution", () => {
     expect(result.reason).toContain(`attendue « ${OLD_VERSION} »`)
   })
 })
+
+// ═══════════════════════════════════════════════════════════════
+// admin.diaspora.ga (CH-815, lot A8) : SON projet, SON site
+// ═══════════════════════════════════════════════════════════════
+
+const ADMIN = "admin_diaspora_ga"
+/** Valeurs FICTIVES (RFC 2606) : la démonstration des deux applications, sur un même moteur. */
+const ADMIN_ENV = Object.freeze({
+  ...DEMO_ENV,
+  ADMIN_DIASPORA_GA_DEMO_SITE_URL: "https://admin-demo.example.org",
+  ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: "projet_fictif_admin_demo",
+})
+const ADMIN_OLD_VERSION = "admin-diaspora-ga-111111111111-antsia-222222222222-demo"
+const adminPlan = () => buildRollbackPlan({ app: ADMIN, target: "demo", to: OLD_DEPLOYMENT, version: ADMIN_OLD_VERSION })
+const adminReport = (version) => ({ status: "ok", application: "admin-diaspora-ga", version, backend: "configured", engine: { state: "reachable", version: null, serverTime: null, latencyMs: 40 } })
+
+describe("retour arrière d'admin.diaspora.ga", () => {
+  test("--app : une application à la fois, son étiquette, jamais all", () => {
+    expect(parseRollbackArgs(["--app", ADMIN, "--target", "demo", "--to", OLD_DEPLOYMENT, "--version", ADMIN_OLD_VERSION])).toEqual({
+      app: ADMIN,
+      target: "demo",
+      to: OLD_DEPLOYMENT,
+      version: ADMIN_OLD_VERSION,
+      execute: false,
+      problems: [],
+    })
+    expect(parseRollbackArgs(["--target", "demo", "--to", OLD_DEPLOYMENT, "--version", OLD_VERSION]).app).toBeUndefined()
+    expect(parseRollbackArgs(["--app", "all", "--target", "demo", "--to", OLD_DEPLOYMENT, "--version", OLD_VERSION]).problems).toEqual([
+      "--app all ne vaut que pour la publication : chaque application se contrôle et se remet en arrière par sa propre commande",
+    ])
+    expect(parseRollbackArgs(["--app", ADMIN, "--target", "demo", "--to", OLD_DEPLOYMENT, "--version", OLD_VERSION]).problems).toEqual([
+      "--version désigne une autre application que --app : diaspora_ga, pas admin_diaspora_ga",
+    ])
+    expect(parseRollbackArgs(["--app", "site", "--target", "demo", "--to", OLD_DEPLOYMENT, "--version", OLD_VERSION]).problems).toEqual([
+      "--app inconnue (« site ») : valeurs admises diaspora_ga (par défaut), admin_diaspora_ga",
+    ])
+  })
+
+  test("la commande proposée nomme l'application ; celle de diaspora.ga reste celle d'avant", () => {
+    expect(rollbackCommand("demo", OLD_DEPLOYMENT, ADMIN_OLD_VERSION, ADMIN)).toBe(
+      `node scripts/rollback.mjs --app admin_diaspora_ga --target demo --to ${OLD_DEPLOYMENT} --version ${ADMIN_OLD_VERSION}`,
+    )
+    expect(rollbackCommand("demo", OLD_DEPLOYMENT, OLD_VERSION, "diaspora_ga")).toBe(rollbackCommand("demo", OLD_DEPLOYMENT, OLD_VERSION))
+  })
+
+  test("le plan : son projet, son contrôle, sa phrase ; aucune valeur de la machine", () => {
+    const plan = adminPlan()
+    expect(plan.steps.map((step) => step.id)).toEqual(["agreement", "inspect", "promote", "public-check"])
+    expect(plan.phrase).toBe(`REVENIR demo ${ADMIN_OLD_VERSION}`)
+    expect(plan.steps.flatMap((step) => (step.commands ?? []).map(renderCommand)).at(-1)).toBe(
+      `node scripts/release-check.mjs --app admin_diaspora_ga --target demo --version ${ADMIN_OLD_VERSION}`,
+    )
+    const rendered = renderRollbackPlan(plan, { problems: ["ADMIN_DIASPORA_GA_DEMO_SITE_URL manque"] })
+    expect(rendered).toStartWith("Plan de retour arrière de admin.diaspora.ga — cible demo")
+    expect(rendered).toContain("avec VERCEL_ORG_ID=<DIASPORA_GA_VERCEL_ORG_ID>, VERCEL_PROJECT_ID=<ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID>")
+    expect(rendered).not.toContain("<DIASPORA_GA_DEMO_VERCEL_PROJECT_ID>")
+    for (const value of Object.values(ADMIN_ENV)) expect(rendered).not.toContain(value)
+  })
+
+  test("exécution : vérifie SON projet, repromeut, contrôle SON site", async () => {
+    const requests = []
+    const fake = fakeDeps({ inspect: { id: "ancien", url: OLD_DEPLOYMENT, readyState: "READY", target: "production", projectId: "projet_fictif_admin_demo" } })
+    fake.deps.env = ADMIN_ENV
+    fake.deps.fetch = async (url) => {
+      requests.push(String(url))
+      return new Response(JSON.stringify(adminReport(ADMIN_OLD_VERSION)), { headers: { "content-security-policy": CSP } })
+    }
+    expect(await executeRollback(adminPlan(), fake.deps)).toEqual({ ok: true, stage: "public-check" })
+    expect(fake.calls[1].env).toEqual({ VERCEL_ORG_ID: "equipe_fictive", VERCEL_PROJECT_ID: "projet_fictif_admin_demo" })
+    expect(requests).toEqual(["https://admin-demo.example.org/api/sante-fonctionnelle"])
+    expect(fake.logs[0]).toContain("ADMIN_DIASPORA_GA_DEMO_SITE_URL")
+  })
+
+  test("un déploiement du projet des membres n'est jamais remis en service sur le site d'administration", async () => {
+    const fake = fakeDeps()
+    fake.deps.env = ADMIN_ENV
+    expect(await executeRollback(adminPlan(), fake.deps)).toEqual({
+      ok: false,
+      stage: "inspect",
+      reason: "ce déploiement n'appartient pas au projet de ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID",
+    })
+    expect(fake.commands()).not.toContain("vercel promote")
+  })
+})
