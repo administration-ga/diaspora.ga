@@ -41,5 +41,10 @@
     "loadMore": "Afficher les notifications plus anciennes",
     "loadingMore": "Chargement…",
     "retry": "Réessayer"
+  },
+  "notificationOpen": {
+    "title": "Ouvrir une notification",
+    "loading": "Ouverture de la notification…",
+    "error": "Cette notification n’a pas pu s’ouvrir pour le moment."
   }
 }

@@ -5,7 +5,7 @@ import { hasCapability, type CountryCode, type FeedScope } from "@diaspora-ga/do
 import { useMemo, useSyncExternalStore } from "react"
 
 import type { EntryDoorsView } from "../data/entry-doors-port"
-import { describeMediaFile, downscaleImage } from "../data/media"
+import { describeMediaFile, downscaleImage, isVideoCandidateType } from "../data/media"
 import type { ActionResult, ContentPreferencesQuery, ContentPreferencesRequest, DemoAccountView, DiasporaGaDataSource } from "../data/port"
 import type {
   BookmarkView,
@@ -513,10 +513,11 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
       checkHandle: (handle) => store.checkHandle(handle),
       join: (input) => store.join(input),
       uploadMedia: async (file) => {
+        // Le stockage du navigateur ne garderait pas une vidéo d'une visite à l'autre : pas de vidéo en
+        // démonstration, quel qu'en soit le format (FD-02) — rien n'y est préparé ni converti pour rien.
+        if (isVideoCandidateType(file.type)) return { ok: false, code: "feature_unavailable" }
         const facts = await describeMediaFile(file)
         if (!facts.ok) return facts
-        // Le stockage du navigateur ne garderait pas une vidéo d'une visite à l'autre : pas de vidéo en démonstration.
-        if (facts.value.kind === "video") return { ok: false, code: "feature_unavailable" }
         // La règle du moteur (FD-01) : ré-encodée par son module, sans métadonnées, refus fermés ; aucun dépôt.
         const image = await downscaleImage(file, DEMO_IMAGE_MAX_SIDE)
         if (!image.ok) return image

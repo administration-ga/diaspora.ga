@@ -45,7 +45,12 @@ export interface FeatureRoutes {
   agenda?(): string
   /** IM-04 : une conversation de groupe d'iCom (message ou invitation de groupe), sous la messagerie de l'application. */
   groupConversation?(threadId: string): string
-  /** IM-04 : le journal d'appels d'iCom (appel manqué, message vocal) ; aucune route d'appel. */
+  /** IC-09 du moteur : une conversation à deux d'iCom (message reçu d'une relation), sous la messagerie de l'application. */
+  personalConversation?(threadId: string): string
+  /**
+   * IM-04 : le journal d'appels d'iCom (appel manqué, message vocal) ; aucune route d'appel.
+   * Absent quand l'application ne propose pas d'appel : aucun lien n'y mène alors.
+   */
   callJournal?(): string
   hub(country: CountryCode): string
   /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */

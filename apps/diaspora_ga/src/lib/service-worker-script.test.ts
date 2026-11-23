@@ -210,20 +210,27 @@ describe("script de fond — notifications : référence opaque et origine ferm�
     expect(subject.showNotification).not.toHaveBeenCalled()
   })
 
-  it("sans porte d'ouverture (avant DS-14), le clic ouvre le fil, sans référence ni destination venue de la notification", async () => {
-    const subject = worker(serviceWorkerScript(CONFIG))
+  it("sans porte d'ouverture, le clic ouvre le repli, sans référence ni destination venue de la notification", async () => {
+    const subject = worker(serviceWorkerScript({ ...CONFIG, openPath: null }))
     const close = vi.fn()
     await subject.fire("notificationclick", { notification: { data: { reference: payload.reference, path: payload.url }, close } })
     expect(close).toHaveBeenCalledOnce()
-    expect(subject.openWindow).toHaveBeenCalledWith(new URL(routes.feed(), SCOPE).href)
+    expect(subject.openWindow).toHaveBeenCalledWith(new URL(CONFIG.fallbackPath, SCOPE).href)
   })
 
-  it("avec une porte d'ouverture posée (DS-14, MO-06), le clic y mène avec la seule référence", async () => {
-    const subject = worker(serviceWorkerScript({ ...CONFIG, openPath: routes.feed() }))
+  it("DS-14 : le clic mène à la porte d'ouverture de la table des routes, avec la seule référence, jamais l'adresse de la charge utile", async () => {
+    const subject = worker(serviceWorkerScript(CONFIG))
     await subject.fire("notificationclick", { notification: { data: { reference: payload.reference, path: payload.url }, close: vi.fn() } })
     const opened = new URL(String(subject.openWindow.mock.calls[0]?.[0]))
     expect(opened.origin).toBe(new URL(SCOPE).origin)
-    expect(opened.searchParams.get(CONFIG.referenceParam)).toBe(payload.reference)
+    expect(`${opened.pathname}${opened.search}`).toBe(routes.openNotification(payload.reference))
+    expect([...opened.searchParams.keys()]).toEqual([CONFIG.referenceParam])
+  })
+
+  it("DS-14 : une référence illisible dans la notification mène à la page des notifications, sans paramètre", async () => {
+    const subject = worker(serviceWorkerScript(CONFIG))
+    await subject.fire("notificationclick", { notification: { data: { reference: "https://external.example/" }, close: vi.fn() } })
+    expect(subject.openWindow).toHaveBeenCalledWith(new URL(routes.notifications(), SCOPE).href)
   })
 
   it("réutilise une fenêtre de la même origine et laisse les autres fenêtres intactes", async () => {
@@ -233,7 +240,7 @@ describe("script de fond — notifications : référence opaque et origine ferm�
     const subject = worker(serviceWorkerScript(CONFIG), { windows: [foreign, current] })
     await subject.fire("notificationclick", { notification: { data: { reference: payload.reference }, close: vi.fn() } })
     expect(foreign.navigate).not.toHaveBeenCalled()
-    expect(current.navigate).toHaveBeenCalledWith(new URL(routes.feed(), SCOPE).href)
+    expect(current.navigate).toHaveBeenCalledWith(new URL(routes.openNotification(payload.reference), SCOPE).href)
     expect(focus).toHaveBeenCalledOnce()
     expect(subject.openWindow).not.toHaveBeenCalled()
   })

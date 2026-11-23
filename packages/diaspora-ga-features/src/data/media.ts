@@ -13,14 +13,16 @@
  * jamais rendu. Le type, le poids et les dimensions déclarés sont ceux du
  * fichier PRÉPARÉ.
  *
- * Une VIDÉO (FD-02, lot SD-03 du moteur) : MP4 ou WebM seulement, la liste
- * d'envoi du moteur (`POST_VIDEO_UPLOAD_MIME_TYPES`) — le .mov de l'iPhone ne se
- * lit pas partout. Il est refusé AVANT tout envoi, avec la marche à suivre
- * (`media_video_format`) ; aucune conversion n'est promise : celle du moteur
- * (`prepareVideoForUpload`) joue la vidéo en temps réel, onglet visible, avec
- * progression et annulation, et rend ses refus en phrases — DIASPORA.GA ne la
- * branchera qu'avec cet écran. La durée mesurée est jugée par la règle du
- * moteur (`assertPostVideoDuration`), puis déclarée avec la vidéo.
+ * Une VIDÉO (FD-02, lot SD-03 du moteur) part toujours en MP4 ou en WebM, la
+ * liste d'envoi du moteur (`POST_VIDEO_UPLOAD_MIME_TYPES`) : le .mov de l'iPhone
+ * (ou un MP4 en HEVC) ne se lit pas partout. Toute vidéo choisie passe par la
+ * préparation du moteur (`prepareVideoForUpload`) : sondée, puis convertie dans
+ * le navigateur quand il sait la lire, en temps réel, onglet visible ; l'écran
+ * en suit l'avancement et peut l'annuler (`MediaPreparationOptions`). Quand ce
+ * navigateur ne sait ni la lire ni la convertir, la marche à suivre est dite
+ * (`media_video_format`) ; chaque refus de la préparation a son code fermé
+ * (`VIDEO_PREPARATION_CODES`). Le fichier PRÉPARÉ est pesé et sa durée jugée par
+ * la règle du moteur (`assertPostVideoDuration`), puis déclarée avec la vidéo.
  */
 import {
   assertPostMedia,
@@ -28,12 +30,26 @@ import {
   POST_IMAGE_MIME_TYPES,
   POST_MEDIA_ALT_MAX_LENGTH,
   POST_MEDIA_MAX_COUNT,
+  POST_VIDEO_MAX_BYTES,
   POST_VIDEO_UPLOAD_MIME_TYPES,
   type PostMediaInput,
   type PostMediaKind,
 } from "@antsia/social-domain/content"
 import { isDomainViolation } from "@antsia/social-domain/violation"
-import { isVideoCandidateType } from "@antsia/social-features/features/video-upload/video-upload-policy"
+import {
+  prepareVideoForUpload,
+  type PrepareVideo,
+  type PrepareVideoOptions,
+  type VideoPreparation,
+  type VideoPreparationPhase,
+} from "@antsia/social-features/features/video-upload/video-preparation"
+import {
+  isVideoCandidateType,
+  POST_VIDEO_UPLOAD_LIMITS,
+  VIDEO_UPLOAD_ACCEPT,
+  type VideoPreparationRefusal,
+} from "@antsia/social-features/features/video-upload/video-upload-policy"
+import { createAppI18n, DEFAULT_LOCALE } from "@antsia/social-features/i18n"
 import {
   IMAGE_UPLOAD_MAX_DIMENSION,
   IMAGE_UPLOAD_QUALITY,
@@ -51,11 +67,15 @@ import {
 import type { ActionErrorCode } from "./errors"
 import type { ActionResult } from "./port"
 
-export { POST_MEDIA_ALT_MAX_LENGTH, POST_MEDIA_MAX_COUNT }
-export type { PostMediaInput, PostMediaKind }
+export { isVideoCandidateType, POST_MEDIA_ALT_MAX_LENGTH, POST_MEDIA_MAX_COUNT }
+export type { PostMediaInput, PostMediaKind, PrepareVideo, VideoPreparationPhase }
 
-/** Les types qu'accepte le sélecteur de fichiers du composeur : les photos, et les vidéos de la liste d'envoi du moteur. */
-export const POST_MEDIA_ACCEPT = [...POST_IMAGE_MIME_TYPES, ...POST_VIDEO_UPLOAD_MIME_TYPES].join(",")
+/**
+ * Les types qu'accepte le sélecteur de fichiers du composeur : les photos, et TOUTE vidéo
+ * (`VIDEO_UPLOAD_ACCEPT` du moteur) — restreindre le choix à MP4 et WebM cacherait le .mov de
+ * l'iPhone, que la préparation sait convertir. Le tri se fait après le choix (FD-02).
+ */
+export const POST_MEDIA_ACCEPT = [...POST_IMAGE_MIME_TYPES, VIDEO_UPLOAD_ACCEPT].join(",")
 
 /**
  * Les règles des médias du moteur, et de son dépôt de fichiers, dites par
@@ -74,10 +94,24 @@ export const MEDIA_RULE_CODES: Readonly<Record<string, ActionErrorCode>> = {
   UPLOAD_MISMATCH: "media_upload_failed",
 }
 
-/** Le genre d'un fichier qu'une NOUVELLE publication peut porter ; `null` : refusé (le .mov compris). */
+/** Le genre d'un fichier qu'une NOUVELLE publication peut porter TEL QUEL ; `null` : refusé (le .mov compris, qui se prépare d'abord). */
 export function postMediaKindOf(mimeType: string): PostMediaKind | null {
   if ((POST_IMAGE_MIME_TYPES as readonly string[]).includes(mimeType)) return "image"
   if ((POST_VIDEO_UPLOAD_MIME_TYPES as readonly string[]).includes(mimeType)) return "video"
+  return null
+}
+
+/**
+ * Ce qu'un fichier CHOISI présente aux règles du moteur avant tout envoi (FD-02). Une photo, un
+ * MP4 ou un WebM : ses vrais type et poids. Une vidéo d'un autre conteneur (le .mov de l'iPhone)
+ * se présente comme le MP4 qu'elle deviendra, au plus lourd admis : seule sa PLACE (une vidéo
+ * seule, jamais une pièce de trop) se juge ici ; son type, son poids et sa durée réels se jugent
+ * sur le fichier PRÉPARÉ, avant tout dépôt (`prepareMediaFile`). `null` : ni photo ni vidéo.
+ */
+export function selectionMediaInput(file: File): PostMediaInput | null {
+  const kind = postMediaKindOf(file.type)
+  if (kind) return { kind, mimeType: file.type, sizeBytes: file.size }
+  if (isVideoCandidateType(file.type)) return { kind: "video", mimeType: POST_VIDEO_UPLOAD_MIME_TYPES[0], sizeBytes: POST_VIDEO_MAX_BYTES }
   return null
 }
 
@@ -196,15 +230,114 @@ export async function fileForDeposit(file: File, prepare?: PrepareImage): Promis
 }
 
 /**
+ * Les refus de la préparation d'une vidéo (module du moteur, liste fermée
+ * `VIDEO_PREPARATION_REFUSALS`), dits par les codes fermés de DIASPORA.GA.
+ * Chacun veut dire : la vidéo n'est PAS envoyée. Ce navigateur ne sait ni la
+ * lire ni la convertir : la marche à suivre d'aujourd'hui (`media_video_format`).
+ */
+export const VIDEO_PREPARATION_CODES: Readonly<Record<VideoPreparationRefusal, ActionErrorCode>> = {
+  "not-decodable": "media_video_format",
+  "too-long": "media_video_too_long",
+  "too-long-to-convert": "media_video_too_long_to_convert",
+  "no-encoder": "media_video_format",
+  "conversion-failed": "media_video_conversion_failed",
+}
+
+/** Ce que l'écran suit et peut arrêter pendant la préparation d'une vidéo (FD-02). */
+export interface MediaPreparationOptions {
+  /**
+   * La préparation des vidéos : `prepareVideoForUpload` du moteur par défaut. Remplaçable dans
+   * les tests — `jsdom` n'a ni décodeur vidéo ni `MediaRecorder`.
+   */
+  readonly prepareVideo?: PrepareVideo
+  /** L'annulation : le geste « Annuler la conversion », la fermeture ou le départ du composeur. */
+  readonly signal?: AbortSignal
+  /** L'avancement de la préparation d'une vidéo : analyse, puis conversion (de 0 à 1). */
+  readonly onPhase?: (phase: VideoPreparationPhase) => void
+}
+
+/**
+ * Le module du moteur compose aussi une phrase à côté de chaque refus ; DIASPORA.GA dit le CODE
+ * par ses propres textes (`VIDEO_PREPARATION_CODES`) et ne montre jamais cette phrase. Une
+ * instance du moteur sans textes propres suffit à la composer ; créée au premier besoin.
+ */
+let engineSentences: PrepareVideoOptions["t"] | null = null
+function engineSentenceT(): PrepareVideoOptions["t"] {
+  engineSentences ??= createAppI18n({ locale: DEFAULT_LOCALE, appResources: { fr: {}, en: {} }, defaultNS: "reseau" }).getFixedT(DEFAULT_LOCALE)
+  return engineSentences
+}
+
+/** L'issue d'une préparation qui a levé : annulée si on l'a annulée, sinon une conversion échouée. */
+function failedPreparation(signal: AbortSignal | undefined): VideoPreparation {
+  return signal?.aborted ? { status: "cancelled" } : { status: "refused", refusal: "conversion-failed", message: "" }
+}
+
+/**
+ * Prépare une VIDÉO avant son dépôt (FD-02) : un MP4 ou un WebM trop lourd est refusé avant
+ * toute analyse ; puis le module du moteur la sonde et, s'il le faut (un .mov, un MP4 en HEVC),
+ * la convertit en MP4 ou en WebM dans ce navigateur. Le fichier RENDU est pesé (une conversion
+ * vise un débit sans le tenir à l'octet) et sa durée jugée par la règle du moteur. Échec fermé :
+ * un refus, ou `media_cancelled`, jamais l'original d'un conteneur non admis.
+ */
+async function prepareVideoMedia(
+  file: File,
+  options: MediaPreparationOptions,
+): Promise<ActionResult<{ readonly file: File; readonly facts: MediaFileFacts }>> {
+  if (postMediaKindOf(file.type) === "video") {
+    const weight = postMediaRefusal([{ kind: "video", mimeType: file.type, sizeBytes: file.size }])
+    if (weight) return { ok: false, code: weight }
+  }
+  const { signal, onPhase } = options
+  let result: VideoPreparation
+  try {
+    result = await (options.prepareVideo ?? prepareVideoForUpload)(file, {
+      limits: POST_VIDEO_UPLOAD_LIMITS,
+      t: engineSentenceT(),
+      ...(signal ? { signal } : {}),
+      ...(onPhase ? { onPhase } : {}),
+    })
+  } catch {
+    result = failedPreparation(signal)
+  }
+  if (result.status === "cancelled" || signal?.aborted) return { ok: false, code: "media_cancelled" }
+  if (result.status === "refused") return { ok: false, code: VIDEO_PREPARATION_CODES[result.refusal] }
+  const output = result.file
+  if (postMediaKindOf(output.type) !== "video") return { ok: false, code: "media_video_conversion_failed" }
+  const weight = postMediaRefusal([{ kind: "video", mimeType: output.type, sizeBytes: output.size }])
+  if (weight) return { ok: false, code: result.converted && weight === "media_too_large" ? "media_video_converted_too_large" : weight }
+  // Les dimensions du fichier rendu ; la durée de la préparation fait foi (celle d'un WebM enregistré n'est pas lisible).
+  const measured = await measureVideo(output)
+  if (signal?.aborted) return { ok: false, code: "media_cancelled" }
+  const durationMs = result.durationMs ?? measured.durationMs
+  const tooLong = postVideoDurationRefusal(durationMs)
+  if (tooLong) return { ok: false, code: tooLong }
+  return {
+    ok: true,
+    value: {
+      file: output,
+      facts: {
+        kind: "video",
+        mimeType: output.type,
+        sizeBytes: output.size,
+        ...(measured.width !== undefined && measured.height !== undefined ? { width: measured.width, height: measured.height } : {}),
+        ...(durationMs !== undefined ? { durationMs } : {}),
+      },
+    },
+  }
+}
+
+/**
  * Le fichier à déposer pour une publication, et ce qu'il dit de lui-même.
  *
  *   · une PHOTO est préparée (`prepareImageFile`) ; les règles du moteur sont
  *     jugées sur le fichier PRÉPARÉ, celui que le serveur recevra et relira ;
  *     ses dimensions sont celles de la sortie (mesurées, pour un GIF animé
  *     laissé tel quel) ;
- *   · une VIDÉO MP4 ou WebM part telle quelle (`describeMediaFile` : type,
- *     poids, durée mesurée et bornée) ; un autre conteneur est refusé avec la
- *     marche à suivre, sans conversion (voir l'en-tête).
+ *   · une VIDÉO, quel qu'en soit le conteneur, est préparée par le module du
+ *     moteur (`prepareVideoMedia`) : le fichier rendu est toujours un MP4 ou un
+ *     WebM, pesé, sa durée bornée ; l'avancement et l'annulation passent par
+ *     `options` ;
+ *   · tout autre fichier est refusé par son type.
  *
  * Le poids du fichier CHOISI est jugé avant, par le composeur (règles du
  * moteur sur l'ensemble des médias, avant tout envoi).
@@ -212,13 +345,11 @@ export async function fileForDeposit(file: File, prepare?: PrepareImage): Promis
 export async function prepareMediaFile(
   file: File,
   prepare?: PrepareImage,
+  options: MediaPreparationOptions = {},
 ): Promise<ActionResult<{ readonly file: File; readonly facts: MediaFileFacts }>> {
+  if (isVideoCandidateType(file.type)) return prepareVideoMedia(file, options)
   const kind = postMediaKindOf(file.type)
-  if (!kind) return { ok: false, code: unsupportedMediaRefusal(file.type) }
-  if (kind === "video") {
-    const facts = await describeMediaFile(file)
-    return facts.ok ? { ok: true, value: { file, facts: facts.value } } : facts
-  }
+  if (kind !== "image") return { ok: false, code: unsupportedMediaRefusal(file.type) }
   const prepared = await prepareImageFile(file, prepare)
   if (!prepared.ok) return prepared
   const output = prepared.value.file

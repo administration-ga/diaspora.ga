@@ -111,6 +111,8 @@ export const useDeviceNotifications = () => useDataSource().deviceNotifications 
 export const useNetworkFeatures = () => useDataSource().networkFeatures ?? null
 /** Parcourir l'annuaire par pays et par ville (CH-816 P3) ; `null` : la recherche par nom seule. */
 export const useMemberBrowse = () => useDataSource().memberBrowse ?? null
+/** DS-14 (ouverture) : relire la destination d'une notification poussée ; `null` : rien n'est poussé par ce fournisseur. */
+export const useNotificationOpening = () => useDataSource().notificationOpening ?? null
 /** Chercher dans les publications lisibles du réseau (DS-11) ; `null` : le fournisseur ne la sert pas. */
 export const usePostSearchCapability = () => useDataSource().postSearch ?? null
 

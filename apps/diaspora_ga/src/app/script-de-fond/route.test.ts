@@ -4,7 +4,7 @@ import { runInNewContext } from "node:vm"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { describe, expect, it } from "vitest"
 
-import { routes } from "@/lib/routes"
+import { NOTIFICATION_REFERENCE_PARAM, routes } from "@/lib/routes"
 import { OFFLINE_CACHE_PREFIX, SERVICE_WORKER_VERSION } from "@/lib/service-worker"
 import type { ServiceWorkerConfiguration } from "@/lib/service-worker-script"
 
@@ -35,10 +35,12 @@ describe("route du script de fond", () => {
       title: getFixedT("fr")("brand.name"),
       messages: { fr: getFixedT("fr")("installableApp.notificationBody"), en: getFixedT("en")("installableApp.notificationBody") },
       tagPrefix: "diaspora-ga-notification-",
-      openPath: null,
-      fallbackPath: routes.feed(),
-      referenceParam: "reference",
+      // DS-14 : la porte d'ouverture et son repli, la page des notifications.
+      openPath: routes.openNotification(),
+      fallbackPath: routes.notifications(),
+      referenceParam: NOTIFICATION_REFERENCE_PARAM,
     })
+    expect(config.referenceParam).toBe("reference")
     expect(config.messages.fr).not.toBe(config.messages.en)
   })
 

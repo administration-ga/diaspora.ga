@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
+import { VIDEO_TRANSCODE_MAX_DURATION_MS } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { describe, expect, it } from "vitest"
 
 import { getFixedT } from "./index"
@@ -26,6 +27,10 @@ const LIMIT_PHRASES = [
   "errors.media_type_invalid",
   "errors.media_video_format",
   "errors.media_video_too_long",
+  // FD-02 : les refus de la préparation d'une vidéo dans le navigateur.
+  "errors.media_video_too_long_to_convert",
+  "errors.media_video_conversion_failed",
+  "errors.media_video_converted_too_large",
   "profile.images.requirements",
   "profile.images.format",
   "profile.images.inputTooLarge",
@@ -42,6 +47,8 @@ describe("FD-02 — les bornes des médias suivent le moteur", () => {
     expect(MEDIA_LIMIT_VARIABLES.postVideoFormats).toBe(formatNames(POST_VIDEO_UPLOAD_MIME_TYPES))
     expect(MEDIA_LIMIT_VARIABLES.postVideoFormats).not.toContain("MOV")
     expect(MEDIA_LIMIT_VARIABLES.postVideoMaxMinutes).toBe(String(POST_VIDEO_MAX_DURATION_MS / 60_000))
+    // FD-02 : la borne de la CONVERSION dans le navigateur, celle du module du moteur.
+    expect(MEDIA_LIMIT_VARIABLES.postVideoConvertMaxMinutes).toBe(String(VIDEO_TRANSCODE_MAX_DURATION_MS / 60_000))
     expect(MEDIA_LIMIT_VARIABLES.profileAvatarMaxMegabytes).toBe(megabytes(UPLOAD_USAGES.avatar.maxBytes))
     expect(MEDIA_LIMIT_VARIABLES.profileCoverMaxMegabytes).toBe(megabytes(UPLOAD_USAGES.cover.maxBytes))
     // Une borne qui ne tombe pas sur un mébioctet entier est dite par défaut, jamais par excès.
@@ -54,6 +61,8 @@ describe("FD-02 — les bornes des médias suivent le moteur", () => {
   it("la borne de durée du moteur se dit en minutes entières : si elle change de forme, la phrase doit suivre", () => {
     expect(POST_VIDEO_MAX_DURATION_MS % 60_000).toBe(0)
     expect(POST_VIDEO_MAX_DURATION_MS).toBeGreaterThanOrEqual(60_000)
+    expect(VIDEO_TRANSCODE_MAX_DURATION_MS % 60_000).toBe(0)
+    expect(VIDEO_TRANSCODE_MAX_DURATION_MS).toBeGreaterThanOrEqual(60_000)
   })
 
   it.each(["fr", "en"] as const)("aucune phrase de borne n'écrit un chiffre en dur (%s)", (locale) => {
@@ -82,5 +91,7 @@ describe("FD-02 — les bornes des médias suivent le moteur", () => {
   it("la phrase française garde l'espace insécable entre le nombre et l'unité", () => {
     expect(getFixedT("fr")("errors.media_too_large")).toContain(`${megabytes(POST_VIDEO_MAX_BYTES)} Mo`)
     expect(getFixedT("fr")("errors.media_video_too_long")).toContain(`${minutes(POST_VIDEO_MAX_DURATION_MS)} min`)
+    expect(getFixedT("fr")("errors.media_video_too_long_to_convert")).toContain(`${minutes(VIDEO_TRANSCODE_MAX_DURATION_MS)} min`)
+    expect(getFixedT("fr")("errors.media_video_converted_too_large")).toContain(`${megabytes(POST_VIDEO_MAX_BYTES)} Mo`)
   })
 })

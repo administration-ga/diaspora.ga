@@ -4,7 +4,7 @@
  * surfaces de `@diaspora-ga/features` ne connaissent aucune URL : elles reçoivent
  * cette table par `RoutingProvider`.
  */
-import { contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
+import { chatKey, contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
 import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
 import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
 import { moderationDeskPath, type ModerationDeskTab } from "@diaspora-ga/features/navigation"
@@ -214,6 +214,12 @@ export const SPONSOR_REQUEST_PARAM = "pour"
 /** L'ancre de la rubrique « Emplois » de la fiche d'une page (EM-04). */
 export const PAGE_JOBS_ANCHOR = "emplois-de-la-page"
 
+/**
+ * Le paramètre de la porte d'ouverture d'une notification poussée (DS-14) : la référence OPAQUE du
+ * moteur, seule chose que porte la notification de l'appareil ; le script de fond l'y pose.
+ */
+export const NOTIFICATION_REFERENCE_PARAM = "reference"
+
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
@@ -253,6 +259,13 @@ export const routes = {
   bookmarks: () => "/enregistrements",
   /** Tous mes avis de la cloche, page après page, avec le filtre « Non lues » (NP-04). */
   notifications: () => "/notifications",
+  /**
+   * DS-14 (ouverture) : la porte d'une notification poussée, touchée sur l'appareil. Elle ne porte
+   * que la référence opaque du moteur, relue pour la personne de la session, jamais une destination ;
+   * sans référence, son chemin seul (le script de fond y pose lui-même le paramètre).
+   */
+  openNotification: (reference?: string) =>
+    reference === undefined ? "/notifications/ouvrir" : `/notifications/ouvrir?${new URLSearchParams({ [NOTIFICATION_REFERENCE_PARAM]: reference })}`,
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   /** L'annuaire : la recherche par nom, et le parcours par pays, ville et confiance (CH-816 P3). */
   members: (filters?: MemberBrowseParams) => membersHref(filters),
@@ -272,6 +285,8 @@ export const routes = {
   contextualConversation: (threadId: string) => conversationHref(contextualConversationKey(threadId), "/messages") ?? "/messages",
   /** Une conversation de groupe d'iCom (IM-04 : message ou invitation de groupe) : `/messages/groupe/<fil>`, composée par la messagerie du moteur. */
   groupConversation: (threadId: string) => conversationHref(groupeKey(threadId), "/messages") ?? "/messages",
+  /** Une conversation à deux d'iCom (IC-09 du moteur : message reçu d'une relation) : `/messages/chat/<fil>`, composée par la messagerie du moteur. */
+  personalConversation: (threadId: string) => conversationHref(chatKey(threadId), "/messages") ?? "/messages",
   /**
    * Le journal d'appels d'iCom (IM-04 : appel manqué, message vocal), sur la brique iAppel de la
    * messagerie, la même adresse que composent les avis du moteur (`icomMobileTabHref("iappel")`,
@@ -419,6 +434,9 @@ export const ROUTE_FILTER_KEYS = [
   "langue",
   // IM-04 : la brique d'iCom ouverte (journal d'appels).
   "brique",
+  // DS-14 : la référence opaque d'une notification poussée. Elle ne donne aucun droit (le moteur relit
+  // destinataire et session à l'ouverture) : elle survit à l'entrée, la porte d'ouverture la relit.
+  NOTIFICATION_REFERENCE_PARAM,
 ] as const
 
 /** Ancres internes de la vitrine. */
