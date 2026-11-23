@@ -238,6 +238,20 @@ describe("PostCard — l'auteur sait où en est sa publication (FD-04)", () => {
   })
 })
 
+describe("PostCard — l'épinglée du mur (FD-10)", () => {
+  it.each(["fr", "en"] as const)("le mur dit l'épinglée en %s ; une publication non épinglée, ou lue hors du mur, n'en dit rien", (locale) => {
+    const t = getFixedT(locale)
+    const pinned = mount({ ...post, pinned: true }, locale)
+    expect(screen.getByText(t("post.pinnedOnWall"))).toBeInTheDocument()
+    pinned.unmount()
+    const unpinned = mount({ ...post, pinned: false }, locale)
+    expect(screen.queryByText(t("post.pinnedOnWall"))).not.toBeInTheDocument()
+    unpinned.unmount()
+    mount(post, locale)
+    expect(screen.queryByText(t("post.pinnedOnWall"))).not.toBeInTheDocument()
+  })
+})
+
 describe("PostCard — publication d'une page, pages fermées sur le réseau (ADR-0041 du moteur)", () => {
   const pagePost: PostView = { ...post, author: { kind: "page", id: "page-saveurs", handle: "saveurs", displayName: "Saveurs du Gabon", badges: [] } }
 

@@ -463,6 +463,7 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     myReaction: mine,
     isMine: post.author.kind === "person" && post.author.id === viewerId,
     bookmarked: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "bookmark"),
+    notifying: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "notify"),
     edited: post.editedAt !== null,
     editedAt: post.editedAt,
   }

@@ -91,6 +91,7 @@ import enNotificationsCenter from "./locales/en/notifications-center.json"
 import enIcomNotices from "./locales/en/icom-notices.json"
 import enFeedRail from "./locales/en/feed-rail.json"
 import enMemberBrowse from "./locales/en/member-browse.json"
+import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -171,6 +172,7 @@ import frNotificationsCenter from "./locales/fr/notifications-center.json"
 import frIcomNotices from "./locales/fr/icom-notices.json"
 import frFeedRail from "./locales/fr/feed-rail.json"
 import frMemberBrowse from "./locales/fr/member-browse.json"
+import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -261,6 +263,8 @@ export const LOCALE_PARTS = {
     "feed-rail": frFeedRail,
     // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
     "member-browse": frMemberBrowse,
+    // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
+    "post-author-gestures": frPostAuthorGestures,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -344,6 +348,8 @@ export const LOCALE_PARTS = {
     "feed-rail": enFeedRail,
     // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
     "member-browse": enMemberBrowse,
+    // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
+    "post-author-gestures": enPostAuthorGestures,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

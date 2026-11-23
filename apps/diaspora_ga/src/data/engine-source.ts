@@ -1015,6 +1015,38 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return null
       }),
 
+    // FD-10 : les gestes de l'auteur que le moteur sert déjà ; il garde ses règles (ma publication,
+    // personnelle, hors groupe, publiée) et rend le même « introuvable » pour tout le reste.
+    pinOnMyWall: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.pinOnMyWall, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    unpinMyWall: () =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.unpinMyWall, { networkId: await diasporaGa() })
+        return null
+      }),
+
+    // La lecture dans ANTSIA seulement : la publication reste dans DIASPORA.GA, pour la même audience.
+    withdrawFromRoot: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.withdrawFromRoot, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    // La marque `notify` du moteur : une bascule privée, que l'auteur n'apprend pas.
+    toggleCommentNotifications: (postId) =>
+      attempt(async () => {
+        const result = await deps.convex.mutation(api.modules.marks.marks.toggleMark, {
+          networkId: await diasporaGa(),
+          postId: postId as Id<"posts">,
+          kind: "notify",
+        })
+        return { notifying: result.marked }
+      }),
+
     removePost: (postId) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.posts.posts.remove, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
