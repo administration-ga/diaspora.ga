@@ -122,7 +122,6 @@
       "lastDecisionBy": "Last decision: {{date}}, by {{name}}",
       "viaConsole": "Decision taken from the platform console.",
       "reason": "Reason: {{reason}}",
-      "reasonInJournal": "The reason can be read in the decision log.",
       "neverDecided": "No decision: closed since the network opened.",
       "decidedButBlocked": "Opening decided, with no effect while {{module}} stays closed.",
       "prerequisites": "Before opening, review",

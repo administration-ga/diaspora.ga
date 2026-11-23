@@ -9,7 +9,7 @@ import { I18nextProvider } from "react-i18next"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { APP_NAMESPACE, appResources } from "@/i18n/resources"
-import type { FeatureState, NetworkAuditEntry } from "@/lib/network-features"
+import type { FeatureState, LastDecision } from "@/lib/network-features"
 
 /**
  * CH-815 A5 — la section « Modules » : une carte par module rendu par le moteur, son état, ce
@@ -23,8 +23,8 @@ const DECIDED_AT = Date.UTC(2026, 10, 20, 14, 3)
 
 const mocks = vi.hoisted(() => ({
   rows: undefined as unknown,
-  journal: undefined as unknown,
-  journalFailure: null as unknown,
+  decisions: undefined as unknown,
+  decisionsFailure: null as unknown,
   args: new Map<string, unknown>(),
   setFeature: vi.fn(),
   mutations: [] as string[],
@@ -39,9 +39,9 @@ vi.mock("convex/react", async () => {
       const path = name(reference)
       mocks.args.set(path, args)
       if (path === "modules/networks/features:settings") return mocks.rows
-      if (path === "modules/platform/audit:paginateNetworkAudit") {
-        if (mocks.journalFailure) throw mocks.journalFailure
-        return mocks.journal
+      if (path === "modules/networks/features:lastDecisions") {
+        if (mocks.decisionsFailure) throw mocks.decisionsFailure
+        return mocks.decisions
       }
       throw new Error(`lecture inattendue : ${path}`)
     },
@@ -69,17 +69,15 @@ function rowsWith(open: readonly NetworkFeature[], decided: Partial<Record<Netwo
   })
 }
 
-function auditEntry(overrides: Partial<NetworkAuditEntry> & { details: NonNullable<NetworkAuditEntry["details"]> }): NetworkAuditEntry {
+/** Une ligne de `features.lastDecisions` : un module décidé (un module jamais décidé n'y figure pas). */
+function lastDecision(overrides: Partial<LastDecision> & Pick<LastDecision, "feature" | "reason">): LastDecision {
   return {
-    auditId: "audit-1",
-    action: "network.feature_set",
+    enabled: true,
+    at: DECIDED_AT,
     capacity: "network_admin",
     actor: { personId: "person-one", displayName: "Awa NDONG", handle: "awa" },
-    networkId: NETWORK_ID,
-    subject: { table: "networks", id: NETWORK_ID },
-    at: DECIDED_AT,
     ...overrides,
-  } as NetworkAuditEntry
+  } as LastDecision
 }
 
 function mount() {
@@ -98,8 +96,8 @@ const toggleButton = (feature: NetworkFeature, action: "open" | "close") => card
 beforeEach(() => {
   vi.clearAllMocks()
   mocks.rows = rowsWith([])
-  mocks.journal = { page: [], isDone: true, continueCursor: "" }
-  mocks.journalFailure = null
+  mocks.decisions = []
+  mocks.decisionsFailure = null
   mocks.args.clear()
   mocks.mutations = []
   mocks.setFeature.mockResolvedValue({ changed: true })
@@ -107,10 +105,10 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe("section Modules — les cartes", () => {
-  it("lit l'état des modules et le journal du réseau administré, sans rien écrire", () => {
+  it("lit l'état des modules et leurs dernières décisions pour le réseau administré, en une requête, sans rien écrire", () => {
     mount()
     expect(mocks.args.get("modules/networks/features:settings")).toEqual({ networkId: NETWORK_ID })
-    expect(mocks.args.get("modules/platform/audit:paginateNetworkAudit")).toEqual({ networkId: NETWORK_ID, paginationOpts: { numItems: 100, cursor: null } })
+    expect(mocks.args.get("modules/networks/features:lastDecisions")).toEqual({ networkId: NETWORK_ID })
     expect(mocks.setFeature).not.toHaveBeenCalled()
   })
 
@@ -167,42 +165,52 @@ describe("section Modules — les cartes", () => {
     )
   })
 
-  it("dernière décision : la date, l'auteur et le motif quand le journal la porte ; la date seule sinon ; « aucune décision » sans ligne", () => {
+  it("dernière décision : la date, l'auteur et le motif d'un module décidé ; la date seule s'il n'y figure pas ; « aucune décision » sans ligne", () => {
     mocks.rows = rowsWith(["pages", "mutualAid"], { pages: DECIDED_AT, mutualAid: DECIDED_AT + 60_000 })
-    mocks.journal = {
-      page: [
-        // Une décision d'un autre module, au même instant : ignorée.
-        auditEntry({ details: { reason: "Autre décision du pilote.", feature: "jobs", enabled: true } }),
-        auditEntry({ details: { reason: "Ouverture des pages pour le pilote de Lyon.", feature: "pages", enabled: true } }),
-      ],
-      isDone: true,
-      continueCursor: "",
-    }
+    // Un module absent de la lecture (mutualAid : posé hors bascule) ne porte rien de plus que sa date.
+    mocks.decisions = [lastDecision({ feature: "pages", reason: "Ouverture des pages pour le pilote de Lyon." })]
     mount()
     const date = new Intl.DateTimeFormat("fr", { dateStyle: "long", timeStyle: "short" }).format(new Date(DECIDED_AT))
     expect(card("pages").getByText(t("modules.card.lastDecisionBy", { date, name: "Awa NDONG" }))).toBeInTheDocument()
     expect(card("pages").getByText(t("modules.card.reason", { reason: "Ouverture des pages pour le pilote de Lyon." }))).toBeInTheDocument()
-    // Hors de la fenêtre du journal lue : la date seule, et le motif renvoyé au journal.
     const later = new Intl.DateTimeFormat("fr", { dateStyle: "long", timeStyle: "short" }).format(new Date(DECIDED_AT + 60_000))
     expect(card("mutualAid").getByText(t("modules.card.lastDecision", { date: later }))).toBeInTheDocument()
-    expect(card("mutualAid").getByText(t("modules.card.reasonInJournal"))).toBeInTheDocument()
+    expect(card("mutualAid").queryByText(/Motif :/)).toBeNull()
     expect(card("mentoring").getByText(t("modules.card.neverDecided"))).toBeInTheDocument()
+  })
+
+  it("l'auteur sans nom publié se dit par son identifiant ; sans acteur, la date seule", () => {
+    mocks.rows = rowsWith(["pages", "jobs"], { pages: DECIDED_AT, jobs: DECIDED_AT })
+    mocks.decisions = [
+      lastDecision({ feature: "pages", reason: "Ouverture des pages pour le pilote.", actor: { personId: "person-one", displayName: null, handle: "awa" } } as Partial<LastDecision> & Pick<LastDecision, "feature" | "reason">),
+      lastDecision({ feature: "jobs", reason: "Ouverture de l'emploi pour le pilote.", actor: null }),
+    ]
+    mount()
+    const date = new Intl.DateTimeFormat("fr", { dateStyle: "long", timeStyle: "short" }).format(new Date(DECIDED_AT))
+    expect(card("pages").getByText(t("modules.card.lastDecisionBy", { date, name: "awa" }))).toBeInTheDocument()
+    expect(card("jobs").getByText(t("modules.card.lastDecision", { date }))).toBeInTheDocument()
+    expect(card("jobs").getByText(t("modules.card.reason", { reason: "Ouverture de l'emploi pour le pilote." }))).toBeInTheDocument()
   })
 
   it("une décision prise depuis la console de la plateforme le dit", () => {
     mocks.rows = rowsWith(["mentoring"], { mentoring: DECIDED_AT })
-    mocks.journal = { page: [auditEntry({ capacity: "platform_admin", details: { reason: "Bascule de secours du mentorat.", feature: "mentoring", enabled: true } })], isDone: true, continueCursor: "" }
+    mocks.decisions = [lastDecision({ feature: "mentoring", reason: "Bascule de secours du mentorat.", capacity: "platform_admin" })]
     mount()
     expect(card("mentoring").getByText(t("modules.card.viaConsole"))).toBeInTheDocument()
   })
 
-  it("le journal illisible ne retire rien aux cartes : la date seule", () => {
+  it("la lecture des décisions en attente n'affirme aucun motif ; en refus, elle ne retire rien aux cartes : la date seule", () => {
     mocks.rows = rowsWith(["pages"], { pages: DECIDED_AT })
-    mocks.journalFailure = Object.assign(new Error("refus"), { data: { code: "notFound" } })
+    mocks.decisions = undefined
+    mount()
+    expect(card("pages").queryByText(/Motif :/)).toBeNull()
+    cleanup()
+    mocks.decisionsFailure = Object.assign(new Error("refus"), { data: { code: "notFound" } })
     vi.spyOn(console, "error").mockImplementation(() => undefined)
     mount()
     expect(card("pages").getByText(t("modules.state.open"))).toBeInTheDocument()
-    expect(card("pages").getByText(t("modules.card.reasonInJournal"))).toBeInTheDocument()
+    expect(card("pages").getByText(/Dernière décision/)).toBeInTheDocument()
+    expect(card("pages").queryByText(/Motif :/)).toBeNull()
   })
 
   it("les prérequis à relire avant d'ouvrir : une liste à lire, sans case ni coche gardée ; absente d'un module ouvert", () => {
