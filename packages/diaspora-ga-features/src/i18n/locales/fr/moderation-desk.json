@@ -13,9 +13,7 @@
     },
     "tabsLabel": "Onglets de la modération",
     "tab": {
-      "file": "File",
-      "appeals": "Recours",
-      "team": "Équipe"
+      "file": "File"
     },
     "capacity": {
       "role": {
@@ -221,9 +219,7 @@
       "decide": "Confirmer la décision",
       "back": "Revenir à la décision",
       "reject": "Confirmer le refus",
-      "rejectBody": "Refuser retire ce contenu ({{surface}}) : il ne sera pas publié.",
-      "overturn": "Annuler la décision contestée",
-      "overturnBody": "Annuler la décision lève ses mesures et rétablit le contenu s'il avait été retiré."
+      "rejectBody": "Refuser retire ce contenu ({{surface}}) : il ne sera pas publié."
     },
     "pending": {
       "open": "Examiner le contenu",
@@ -240,71 +236,6 @@
       "submit": "Enregistrer la décision",
       "doneApproved": "Contenu approuvé : il a quitté la relecture.",
       "doneRejected": "Contenu refusé : il a quitté la relecture."
-    },
-    "appeals": {
-      "title": "Recours à examiner",
-      "lead": "Les recours formés contre une décision d'équipe, le plus ancien d'abord. Ni l'ancien décideur ni la personne qui conteste ne les examinent.",
-      "restricted": "L'examen des recours est réservé à l'administration du réseau.",
-      "emptyTitle": "Aucun recours à examiner",
-      "emptyFilteredTitle": "Aucun recours ne correspond",
-      "emptyBody": "Un recours apparaît ici quand une personne conteste une décision d'équipe.",
-      "decidedAt": "Décision du",
-      "decisionReason": "Motif de la décision",
-      "noReason": "Aucun motif enregistré.",
-      "measures": "Mesures",
-      "noMeasure": "Aucune mesure",
-      "measureUntil": "{{measure}} jusqu'au {{date}}",
-      "appealReason": "Motif du recours",
-      "filedAt": "Recours formé le",
-      "open": "Examiner le recours",
-      "sheetTitle": "Recours : {{surface}}",
-      "sheetDescription": "La décision contestée, le motif du recours, puis votre examen motivé.",
-      "decisionTitle": "Votre examen",
-      "outcomeLegend": "Issue",
-      "uphold": "Maintenir la décision",
-      "upholdHint": "La décision et ses mesures restent en vigueur ; la personne peut encore saisir l'équipe de la plateforme.",
-      "overturn": "Annuler la décision",
-      "overturnHint": "Les mesures sont levées et le contenu est rétabli s'il avait été retiré.",
-      "submit": "Enregistrer l'examen",
-      "doneUpheld": "Décision maintenue : le recours a quitté la file.",
-      "doneOverturned": "Décision annulée : le recours a quitté la file."
-    },
-    "team": {
-      "title": "Équipes de modération",
-      "lead": "Les équipes qui traitent la file du réseau et leurs responsables.",
-      "countryNote": "Le moteur ne rattache pas encore une équipe à un pays : le nom d'une équipe peut l'indiquer, il ne délimite aucune compétence.",
-      "mine": "Vos équipes",
-      "noTeam": "Vous ne faites partie d'aucune équipe.",
-      "noTeamNetworkWide": "Vous ne faites partie d'aucune équipe : votre rôle réseau vous ouvre toute la file accessible.",
-      "scopeAll": "Toutes les natures de contenu",
-      "scopeOne": "Nature traitée : {{surface}}",
-      "readOnly": "La composition des équipes est tenue par l'administration du réseau.",
-      "picker": "Équipe à composer",
-      "noneYet": "Aucune équipe n'existe encore : créez la première ci-dessous.",
-      "roster": "Membres de l'équipe {{name}}",
-      "rosterEmpty": "Cette équipe n'a encore aucun membre actif.",
-      "rosterMore": "D'autres membres existent ; seuls les premiers sont montrés.",
-      "me": "(vous)",
-      "neutralName": "Membre au profil non publié",
-      "outsideNetwork": "N'est plus membre actif du réseau.",
-      "remove": "Retirer",
-      "removeTitle": "Retirer {{name}} de l'équipe",
-      "removeBody": "Cette personne ne lira plus la file de l'équipe {{team}}. Le retrait est motivé et inscrit au journal des décisions du moteur.",
-      "removeConfirm": "Retirer de l'équipe",
-      "removed": "{{name}} ne fait plus partie de l'équipe.",
-      "addTitle": "Ajouter un membre à l'équipe {{name}}",
-      "handle": "Identifiant public du membre",
-      "handleHint": "Par exemple prenom.nom : seule une personne membre active du réseau peut être ajoutée.",
-      "search": "Chercher le membre",
-      "addConfirm": "Ajouter à l'équipe",
-      "added": "{{name}} fait désormais partie de l'équipe.",
-      "createTitle": "Créer une équipe",
-      "createLead": "Une équipe traite toutes les natures de contenu ou une seule ; sa création est motivée.",
-      "name": "Nom de l'équipe",
-      "nameHint": "De {{nameMin}} à {{nameMax}} caractères, par exemple « France ».",
-      "scope": "Nature de contenu traitée",
-      "create": "Créer l'équipe",
-      "created": "Équipe « {{name}} » créée."
     }
   },
   "errors": {
@@ -316,8 +247,6 @@
     "moderation_desk_conflict": "Le dossier a changé entre-temps : il a sans doute déjà été tranché. Relisez la file.",
     "moderation_desk_limit": "Le moteur refuse ce geste pour l'instant (limite atteinte ou restriction en cours).",
     "moderation_desk_party": "Vous êtes partie à ce dossier : un autre membre de l'équipe doit le trancher.",
-    "moderation_desk_team_name_length": "Le nom de l'équipe doit compter entre {{nameMin}} et {{nameMax}} caractères.",
-    "moderation_desk_handle_required": "Saisissez l'identifiant public du membre.",
-    "moderation_desk_member_unknown": "Aucun membre actif du réseau ne porte cet identifiant."
+    "moderation_desk_last_admin": "Le réseau garde toujours au moins un administrateur actif : nommez-en un autre avant ce retrait."
   }
 }

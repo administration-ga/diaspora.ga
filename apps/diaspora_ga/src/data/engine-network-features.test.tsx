@@ -3,14 +3,13 @@ import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { cleanup, renderHook } from "@testing-library/react"
 import type { ConvexReactClient } from "convex/react"
 import { getFunctionName } from "convex/server"
-import { ConvexError } from "convex/values"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { createEngineNetworkFeatures, networkFeaturesErrorCode } from "./engine-network-features"
+import { createEngineNetworkFeatures } from "./engine-network-features"
 
 /**
- * L'adaptateur des fonctionnalités du réseau sans moteur (ADR-0041 du moteur) : lectures
- * réactives jouées par un `useQueries` factice, écritures contre un client Convex factice.
+ * L'adaptateur des fonctionnalités du réseau sans moteur (ADR-0041 du moteur) : la lecture
+ * réactive des modules ouverts, jouée par un `useQueries` factice.
  */
 type Reference = Parameters<typeof getFunctionName>[0]
 
@@ -32,7 +31,6 @@ vi.mock("convex/react", () => ({
 const NETWORK = { _id: "network-diaspora" }
 const MEMBERSHIP = { status: "declaree", capabilities: ["read_network", "publish"] }
 const OPEN = "modules/networks/features:open"
-const SETTINGS = "modules/networks/features:settings"
 
 function respondWith(overrides: Record<string, unknown> = {}) {
   mocks.respond = (name) => {
@@ -44,17 +42,14 @@ function respondWith(overrides: Record<string, unknown> = {}) {
   }
 }
 
-function setup(mutation: (name: string, args: Record<string, unknown>) => unknown = () => ({ changed: true })) {
-  const writes: { name: string; args: Record<string, unknown> }[] = []
+function setup() {
   const convex = {
     query: vi.fn(async (reference: Reference) => (getFunctionName(reference) === "modules/networks/networks:getBySlug" ? NETWORK : null)),
-    mutation: vi.fn(async (reference: Reference, args: Record<string, unknown>) => {
-      const name = getFunctionName(reference)
-      writes.push({ name, args })
-      return mutation(name, args)
+    mutation: vi.fn(async () => {
+      throw new Error("aucune écriture depuis le site des membres")
     }),
   } as unknown as ConvexReactClient
-  return { features: createEngineNetworkFeatures({ convex, authClient: {} as EngineAuthClient }), writes }
+  return { features: createEngineNetworkFeatures({ convex, authClient: {} as EngineAuthClient }), convex }
 }
 
 beforeEach(() => {
@@ -91,24 +86,12 @@ describe("fonctionnalités du réseau — clés ouvertes (networks/features:open
   })
 })
 
-describe("fonctionnalités du réseau — réglages de l'administration", () => {
-  it("l'administration lit l'état des huit ; tout autre membre reçoit le refus indistinct", () => {
-    const rows = [{ feature: "pages", enabled: true, open: true, requires: null, updatedAt: 1 }]
-    respondWith({ [SETTINGS]: rows })
-    const { features } = setup()
-    expect(renderHook(() => features.useSettings()).result.current).toEqual({ status: "ready", data: rows })
-    respondWith({ [SETTINGS]: new ConvexError({ code: "notFound" }) })
-    expect(renderHook(() => features.useSettings()).result.current).toEqual({ status: "error", code: "not_found" })
-  })
-
-  it("la bascule passe le réseau, la clé, l'état et le motif nettoyé ; ses refus ont leur code", async () => {
-    const { features, writes } = setup()
-    expect(await features.setFeature({ feature: "jobs", enabled: true, reason: "  Ouverture de l'emploi pour le pilote.  " })).toEqual({ ok: true, value: { changed: true } })
-    expect(writes).toEqual([{ name: "modules/networks/features:setFeature", args: { networkId: NETWORK._id, feature: "jobs", enabled: true, reason: "Ouverture de l'emploi pour le pilote." } }])
-    const refused = setup(() => { throw new ConvexError({ code: "invalidArgument", rule: "NETWORK_FEATURE_REQUIRES_PARENT" }) })
-    expect(await refused.features.setFeature({ feature: "jobs", enabled: true, reason: "Ouverture de l'emploi pour le pilote." })).toEqual({ ok: false, code: "network_feature_requires_parent" })
-    expect(networkFeaturesErrorCode(new ConvexError({ code: "invalidArgument", rule: "NETWORK_FEATURE_HAS_OPEN_CHILDREN" }))).toBe("network_feature_has_open_children")
-    expect(networkFeaturesErrorCode(new ConvexError({ code: "invalidArgument", rule: "DECISION_REASON_LENGTH", params: { min: 10, max: 500 } }))).toBe("network_feature_reason_length")
-    expect(networkFeaturesErrorCode(new ConvexError({ code: "notFound" }))).toBe("not_found")
+describe("fonctionnalités du réseau — aucune décision depuis le site des membres (CH-815, D5)", () => {
+  it("l'adaptateur ne sert que la lecture des modules ouverts : ni l'état des huit, ni la bascule", () => {
+    const { features, convex } = setup()
+    expect(Object.keys(features)).toEqual(["useOpen"])
+    renderHook(() => features.useOpen())
+    expect(mocks.read).not.toHaveBeenCalledWith("modules/networks/features:settings", expect.anything())
+    expect(convex.mutation).not.toHaveBeenCalled()
   })
 })

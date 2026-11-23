@@ -24,10 +24,8 @@ import { ARRIVAL_KIT_ERROR_CODES } from "./arrival-kit-port"
 import { MENTORING_ERROR_CODES } from "./mentoring-port"
 import { JOB_ERROR_CODES } from "./jobs-port"
 import { MODERATION_DESK_ERROR_CODES } from "./moderation-desk-port"
-import { PILOT_METRICS_ERROR_CODES } from "./pilot-metrics-port"
 import { ENTRY_DOORS_ERROR_CODES } from "./entry-doors-port"
 import { CALL_SETTINGS_ERROR_CODES } from "./call-settings-port"
-import { NETWORK_FEATURES_ERROR_CODES } from "./network-features-port"
 
 /**
  * Les codes de refus FERMÉS que l'écran traduit par `errors.<code>`.
@@ -140,13 +138,11 @@ export const ACTION_ERROR_CODES = [
   ...MENTORING_ERROR_CODES,
   ...JOB_ERROR_CODES,
   ...MODERATION_DESK_ERROR_CODES,
-  ...PILOT_METRICS_ERROR_CODES,
   ...CONVERSATION_ERROR_CODES,
   // Entrée par IDN (EA-02) : départ refusé, retour d'un refus ou d'un échec chez IDN.
   ...ENTRY_DOORS_ERROR_CODES,
   ...CALL_SETTINGS_ERROR_CODES,
   // Fonctionnalités activables du réseau (ADR-0041 du moteur) : motif et règle de dépendance.
-  ...NETWORK_FEATURES_ERROR_CODES,
 ] as const
 
 export type ActionErrorCode = (typeof ACTION_ERROR_CODES)[number]

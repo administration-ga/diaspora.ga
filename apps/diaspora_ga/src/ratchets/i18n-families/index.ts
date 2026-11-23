@@ -15,7 +15,6 @@ import { FAMILIES as MENTORING } from "./mentoring"
 import { FAMILIES as JOBS } from "./jobs"
 import { FAMILIES as MODERATION_DESK } from "./moderation-desk"
 import { FAMILIES as MODERATION_DEADLINES } from "./moderation-deadlines"
-import { FAMILIES as PILOT_METRICS } from "./pilot-metrics"
 import { FAMILIES as SERVICE_NOTIFICATIONS } from "./service-notifications"
 import { FAMILIES as DEMO_ACCOUNTS } from "./demo-accounts"
 import { FAMILIES as REPORTER_NOTICES } from "./reporter-notices"
@@ -39,7 +38,6 @@ export const LOT_FAMILIES: readonly string[] = [
   ...JOBS,
   ...MODERATION_DESK,
   ...MODERATION_DEADLINES,
-  ...PILOT_METRICS,
   ...SERVICE_NOTIFICATIONS,
   ...DEMO_ACCOUNTS,
   ...REPORTER_NOTICES,

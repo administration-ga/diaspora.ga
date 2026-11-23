@@ -50,6 +50,5 @@ export function createFormats(input: CreateMenuInput): readonly CreateFormat[] {
     holdsPageRole: false,
     holdsAssociation: false,
     moderator: false,
-    pilotReader: false,
   }).create.map(createFormatOf)
 }

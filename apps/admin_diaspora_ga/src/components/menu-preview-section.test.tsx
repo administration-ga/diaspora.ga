@@ -161,7 +161,7 @@ describe("aperçu du menu — cocher pour voir, sans rien écrire", () => {
     expect(checkbox("pages")).toBeEnabled()
   })
 
-  it("le membre regardé : en attente, ni Messages ni actu ; avec une page et un rôle de responsable, leurs entrées", async () => {
+  it("le membre regardé : en attente, ni Messages ni actu ; avec une page et un rôle de modération, leurs entrées ; la mesure n'ajoute rien", async () => {
     const user = userEvent.setup()
     mocks.rows = rowsWith(["pages", "pilotMetrics"])
     mount()
@@ -170,12 +170,14 @@ describe("aperçu du menu — cocher pour voir, sans rien écrire", () => {
     expect(labels(panel(t("preview.phoneBar")))).not.toContain(members("nav.messages"))
 
     await user.click(screen.getByRole("radio", { name: t("preview.membership.active") }))
-    for (const holding of ["holdsPageRole", "holdsAssociation", "moderator", "pilotReader"] as const) {
+    for (const holding of ["holdsPageRole", "holdsAssociation", "moderator"] as const) {
       await user.click(screen.getByRole("checkbox", { name: t(`preview.holding.${holding}`) }))
     }
-    const person = { membership: "active", holdings: { holdsPageRole: true, holdsAssociation: true, moderator: true, pilotReader: true } } as const
+    const person = { membership: "active", holdings: { holdsPageRole: true, holdsAssociation: true, moderator: true } } as const
     expectPreviewOf(memberMenu({ ...previewSituation(person), openFeatures: ["pages", "pilotMetrics"] }))
-    for (const key of ["nav.myActivity", "nav.myAssociations", "nav.moderation", "pilotMetrics.nav"]) expect(labels(panel(t("preview.account")))).toContain(members(key))
+    for (const key of ["nav.myActivity", "nav.myAssociations", "nav.moderation"]) expect(labels(panel(t("preview.account")))).toContain(members(key))
+    // CH-815 A6 : la mesure du pilote ne se lit plus sur diaspora.ga ; ouverte, elle n'ajoute aucune entrée.
+    expectPreviewOf(memberMenu({ ...previewSituation(person), openFeatures: ["pages"] }))
   })
 
   it("n'écrit jamais : aucune fonction d'écriture n'est même branchée, la seule lecture est l'état des modules", async () => {

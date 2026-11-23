@@ -93,7 +93,7 @@ export const PREVIEW_MEMBERSHIPS = ["active", "pending", "suspended"] as const
 export type PreviewMembership = (typeof PREVIEW_MEMBERSHIPS)[number]
 
 /** Ce que l'aperçu laisse cocher sur la personne, en plus de son adhésion. */
-export const PREVIEW_HOLDINGS = ["holdsPageRole", "holdsAssociation", "moderator", "pilotReader"] as const
+export const PREVIEW_HOLDINGS = ["holdsPageRole", "holdsAssociation", "moderator"] as const
 export type PreviewHolding = (typeof PREVIEW_HOLDINGS)[number]
 
 export interface PreviewPerson {
@@ -104,7 +104,7 @@ export interface PreviewPerson {
 /** Un membre en règle, sans page, sans association, sans rôle : le membre le plus courant. */
 export const DEFAULT_PREVIEW_PERSON: PreviewPerson = {
   membership: "active",
-  holdings: { holdsPageRole: false, holdsAssociation: false, moderator: false, pilotReader: false },
+  holdings: { holdsPageRole: false, holdsAssociation: false, moderator: false },
 }
 
 /**

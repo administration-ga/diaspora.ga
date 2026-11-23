@@ -26,7 +26,6 @@ import {
   useModerationDesk,
   useOpenCountries,
   usePageAdmin,
-  usePilotMetrics,
   NETWORK_FEATURES,
   type AssociationListPage,
   type AssociationsCapability,
@@ -34,7 +33,6 @@ import {
   type MembershipView,
   type ModerationDeskCapability,
   type PageAdminCapability,
-  type PilotMetricsCapability,
   type PostView,
 } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
@@ -174,7 +172,6 @@ function navEntryOf(entry: MemberMenuEntry, context: { readonly handle: string; 
  * capacité absente et gardent l'ordre des hooks, la source de données ne changeant pas d'un rendu à l'autre.
  */
 const NO_MODERATION_DESK: Pick<ModerationDeskCapability, "useDesk"> = { useDesk: () => ({ status: "ready", data: null }) }
-const NO_PILOT_METRICS: Pick<PilotMetricsCapability, "useAccess"> = { useAccess: () => ({ status: "ready", data: { allowed: false } }) }
 
 /**
  * Même règle pour les entrées personnelles qui attendent un contenu : sans capacité (module des
@@ -269,7 +266,7 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
  *     compte), barre basse flottante aux mêmes entrées, composeur en feuille.
  * Les entrées personnelles (Mes relations, Enregistrements, Parrainer ; Mes pages et Mes
  * associations quand j'en ai ; celles d'un module ouvert) et celles des responsables
- * (Modération, Pilote) vivent dans le menu du compte seulement, plus dans le rail.
+ * (Modération) vivent dans le menu du compte seulement, plus dans le rail.
  *
  * Publier vit dans l'en-tête au téléphone, pas en bouton flottant : au-dessus de la
  * barre basse se tient la pile des cartes flottantes (démonstration, statut d'adhésion,
@@ -308,7 +305,6 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et le menu du compte n'offrent que ceux-là.
   const features = useFeatureGate()
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
-  const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const holdsPageRole = useHoldsPageRole()
   const holdsAssociation = useHoldsAssociation()
   // Le menu exact, par la règle partagée avec l'aperçu d'admin.diaspora.ga (fiche CH-815, § 5) :
@@ -323,7 +319,6 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     holdsPageRole,
     holdsAssociation,
     moderator: desk.status === "ready" && desk.data !== null,
-    pilotReader: pilot.status === "ready" && pilot.data.allowed,
   })
   const entryContext = { handle: membership.handle, current, pathname, messagesUnread: icom === null ? 0 : messagesUnread }
   const rail = menu.rail.map((entry) => navEntryOf(entry, entryContext))

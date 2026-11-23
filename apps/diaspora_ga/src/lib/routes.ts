@@ -329,10 +329,8 @@ export const routes = {
   jobOffer: (jobId: string) => `/emploi/${encodeURIComponent(jobId)}`,
   myApplications: () => "/mes-candidatures",
   talents: (country?: CountryCode) => zoneHref("/talents", country),
-  /** Modération par pays (PD6, G9) : file, pages à vérifier (AS-01), recours, équipes habilitées seulement ; réglages (MD-04) pour l'administration du réseau. */
-  moderationDesk: (tab?: "file" | "pages" | "recours" | "equipe" | "reglages") => tab ? `/moderation?onglet=${tab}` : "/moderation",
-  /** Mesure du pilote (G11, DG-027) : agrégats sans contenu privé, responsables du réseau seulement. */
-  pilotDashboard: () => "/pilote",
+  /** Modération par pays (PD6, G9) : la file et les pages à vérifier (AS-01), équipes habilitées seulement ; les décisions du réseau se prennent dans l'application d'administration (CH-815, D5). */
+  moderationDesk: (tab?: "file" | "pages") => tab ? `/moderation?onglet=${tab}` : "/moderation",
   /** Revendiquer une page existante (preuves privées, instruction). */
   pageClaim: (handle: string) => `/pages/${handle}/revendiquer`,
   settings: () => "/parametres",

@@ -152,6 +152,12 @@ describe("section Modules — les cartes", () => {
     mount()
     const adds = card(feature).getByRole("heading", { name: t("modules.card.adds") }).parentElement
     if (!adds) throw new Error("bloc « ce qu'il ajoute » absent")
+    // CH-815 A6 : la mesure du pilote n'ajoute rien au menu des membres, et la carte le dit.
+    if (featureMenuAdditions(feature).length === 0) {
+      expect(within(adds).queryAllByRole("listitem")).toEqual([])
+      expect(within(adds).getByText(t("modules.card.addsNothing"))).toBeInTheDocument()
+      return
+    }
     const items = within(adds).getAllByRole("listitem").map((item) => item.textContent)
     expect(items).toEqual(
       featureMenuAdditions(feature).map(

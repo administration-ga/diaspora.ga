@@ -114,7 +114,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   talents: "jobs",
   pageOpenJobs: "jobs",
   myApplications: "jobs",
-  // Entraide, mentorat, kit d'arrivée, mesure du pilote.
+  // Entraide, mentorat, kit d'arrivée (la mesure du pilote n'a plus d'adresse ici : CH-815, lot A6).
   mutualAid: "mutualAid",
   mutualAidItem: "mutualAid",
   mentoring: "mentoring",
@@ -122,7 +122,6 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   myMentoring: "mentoring",
   arrivalKit: "arrivalKit",
   arrivalKitResource: "arrivalKit",
-  pilotDashboard: "pilotMetrics",
 }
 
 /** La fonctionnalité dont relève ce chemin de membre, ou `null` (socle, hors de la coque, ou inconnu). */

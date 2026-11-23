@@ -59,7 +59,11 @@
     "section": {
       "dashboard": "Tableau de bord",
       "modules": "Modules",
-      "menuPreview": "Aperçu du menu"
+      "menuPreview": "Aperçu du menu",
+      "metrics": "Mesure",
+      "appeals": "Recours",
+      "team": "Équipe et responsables",
+      "rules": "Règles"
     }
   },
   "dashboard": {
@@ -93,7 +97,8 @@
       "open": "Ouvrir le module",
       "close": "Fermer le module",
       "blockedByParent": "S’ouvre une fois {{module}} ouvert.",
-      "blockedByChildren": "Se ferme une fois fermés les modules qui vivent sur lui : {{modules}}."
+      "blockedByChildren": "Se ferme une fois fermés les modules qui vivent sur lui : {{modules}}.",
+      "addsNothing": "Rien : ce module ne change pas le menu des membres."
     },
     "prerequisite": {
       "parentOpen": "Le module exigé est ouvert : {{module}}.",
@@ -153,7 +158,6 @@
       "pageTeam": "pour qui tient un rôle sur une page",
       "associationMember": "pour qui adhère à une association",
       "moderator": "pour les modérateurs",
-      "pilotReader": "pour les responsables qui lisent la mesure",
       "publisher": "pour les membres qui publient",
       "registrant": "pour les membres qui peuvent inscrire une page"
     }
@@ -179,8 +183,7 @@
     "holding": {
       "holdsPageRole": "Tient un rôle sur une page",
       "holdsAssociation": "Adhère à une association",
-      "moderator": "Modère le réseau ou un pays",
-      "pilotReader": "Lit la mesure du pilote"
+      "moderator": "Modère le réseau ou un pays"
     },
     "comparison": "Par rapport au menu d’aujourd’hui",
     "noChange": "Aucun changement par rapport au menu d’aujourd’hui.",
@@ -231,5 +234,429 @@
     "title": "Page introuvable",
     "lead": "Cette adresse ne correspond à aucune section de l’administration.",
     "back": "Retour au tableau de bord"
+  },
+  "section": {
+    "loading": "Chargement…",
+    "failed": "La lecture n’a pas abouti.",
+    "retry": "Relire",
+    "loadMore": "Afficher plus",
+    "loadingMore": "Chargement de la suite…"
+  },
+  "decision": {
+    "reason": "Motif de la décision",
+    "reasonHint": "Obligatoire, de {{min}} à {{max}} caractères. La personne concernée le lira : n’y écrivez ni coordonnée ni donnée privée.",
+    "reasonLength": "Le motif doit compter entre {{min}} et {{max}} caractères.",
+    "pending": "Patientez…",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "back": "Revenir à la décision"
+  },
+  "filters": {
+    "label": "Filtres des recours",
+    "zone": "Pays du contenu",
+    "zoneAll": "Tous les pays",
+    "zoneNone": "Sans pays (portée diaspora, comptes, messages)",
+    "zoneOpen": "Pays ouverts",
+    "zoneOther": "Autres pays",
+    "surface": "Nature du contenu",
+    "surfaceAll": "Toutes les natures",
+    "noCountry": "Sans pays"
+  },
+  "lookup": {
+    "required": "Saisissez l’identifiant public de la personne.",
+    "invalid": "Cet identifiant public n’est pas valable.",
+    "unknown": "Aucun membre actif du réseau ne porte cet identifiant.",
+    "failed": "La recherche n’a pas abouti.",
+    "hint": "Par exemple prenom.nom : seule une personne membre active du réseau est trouvée.",
+    "search": "Chercher"
+  },
+  "appeals": {
+    "title": "Recours",
+    "lead": "Les recours formés contre une décision d’équipe et montés au réseau, le plus ancien d’abord. Ni l’ancien décideur ni la personne qui conteste ne les examinent. Chaque examen est motivé et inscrit au journal des décisions.",
+    "emptyTitle": "Aucun recours à examiner",
+    "emptyFilteredTitle": "Aucun recours ne correspond",
+    "emptyBody": "Un recours apparaît ici quand une personne conteste une décision d’équipe.",
+    "decidedAt": "Décision du",
+    "decisionReason": "Motif de la décision",
+    "noReason": "Aucun motif enregistré.",
+    "measures": "Mesures",
+    "noMeasure": "Aucune mesure",
+    "measureUntil": "{{measure}} jusqu’au {{date}}",
+    "appealReason": "Motif du recours",
+    "filedAt": "Recours formé le",
+    "open": "Examiner le recours",
+    "sheetTitle": "Recours : {{surface}}",
+    "sheetDescription": "La décision contestée, le motif du recours, puis votre examen motivé.",
+    "decisionTitle": "Votre examen",
+    "outcomeLegend": "Issue",
+    "uphold": "Maintenir la décision",
+    "upholdHint": "La décision et ses mesures restent en vigueur ; la personne peut encore saisir l’équipe de la plateforme.",
+    "overturn": "Annuler la décision",
+    "overturnHint": "Les mesures sont levées et le contenu est rétabli s’il avait été retiré.",
+    "submit": "Enregistrer l’examen",
+    "doneUpheld": "Décision maintenue : le recours a quitté la file.",
+    "doneOverturned": "Décision annulée : le recours a quitté la file.",
+    "ground": "Motif du dossier",
+    "view": "Voir le recours",
+    "outcomeRequired": "Choisissez une issue.",
+    "reasonHint": "Obligatoire. La personne concernée le lira : n’y écrivez ni coordonnée ni donnée privée.",
+    "confirmTitle": "Confirmer l’annulation",
+    "confirmOverturn": "Annuler la décision contestée",
+    "confirmBody": "Annuler la décision lève ses mesures et rétablit le contenu s’il avait été retiré.",
+    "conflict": "Ce recours a changé entre-temps : il a sans doute déjà été examiné. Relisez la file.",
+    "failed": "L’examen n’a pas été enregistré.",
+    "party": {
+      "title": "Vous n’examinez pas ce recours",
+      "handOver": "Un autre administrateur du réseau doit l’examiner."
+    }
+  },
+  "team": {
+    "title": "Équipe et responsables",
+    "lead": "Les responsables du réseau, puis les équipes qui traitent la file de modération de diaspora.ga. Chaque nomination, chaque ajout et chaque retrait est motivé et inscrit au journal des décisions.",
+    "countryNote": "Le moteur ne rattache pas encore une équipe à un pays : le nom d’une équipe peut l’indiquer, il ne délimite aucune compétence.",
+    "scopeAll": "Toutes les natures de contenu",
+    "scopeOne": "Nature traitée : {{surface}}",
+    "picker": "Équipe à composer",
+    "noneYet": "Aucune équipe n’existe encore : créez la première ci-dessous.",
+    "roster": "Membres de l’équipe {{name}}",
+    "rosterEmpty": "Cette équipe n’a encore aucun membre actif.",
+    "rosterMore": "D’autres membres existent ; seuls les premiers sont montrés.",
+    "me": "(vous)",
+    "neutralName": "Membre au profil non publié",
+    "outsideNetwork": "N’est plus membre actif du réseau.",
+    "remove": "Retirer",
+    "removeTitle": "Retirer {{name}} de l’équipe",
+    "removeBody": "Cette personne ne lira plus la file de l’équipe {{team}}. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+    "removeConfirm": "Retirer de l’équipe",
+    "removed": "{{name}} ne fait plus partie de l’équipe.",
+    "addTitle": "Ajouter un membre à l’équipe {{name}}",
+    "handle": "Identifiant public du membre",
+    "addConfirm": "Ajouter à l’équipe",
+    "added": "{{name}} fait désormais partie de l’équipe.",
+    "createTitle": "Créer une équipe",
+    "createLead": "Une équipe traite toutes les natures de contenu ou une seule ; sa création est motivée.",
+    "name": "Nom de l’équipe",
+    "nameHint": "De {{nameMin}} à {{nameMax}} caractères, par exemple « France ».",
+    "scope": "Nature de contenu traitée",
+    "create": "Créer l’équipe",
+    "created": "Équipe « {{name}} » créée.",
+    "teamsTitle": "Équipes de modération",
+    "nameLength": "Le nom de l’équipe doit compter entre {{nameMin}} et {{nameMax}} caractères.",
+    "failed": "Le geste sur l’équipe n’a pas abouti."
+  },
+  "responsibles": {
+    "title": "Responsables du réseau",
+    "lead": "L’administration du réseau décide ici : recours, équipes, responsables, règles et modules. La modération du réseau lit et tranche toute la file sur diaspora.ga. Chaque nomination, chaque changement et chaque retrait est motivé et inscrit au journal des décisions du moteur ; il vaut dès le geste suivant de la personne.",
+    "role": {
+      "network_admin": "Administration du réseau",
+      "network_moderator": "Modération du réseau"
+    },
+    "inactive": "Rôle en sommeil : l’adhésion de cette personne est en attente ou suspendue.",
+    "more": "D’autres responsables existent ; seuls les premiers sont montrés.",
+    "change": "Changer le rôle",
+    "remove": "Retirer le rôle",
+    "changeTitle": "Changer le rôle {{name, de}}",
+    "changeBody": "{{name}} passera de « {{from}} » à « {{to}} » dès son prochain geste. Le changement est motivé et inscrit au journal des décisions du moteur.",
+    "changeConfirm": "Confirmer le changement",
+    "removeTitle": "Retirer {{name}} des responsables du réseau",
+    "removeBody": "{{name}} reste membre du réseau, sans le rôle « {{role}} », dès son prochain geste. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+    "removeConfirm": "Confirmer le retrait",
+    "selfWarning": "C’est votre propre rôle : vous en perdrez les droits dès ce geste.",
+    "appointTitle": "Nommer un responsable",
+    "appointLead": "Seule une personne membre active du réseau, au statut « déclarée » au moins, reçoit un rôle ; aucune adhésion n’est créée. Le réseau garde toujours au moins un administrateur actif.",
+    "handle": "Identifiant public de la personne à nommer",
+    "roleField": "Rôle confié",
+    "appointConfirm": "Nommer",
+    "appointed": "Nomination enregistrée : {{name}}, {{role}}.",
+    "changed": "Rôle changé : {{name}}, {{role}}.",
+    "removed": "{{name}} n’est plus responsable du réseau.",
+    "unchanged": "{{name}} a déjà ce rôle : rien n’a changé.",
+    "refused": "Ce geste n’a pas abouti : un rôle ne se confie qu’à une personne membre active du réseau, au statut « déclarée » au moins.",
+    "failed": "Le geste sur le rôle n’a pas abouti."
+  },
+  "rules": {
+    "lead": "Ce que le réseau relit avant publication, rubrique par rubrique, et les mots qui envoient un contenu en relecture. Réservé à l’administration du réseau ; chaque réglage et chaque mot est motivé et inscrit au journal des décisions du moteur.",
+    "loading": "Chargement des réglages…",
+    "defaults": {
+      "title": "Sans réglage du réseau",
+      "preReviewOff": "Pas de relecture avant publication : un contenu paraît dès son écriture.",
+      "preReviewOn": "Relecture avant publication : chaque contenu attend un modérateur.",
+      "links_one": "Au-delà de {{count}} lien, le contenu part en relecture : il n’est pas refusé.",
+      "links_other": "Au-delà de {{count}} liens, le contenu part en relecture : il n’est pas refusé.",
+      "writes_one": "Au-delà de {{count}} écriture en {{window}}, toutes rubriques confondues, la suivante part aussi en relecture.",
+      "writes_other": "Au-delà de {{count}} écritures en {{window}}, toutes rubriques confondues, la suivante part aussi en relecture.",
+      "terms": "Un contenu qui contient un mot bloqué part en relecture.",
+      "source": "Ce sont les défauts du moteur ANTSIA, lus tels qu’il les applique. Ils valent pour toute rubrique sans réglage, sauf les contenus relus d’office, listés à part, et les rubriques de l’entraide, du mentorat, du kit d’arrivée et de l’emploi, publiées sans règle tant qu’aucun réglage n’est posé pour elles."
+    },
+    "held": {
+      "title": "Relus d’office dans DIASPORA.GA",
+      "lead": "Tant qu’aucun réglage n’est posé pour leur rubrique, ces contenus attendent un modérateur avant de paraître :",
+      "associationEvents": "les évènements d’association (rubrique « Évènement ») ;",
+      "reviews": "les avis sur une prestation (rubrique « Avis sur une prestation ») ;",
+      "reviewReplies": "les réponses d’une page à un avis (rubrique « Réponse d’une page à un avis ») ;",
+      "eventGallery": "les ajouts à la galerie d’un évènement (rubrique « Publication »).",
+      "note": "Un réglage posé sur l’une de ces rubriques les soumet à ce réglage. Sur « Évènement » et « Publication », il vaut aussi pour les évènements personnels et pour toutes les publications."
+    },
+    "heldNote": {
+      "associationEvents": "Les évènements d’association y restent relus d’office tant qu’aucun réglage n’est posé.",
+      "eventGallery": "Les ajouts à la galerie d’un évènement y restent relus d’office tant qu’aucun réglage n’est posé."
+    },
+    "without": {
+      "defaults": "Sans réglage : les défauts du moteur s’appliquent.",
+      "held": "Sans réglage : tout contenu de cette rubrique attend un modérateur avant de paraître.",
+      "unchecked": "Sans réglage : publié dès l’écriture et modéré après signalement, sans plafond de liens, sans cadence ni mots bloqués."
+    },
+    "window": {
+      "hours_one": "{{count}} heure",
+      "hours_other": "{{count}} heures",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "seconds_one": "{{count}} seconde",
+      "seconds_other": "{{count}} secondes"
+    },
+    "surfaces": {
+      "title": "Par rubrique",
+      "lead": "Les rubriques de DIASPORA.GA. Un réglage remplace, pour sa rubrique, la règle sans réglage ; il ne se retire pas, il se change."
+    },
+    "policy": {
+      "since": "Réglage en vigueur depuis le {{date}}.",
+      "preReviewOn": "Relecture avant publication : oui.",
+      "preReviewOff": "Relecture avant publication : non.",
+      "links_one": "Au-delà de {{count}} lien : relecture.",
+      "links_other": "Au-delà de {{count}} liens : relecture.",
+      "writes_one": "Au plus {{count}} écriture en {{window}} ; au-delà, relecture.",
+      "writes_other": "Au plus {{count}} écritures en {{window}} ; au-delà, relecture.",
+      "set": "Poser un réglage",
+      "change": "Changer le réglage"
+    },
+    "sheet": {
+      "title": "Réglage : {{surface}}",
+      "description": "Relecture avant publication, plafond de liens et cadence pour cette rubrique. Le réglage est motivé et inscrit au journal des décisions du moteur.",
+      "preReview": "Relire avant publication",
+      "preReviewHint": "Chaque contenu de cette rubrique attend un modérateur avant de paraître.",
+      "maxLinks": "Plafond de liens",
+      "maxLinksHint": "Au-delà, le contenu part en relecture ; de {{linksMin}} à {{linksMax}}.",
+      "maxWrites": "Écritures au plus dans la fenêtre",
+      "maxWritesHint": "Au-delà, la suivante part en relecture ; de {{writesMin}} à {{writesMax}}.",
+      "window": "Fenêtre de cadence, en minutes",
+      "windowHint": "De {{windowMin}} à {{windowMax}} minutes.",
+      "liftsHeld": {
+        "associationEvents": "Les évènements d’association sont relus d’office aujourd’hui. Ce réglage vaut pour tous les évènements, ceux des associations compris : sans relecture avant publication, le prochain paraîtra directement s’il respecte le plafond de liens, la cadence et les mots bloqués.",
+        "reviews": "Les avis sont relus d’office aujourd’hui. Ce réglage les y soumet : sans relecture avant publication, le prochain avis paraîtra directement s’il respecte le plafond de liens, la cadence et les mots bloqués.",
+        "reviewReplies": "Les réponses d’une page à un avis sont relues d’office aujourd’hui. Ce réglage les y soumet : sans relecture avant publication, la prochaine paraîtra directement si elle respecte le plafond de liens, la cadence et les mots bloqués.",
+        "eventGallery": "Les ajouts à la galerie d’un évènement sont relus d’office aujourd’hui. Ce réglage vaut pour toutes les publications, galerie comprise : sans relecture avant publication, le prochain ajout paraîtra directement s’il respecte le plafond de liens, la cadence et les mots bloqués."
+      },
+      "permanent": "Un réglage posé ne se retire pas : il se change.",
+      "reasonHint": "Pourquoi ce réglage ; le motif reste au journal des décisions ({{min}} à {{max}} caractères).",
+      "submit": "Enregistrer le réglage",
+      "saved": "Réglage enregistré : {{surface}}."
+    },
+    "terms": {
+      "title": "Mots bloqués",
+      "lead": "Un contenu qui contient l’un de ces mots part en relecture : il n’est pas refusé. Casse et accents ne comptent pas, et le mot est cherché aussi à l’intérieur des mots. Le réseau en garde {{termsMax}} au plus.",
+      "waveNote": "Les rubriques de l’entraide, du mentorat, du kit d’arrivée et de l’emploi ne lisent les mots bloqués qu’une fois un réglage posé pour elles.",
+      "emptyTitle": "Aucun mot bloqué",
+      "emptyBody": "Le réseau n’a bloqué aucun mot pour l’instant.",
+      "since": "Bloqué le {{date}}",
+      "remove": "Débloquer",
+      "removeTitle": "Débloquer « {{term}} »",
+      "removeBody": "Un contenu qui contient ce mot ne partira plus en relecture pour cette raison. Le retrait est motivé et inscrit au journal des décisions du moteur.",
+      "removeConfirm": "Débloquer ce mot",
+      "removed": "« {{term}} » n’est plus bloqué.",
+      "addTitle": "Bloquer un mot",
+      "term": "Mot ou expression",
+      "termHint": "De {{termMin}} à {{termMax}} caractères, casse et accents retirés.",
+      "reasonHint": "Pourquoi ce mot ; le motif reste au journal des décisions ({{min}} à {{max}} caractères).",
+      "add": "Bloquer ce mot",
+      "added": "« {{term}} » est bloqué."
+    },
+    "title": "Règles de modération",
+    "failed": "La règle n’a pas été enregistrée.",
+    "refusal": {
+      "links": "Le plafond de liens va de {{linksMin}} à {{linksMax}}, en nombre entier.",
+      "writes": "La cadence admet de {{writesMin}} à {{writesMax}} écritures, en nombre entier.",
+      "window": "La fenêtre de cadence va de {{windowMin}} à {{windowMax}} minutes, en nombre entier.",
+      "termLength": "Un mot bloqué compte de {{termMin}} à {{termMax}} caractères, casse et accents retirés.",
+      "termsFull": "Le réseau garde déjà {{termsMax}} mots bloqués : débloquez-en un avant d’en ajouter un autre."
+    }
+  },
+  "metrics": {
+    "title": "Mesure du pilote",
+    "lead": "Des comptes agrégés par jour et par pays, recalculés par un passage nocturne, pour suivre l’utilité du pilote sans observer personne.",
+    "privacyBadge": "Mesures du pilote, sans contenu privé",
+    "loading": "Chargement de la mesure…",
+    "notMeasuredTitle": "Aucun passage de mesure pour l’instant",
+    "notMeasuredBody": "Les comptes sont recalculés chaque nuit. Ils apparaîtront ici après le premier passage.",
+    "filters": {
+      "title": "Portée et période",
+      "country": "Pays",
+      "countryHint": "Tout le réseau, ou l’un de ses pays ouverts.",
+      "period": "Période",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours"
+    },
+    "scope": {
+      "network": "Tout le réseau"
+    },
+    "summary": {
+      "scope": "Portée : {{scope}}",
+      "window": "Jours UTC du {{start}} au {{end}}",
+      "computedAt": "Dernier passage : {{date}}",
+      "partial_one": "Mesure partielle : {{count}} jour mesuré sur {{days}}.",
+      "partial_other": "Mesure partielle : {{count}} jours mesurés sur {{days}}."
+    },
+    "table": {
+      "indicator": "Indicateur",
+      "value": "Valeur"
+    },
+    "group": {
+      "services": "Services et demandes",
+      "associations": "Associations",
+      "events": "Évènements de page",
+      "reviews": "Avis",
+      "mutual_aid": "Entraide, mentorat et kit d’arrivée"
+    },
+    "indicator": {
+      "offers_active": {
+        "label": "Offres actives",
+        "hint": "Offres publiées au catalogue par des pages lisibles, relevées au dernier passage."
+      },
+      "requests_sent": {
+        "label": "Demandes envoyées",
+        "hint": "Demandes créées pendant la période."
+      },
+      "requests_answered": {
+        "label": "Demandes répondues",
+        "hint": "Une proposition ou un refus de la page, à ce jour."
+      },
+      "requests_confirmed": {
+        "label": "Demandes confirmées",
+        "hint": "Un rendez-vous convenu, même annulé ensuite."
+      },
+      "requests_completed": {
+        "label": "Prestations réalisées",
+        "hint": "Réalisation déclarée par la page."
+      },
+      "requests_cancelled": {
+        "label": "Demandes annulées",
+        "hint": "Annulées par la personne ou par la page."
+      },
+      "requests_expired": {
+        "label": "Demandes expirées",
+        "hint": "Échéance atteinte sans accord."
+      },
+      "memberships_requested": {
+        "label": "Adhésions demandées",
+        "hint": "Premières demandes d’adhésion à une association."
+      },
+      "memberships_accepted": {
+        "label": "Adhésions acceptées",
+        "hint": "Acceptées à ce jour, même quittées ensuite."
+      },
+      "event_registrations": {
+        "label": "Inscriptions aux évènements",
+        "hint": "Places confirmées aux évènements de page de la période."
+      },
+      "event_attendances": {
+        "label": "Présences aux évènements",
+        "hint": "Présences pointées parmi ces places."
+      },
+      "reviews_published": {
+        "label": "Avis publiés",
+        "hint": "Avis rédigés pendant la période et publiés à ce jour."
+      },
+      "aid_questions_asked": {
+        "label": "Questions d’entraide posées",
+        "hint": "Questions créées pendant la période ; une question retirée par son auteur ou par la modération ne compte pas."
+      },
+      "aid_questions_answered": {
+        "label": "Questions qui ont reçu une réponse",
+        "hint": "Au moins une réponse publiée, à ce jour."
+      },
+      "aid_questions_resolved": {
+        "label": "Aides abouties",
+        "hint": "Questions dont l’auteur a retenu une réponse, à ce jour, même closes ensuite."
+      },
+      "aid_signups": {
+        "label": "Inscriptions bénévoles",
+        "hint": "Inscriptions à une mission nées pendant la période et encore confirmées."
+      },
+      "mentoring_requested": {
+        "label": "Demandes de mentorat",
+        "hint": "Demandes envoyées pendant la période."
+      },
+      "mentoring_accepted": {
+        "label": "Demandes de mentorat acceptées",
+        "hint": "Acceptées à ce jour, même closes ensuite."
+      },
+      "kit_resources_listed": {
+        "label": "Ressources du kit d’arrivée publiées",
+        "hint": "Ressources relues et servies dans le kit, relevées au dernier passage."
+      },
+      "kit_resources_to_review": {
+        "label": "Ressources du kit à revoir",
+        "hint": "Signalées périmées, vérifiées il y a plus de douze mois ou marquées par un relecteur, au dernier passage."
+      }
+    },
+    "base": {
+      "requests_sent": "sur {{value}} demandes envoyées",
+      "requests_confirmed": "sur {{value}} demandes confirmées",
+      "memberships_requested": "sur {{value}} adhésions demandées",
+      "event_registrations": "sur {{value}} places confirmées",
+      "aid_questions_asked": "sur {{value}} questions posées",
+      "mentoring_requested": "sur {{value}} demandes de mentorat",
+      "kit_resources_listed": "sur {{value}} ressources publiées"
+    },
+    "baseBelow": {
+      "requests_sent": "sur moins de {{threshold}} demandes envoyées",
+      "requests_confirmed": "sur moins de {{threshold}} demandes confirmées",
+      "memberships_requested": "sur moins de {{threshold}} adhésions demandées",
+      "event_registrations": "sur moins de {{threshold}} places confirmées",
+      "aid_questions_asked": "sur moins de {{threshold}} questions posées",
+      "mentoring_requested": "sur moins de {{threshold}} demandes de mentorat",
+      "kit_resources_listed": "sur moins de {{threshold}} ressources publiées"
+    },
+    "ratioDetail": "{{base}} · {{rate}}",
+    "rate": {
+      "value": "taux : {{rate}} %",
+      "withheld": "taux non publié (part inférieure au seuil)",
+      "complement": "taux non publié (écart avec la base inférieur au seuil)"
+    },
+    "value": {
+      "belowThreshold": "moins de {{threshold}}",
+      "masked": "masqué"
+    },
+    "duration": {
+      "median": "Délai de première réponse, médiane",
+      "p75": "Délai de première réponse, 75e centile",
+      "hint": "De l’envoi à la première proposition ou au refus de la page, rangé par classe d’heures.",
+      "sample": "sur {{value}} demandes répondues",
+      "sampleBelow": "sur moins de {{threshold}} demandes répondues"
+    },
+    "hours": {
+      "atMost": "{{hours}} h au plus",
+      "above": "plus de {{hours}} h",
+      "withheld": "non publié"
+    },
+    "notes": {
+      "title": "Ce que cette mesure ne fait pas",
+      "noContent": "Aucun texte de demande, de recherche, de message ni d’avis n’entre dans ces comptes.",
+      "noPeople": "Aucun identifiant de personne n’est conservé dans les agrégats et aucun parcours individuel n’est suivi.",
+      "threshold": "Un compte inférieur à {{threshold}} s’affiche « moins de {{threshold}} ». Un taux n’est publié que si sa part et son écart avec la base atteignent ce seuil.",
+      "cohorts": "Une demande, une adhésion ou un avis compte le jour de sa création, avec son état au dernier passage. Une place compte le jour de son évènement.",
+      "notMeasured": "Les recherches sans résultat et les abandons ne sont pas mesurés."
+    },
+    "durationAid": {
+      "median": "Délai de première réponse à une question, médiane",
+      "p75": "Délai de première réponse à une question, 75e centile",
+      "hint": "De la question à sa plus ancienne réponse encore publiée, rangé par classe d’heures.",
+      "sample": "sur {{value}} questions répondues",
+      "sampleBelow": "sur moins de {{threshold}} questions répondues"
+    },
+    "closed": {
+      "title": "Le module « Mesure » est fermé",
+      "body": "La mesure du pilote ne se lit qu’une fois le module « Mesure » ouvert dans la section « Modules ». Tant qu’il est fermé, le moteur ne sert aucun chiffre, et aucun n’est affiché à sa place.",
+      "link": "Ouvrir la section « Modules »"
+    }
   }
 }

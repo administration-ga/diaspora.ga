@@ -27,8 +27,12 @@ import type { MembershipStatus } from "@diaspora-ga/domain"
 export const MEMBER_BAR_ENTRIES = ["feed", "explore", "services", "communities", "messages"] as const
 /** « Mon espace » : les entrées personnelles du menu du compte, dans leur ordre… */
 export const MEMBER_PERSONAL_ENTRIES = ["myRequests", "myActivity", "myAssociations", "myApplications", "myMentoring", "relations", "bookmarks", "sponsor"] as const
-/** … puis celles des responsables que le serveur reconnaît. */
-export const MEMBER_RESPONSIBLE_ENTRIES = ["moderation", "pilot"] as const
+/**
+ * … puis celles des responsables que le serveur reconnaît : le guichet de modération seul. La
+ * mesure du pilote n'est plus une adresse de diaspora.ga (fiche CH-815, lot A6) : elle se lit
+ * dans l'application d'administration, section « Mesure ».
+ */
+export const MEMBER_RESPONSIBLE_ENTRIES = ["moderation"] as const
 /** Le compte, en tête du menu du compte ; « Mes données » le ferme. */
 export const MEMBER_ACCOUNT_ENTRIES = ["profile", "settings"] as const
 export const MEMBER_DATA_ENTRY = "myData" as const
@@ -75,7 +79,6 @@ export type MemberMenuRouteKey =
   | "bookmarks"
   | "sponsor"
   | "moderationDesk"
-  | "pilotDashboard"
   | "settingsData"
   | "legalNotice"
   | "privacy"
@@ -94,11 +97,10 @@ export type MemberMenuRouteKey =
  *  · `pageTeam` — une page où il tient un rôle vivant, ou une de ses pages en sommeil ;
  *  · `associationMember` — une adhésion à une association, ou une demande en cours ;
  *  · `moderator` — le guichet de modération que le serveur lui reconnaît ;
- *  · `pilotReader` — l'accès à la mesure du pilote que le serveur lui reconnaît ;
  *  · `publisher` — il peut publier et iCom sert les actus ;
  *  · `registrant` — son adhésion voit l'inscription d'une page (`canSeeRegistration`).
  */
-export const MEMBER_MENU_AUDIENCES = ["everyone", "icom", "engineNetwork", "pageTeam", "associationMember", "moderator", "pilotReader", "publisher", "registrant"] as const
+export const MEMBER_MENU_AUDIENCES = ["everyone", "icom", "engineNetwork", "pageTeam", "associationMember", "moderator", "publisher", "registrant"] as const
 export type MemberMenuAudience = (typeof MEMBER_MENU_AUDIENCES)[number]
 
 /** La règle d'une entrée : son adresse, son libellé, le module de son adresse et son public. */
@@ -144,7 +146,6 @@ export const MEMBER_MENU_ENTRIES: Readonly<Record<MemberMenuEntryId, MemberMenuE
   sponsor: { routeKey: "sponsor", labelKey: "nav.sponsor", feature: CORE, audience: "everyone" },
   // Les responsables : le serveur rejuge chaque lecture derrière ces entrées.
   moderation: { routeKey: "moderationDesk", labelKey: "nav.moderation", feature: CORE, audience: "moderator" },
-  pilot: { routeKey: "pilotDashboard", labelKey: "pilotMetrics.nav", feature: "pilotMetrics", audience: "pilotReader" },
   myData: { routeKey: "settingsData", labelKey: "nav.myData", feature: CORE, audience: "everyone" },
   // Les textes du site, mêmes libellés que le pied des pages publiques.
   legalNotice: { routeKey: "legalNotice", labelKey: "footer.legalNotice", feature: CORE, audience: "everyone" },
@@ -200,7 +201,6 @@ export interface MemberMenuSituation {
   readonly holdsPageRole: boolean
   readonly holdsAssociation: boolean
   readonly moderator: boolean
-  readonly pilotReader: boolean
 }
 
 export interface MemberMenuInput extends MemberMenuSituation {
@@ -220,7 +220,6 @@ export const MEMBER_MENU_WIDEST_SITUATION: MemberMenuSituation = {
   holdsPageRole: true,
   holdsAssociation: true,
   moderator: true,
-  pilotReader: true,
 }
 
 /** Le public est-il touché par cette situation ? */
@@ -238,8 +237,6 @@ export function audienceReached(audience: MemberMenuAudience, situation: MemberM
       return situation.holdsAssociation
     case "moderator":
       return situation.moderator
-    case "pilotReader":
-      return situation.pilotReader
     case "publisher":
       return situation.canPublish && situation.icom
     case "registrant":

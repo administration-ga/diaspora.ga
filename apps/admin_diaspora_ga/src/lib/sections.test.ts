@@ -44,11 +44,12 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
     }
   })
 
-  it("avec le lot A5 : le tableau de bord (Pilotage), puis les modules et l'aperçu du menu (Application des membres)", () => {
-    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "modules", "menuPreview"])
+  it("avec le lot A6 : tableau de bord et mesure (Pilotage), modules et aperçu (Application des membres), recours, équipe et règles (Confiance)", () => {
+    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "metrics", "modules", "menuPreview", "appeals", "team", "rules"])
     expect(groupedSections().map((entry) => [entry.group, entry.sections.map((section) => section.href)])).toEqual([
-      ["pilotage", [routes.dashboard()]],
+      ["pilotage", [routes.dashboard(), routes.metrics()]],
       ["membersApp", [routes.modules(), routes.menuPreview()]],
+      ["trust", [routes.appeals(), routes.team(), routes.rules()]],
     ])
   })
 
@@ -56,7 +57,8 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
     const journal: AdminSection = { id: "journal", group: "pilotage", href: routes.journal(), labelKey: "nav.section.journal", icon: LayoutDashboard }
     const modules: AdminSection = { id: "modules", group: "membersApp", href: routes.modules(), labelKey: "nav.section.modules", icon: LayoutDashboard }
     const appeals: AdminSection = { id: "appeals", group: "trust", href: routes.appeals(), labelKey: "nav.section.appeals", icon: LayoutDashboard }
-    const grouped = groupedSections([...SECTIONS, appeals, journal, modules])
+    const base = SECTIONS.filter((section) => section.id === "dashboard")
+    const grouped = groupedSections([...base, appeals, journal, modules])
     expect(grouped.map((entry) => entry.group)).toEqual(["pilotage", "membersApp", "trust"])
     expect(grouped[0]?.sections.map((section) => section.id)).toEqual(["dashboard", "journal"])
   })

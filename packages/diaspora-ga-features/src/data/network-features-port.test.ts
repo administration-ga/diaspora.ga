@@ -2,18 +2,13 @@ import { describe, expect, it } from "vitest"
 
 import { createDemoDataSource } from "../demo/source"
 import { DemoStore } from "../demo/store"
-import { ACTION_ERROR_CODES } from "./errors"
 import {
   FEATURE_CAPABILITIES,
   featureGateOf,
   gateSource,
   knownFeatures,
   NETWORK_FEATURES,
-  NETWORK_FEATURES_ERROR_CODES,
-  networkFeatureToggleError,
 } from "./network-features-port"
-
-const REASON = "Ouverture pour le lancement du pilote."
 
 describe("fonctionnalités activables du réseau — port (ADR-0041 du moteur)", () => {
   it("chaque fonctionnalité gouverne des capacités de la source, sans doublon ; le socle n'en fait pas partie", () => {
@@ -64,16 +59,7 @@ describe("fonctionnalités activables du réseau — port (ADR-0041 du moteur)",
     expect(knownFeatures([])).toEqual([])
   })
 
-  it("une bascule se juge comme au moteur : motif, puis dépendance aux pages", () => {
-    expect(networkFeatureToggleError({ feature: "pages", enabled: true, reason: "court" }, [])).toBe("network_feature_reason_length")
-    expect(networkFeatureToggleError({ feature: "pages", enabled: true, reason: "x".repeat(501) }, [])).toBe("network_feature_reason_length")
-    expect(networkFeatureToggleError({ feature: "jobs", enabled: true, reason: REASON }, [])).toBe("network_feature_requires_parent")
-    expect(networkFeatureToggleError({ feature: "jobs", enabled: true, reason: REASON }, ["pages"])).toBeNull()
-    expect(networkFeatureToggleError({ feature: "pages", enabled: false, reason: REASON }, ["pages", "services"])).toBe("network_feature_has_open_children")
-    expect(networkFeatureToggleError({ feature: "mutualAid", enabled: true, reason: REASON }, [])).toBeNull()
-  })
-
-  it("les refus d'une bascule sont des codes d'action traduisibles", () => {
-    for (const code of NETWORK_FEATURES_ERROR_CODES) expect(ACTION_ERROR_CODES).toContain(code)
+  it("la mesure du pilote ne gouverne aucune capacité du site des membres (CH-815, lot A6)", () => {
+    expect(FEATURE_CAPABILITIES.pilotMetrics).toEqual([])
   })
 })

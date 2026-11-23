@@ -16,7 +16,7 @@
  *
  * Rien n'est retiré : les cartes des modules fermés restent écrites (textes fr et en) et citées par
  * la vision sous la porte, qui ne les rend pas. Chaque carte relève du socle (`null`) ou d'UN seul
- * module ; les mesures du pilote, réservées à l'équipe, n'en ont aucune.
+ * module ; la mesure du pilote, lue dans l'application d'administration, n'en a aucune.
  *
  * Qui lit cette déclaration : la vision sous la porte (`components/door-vision.tsx`) et la carte
  * d'inscription de la porte (`screens/landing-screen.tsx`).

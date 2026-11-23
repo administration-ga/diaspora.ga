@@ -1,4 +1,5 @@
-// Dupliqué de apps/diaspora_ga/src/ratchets/i18n-keys.test.ts @ 237b585 — adaptations : espace `admin` d'admin.diaspora.ga, lu dans l'application ; familles dynamiques tirées du registre des sections ; parité fr/en des clés et des variables tenue ici (diaspora.ga la tient dans le paquet de surfaces).
+// Dupliqué de apps/diaspora_ga/src/ratchets/i18n-keys.test.ts @ 237b585 — adaptations : espace `admin` d'admin.diaspora.ga, lu dans l'application ; familles dynamiques tirées du registre des sections et (lot A6) de la liste fermée des indicateurs du pilote ; parité fr/en des clés et des variables tenue ici (diaspora.ga la tient dans le paquet de surfaces).
+import { PILOT_METRIC_GROUPS, PILOT_METRICS } from "@diaspora-ga/domain"
 import { describe, expect, it } from "vitest"
 
 import { SECTION_GROUP_KEYS, SECTIONS } from "@/lib/sections"
@@ -10,6 +11,8 @@ import { productSources, readLocale, type LocaleTree } from "./sources"
  * et le français et l'anglais portent les mêmes clés et les mêmes `{{variables}}`.
  *  · une clé citée en toutes lettres (`t("…")`, objet, ternaire) doit exister ;
  *  · les libellés du menu viennent du registre des sections (groupes et sections) ;
+ *  · la section « Mesure » (lot A6) lit ses groupes, ses indicateurs et leurs bases dans la liste
+ *    fermée du domaine (`@diaspora-ga/domain`, pilot-metrics) : chaque membre doit exister ;
  *  · aucune clé de la locale n'est morte.
  */
 function flatten(tree: LocaleTree, prefix = ""): [string, string][] {
@@ -34,8 +37,19 @@ const literalKeys = new Set(
   [...code.matchAll(/["'`]([a-z][A-Za-z0-9]*(?:\.[A-Za-z0-9_]+)+)["'`]/g)].map((match) => match[1]!).filter((candidate) => NAMESPACES.has(candidate.split(".")[0]!)),
 )
 
-/** Les libellés du menu, lus dans le registre (qui les cite aussi en toutes lettres). */
-const FAMILIES: string[] = [...Object.values(SECTION_GROUP_KEYS), ...SECTIONS.map((section) => section.labelKey)]
+/** Les indicateurs à libellé propre (tous sauf les délais de première réponse, cités en toutes lettres). */
+const LABELLED = PILOT_METRICS.filter((metric) => metric.kind !== "duration").map((metric) => metric.id)
+/** Les bases des taux : chaque dénominateur, une seule fois. */
+const BASES = [...new Set(PILOT_METRICS.flatMap((metric) => (metric.kind === "ratio" || metric.kind === "snapshot_ratio" ? [metric.denominatorId] : [])))]
+
+/** Les libellés du menu, lus dans le registre (qui les cite aussi en toutes lettres), puis les familles de la mesure. */
+const FAMILIES: string[] = [
+  ...Object.values(SECTION_GROUP_KEYS),
+  ...SECTIONS.map((section) => section.labelKey),
+  ...PILOT_METRIC_GROUPS.map((group) => `metrics.group.${group}`),
+  ...LABELLED.flatMap((id) => [`metrics.indicator.${id}.label`, `metrics.indicator.${id}.hint`]),
+  ...BASES.flatMap((id) => [`metrics.base.${id}`, `metrics.baseBelow.${id}`]),
+]
 
 const variables = (sentence: string) => [...sentence.matchAll(/\{\{\s*([\w.]+)[^}]*\}\}/g)].map((match) => match[1]).sort()
 
@@ -49,7 +63,7 @@ describe("cliquet i18n d'admin.diaspora.ga — clés", () => {
     expect([...literalKeys].filter((key) => !exists(key)).sort()).toEqual([])
   })
 
-  it("chaque libellé du menu existe", () => {
+  it("chaque libellé du menu et chaque famille de la mesure existe", () => {
     expect(FAMILIES.filter((key) => !exists(key))).toEqual([])
   })
 

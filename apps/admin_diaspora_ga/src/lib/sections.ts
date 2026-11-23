@@ -1,4 +1,4 @@
-import { Blocks, LayoutDashboard, MonitorSmartphone, type LucideIcon } from "lucide-react"
+import { Blocks, ChartColumn, LayoutDashboard, MonitorSmartphone, Scale, SlidersHorizontal, Users, type LucideIcon } from "lucide-react"
 
 import { routes } from "./routes"
 
@@ -33,9 +33,15 @@ export interface AdminSection {
 /** Les sections présentes dans le code, dans l'ordre du menu. */
 export const SECTIONS: readonly AdminSection[] = [
   { id: "dashboard", group: "pilotage", href: routes.dashboard(), labelKey: "nav.section.dashboard", icon: LayoutDashboard },
+  // Pilotage (lot A6) : la mesure du pilote, déménagée de `/pilote` sur diaspora.ga.
+  { id: "metrics", group: "pilotage", href: routes.metrics(), labelKey: "nav.section.metrics", icon: ChartColumn },
   // Application des membres (lot A5) : les modules, puis l'aperçu du menu qu'ils composent.
   { id: "modules", group: "membersApp", href: routes.modules(), labelKey: "nav.section.modules", icon: Blocks },
   { id: "menuPreview", group: "membersApp", href: routes.menuPreview(), labelKey: "nav.section.menuPreview", icon: MonitorSmartphone },
+  // Confiance (lot A6) : les décisions du réseau, déménagées du bureau de diaspora.ga (D5).
+  { id: "appeals", group: "trust", href: routes.appeals(), labelKey: "nav.section.appeals", icon: Scale },
+  { id: "team", group: "trust", href: routes.team(), labelKey: "nav.section.team", icon: Users },
+  { id: "rules", group: "trust", href: routes.rules(), labelKey: "nav.section.rules", icon: SlidersHorizontal },
 ]
 
 export interface SectionGroupEntries {

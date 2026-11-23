@@ -116,7 +116,6 @@ import { createEngineArrivalKit } from "./engine-arrival-kit"
 import { createEngineMentoring } from "./engine-mentoring"
 import { createEngineJobs } from "./engine-jobs"
 import { createEngineModerationDesk } from "./engine-moderation-desk"
-import { createEnginePilotMetrics } from "./engine-pilot-metrics"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
 import { createEnginePageDecisions } from "./engine-page-decisions"
@@ -259,7 +258,6 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     mentoring: createEngineMentoring(deps),
     jobs: createEngineJobs(deps),
     moderationDesk: createEngineModerationDesk(deps),
-    pilotMetrics: createEnginePilotMetrics(deps),
     // P16 · G9 : décisions qui ont retiré un contenu porté par une page, et leur recours.
     pageDecisions: createEnginePageDecisions(deps),
     conversations: createEngineConversations(deps),

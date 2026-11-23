@@ -13,9 +13,9 @@ describe("adresses et fonctionnalités du réseau", () => {
     expect(Object.keys(ROUTE_FEATURES).sort()).toEqual(Object.keys(ROUTE_DESTINATIONS).sort())
   })
 
-  it("chaque fonctionnalité a au moins une adresse ; aucune adresse hors de la coque n'en relève", () => {
+  it("chaque fonctionnalité a au moins une adresse, sauf la mesure du pilote (lue dans l'administration, CH-815 A6) ; aucune adresse hors de la coque n'en relève", () => {
     const used = new Set(Object.values(ROUTE_FEATURES).filter((feature) => feature !== null))
-    expect(NETWORK_FEATURES.filter((feature) => !used.has(feature))).toEqual([])
+    expect(NETWORK_FEATURES.filter((feature) => !used.has(feature))).toEqual(["pilotMetrics"])
     for (const [key, home] of Object.entries(ROUTE_DESTINATIONS)) {
       if (home.kind === "outside") expect(ROUTE_FEATURES[key as keyof typeof ROUTE_FEATURES], key).toBeNull()
     }
@@ -50,7 +50,8 @@ describe("adresses et fonctionnalités du réseau", () => {
     expect(featureOfPath(routes.myMentoring())).toBe("mentoring")
     expect(featureOfPath(routes.arrivalKit())).toBe("arrivalKit")
     expect(featureOfPath(routes.arrivalKitResource("k-1"))).toBe("arrivalKit")
-    expect(featureOfPath(routes.pilotDashboard())).toBe("pilotMetrics")
+    // CH-815 A6 : la mesure du pilote n'a plus d'adresse sur diaspora.ga.
+    expect(Object.values(ROUTE_FEATURES)).not.toContain("pilotMetrics")
   })
 
   it("une adresse inconnue ou hors de la coque ne relève d'aucune fonctionnalité", () => {
@@ -75,7 +76,7 @@ describe("les modules rangés sous une destination, dérivés des deux tables", 
 
   it("suit les tables : un module y figure si et seulement si une de ses adresses se range sous la destination", () => {
     const keys = Object.keys(ROUTE_FEATURES) as RouteKey[]
-    for (const destination of ["feed", "explore", "services", "communities", "messages", "myActivity", "pilot"] as const) {
+    for (const destination of ["feed", "explore", "services", "communities", "messages", "myActivity", "moderation"] as const) {
       const expected = NETWORK_FEATURES.filter((feature) =>
         keys.some((key) => {
           const home = ROUTE_DESTINATIONS[key]
