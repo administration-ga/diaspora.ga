@@ -156,7 +156,7 @@
     },
     "directory": {
       "title": "Apparaître dans l'annuaire des membres",
-      "body": "Masqué par défaut. Si vous l'acceptez, vous choisissez qui peut vous trouver. On vous contacte seulement par la messagerie.",
+      "body": "Masqué par défaut. Si vous l'acceptez, vous choisissez qui peut vous trouver, par votre nom ou en parcourant les membres de votre pays ou de votre ville. On vous contacte seulement par la messagerie.",
       "levelLabel": "Qui peut vous trouver dans l'annuaire",
       "country": "Les membres de mon pays de résidence",
       "network": "Tous les membres de DIASPORA.GA"
@@ -761,7 +761,7 @@
     "visibilityLegend": "Qui voit quoi",
     "saved": "Enregistré.",
     "directory": "Annuaire des membres",
-    "directoryLead": "Masqué par défaut. Un profil privé ou retiré reste absent de l’annuaire, même si le niveau choisi est visible. On vous contacte seulement par la messagerie, jamais par une adresse.",
+    "directoryLead": "Masqué par défaut. Les membres que votre niveau autorise peuvent vous trouver par votre nom, ou en parcourant les membres de votre pays ou de votre ville, s’ils les voient sur votre profil. Un profil privé ou retiré reste absent de l’annuaire, même si le niveau choisi est visible. On vous contacte seulement par la messagerie, jamais par une adresse.",
     "directoryNeedsConsent": "Activez d'abord le consentement « Annuaire des membres » ci-dessous.",
     "directoryLevel": {
       "hidden": "Masqué",

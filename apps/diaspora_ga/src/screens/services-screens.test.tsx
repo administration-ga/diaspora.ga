@@ -184,6 +184,23 @@ describe("/services — le catalogue", () => {
     expect(screen.getByText(/prix non comparé à votre budget/)).toBeTruthy()
   })
 
+  it("CH-816 (lot P4) : propose les onze catégories, celles du pilote d'abord, et cherche par une catégorie de l'élargissement", async () => {
+    mocks.params = new URLSearchParams("categorie=it_support")
+    mocks.searchPages.set("first", ready([card("o1", { category: "it_support" })]))
+    render(tree(<ServicesScreen />))
+    expect(mocks.search).toHaveBeenLastCalledWith({ category: "it_support", cursor: null })
+    expect(within(screen.getByRole("list", { name: "Offres trouvées" })).getByText("Informatique et dépannage")).toBeTruthy()
+    const select = screen.getByLabelText("Catégorie")
+    expect(within(select).getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "Toutes les catégories",
+      "Coiffure et beauté", "Création numérique", "Photographie", "Traduction", "Aide à l'installation",
+      "Ingénierie et conseil technique", "Restauration et traiteur", "Couture et mode", "Bâtiment et rénovation", "Événementiel", "Informatique et dépannage",
+    ])
+    fireEvent.change(select, { target: { value: "catering" } })
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: "Rechercher" })) })
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/services?categorie=catering"))
+  })
+
   it("refuse un budget illisible sans rien chercher", async () => {
     render(tree(<ServicesScreen />))
     fireEvent.change(screen.getByLabelText("Budget maximal"), { target: { value: "45,555" } })

@@ -106,6 +106,8 @@ export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
 export const useCallSettings = () => useDataSource().callSettings ?? null
 /** Les fonctionnalités activables du réseau (clés ouvertes ; état et bascule pour l'administration). */
 export const useNetworkFeatures = () => useDataSource().networkFeatures ?? null
+/** Parcourir l'annuaire par pays et par ville (CH-816 P3) ; `null` : la recherche par nom seule. */
+export const useMemberBrowse = () => useDataSource().memberBrowse ?? null
 
 /**
  * Les modules ouverts, pour la navigation et les adresses. Hors fournisseur, ou sur une

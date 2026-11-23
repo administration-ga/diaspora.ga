@@ -57,6 +57,9 @@ import type {
   FeedPageQuery,
   FeedPageRequest,
   Loadable,
+  MemberBrowseCapability,
+  MemberBrowsePage,
+  MemberBrowseQuery,
   MemberHitView,
   OpenCountryView,
   PostView,
@@ -130,6 +133,7 @@ import {
   toBookmarkView,
   toCommentThreadView,
   toCommentView,
+  toMemberBrowsePage,
   toMemberHitView,
   toMembershipView,
   toWall,
@@ -143,6 +147,39 @@ import {
   toSuggestionView,
   toSponsorDashboardView,
 } from "./engine-views"
+
+/**
+ * CH-816 P3 — parcourir l'annuaire de la tranche (`directory.browseMembers`), une fenêtre par
+ * curseur. Réservé aux membres qui consultent l'annuaire : sinon le refus standard, sans appel au
+ * moteur (qui refuserait de même). Une réponse identique garde la même fenêtre : la chaîne des
+ * fenêtres de l'écran ne se relance pas à chaque rendu.
+ */
+export function createEngineMemberBrowse(deps: EngineSourceDeps): MemberBrowseCapability {
+  // Une lecture réactive seulement : aucune écriture.
+  void deps
+  return {
+    useBrowse(args): MemberBrowseQuery {
+      const member = useEngineMember()
+      const error = memberReadError(member, "view_directory")
+      const networkId = member.networkId.state === "ready" ? member.networkId.value : null
+      const canRead = error === null && member.auth.isAuthenticated && member.membership.state === "ready" && member.membership.value !== null
+      const city = args.city?.trim() ?? ""
+      const loaded = useLoaded(
+        api.modules.diaspora.directory.browseMembers,
+        canRead && networkId
+          ? { networkId, country: args.country, cursor: args.cursor, ...(city ? { city } : {}), ...(args.verifiedOnly ? { verifiedOnly: true } : {}) }
+          : "skip",
+      )
+      const value = loaded.state === "ready" ? loaded.value : undefined
+      const code = loaded.state === "error" ? loaded.code : null
+      return useMemo((): MemberBrowseQuery => {
+        if (error !== null) return failed<MemberBrowsePage>(error)
+        if (code !== null) return failed<MemberBrowsePage>(code)
+        return value === undefined ? LOADING : ready(toMemberBrowsePage(value))
+      }, [error, code, value])
+    },
+  }
+}
 
 /** Taille d'une fenêtre du fil DIASPORA.GA (le moteur accepte jusqu'à cinquante lignes). */
 const FEED_PAGE = 30
@@ -232,6 +269,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     callSettings: createEngineCallSettings(deps),
     // ADR-0041 du moteur : les fonctionnalités activables du réseau (clés ouvertes, réglages de l'administration).
     networkFeatures: createEngineNetworkFeatures(deps),
+    // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.
+    memberBrowse: createEngineMemberBrowse(deps),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()

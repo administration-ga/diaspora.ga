@@ -51,7 +51,13 @@
       "digital_creation": "Digital design",
       "photography": "Photography",
       "translation": "Translation",
-      "settling_in": "Settling-in help"
+      "settling_in": "Settling-in help",
+      "engineering": "Engineering and technical consulting",
+      "catering": "Catering and food",
+      "fashion": "Tailoring and fashion",
+      "building": "Building and renovation",
+      "events": "Events",
+      "it_support": "IT support and repair"
     },
     "delivery": {
       "onsite": "In person",

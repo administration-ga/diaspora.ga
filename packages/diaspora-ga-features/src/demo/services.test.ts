@@ -95,7 +95,7 @@ describe("démonstration des services — offres fictives", () => {
 
   it("chaque offre de départ passe la règle du domaine et se dit fictive", () => {
     const seed = createDemoServicesSeed(NOW)
-    expect(seed.offers).toHaveLength(6)
+    expect(seed.offers).toHaveLength(7)
     for (const offer of seed.offers) {
       expect(offer.title).toContain("(démo)")
       expect(offer.createdAt).toBeLessThan(NOW)
@@ -107,21 +107,25 @@ describe("démonstration des services — offres fictives", () => {
     const { capability } = setup("p-prisca")
     const { result } = renderHook(() => capability.useSearch({ cursor: null }))
     const page = data(result.current)
-    expect(page.items.map((item) => item.id)).toEqual(["offer-demo-traduction", "offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon"])
+    expect(page.items.map((item) => item.id)).toEqual(["offer-demo-traduction", "offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon", "offer-demo-traiteur"])
     expect(page.isDone).toBe(true)
     expect(page.items[1]).toMatchObject({ provider: { handle: "saveurs-okoume-demo", badge: "verified", ownerKind: "company", logoUrl: null }, budgetFit: null })
     expect(JSON.stringify(page)).not.toMatch(/@|p-mireille|p-steeve/)
   })
 
   it.each([
-    [{ city: " PARIS " }, ["offer-demo-coiffure"]],
+    [{ city: " PARIS " }, ["offer-demo-coiffure", "offer-demo-traiteur"]],
     [{ country: "BE" }, ["offer-demo-bruxelles"]],
     [{ category: "translation" }, ["offer-demo-traduction"]],
+    // CH-816 (lot P4) : une catégorie de l'élargissement se filtre comme les autres.
+    [{ category: "catering" }, ["offer-demo-traiteur"]],
+    [{ category: "engineering" }, []],
     [{ delivery: "remote" }, ["offer-demo-traduction", "offer-demo-bruxelles", "offer-demo-accueil-lyon"]],
-    [{ delivery: "onsite" }, ["offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon"]],
+    [{ delivery: "onsite" }, ["offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon", "offer-demo-traiteur"]],
     [{ query: "tresses" }, ["offer-demo-coiffure"]],
     [{ query: "nouveaux arrivants" }, ["offer-demo-accueil-lyon"]],
-    [{ query: "x" }, ["offer-demo-traduction", "offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon"]],
+    [{ query: "buffet" }, ["offer-demo-traiteur"]],
+    [{ query: "x" }, ["offer-demo-traduction", "offer-demo-coiffure", "offer-demo-bruxelles", "offer-demo-accueil-lyon", "offer-demo-traiteur"]],
   ] as const)("filtre %o", (filters, ids) => {
     const { capability } = setup("p-prisca")
     const { result } = renderHook(() => capability.useSearch({ ...filters, cursor: null } as ServiceSearchRequest))
@@ -135,6 +139,7 @@ describe("démonstration des services — offres fictives", () => {
       ["offer-demo-traduction", "quote"],
       ["offer-demo-bruxelles", "within"],
       ["offer-demo-accueil-lyon", "within"],
+      ["offer-demo-traiteur", "quote"],
     ])
   })
 
@@ -165,9 +170,9 @@ describe("démonstration des services — offres fictives", () => {
     expect(first.isDone).toBe(false)
     rerender({ cursor: first.continueCursor })
     const second = data(result.current)
-    expect(second.items).toHaveLength(2)
+    expect(second.items).toHaveLength(3)
     expect(second.isDone).toBe(true)
-    expect(new Set([...first.items, ...second.items].map((item) => item.id)).size).toBe(14)
+    expect(new Set([...first.items, ...second.items].map((item) => item.id)).size).toBe(15)
   })
 
   it.each([
@@ -298,7 +303,7 @@ describe("démonstration des services — gérer une offre", () => {
     const storage = memoryStorage()
     const { store, capability, clock } = setup("p-mireille", (state) => state, { storage })
     await capability.createOffer({ ...INPUT, pageId: "page-saveurs", publish: true })
-    expect(JSON.parse(storage.items.get(DEMO_SERVICES_STORAGE_KEY)!).offers).toHaveLength(7)
+    expect(JSON.parse(storage.items.get(DEMO_SERVICES_STORAGE_KEY)!).offers).toHaveLength(8)
     const again = createDemoServices(store, { storage })
     expect(again.findOffer("offer-demo-1")?.title).toBe(INPUT.title)
     // Un stockage illisible ou d'une autre démonstration est ignoré.
@@ -314,8 +319,8 @@ describe("démonstration des services — gérer une offre", () => {
   it("prévient les lecteurs abonnés à chaque écriture", async () => {
     const { capability } = setup("p-mireille")
     const { result } = renderHook(() => capability.useSearch({ city: "Paris", cursor: null }))
-    expect(data(result.current).items).toHaveLength(1)
-    await act(async () => { await capability.createOffer({ ...INPUT, pageId: "page-saveurs", publish: true }) })
     expect(data(result.current).items).toHaveLength(2)
+    await act(async () => { await capability.createOffer({ ...INPUT, pageId: "page-saveurs", publish: true }) })
+    expect(data(result.current).items).toHaveLength(3)
   })
 })

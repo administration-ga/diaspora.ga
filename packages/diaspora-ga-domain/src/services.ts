@@ -19,12 +19,36 @@ import { parseMoney, type CurrencyCode, type Money, type MoneyRefusal } from "./
 import { ok, refuse, type Result } from "./result"
 
 /**
- * Catégories du pilote (plan global §G4) : coiffure et beauté NON médicale,
- * création numérique, photographie, traduction, aide à l'installation. Une
- * profession réglementée (santé, droit, finance) n'entre pas par une catégorie
+ * Catégories des services. Les cinq du pilote (plan global §G4) : coiffure et
+ * beauté NON médicale, création numérique, photographie, traduction, aide à
+ * l'installation. Liste élargie le 22/11/2026 à la demande du propriétaire
+ * (CH-816, lot P4), pour que les entrepreneurs de la diaspora proposent aussi
+ * leurs métiers : ingénierie et conseil technique, restauration et traiteur,
+ * couture et mode, bâtiment et rénovation, événementiel, informatique et
+ * dépannage — une PROPOSITION que le propriétaire valide.
+ *
+ * Une profession réglementée (santé, droit, finance) n'entre pas par une catégorie
  * générique : elle attendra sa politique propre.
+ *
+ * L'ordre se lit tel quel dans les listes de l'écran ; `SERVICE_CATEGORIES[0]` est la
+ * valeur par défaut du formulaire d'offre. On ajoute à la fin ; retirer une valeur
+ * une fois des offres publiées avec elle demande une migration de `serviceOffers`.
  */
-export const SERVICE_CATEGORIES = ["beauty", "digital_creation", "photography", "translation", "settling_in"] as const
+export const SERVICE_CATEGORIES = [
+  // Pilote (plan global §G4).
+  "beauty",
+  "digital_creation",
+  "photography",
+  "translation",
+  "settling_in",
+  // Élargissement du 22/11/2026 (CH-816, lot P4), proposé au propriétaire.
+  "engineering",
+  "catering",
+  "fashion",
+  "building",
+  "events",
+  "it_support",
+] as const
 export type ServiceCategory = (typeof SERVICE_CATEGORIES)[number]
 
 /** Où la prestation a lieu : chez le professionnel ou chez le client (présentiel), à distance, ou les deux. */
