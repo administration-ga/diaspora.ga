@@ -193,6 +193,58 @@ describe("PostCard — partage accessible en lecture seule", () => {
     expect(share).not.toHaveBeenCalled()
   })
 
+  it("dit que le lien ne rend pas la publication publique ; sans feuille du système, seule la copie est proposée", async () => {
+    const user = userEvent.setup()
+    const t = getFixedT("fr")
+    mount()
+    await user.click(screen.getByRole("button", { name: t("post.share") }))
+    const dialog = screen.getByRole("dialog")
+    expect(dialog.textContent).toContain(t("post.shareActions.accessNotice"))
+    expect(screen.queryByRole("button", { name: t("post.shareActions.nativeShare") })).not.toBeInTheDocument()
+  })
+
+  describe("la feuille de partage du téléphone (FD-06)", () => {
+    function withNativeShare(share: (data: ShareData) => Promise<void>) {
+      Object.defineProperty(window.navigator, "share", { configurable: true, writable: true, value: vi.fn(share) })
+      return window.navigator.share as unknown as ReturnType<typeof vi.fn>
+    }
+    afterEach(() => { Reflect.deleteProperty(window.navigator, "share") })
+
+    it.each(["fr", "en"] as const)("reçoit l'adresse et un titre neutre en %s, jamais le texte ni l'auteur de la publication", async (locale) => {
+      const user = userEvent.setup()
+      const t = getFixedT(locale)
+      const native = withNativeShare(async () => undefined)
+      const value: PostView = { ...post, author: { ...post.author, handle: "auteur.fictif", displayName: "Awa FICTIVE" } }
+      mount(value, locale)
+      await user.click(screen.getByRole("button", { name: t("post.share") }))
+      await user.click(screen.getByRole("button", { name: t("post.shareActions.nativeShare") }))
+      const expected = new URL(routes.post(post.id), window.location.origin).href
+      expect(native).toHaveBeenCalledExactlyOnceWith({ title: t("post.shareActions.nativeTitle"), url: expected })
+      const sent = JSON.stringify(native.mock.calls)
+      expect(sent).not.toContain(post.body)
+      expect(sent).not.toContain("Awa FICTIVE")
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    })
+
+    it("fermer la feuille n'est pas un échec ; un échec le dit et laisse copier le lien", async () => {
+      const user = userEvent.setup()
+      const t = getFixedT("fr")
+      withNativeShare(async () => { throw new DOMException("fermée", "AbortError") })
+      const first = mount()
+      await user.click(screen.getByRole("button", { name: t("post.share") }))
+      await user.click(screen.getByRole("button", { name: t("post.shareActions.nativeShare") }))
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+      first.unmount()
+
+      withNativeShare(async () => { throw new DOMException("refusée", "NotAllowedError") })
+      mount()
+      await user.click(screen.getByRole("button", { name: t("post.share") }))
+      await user.click(screen.getByRole("button", { name: t("post.shareActions.nativeShare") }))
+      expect((await screen.findByRole("alert")).textContent).toBe(t("post.shareActions.shareFailed"))
+      expect(screen.getByRole("button", { name: t("post.shareActions.copyLink") })).toBeInTheDocument()
+    })
+  })
+
   it("ne propose pas de partager une publication encore en relecture", () => {
     const t = getFixedT("fr")
     mount({ ...post, moderation: "pending_review", isMine: true }, "fr", vi.fn())

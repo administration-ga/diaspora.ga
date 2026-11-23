@@ -92,6 +92,7 @@ import enIcomNotices from "./locales/en/icom-notices.json"
 import enFeedRail from "./locales/en/feed-rail.json"
 import enMemberBrowse from "./locales/en/member-browse.json"
 import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
+import enPostSharing from "./locales/en/post-sharing.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -173,6 +174,7 @@ import frIcomNotices from "./locales/fr/icom-notices.json"
 import frFeedRail from "./locales/fr/feed-rail.json"
 import frMemberBrowse from "./locales/fr/member-browse.json"
 import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
+import frPostSharing from "./locales/fr/post-sharing.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -265,6 +267,8 @@ export const LOCALE_PARTS = {
     "member-browse": frMemberBrowse,
     // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
     "post-author-gestures": frPostAuthorGestures,
+    // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.
+    "post-sharing": frPostSharing,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -350,6 +354,8 @@ export const LOCALE_PARTS = {
     "member-browse": enMemberBrowse,
     // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
     "post-author-gestures": enPostAuthorGestures,
+    // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.
+    "post-sharing": enPostSharing,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

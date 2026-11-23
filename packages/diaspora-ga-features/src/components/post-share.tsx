@@ -30,7 +30,13 @@ export function usePostShare(): ((post: PostView) => void) | null {
   return useContext(PostShareContext)
 }
 
-/** Copier l'adresse d'une publication lisible ne crée ni citation ni droit d'accès. */
+/**
+ * Partager une publication lisible (FD-06) : copier son adresse, ou l'envoyer par la feuille de
+ * partage du téléphone quand le navigateur en a une (même approche que le partage d'une page).
+ * L'adresse est interne : ouverte hors session, elle mène à la porte, puis à la publication si la
+ * personne entrée peut la lire. Rien du contenu ne part avec elle (aucun aperçu public d'une
+ * publication `network`) ; partager ne crée ni citation ni droit d'accès.
+ */
 export function PostShareButton({ post }: { post: PostView }) {
   const { t } = useDiasporaGaT()
   const { routes } = useRouting()
@@ -41,10 +47,28 @@ export function PostShareButton({ post }: { post: PostView }) {
   const [link, setLink] = useState("")
   const [copying, setCopying] = useState(false)
   const [copyFailed, setCopyFailed] = useState(false)
+  const [nativeAvailable, setNativeAvailable] = useState(false)
+  const [sharing, setSharing] = useState(false)
+  const [shareFailed, setShareFailed] = useState(false)
 
   const openShare = () => {
     setLink(new URL(routes.post(post.id), window.location.origin).href)
     setCopyFailed(false)
+    setShareFailed(false)
+    setNativeAvailable(typeof navigator.share === "function")
+  }
+  const shareNatively = async () => {
+    if (sharing || link.length === 0) return
+    setSharing(true)
+    setShareFailed(false)
+    try {
+      // Un titre neutre et l'adresse seulement : ni le texte, ni l'auteur, ni les médias.
+      await navigator.share({ title: t("post.shareActions.nativeTitle"), url: link })
+    } catch (error) {
+      // Fermer la feuille du téléphone n'est pas un échec. Jugé par le nom : une `DOMException`
+      // ne descend pas toujours de l'`Error` de la page qui l'attrape.
+      if (!(typeof error === "object" && error !== null && (error as { name?: unknown }).name === "AbortError")) setShareFailed(true)
+    } finally { setSharing(false) }
   }
   const copyLink = async () => {
     if (copying) return
@@ -81,12 +105,19 @@ export function PostShareButton({ post }: { post: PostView }) {
         onOpenAutoFocus={(event) => { event.preventDefault(); input.current?.focus(); input.current?.select() }}
       >
         <div className="flex flex-col gap-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("post.shareActions.accessNotice")}</p>
           <Field id={`${id}-link`} label={t("post.shareActions.link")} error={copyFailed ? t("post.shareActions.copyFailed") : undefined}>
             {(control) => <Input ref={input} id={control.id} value={link} readOnly onFocus={(event) => event.currentTarget.select()} aria-describedby={control.describedBy} />}
           </Field>
           <Button onClick={() => void copyLink()} aria-disabled={copying} aria-busy={copying}>
             <CopyIcon aria-hidden />{t("post.shareActions.copyLink")}
           </Button>
+          {nativeAvailable ? (
+            <Button variant="secondary" className="h-auto min-h-11 whitespace-normal py-2" onClick={() => void shareNatively()} aria-disabled={sharing} aria-busy={sharing}>
+              <Share2Icon aria-hidden />{t("post.shareActions.nativeShare")}
+            </Button>
+          ) : null}
+          {shareFailed ? <p role="alert" className="text-sm text-destructive">{t("post.shareActions.shareFailed")}</p> : null}
           {share && isShareable(post) ? (
             <Button variant="secondary" onClick={() => { setOpen(false); share(post) }}>
               <Repeat2Icon aria-hidden />{t("post.shareActions.quote")}

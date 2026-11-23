@@ -1,0 +1,10 @@
+{
+  "post": {
+    "shareActions": {
+      "accessNotice": "Ouvert sans session, le lien mène d’abord à l’entrée de DIASPORA.GA, puis à la publication. Le partager ne la rend pas publique.",
+      "nativeShare": "Autres options de partage",
+      "nativeTitle": "Une publication sur DIASPORA.GA",
+      "shareFailed": "Le partage n’a pas abouti. Vous pouvez copier le lien de la publication."
+    }
+  }
+}
