@@ -28,6 +28,7 @@ import { type FunctionArgs, type FunctionReference, type FunctionReturnType, get
 import { convexToJson, jsonToConvex, type Value } from "convex/values"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 
+import type { DemoGateTokenStore } from "./engine-demo-gate"
 import { engineActionErrorCode } from "./engine-errors"
 
 export const PAGE_ACCESS_ERRORS: ReadonlySet<ActionErrorCode> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
@@ -141,6 +142,15 @@ export interface EngineSourceDeps {
    * d'image ni canvas.
    */
   readonly prepareImage?: PrepareImage
+  /**
+   * CH-817 : l'origine des actions HTTP du moteur (`NEXT_PUBLIC_CONVEX_SITE_URL`), où le navigateur
+   * appelle la porte des comptes de démonstration ; absente, la porte n'est pas joignable d'ici.
+   */
+  readonly convexSiteUrl?: string | null
+  /** CH-817 : la session de porte de cet onglet (`sessionStorage` seulement ; remplaçable dans les tests). */
+  readonly demoGateTokens?: DemoGateTokenStore
+  /** CH-817 : l'appel HTTP vers la porte (remplaçable dans les tests). */
+  readonly fetch?: typeof fetch
   /**
    * La préparation des vidéos avant tout dépôt (FD-02) : `prepareVideoForUpload` du moteur par
    * défaut — sonde, puis conversion en MP4 ou WebM dans le navigateur. Remplaçable dans les

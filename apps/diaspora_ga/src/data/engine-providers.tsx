@@ -37,6 +37,8 @@ function EngineSource(props: { children: ReactNode }) {
       convex,
       authClient,
       locale: () => (isSupportedLocale(displayed.current) ? displayed.current : DEFAULT_LOCALE),
+      // CH-817 : l'origine des actions HTTP du moteur, où le navigateur appelle la porte des comptes de démonstration.
+      convexSiteUrl: publicEnv.convexSiteUrl,
     }),
   )
   // ADR-0041 du moteur : les fonctionnalités ouvertes lues avant la coque ; les modules fermés n'y sont pas montés.

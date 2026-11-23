@@ -89,7 +89,8 @@ const deepFreeze = (value) => {
  *   diverger. Le site et le projet d'hébergement, eux, sont propres à chaque application ;
  * - `releaseKeys` : ce que la publication exige (le contrôle et le retour arrière exigent
  *   `CHECK_KEYS` et `ROLLBACK_KEYS`, les mêmes pour toutes) ; `optionalUrlKeys` : les
- *   liens facultatifs ;
+ *   liens facultatifs ; `optionalMediaKeys` : les origines facultatives d'un serveur média
+ *   (`wss://`, lues à la construction pour la politique de sécurité du site) ;
  * - `publicVariables` : la liste publique, celle du catalogue (`build_args` et
  *   `runtime_env`), écrite à part pour que la garde `assertPublicOnly` ait un sens ;
  * - `siteVariables` : ce que la publication passe au site, dans l'ordre : une valeur
@@ -115,9 +116,11 @@ export const RELEASE_APPS = deepFreeze({
       projectId: "DIASPORA_GA_{CIBLE}_VERCEL_PROJECT_ID",
       idnPortalUrl: "DIASPORA_GA_{CIBLE}_IDN_PORTAL_URL",
       consulateUrl: "DIASPORA_GA_{CIBLE}_CONSULATE_URL",
+      livekitWsUrl: "DIASPORA_GA_{CIBLE}_LIVEKIT_WS_URL",
     },
     releaseKeys: ["siteUrl", "convexUrl", "convexSiteUrl", "projectId", "orgId", "scope"],
     optionalUrlKeys: ["idnPortalUrl", "consulateUrl"],
+    optionalMediaKeys: ["livekitWsUrl"],
     publicVariables: [
       "NEXT_PUBLIC_CONVEX_URL",
       "NEXT_PUBLIC_SITE_URL",
@@ -125,6 +128,8 @@ export const RELEASE_APPS = deepFreeze({
       "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE",
       "NEXT_PUBLIC_IDN_PORTAL_URL",
       "NEXT_PUBLIC_CONSULATE_URL",
+      "NEXT_PUBLIC_CONVEX_SITE_URL",
+      "LIVEKIT_WS_URL",
       "CONVEX_SITE_URL",
     ],
     siteVariables: [
@@ -132,9 +137,14 @@ export const RELEASE_APPS = deepFreeze({
       ["NEXT_PUBLIC_SITE_URL", { machine: "siteUrl" }],
       ["NEXT_PUBLIC_CONVEX_URL", { machine: "convexUrl" }],
       ["CONVEX_SITE_URL", { machine: "convexSiteUrl" }],
+      // CH-817 : la même origine des actions HTTP, lue par le NAVIGATEUR (la porte des comptes de démonstration).
+      ["NEXT_PUBLIC_CONVEX_SITE_URL", { machine: "convexSiteUrl" }],
       ["NEXT_PUBLIC_BUILD_SHA", { version: true }],
       ["NEXT_PUBLIC_IDN_PORTAL_URL", { machine: "idnPortalUrl", optional: true }],
       ["NEXT_PUBLIC_CONSULATE_URL", { machine: "consulateUrl", optional: true }],
+      // Le serveur média des appels et du direct : sa seule trace côté site est la politique de sécurité,
+      // que la configuration commune du moteur construit à la construction (`connect-src`).
+      ["LIVEKIT_WS_URL", { machine: "livekitWsUrl", optional: true }],
     ],
     health: { path: HEALTH_PATH, application: HEALTH_APPLICATION, dataSource: "required", engine: "text" },
   },
@@ -152,6 +162,7 @@ export const RELEASE_APPS = deepFreeze({
     },
     releaseKeys: ["siteUrl", "convexUrl", "convexSiteUrl", "projectId", "orgId", "scope", "membersSiteUrl"],
     optionalUrlKeys: [],
+    optionalMediaKeys: [],
     publicVariables: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_MEMBERS_SITE_URL", "CONVEX_SITE_URL"],
     siteVariables: [
       ["NEXT_PUBLIC_SITE_URL", { machine: "siteUrl" }],
@@ -261,6 +272,16 @@ function isHttpsUrl(value) {
   }
 }
 
+/** Une origine `wss://` exacte (sans chemin, requête ni barre finale) : celle d'un serveur média publié. */
+function isWssOrigin(value) {
+  try {
+    const url = new URL(value)
+    return url.protocol === "wss:" && !url.username && !url.password && `${url.protocol}//${url.host}` === value
+  } catch {
+    return false
+  }
+}
+
 /** Même règle que la garde de construction (LX-01) : tout sauf un poste de développement est public. */
 function isPublicHost(origin) {
   const hostname = new URL(origin).hostname.toLowerCase()
@@ -283,7 +304,7 @@ function variableName(app, target, key) {
  * @param {string} [app] l'application (absente : diaspora.ga)
  */
 export function readTargetEnv(target, env = process.env, keys = RELEASE_KEYS, app = DEFAULT_RELEASE_APP) {
-  const { optionalUrlKeys } = releaseApp(app)
+  const { optionalUrlKeys, optionalMediaKeys } = releaseApp(app)
   const name = (key, forTarget = target, forApp = app) => variableName(forApp, forTarget, key)
   const values = {}
   const problems = []
@@ -305,6 +326,13 @@ export function readTargetEnv(target, env = process.env, keys = RELEASE_KEYS, ap
     const value = read(variable)
     if (value === undefined) continue
     if (!isHttpsUrl(value)) problems.push(`${variable} doit être une adresse https`)
+    values[key] = value
+  }
+  for (const key of optionalMediaKeys) {
+    const variable = name(key)
+    const value = read(variable)
+    if (value === undefined) continue
+    if (!isWssOrigin(value)) problems.push(`${variable} doit être une origine wss, sans chemin ni barre finale`)
     values[key] = value
   }
   const other = otherTarget(target)
@@ -391,7 +419,7 @@ export function versionProblems(raw, { app = DEFAULT_RELEASE_APP, target }) {
 /**
  * Les variables publiques d'une publication, dans l'ordre de la table. Les valeurs tirées
  * de la machine restent des RÉFÉRENCES (`envRef`) jusqu'à l'exécution ; une variable
- * facultative (liens vers IDN et consulat.ga) ne passe que si elle est posée.
+ * facultative (liens vers IDN et consulat.ga, serveur média) ne passe que si elle est posée.
  */
 export function releaseVariables(target, version, values, app = DEFAULT_RELEASE_APP) {
   const names = appVariableNames(app, target)

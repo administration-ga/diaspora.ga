@@ -1,9 +1,6 @@
 {
   "demoAccounts": {
-    "open": "Comptes de démonstration",
-    "openHint": "Démonstration et développement local seulement",
     "title": "Comptes de démonstration",
-    "lead": "Chaque compte entre par le vrai code à usage unique, lu ici pour vous, puis son accueil et son équipement se font tout seuls. Personnes, pages et adresses sont fictives ; en ligne, chaque compte est partagé par tous les visiteurs.",
     "close": "Fermer",
     "groups": {
       "members": "Membres, statut par statut",
@@ -53,11 +50,11 @@
       },
       "association": {
         "title": "Association",
-        "description": "Présidente d'une association à Lyon ; une mission bénévole et deux événements, en attente de la modération."
+        "description": "Présidente d'une association à Lyon, administratrice de sa page."
       },
       "entreprise": {
         "title": "Entreprise",
-        "description": "Traiteur à Paris : une offre de service et une offre d'emploi."
+        "description": "Traiteur à Paris, administrateur de la page de son entreprise."
       },
       "media": {
         "title": "Média",

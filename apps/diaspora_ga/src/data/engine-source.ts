@@ -22,6 +22,7 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import { isMemberThemeId } from "@antsia/social-contracts/appearance"
+import { DEMO_GATE_TOKEN_HEADER } from "@antsia/social-contracts/demoGate"
 import { isSupportedLocale } from "@diaspora-ga/features/i18n"
 import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
@@ -72,6 +73,7 @@ import type {
   RelationView,
   RepliesPageRequest,
   SessionView,
+  SignInCodeOptions,
   SponsorDashboardView,
   SuggestionView,
   UnreadCountView,
@@ -119,6 +121,7 @@ import { createEngineModerationDesk } from "./engine-moderation-desk"
 import { createEngineConversations } from "./engine-conversations"
 import { createEngineNotificationOpening } from "./engine-notification-opening"
 import { createEngineDemoAccounts } from "./engine-demo-accounts"
+import { createEngineDemoGate, demoGateTokenFor, demoGateTokens, toDemoGateState } from "./engine-demo-gate"
 import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
@@ -266,6 +269,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     conversations: createEngineConversations(deps),
     // Comptes de démonstration par acteur : développement local du moteur seulement.
     demoAccounts: createEngineDemoAccounts(deps),
+    // CH-817 (lot A1) : la porte des comptes de démonstration (numéro WhatsApp, code, session de l'onglet).
+    demoGate: createEngineDemoGate({ siteUrl: deps.convexSiteUrl ?? null, tokens: deps.demoGateTokens ?? demoGateTokens, ...(deps.fetch ? { fetch: deps.fetch } : {}) }),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
     // DS-14 (volet push) : abonner cet appareil aux notifications du navigateur, par les fonctions existantes du moteur.
@@ -790,31 +795,68 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     }
   }
 
+  /**
+   * CH-817 E5 — l'en-tête de la porte sur l'envoi du code et sur la connexion : porte armée, le moteur
+   * refuse ces deux requêtes à la famille réservée sans jeton de session de porte valide. Il ne part
+   * que pour un acteur choisi dans la feuille de la pastille (`demoActor`), à son adresse déclarée, et
+   * avec une session de porte dans l'onglet ; jamais pour une adresse saisie au formulaire ordinaire,
+   * jamais dans une adresse ni un journal.
+   */
+  function demoGateHeaders(email: string, options: SignInCodeOptions | undefined): Record<string, string> {
+    if (options?.demoActor !== true) return {}
+    const token = demoGateTokenFor(email, deps.demoGateTokens ?? demoGateTokens)
+    return token === null ? {} : { [DEMO_GATE_TOKEN_HEADER]: token }
+  }
+
+  /** Les options de requête de Better Auth : rien sans en-tête, pour laisser la requête telle quelle. */
+  function withHeaders(headers: Record<string, string>): { fetchOptions?: { headers: Record<string, string> } } {
+    return Object.keys(headers).length > 0 ? { fetchOptions: { headers } } : {}
+  }
+
+  /**
+   * Le code à recopier du formulaire ordinaire (CH-817 E5, fiche § 7.3) : relu seulement quand la porte
+   * de démonstration n'est PAS armée (`open` : développement local, démonstration sans porte ; un moteur
+   * d'avant la porte compte comme tel). Armée, indisponible ou fermée, et au moindre refus de lecture :
+   * `null` — la feuille de la pastille est alors la seule à relire un code, avec son jeton.
+   */
+  async function codeShownWhenGateOpen(email: string): Promise<string | null> {
+    try {
+      const configuration = await deps.convex.query(api.modules.platform.authentication.configuration, {})
+      if (toDemoGateState(configuration.demoGate) !== "open") return null
+      const latest = await deps.convex.query(api.modules.platform.devTools.latestOtp, { email })
+      return latest?.code ?? null
+    } catch {
+      return null
+    }
+  }
+
   return {
     // EA-02 : départ vers IDN par le client du moteur ; l'identité simulée de la démonstration est ignorée.
     signInWithIdn: () => startIdnSignIn(deps),
 
-    async requestCode(destination) {
+    async requestCode(destination, options) {
       // Le SMS arrive avec l'identité du moteur (PA4).
       if (destination.kind !== "email") return { ok: false, code: "feature_unavailable" }
       const email = destination.value.trim().toLowerCase()
       // La langue affichée accompagne la demande (`Accept-Language`, relayé tel quel par
       // `/api/auth/*`) : le moteur compose le code dans cette langue, à la marque DIASPORA.GA.
+      // Le relais transmet aussi l'en-tête de la porte (CH-817 E5).
       const locale = deps.locale?.()
-      const sent = await deps.authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", ...(locale ? { fetchOptions: { headers: { "Accept-Language": locale } } } : {}) })
+      const headers = { ...(locale ? { "Accept-Language": locale } : {}), ...demoGateHeaders(email, options) }
+      const sent = await deps.authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", ...withHeaders(headers) })
       if (sent.error) return { ok: false, code: authActionErrorCode(sent.error) }
       pendingEmail = email
-      // En développement LOCAL seulement (outils ouverts et backend local), le moteur rend le code ; ailleurs, `null`.
-      const dev = await deps.convex.query(api.modules.platform.devTools.latestOtp, { email }).catch(() => null)
-      return { ok: true, value: { demoCode: dev?.code ?? null } }
+      // Le moteur ne rend le code qu'en développement local ou sur la démonstration déclarée ; porte armée,
+      // le formulaire ordinaire ne le relit plus (CH-817 E5).
+      return { ok: true, value: { demoCode: await codeShownWhenGateOpen(email) } }
     },
 
-    async verifyCode(code, destination) {
+    async verifyCode(code, destination, options) {
       // EA-08, MO-04 : l'adresse que l'écran a gardée dans l'onglet survit au rechargement, la
       // mémoire de cette source non ; sans elle, l'adresse du dernier envoi de cette session.
       const email = destination?.kind === "email" ? destination.value.trim().toLowerCase() : pendingEmail
       if (!email) return { ok: false, code: "code_expired" }
-      const signedIn = await deps.authClient.signIn.emailOtp({ email, otp: code.trim() })
+      const signedIn = await deps.authClient.signIn.emailOtp({ email, otp: code.trim(), ...withHeaders(demoGateHeaders(email, options)) })
       if (signedIn.error) return { ok: false, code: authActionErrorCode(signedIn.error) }
       pendingEmail = null
       // Rechargement complet : la session amorce proprement le jeton Convex de la personne qui arrive.

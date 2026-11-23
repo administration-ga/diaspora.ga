@@ -96,6 +96,7 @@ import enLive from "./locales/en/live.json"
 import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
 import enPostSharing from "./locales/en/post-sharing.json"
 import enPostSearch from "./locales/en/post-search.json"
+import enDemoGate from "./locales/en/demo-gate.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -181,6 +182,7 @@ import frLive from "./locales/fr/live.json"
 import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
 import frPostSharing from "./locales/fr/post-sharing.json"
 import frPostSearch from "./locales/fr/post-search.json"
+import frDemoGate from "./locales/fr/demo-gate.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -281,6 +283,8 @@ export const LOCALE_PARTS = {
     "post-sharing": frPostSharing,
     // CH-817 (DS-11, volet recherche) : chercher dans les publications depuis « Membres ».
     "post-search": frPostSearch,
+    // CH-817 (lot A1) : la pastille « Compte démo » et la porte des comptes de démonstration (numéro, code, acteurs).
+    "demo-gate": frDemoGate,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -373,6 +377,8 @@ export const LOCALE_PARTS = {
     "post-sharing": enPostSharing,
     // CH-817 (DS-11, volet recherche) : chercher dans les publications depuis « Membres ».
     "post-search": enPostSearch,
+    // CH-817 (lot A1) : la pastille « Compte démo » et la porte des comptes de démonstration (numéro, code, acteurs).
+    "demo-gate": enDemoGate,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

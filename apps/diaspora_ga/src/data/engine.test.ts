@@ -1,4 +1,5 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
+import { DEMO_GATE_TOKEN_HEADER } from "@antsia/social-contracts/demoGate"
 import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { prepareVideoForUpload, type PrepareVideo, type VideoRuntime } from "@antsia/social-features/features/video-upload/video-preparation"
@@ -12,6 +13,7 @@ import { getFunctionName } from "convex/server"
 import { ConvexError } from "convex/values"
 import { describe, expect, it, vi } from "vitest"
 
+import { createDemoGateTokenStore } from "./engine-demo-gate"
 import { authActionErrorCode, engineActionErrorCode } from "./engine-errors"
 import { createEngineActions, feedRequest } from "./engine-source"
 import {
@@ -224,6 +226,10 @@ function fakeConvex(handlers: Record<string, (args: Record<string, unknown>) => 
 }
 
 const NETWORK = { "modules/networks/networks:getBySlug": () => ({ _id: "n-diaspora-ga", slug: "diaspora-ga" }) }
+const CONFIGURATION = "modules/platform/authentication:configuration"
+const LATEST_OTP = "modules/platform/devTools:latestOtp"
+/** Un jeton de session de porte FICTIF, de forme seule. */
+const GATE_TOKEN = "t".repeat(43)
 /** La personne de la session telle que le moteur la lit, avant tout profil (compte neuf). */
 const NEW_PERSON_VIEW: Record<string, unknown> = { _id: "p1", published: false, private: false, badges: [], consentsInForce: [] }
 const NEW_PERSON = { "modules/people/persons:getMyPerson": () => NEW_PERSON_VIEW }
@@ -238,15 +244,87 @@ function fakeAuth(overrides: Partial<Record<"send" | "signIn" | "signOut", () =>
 
 describe("écritures de la source « moteur »", () => {
   it("le code à usage unique : courriel seulement (SMS avec PA4), code de développement relu s'il existe", async () => {
-    const { convex, calls } = fakeConvex({ "modules/platform/devTools:latestOtp": () => ({ code: "123456", expiresAt: 2 }) })
+    // Un moteur d'avant la porte ne publie pas `demoGate` : la porte compte comme non armée.
+    const { convex, calls } = fakeConvex({ [CONFIGURATION]: () => ({}), [LATEST_OTP]: () => ({ code: "123456", expiresAt: 2 }) })
     const auth = fakeAuth()
     const actions = createEngineActions({ convex, authClient: auth.client })
     expect(await actions.requestCode({ kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: false, code: "feature_unavailable" })
     expect(await actions.requestCode({ kind: "email", value: " Ada@Exemple.test " })).toEqual({ ok: true, value: { demoCode: "123456" } })
     expect(auth.send).toHaveBeenCalledWith({ email: "ada@exemple.test", type: "sign-in" })
-    expect(calls).toEqual([{ name: "modules/platform/devTools:latestOtp", args: { email: "ada@exemple.test" } }])
+    expect(calls).toEqual([
+      { name: CONFIGURATION, args: {} },
+      { name: LATEST_OTP, args: { email: "ada@exemple.test" } },
+    ])
     expect(await actions.verifyCode("654321")).toEqual({ ok: true, value: null })
     expect(auth.signIn).toHaveBeenCalledWith({ email: "ada@exemple.test", otp: "654321" })
+  })
+
+  it("CH-817 E5 : le formulaire ordinaire ne relit le code que porte non armée (`open`), jamais avec un jeton", async () => {
+    let state: string | undefined = "open"
+    const { convex, calls } = fakeConvex({ [CONFIGURATION]: () => ({ demoGate: state }), [LATEST_OTP]: () => ({ code: "123456", expiresAt: 2 }) })
+    const tokens = createDemoGateTokenStore({ storage: () => null, now: () => 1_000 })
+    tokens.save({ token: GATE_TOKEN, expiresAt: 5_000 })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client, demoGateTokens: tokens })
+    // Non armée : le code se relit, sans jeton, même pour une adresse d'acteur et avec une session de porte.
+    expect(await actions.requestCode({ kind: "email", value: "verifie@demo.diaspora-ga.test" }, { demoActor: true })).toEqual({ ok: true, value: { demoCode: "123456" } })
+    expect(calls.at(-1)).toEqual({ name: LATEST_OTP, args: { email: "verifie@demo.diaspora-ga.test" } })
+    // Armée, incomplète ou fermée : aucune lecture du code ; la feuille est la seule à le relire.
+    for (const other of ["gated", "unavailable", "closed"]) {
+      state = other
+      calls.length = 0
+      expect(await actions.requestCode({ kind: "email", value: "ada@exemple.test" })).toEqual({ ok: true, value: { demoCode: null } })
+      expect(await actions.requestCode({ kind: "email", value: "verifie@demo.diaspora-ga.test" }, { demoActor: true })).toEqual({ ok: true, value: { demoCode: null } })
+      expect(calls.map((call) => call.name), other).toEqual([CONFIGURATION, CONFIGURATION])
+    }
+    // La configuration illisible ne vaut pas « non armée » : aucun code.
+    const unreadable = fakeConvex({ [LATEST_OTP]: () => ({ code: "123456", expiresAt: 2 }) })
+    expect(await createEngineActions({ convex: unreadable.convex, authClient: fakeAuth().client }).requestCode({ kind: "email", value: "ada@exemple.test" })).toEqual({ ok: true, value: { demoCode: null } })
+    expect(unreadable.calls.map((call) => call.name)).toEqual([CONFIGURATION])
+  })
+
+  it("CH-817 E5 : l'en-tête de la porte part sur l'envoi ET la connexion d'un acteur de la feuille, avec une session de porte", async () => {
+    const { convex } = fakeConvex({ [CONFIGURATION]: () => ({ demoGate: "gated" }) })
+    const tokens = createDemoGateTokenStore({ storage: () => null, now: () => 1_000 })
+    const auth = fakeAuth()
+    const actions = createEngineActions({ convex, authClient: auth.client, demoGateTokens: tokens, locale: () => "fr" })
+    const actor = { kind: "email", value: " Verifie@Demo.Diaspora-GA.test " } as const
+    tokens.save({ token: GATE_TOKEN, expiresAt: 5_000 })
+
+    await actions.requestCode(actor, { demoActor: true })
+    expect(auth.send).toHaveBeenLastCalledWith({
+      email: "verifie@demo.diaspora-ga.test",
+      type: "sign-in",
+      fetchOptions: { headers: { "Accept-Language": "fr", [DEMO_GATE_TOKEN_HEADER]: GATE_TOKEN } },
+    })
+    await actions.verifyCode("123456", actor, { demoActor: true })
+    // Les deux appels sont comparés EN ENTIER : le jeton n'est que dans l'en-tête, nulle part ailleurs.
+    expect(auth.signIn).toHaveBeenLastCalledWith({ email: "verifie@demo.diaspora-ga.test", otp: "123456", fetchOptions: { headers: { [DEMO_GATE_TOKEN_HEADER]: GATE_TOKEN } } })
+  })
+
+  it("CH-817 E5 : jamais d'en-tête de porte pour une adresse ordinaire, sans session, ni hors de la feuille", async () => {
+    const { convex } = fakeConvex({ [CONFIGURATION]: () => ({ demoGate: "gated" }) })
+    const tokens = createDemoGateTokenStore({ storage: () => null, now: () => 1_000 })
+    const auth = fakeAuth()
+    const actions = createEngineActions({ convex, authClient: auth.client, demoGateTokens: tokens })
+    const actor = { kind: "email", value: "verifie@demo.diaspora-ga.test" } as const
+    // Aucune session de porte : la requête d'avant, telle quelle.
+    await actions.requestCode(actor, { demoActor: true })
+    await actions.verifyCode("123456", actor, { demoActor: true })
+    expect(auth.send).toHaveBeenLastCalledWith({ email: "verifie@demo.diaspora-ga.test", type: "sign-in" })
+    expect(auth.signIn).toHaveBeenLastCalledWith({ email: "verifie@demo.diaspora-ga.test", otp: "123456" })
+
+    tokens.save({ token: GATE_TOKEN, expiresAt: 5_000 })
+    // Une adresse ordinaire, même marquée comme venant de la feuille.
+    await actions.requestCode({ kind: "email", value: "ada@exemple.test" }, { demoActor: true })
+    await actions.verifyCode("123456", { kind: "email", value: "ada@exemple.test" }, { demoActor: true })
+    // Une adresse de la famille réservée qui n'est celle d'aucun acteur déclaré.
+    await actions.requestCode({ kind: "email", value: "inconnu@demo.diaspora-ga.test" }, { demoActor: true })
+    // Le formulaire ordinaire : l'adresse d'un acteur saisie à la main ne porte rien.
+    await actions.requestCode(actor)
+    await actions.verifyCode("123456", actor)
+    for (const call of [...auth.send.mock.calls, ...auth.signIn.mock.calls]) expect(JSON.stringify(call)).not.toContain(GATE_TOKEN)
+    expect(auth.send).toHaveBeenCalledTimes(4)
+    expect(auth.signIn).toHaveBeenCalledTimes(3)
   })
 
   it("après un rechargement, la vérification reprend l'adresse gardée par l'écran, sans nouvel envoi (EA-08, MO-04)", async () => {

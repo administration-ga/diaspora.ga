@@ -1,0 +1,57 @@
+{
+  "demoGate": {
+    "pill": "Demo account",
+    "step": {
+      "phone": {
+        "lead": "Enter your WhatsApp number: if it is allowed for the demo, you receive a code to enter it."
+      },
+      "code": {
+        "lead": "Enter the code received on WhatsApp: 6 digits then a letter."
+      },
+      "actors": {
+        "lead": "Each account signs in with the real one-time code, read here for you; its onboarding and setup then happen on their own. People, pages and addresses are fictitious; online, each account is shared by all visitors."
+      },
+      "unavailable": {
+        "lead": "The demo is unavailable for now."
+      }
+    },
+    "phone": {
+      "label": "WhatsApp number",
+      "hint": "With the country code, for example +33 6 00 00 00 00.",
+      "submit": "Get the code"
+    },
+    "code": {
+      "delivery": "If this number is allowed, the code arrives on WhatsApp; with no message after a minute, the delivery did not go through.",
+      "number": "Number: {{number}}",
+      "label": "Code received on WhatsApp",
+      "hint": "6 digits then a letter.",
+      "expiresIn": "This code stays valid for {{duration}}.",
+      "expired": "This code has expired: request a new one.",
+      "submit": "Enter the demo",
+      "resend": "Send a new code",
+      "resent": "New code requested.",
+      "changeNumber": "Change number"
+    },
+    "tooManyAttempts": "Too many attempts: try again in {{duration}}.",
+    "wait": "New request possible in {{duration}}.",
+    "waitOver": "You can request a new code.",
+    "actors": {
+      "openUntil": "Demo access open until {{time}}.",
+      "forget": "Close access",
+      "loading": "Loading accounts…",
+      "unreadable": "The demo accounts cannot be read for now.",
+      "empty": "No demo account is offered for now."
+    },
+    "unavailable": "No code can be requested until the demo is back. Try again later.",
+    "opened": "Demo access open for {{minutes}} minutes.",
+    "duration": {
+      "minutes": "{{minutes}} min {{seconds}} s",
+      "seconds": "{{seconds}} s"
+    }
+  },
+  "errors": {
+    "demo_gate_unavailable": "The demo is unavailable for now. Try again later.",
+    "demo_gate_code_invalid": "Wrong or expired code. Check it, or request a new one.",
+    "demo_gate_code_format": "The code has 6 digits then a letter."
+  }
+}

@@ -7,7 +7,6 @@ import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useEffect, useId, useRef, useState } from "react"
 
-import { DemoAccountsButton } from "@/components/demo-accounts-panel"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { forgetIdnReturnError } from "@/lib/idn-return"
@@ -103,8 +102,7 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           </>
         )}
       </div>
-      {/* Comptes de démonstration par acteur : développement local du moteur, ou comptes fictifs de la démonstration. */}
-      <DemoAccountsButton />
+      {/* Les comptes de démonstration ne sont plus ici (CH-817) : la pastille « Compte démo », tout en bas de la porte. */}
     </section>
   )
 }

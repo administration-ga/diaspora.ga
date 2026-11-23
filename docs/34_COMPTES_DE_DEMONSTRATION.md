@@ -1,4 +1,4 @@
-# Comptes de démonstration par acteur — 19 octobre 2026
+# Comptes de démonstration par acteur — 19 octobre 2026, porte du 23 novembre 2026
 
 Demande du propriétaire : « le bouton des comptes démo des différents acteurs et users de
 DIASPORA.GA ». Le contrat (17 acteurs) a été posé par la session du plan global ; le
@@ -8,21 +8,131 @@ démonstration de la racine d'ANTSIA (`convex/modules/platform/demoAccounts.ts`,
 
 Complément du 19/10 au soir : trois acteurs de plus, pour les comptes de recette du plan global
 (docs/14, § 6.1) que les 17 premiers ne couvraient pas. Ce sont le membre bloqué, le suspendu à
-la racine et l'utilisateur extérieur au réseau. Le catalogue compte désormais 20 acteurs.
+la racine et l'utilisateur extérieur au réseau. Avec le membre fondateur (EA-01), le catalogue
+déclare **21 acteurs**.
+
+Complément du 23/11 (CH-817, fiche
+`DOCUMENTATION/DIASPORA_GA/Parite_espace_2026-11-23/Fiche_porte_compte_demo_DIASPORA_GA_2026-11-23.md`,
+lots A0, E1 à E4 du moteur, A1) : demande du propriétaire, « tout en bas de manière subtile un petit
+bouton pilule "compte démo" », un code de 6 chiffres et 1 lettre, reçu par WhatsApp sur un numéro
+autorisé. Les comptes ne proposent plus que les fonctions ouvertes, avec des publications d'exemple.
 
 ## Ce que voit la personne qui teste
 
-- Sur la porte (`/` et `/entrer`), sous la carte d'accès : un bouton « Comptes de
-  démonstration », « Développement local seulement ».
-- Il ouvre une feuille, groupée en Membres (statut par statut), Pages, Rôles et services, et
-  Accès restreints.
+- Tout en bas de la porte (`/`, `/entrer` et leurs étapes), sous le pied de page : une petite
+  pastille « Compte démo », aux couleurs du repère de démonstration. La carte d'accès ne porte plus
+  aucun bouton de démonstration.
+- Ce que la pastille ouvre dépend de l'état de la porte du moteur
+  (`platform/authentication.configuration`, champ `demoGate`) :
+
+| État | Où | Ce que fait la pastille |
+|---|---|---|
+| `closed` | production, ou comptes de démonstration fermés | rien ne s'affiche |
+| `open` | porte non armée (développement local, par exemple) | la feuille des acteurs, directement, comme l'ancien bouton ; rien si le catalogue est vide |
+| `unavailable` | porte armée mais incomplète (secret trop court, envoi WhatsApp non configuré) | la feuille dit « indisponible pour le moment », sans formulaire |
+| `gated` | démonstration en ligne, porte armée | numéro WhatsApp, puis code, puis la feuille des acteurs ; sans `NEXT_PUBLIC_CONVEX_SITE_URL`, rien ne s'affiche (jamais un geste mort) |
+
+- Porte armée, la feuille se suit en trois temps :
+  1. **le numéro WhatsApp**, avec son indicatif (E.164), normalisé par le contrat du moteur
+     (`normalizeDemoGatePhone`) ;
+  2. **le code** : l'écran ne dit jamais « envoyé », il dit « Si ce numéro est autorisé, le code
+     arrive sur WhatsApp ; sans message après une minute, l'envoi n'a pas abouti. » Le champ accepte
+     6 chiffres puis une lettre, en majuscules, groupés (`482 913 K`) ; l'échéance du code se
+     décompte ; « Renvoyer un code » attend une minute après chaque demande, et trois demandes au
+     plus par quart d'heure (reflet du seau du moteur par numéro). Un renvoi n'annule pas le code
+     déjà parti : jusqu'à trois restent valables, et la feuille vérifie le code saisi contre le plus
+     récent, puis contre les précédents encore valables (le premier code arrivé en retard reste
+     bon). « Changer de numéro » revient au premier temps. Un code faux ou expiré a un seul
+     message ; trop d'appels depuis cette adresse (429, à la demande, au renvoi comme à la
+     vérification) dit l'attente du moteur (`retryAfterMs`) et fait attendre le bouton ; une panne
+     du réseau se reprend ;
+  3. **les acteurs** : la feuille d'avant, groupée en Membres, Pages, Rôles et services, Accès
+     restreints (les groupes vides ne s'affichent pas), l'heure de fin de l'accès, et « Fermer
+     l'accès ».
 - Chaque acteur montre son nom fictif « Prénom NOM », ce qu'il illustre, son pays et le statut
   qu'il obtiendra. L'utilisateur extérieur au réseau n'a pas de statut : il porte « Hors réseau ».
-- Un appui suffit. La connexion passe par le VRAI code à usage unique, lu pour la personne. Puis
-  l'accueil, l'équipement et les gestes se font tout seuls, avec un avis du début à la fin. On
-  arrive sur le fil ; l'utilisateur extérieur, lui, arrive à l'accueil de DIASPORA.GA.
-- En démonstration (données fictives de ce navigateur), le même bouton mène à `/demo`.
-- Ailleurs, catalogue vide, production comprise : rien ne s'affiche.
+- Un appui suffit. La connexion passe par le VRAI code à usage unique (6 chiffres), lu pour la
+  personne : le code de la porte n'est pas celui de la connexion. Puis l'accueil, l'équipement et les
+  gestes des modules ouverts se font tout seuls, avec un avis du début à la fin. On arrive sur le
+  fil ; l'utilisateur extérieur, lui, arrive à l'accueil de DIASPORA.GA.
+- En démonstration (données fictives de ce navigateur), la même pastille mène à `/demo`, sans porte.
+- Échap referme la feuille et rend le focus à la pastille ; le défi en cours survit à la feuille
+  refermée.
+
+## La porte (moteur, lots E1 à E5 ; site, lot A1 et sa suite)
+
+- **Le verrou réel est la connexion** (lot E5 du moteur, après la relecture de sécurité ; fiche,
+  § 7) : porte armée, le moteur refuse d'envoyer un code de connexion à une adresse de la famille
+  `…@demo.diaspora-ga.test`, et de s'y connecter, sans un jeton de session de porte valide dans
+  l'en-tête `X-Demo-Gate-Token` (constante `DEMO_GATE_TOKEN_HEADER` du contrat
+  `@antsia/social-contracts/demoGate`, jamais recopiée). Le refus est indistinct : l'envoi répond
+  comme un envoi réel, mais aucun code n'existe ; la connexion répond comme un code faux
+  (`INVALID_OTP`).
+- **Le site pose l'en-tête sur les deux requêtes** (`sendVerificationOtp` puis `signIn.emailOtp`,
+  par `fetchOptions.headers`, relayées telles quelles par `/api/auth/*`) pour un acteur choisi dans
+  la feuille seulement (option `demoActor` du port, `apps/diaspora_ga/src/data/engine-source.ts`),
+  à l'adresse déclarée de l'acteur et avec une session de porte dans l'onglet. Jamais pour une
+  adresse saisie au formulaire ordinaire, jamais pour une adresse ordinaire, jamais dans une adresse
+  ni un journal.
+- **Second verrou, les deux lectures** : `demoAccounts.catalogue` et `devTools.latestOtp` exigent
+  aussi le jeton (`gateToken`), que le site leur passe pour les seules adresses déclarées des
+  acteurs. Porte armée, la feuille est la SEULE à relire un code : le formulaire de code ordinaire
+  ne relit `latestOtp` que si la porte n'est pas armée (`demoGate` à `open`, développement local
+  compris) ; sinon il n'affiche aucun code.
+- **Un refus indistinct se traite comme un code illisible** : aucun code relu après l'envoi, ou le
+  code refusé à la connexion. La feuille oublie la session de porte et revient au numéro, avec la
+  phrase de tout échec de connexion (« La connexion de démonstration n'a pas abouti… ») : aucun
+  nouveau code d'erreur, aucun mot qui révèle la garde. Une autre panne (débit, réseau) garde la
+  session et la feuille des acteurs. Porte non armée, rien ne change.
+- **Les deux routes HTTP** du moteur (`POST /demo-gate/request` et `POST /demo-gate/verify`), sur
+  l'origine des actions HTTP, sont appelées DIRECTEMENT par le navigateur
+  (`apps/diaspora_ga/src/data/engine-demo-gate.ts`) : le relais d'authentification du site retire
+  l'adresse du visiteur, dont la porte a besoin pour ses seaux. Corps JSON, sans témoin, sans cache,
+  sans redirection. La demande répond pareil pour un numéro autorisé, refusé ou limité ; seul le
+  seau de l'ADRESSE refuse de façon visible et immédiate (429 et `retryAfterMs`, pour la demande
+  comme pour la vérification), un refus qui ne dépend pas du numéro.
+- **La session de porte** dure trente minutes, non renouvelable. Son jeton ne vit que dans le
+  `sessionStorage` de l'onglet (clé `diaspora-ga:demo-gate`), ou dans la mémoire de la page quand ce
+  stockage est refusé ; jamais dans une adresse, un journal, un témoin ni le `localStorage`. Le site
+  l'oublie lui-même à l'échéance (une requête du moteur fige son horloge). Elle survit à la sortie
+  d'un acteur, pour en essayer un autre sans nouveau code, et disparaît avec l'onglet.
+- **La liste des numéros** est une table d'empreintes du moteur, que le propriétaire tient par le
+  script du moteur `scripts/demo-gate-list.mjs` (`reset` puis `allow`, à l'armement et à chaque
+  rotation du secret) ; aucun numéro dans un dépôt.
+- La porte s'arme par la seule présence de `ANTSIA_DEMO_GATE_SECRET` sur le déploiement de
+  démonstration ; les variables (noms seuls) sont au `docs/36`, § 6.4. **Ordre : publier le moteur
+  et le site, PUIS armer la porte.** Porte non armée, toute combinaison fonctionne ; un site d'avant
+  l'en-tête face à un moteur armé ne connecterait plus aucun acteur.
+
+## Le catalogue par règle (`packages/diaspora-ga-domain/src/demo-accounts.ts`)
+
+La liste déclarée reste à 21 ; le moteur ne PROPOSE un acteur (`diasporaGaDemoActorsOffered`) que
+si les modules qu'il illustre (`requires`) et son pays sont ouverts. Les acteurs de recette
+(`audience: "recette"` : le média, le collectif, et les quatre accès restreints) ne sont proposés
+qu'en développement local. Aucun pays ne s'ouvre plus d'office : l'ouverture est une décision de
+l'administration du réseau.
+
+Au lancement (le socle, les pages, la France) : 11 acteurs sur 21 — `nouveau`, `leger`, `declare`,
+`parraine`, `verifie`, `fondateur`, `association`, `entreprise`, `institution`, `moderateur`,
+`administrateur`. Le mentor reparaît seul quand `mentoring` s'ouvre, le talent avec `jobs`.
+
+L'amorçage (`apps/diaspora_ga/src/components/demo-account-bootstrap.tsx`) ne joue que les gestes
+dont le module est ouvert (`DIASPORA_GA_DEMO_GESTURE_FEATURES`) : mentor avec `mentoring`, talent et
+offre d'emploi avec `jobs`, offre de service avec `services`, mission avec `mutualAid`, évènements de
+l'association avec `groupsAndEvents`. Modules fermés, l'association et l'entreprise sont prêtes sans
+« préparation non aboutie ». Les modules ouverts ne se lisent qu'avec une adhésion : la préparation
+se fait en deux temps (accueil et équipement, puis gestes quand le nouveau membre a relu ses
+modules), et une source remontée entre-temps ne la relance pas.
+
+## Les publications d'exemple (`packages/diaspora-ga-domain/src/demo-content.ts`, lot E4 du moteur)
+
+Le moteur les écrit à l'équipement de chaque acteur (`demoContent.animateActor`, planifiée par
+`equipMyDemoAccount`), sans graine manuelle : deux ou trois publications personnelles par acteur qui
+publie (statut effectif déclaré ou vérifié : `leger` et `nouveau` ne publient rien), deux au nom de
+la page pour les acteurs de page si les pages sont ouvertes, quelques réactions et un commentaire
+entre acteurs dès que les deux comptes existent, jamais entre deux comptes bloqués. Texte seul,
+marqué « Démo — », visibilité `network`, jamais à la racine ; une publication retirée n'est jamais
+recréée.
 
 ## Les acteurs (`packages/diaspora-ga-domain/src/demo-accounts.ts`)
 
@@ -30,12 +140,12 @@ Adresses réservées `<acteur>@demo.diaspora-ga.test`. Le domaine `.test` n'est 
 
 | Groupe | Acteurs | Ce qui est posé |
 |---|---|---|
-| Membres | nouveau, leger, declare, parraine, verifie, belgique, canada | Statut dérivé des faits fictifs : rien (en attente), IDN niveau 1 ou 2, parrainage par « verifie », attestation consulaire ; hubs Belgique et Canada. |
+| Membres | nouveau, leger, declare, parraine, verifie, fondateur, belgique, canada | Statut dérivé des faits fictifs : rien (en attente), IDN niveau 1 ou 2, parrainage par « verifie », attestation consulaire, admission fondatrice tracée ; Belgique et Canada proposés seulement si leur pays est ouvert. |
 | Pages | association, entreprise, media, communaute, institution | Une page par nature dans le pays de l'acteur, l'acteur administrateur. Confiance communauté, vérifiée ou officielle (institution seulement). Type d'association ou secteur. |
 | Rôles et services | mentor, talent, moderateur, administrateur | Profil de mentor, profil de talent ; rôle de modération et équipe de démonstration ; administration du réseau. |
 | Accès restreints | suspendu, suspendu-racine, bloque, exterieur | Suspension dans DIASPORA.GA seulement ; suspension à la racine, qui vaut partout ; blocage par « verifie » ; compte ANTSIA sans adhésion DIASPORA.GA. |
 
-Gestes réels, joués par l'application à la première entrée :
+Gestes réels, joués par l'application à la première entrée, si leur module est ouvert :
 - profil de mentor (mentor) et profil de talent (talent) ;
 - offre de service et offre d'emploi de la page d'entreprise (entreprise) ;
 - mission bénévole de l'association (association) ;
@@ -51,11 +161,14 @@ Gestes réels, joués par l'application à la première entrée :
 ## Fonctionnement
 
 1. **Catalogue** : `api.modules.diaspora.demoAccounts.catalogue`, une `@publicProjection`.
-   Elle est vide hors des outils de développement locaux : double garde `devToolsAllowed`,
-   c'est-à-dire `ANTSIA_DEV_TOOLS=true` ET un backend local.
-2. **Connexion** : `requestCode` puis `verifyCode` du port. Le code se lit par
-   `devTools.latestOtp`, avec jusqu'à 8 lectures espacées de 250 ms. L'acteur choisi est mémorisé
-   sous la clé `antsia:diaspora-ga:demo-account`, que la déconnexion de partout purge.
+   Elle est vide hors des comptes de démonstration ouverts (`demoAccountsAllowed` : outils de
+   développement locaux, ou déploiement de démonstration déclaré), et, porte armée, sans session de
+   porte valide (`gateToken`). Elle applique la règle d'offre du domaine.
+2. **Connexion** : `requestCode` puis `verifyCode` du port, avec l'option `demoActor` (porte
+   armée, l'en-tête de la porte sur les deux requêtes). Porte non armée, l'envoi rend le code ;
+   sinon la feuille le relit par `devTools.latestOtp` avec le jeton de porte, avec jusqu'à 8
+   lectures espacées de 250 ms. L'acteur choisi est mémorisé sous la clé
+   `antsia:diaspora-ga:demo-account`, que la déconnexion de partout purge.
 3. **Accueil réel** : `actions.join`, qui pose le profil publié, les consentements (profil,
    annuaire) et l'adhésion, avec le pays et la ville de l'acteur. L'utilisateur extérieur au
    réseau ne rejoue que l'accueil d'ANTSIA, `demoAccounts.welcomeOutsider` : le consentement au
@@ -68,8 +181,8 @@ Gestes réels, joués par l'application à la première entrée :
      - le parrainage par « verifie », antidaté de 31 jours. Parrain et filleuls ne sont retenus
        que sur leur adresse réservée vérifiée, jamais sur le seul identifiant public.
    - Puis la VRAIE dérivation (`applyDerivedStatus`).
-   - Ensuite le rôle, l'équipe, la page et les pays de la démonstration ; ces pays ne
-     s'ouvrent que si personne n'en a décidé.
+   - Ensuite le rôle, l'équipe et la page ; aucun pays ne s'ouvre d'office (CH-817) : un acteur
+     d'un pays fermé n'est ni proposé ni équipé (refus indistinct d'un acteur non proposé).
    - Le blocage de « bloque » par « verifie », par le vrai mécanisme du moteur :
      `graph/connections.blockPair`, le corps de `blockPerson`, extrait sans changement. Il garde
      les conditions de `blockPerson` : le bloqueur membre actif du réseau, la cible vivante. Il
@@ -86,8 +199,8 @@ Gestes réels, joués par l'application à la première entrée :
    - L'équipement rend le statut EFFECTIF, celui que lit l'application ; statut et rôle sont
      vides sans adhésion.
    - Le tout est idempotent.
-5. **Gestes** : par les capacités du port. Ils ne se jouent qu'à la première entrée, et ceux
-   d'une page seulement à sa création.
+5. **Gestes** : par les capacités du port. Ils ne se jouent qu'à la première entrée, ceux d'une
+   page seulement à sa création, et seulement si leur module est ouvert (voir plus haut).
 
 ## Limites connues
 
@@ -115,15 +228,35 @@ Gestes réels, joués par l'application à la première entrée :
   signalements du réseau local.
 - Pendant la préparation, quelques secondes, l'adhésion est encore « en attente » : la carte de
   statut peut s'afficher, puis se retire.
+- Porte : les sessions déjà ouvertes sur des comptes de démonstration durent 7 jours ; armer la
+  porte ne les ferme pas, `reset` (script de la liste) ferme celles des acteurs déclarés. Un invité
+  dont le numéro reste inscrit garde la sienne tant qu'il revient dans les sept jours. Qui connaît
+  un numéro autorisé peut lui faire recevoir 10 codes par jour
+  (accepté pour une démonstration). Sans `x-forwarded-for` sur les actions HTTP du déploiement, tous
+  les visiteurs partagent le seau d'adresse `unknown` : à constater en recette.
+- La règle d'offre change aussi le panneau en développement local : un acteur d'un module ou d'un
+  pays fermé n'y paraît plus.
 
 ## Vérifications
 
 - Tests :
-  - panneau (8), amorçage (16 depuis EV-01, dont 4 pour les événements de l'association),
-    catalogue du domaine (7) ;
+  - CH-817 (lot A1 et sa suite d'après E5) : pastille et feuille (36,
+    `components/demo-accounts-panel.test.tsx` : chaque état et chaque étape, refus, noms
+    accessibles, focus, Échap ; code illisible ou refusé porte armée, retour au numéro et session
+    oubliée ; 429 à la demande et au renvoi ; premier code encore bon après un renvoi), adaptateur
+    de la porte (38, `data/engine-demo-gate.test.ts` : chaque statut HTTP dont le 429 de la demande,
+    session de l'onglet et son échéance, stockage refusé, jeton passé aux deux lectures, adresses
+    déclarées seulement), source moteur (3 dans `data/engine.test.ts` : l'en-tête sur l'envoi et la
+    connexion d'un acteur de la feuille avec une session, jamais ailleurs ; le code ordinaire relu
+    seulement porte non armée), amorçage (22, dont 6 pour les modules
+    fermés et les deux temps), règles de l'écran (4, `diaspora-ga-features/src/data/demo-gate-port.test.ts`),
+    porte d'accueil sans l'ancien bouton (2, `screens/landing-screen.test.tsx`) ;
+  - avant CH-817 : panneau (8), amorçage (16 depuis EV-01, dont 4 pour les événements de
+    l'association), catalogue du domaine (7) ;
   - équipement côté moteur : `demoAccounts.test.ts` d'ANTSIA, 49 tests, dont 13 pour les accès
     restreints, chaque garde avec son contrôle positif ;
-  - cliquets i18n : familles `demoAccounts.*`.
+  - cliquets i18n : familles `demoAccounts.*` et `demoGate.*` (fragment `demo-gate.json`, hors de
+    la vitrine).
 - Recette sur le moteur local, 19/10 au soir :
   - entreprise : statut vérifiée, page « Saveurs du Gabon (démonstration) », offre de service et
     offre d'emploi publiées ;

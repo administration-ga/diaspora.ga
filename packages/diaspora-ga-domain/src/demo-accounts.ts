@@ -1,5 +1,6 @@
 /**
- * Comptes de DÉMONSTRATION de DIASPORA.GA — développement local seulement.
+ * Comptes de DÉMONSTRATION de DIASPORA.GA — développement local, ou déploiement de démonstration
+ * déclaré du moteur, derrière sa porte (CH-817 : pastille « Compte démo », code WhatsApp).
  *
  * LA liste des acteurs, lue à la fois par la tranche `convex/modules/diaspora`
  * du moteur (catalogue et équipement, double garde des outils de développement)
@@ -97,7 +98,11 @@ export type DiasporaGaDemoAudience = (typeof DIASPORA_GA_DEMO_AUDIENCES)[number]
  */
 export const DIASPORA_GA_DEMO_UNREGISTERED_PAGES_AUDIENCE: DiasporaGaDemoAudience = "recette"
 
-/** Les pays que la démonstration ouvre (si personne n'en a encore décidé). */
+/**
+ * Les pays des acteurs de la démonstration. Ils ne s'ouvrent plus d'office (CH-817) : ouvrir un
+ * pays est une décision de l'administration du réseau ; un acteur d'un pays fermé n'est ni
+ * proposé ni équipé, et l'équipement ne crée que le hub qui manquerait à un pays déjà ouvert.
+ */
 export const DIASPORA_GA_DEMO_COUNTRIES = ["FR", "BE", "CA"] as const satisfies readonly CountryCode[]
 
 /** Les faits fictifs dont le statut se dérive (mêmes faits que `MembershipGrounds`). */

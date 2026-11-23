@@ -25,6 +25,8 @@ const mocks = vi.hoisted(() => ({
   createMission: vi.fn(),
   createEvent: vi.fn(),
   associationEvents: true,
+  /** Les modules ouverts du réseau (ADR-0041 du moteur), relus par l'amorçage avant les gestes. */
+  gate: { ready: true, isOpen: (_feature: string) => true } as { ready: boolean; isOpen: (feature: string) => boolean },
   router: { replace: vi.fn() },
   toast: { loading: vi.fn(() => "avis"), success: vi.fn(), error: vi.fn() },
 }))
@@ -41,6 +43,7 @@ vi.mock("@diaspora-ga/features/data", async (importOriginal) => ({
   useServices: () => ({ createOffer: mocks.createServiceOffer }),
   useMutualAid: () => ({ createMission: mocks.createMission }),
   useAssociationEvents: () => (mocks.associationEvents ? { create: mocks.createEvent } : null),
+  useFeatureGate: () => mocks.gate,
 }))
 
 const membership: MembershipView = {
@@ -80,8 +83,13 @@ function demoAccounts(equipped: unknown = equipment()) {
 beforeEach(() => {
   mocks.session = signedIn(null)
   mocks.demoAccounts = demoAccounts()
-  mocks.join.mockResolvedValue({ ok: true, value: { country: "FR" } })
+  // Le vrai accueil crée l'adhésion : la session la lit ensuite, comme le moteur la rend réactive.
+  mocks.join.mockImplementation(async () => {
+    mocks.session = signedIn(membership)
+    return { ok: true, value: { country: "FR" } }
+  })
   mocks.associationEvents = true
+  mocks.gate = { ready: true, isOpen: () => true }
   for (const gesture of [mocks.becomeMentor, mocks.saveTalentProfile, mocks.createServiceOffer, mocks.createJobOffer, mocks.createMission]) gesture.mockResolvedValue({ ok: true, value: {} })
   mocks.createEvent.mockResolvedValue({ ok: true, value: { eventId: "events_demo", created: true } })
 })
@@ -177,6 +185,7 @@ describe("Amorçage d'un compte de démonstration", () => {
 
   it("EV-01 : rejoué, le geste renvoie les mêmes clés d'idempotence ; un membre déjà entré ne le rejoue pas", async () => {
     for (let run = 0; run < 2; run += 1) {
+      mocks.session = signedIn(null)
       window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
       mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: true }))
       mount()
@@ -211,6 +220,80 @@ describe("Amorçage d'un compte de démonstration", () => {
     await waitFor(() => expect(mocks.toast.error).toHaveBeenCalledWith(t("demoAccounts.equipFailed", { name: "Mireille ENGONE" }), { id: "avis" }))
     expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed())
     expect(mocks.toast.success).not.toHaveBeenCalled()
+  })
+
+  it("CH-817 : modules fermés (lancement : socle et pages), l'entreprise est prête sans offre ni avis d'échec", async () => {
+    mocks.gate = { ready: true, isOpen: (feature) => feature === "pages" }
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "entreprise")
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    expect(mocks.demoAccounts?.equip).toHaveBeenCalledExactlyOnceWith("entreprise")
+    expect(mocks.createServiceOffer).not.toHaveBeenCalled()
+    expect(mocks.createJobOffer).not.toHaveBeenCalled()
+    expect(mocks.toast.error).not.toHaveBeenCalled()
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name: "Fabrice NDONG" }), { id: "avis" })
+  })
+
+  it("CH-817 : entraide et groupes fermés, l'association est prête sans mission ni évènement", async () => {
+    mocks.gate = { ready: true, isOpen: (feature) => feature === "pages" }
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "association")
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: "pages_lyon", pageCreated: true }))
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    expect(mocks.createMission).not.toHaveBeenCalled()
+    expect(mocks.createEvent).not.toHaveBeenCalled()
+    expect(mocks.toast.error).not.toHaveBeenCalled()
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name: "Mireille ENGONE" }), { id: "avis" })
+  })
+
+  it("CH-817 : chaque geste suit SON module — emploi ouvert, services fermés : l'offre d'emploi seule", async () => {
+    mocks.gate = { ready: true, isOpen: (feature) => feature === "pages" || feature === "jobs" }
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "entreprise")
+    mount()
+
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalled())
+    expect(mocks.createJobOffer).toHaveBeenCalledOnce()
+    expect(mocks.createServiceOffer).not.toHaveBeenCalled()
+  })
+
+  it("CH-817 : les gestes attendent les modules ouverts du nouveau membre, relus après son entrée", async () => {
+    mocks.gate = { ready: false, isOpen: () => false }
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "mentor")
+    mocks.demoAccounts = demoAccounts(equipment({ pageId: null, pageCreated: false }))
+    const view = render(<I18nProvider locale="fr"><DemoAccountBootstrap /></I18nProvider>)
+
+    await waitFor(() => expect(mocks.demoAccounts?.equip).toHaveBeenCalledOnce())
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    // Les modules du nouveau membre se lisent encore : rien n'est joué, l'avis de préparation reste.
+    expect(mocks.becomeMentor).not.toHaveBeenCalled()
+    expect(mocks.router.replace).not.toHaveBeenCalled()
+    expect(mocks.toast.success).not.toHaveBeenCalled()
+
+    mocks.gate = { ready: true, isOpen: (feature) => feature === "mentoring" }
+    view.rerender(<I18nProvider locale="fr"><DemoAccountBootstrap /></I18nProvider>)
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    expect(mocks.becomeMentor).toHaveBeenCalledExactlyOnceWith(expect.objectContaining({ country: "FR", consent: true }))
+    // Un seul équipement : l'instance remontée ne relance pas la préparation en cours.
+    expect(mocks.demoAccounts?.equip).toHaveBeenCalledOnce()
+    expect(mocks.toast.success).toHaveBeenCalledWith(t("demoAccounts.ready", { name: "Jeanne MAKAYA" }), { id: "avis" })
+  })
+
+  it("CH-817 : une source remontée pendant la préparation ne la relance pas", async () => {
+    window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "verifie")
+    let release: (value: unknown) => void = () => undefined
+    mocks.demoAccounts = { equip: vi.fn(() => new Promise((resolve) => { release = resolve })), welcomeOutsider: vi.fn() }
+    mount()
+    await waitFor(() => expect(mocks.demoAccounts?.equip).toHaveBeenCalledOnce())
+    // Les modules ouverts changent : la source, et l'amorçage avec elle, se remontent.
+    cleanup()
+    mount()
+    await new Promise((resolve) => setTimeout(resolve, 20))
+    expect(mocks.demoAccounts.equip).toHaveBeenCalledOnce()
+    release(equipment({ pageId: null, pageCreated: false }))
+    await waitFor(() => expect(mocks.router.replace).toHaveBeenCalledExactlyOnceWith(routes.feed()))
+    expect(mocks.join).toHaveBeenCalledOnce()
   })
 
   it("l'extérieur au réseau : l'accueil d'ANTSIA seulement, jamais join, puis l'accueil de DIASPORA.GA", async () => {

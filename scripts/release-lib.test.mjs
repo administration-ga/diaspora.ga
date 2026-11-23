@@ -85,6 +85,7 @@ describe("cibles et variables de la machine", () => {
       projectId: "DIASPORA_GA_DEMO_VERCEL_PROJECT_ID",
       idnPortalUrl: "DIASPORA_GA_DEMO_IDN_PORTAL_URL",
       consulateUrl: "DIASPORA_GA_DEMO_CONSULATE_URL",
+      livekitWsUrl: "DIASPORA_GA_DEMO_LIVEKIT_WS_URL",
     })
     expect(Object.values(targetVariableNames("production")).every((name) => name.startsWith("DIASPORA_GA_PRODUCTION_"))).toBe(true)
   })
@@ -145,6 +146,19 @@ describe("cibles et variables de la machine", () => {
     expect(readTargetEnv("demo", { ...DEMO_ENV, DIASPORA_GA_DEMO_CONSULATE_URL: "ftp://consulat.example.org" }).problems).toEqual(["DIASPORA_GA_DEMO_CONSULATE_URL doit être une adresse https"])
   })
 
+  test("le serveur média est facultatif ; posé, c'est une origine wss exacte (CH-817)", () => {
+    expect(readTargetEnv("demo", DEMO_ENV).values.livekitWsUrl).toBeUndefined()
+    expect(readTargetEnv("demo", { ...DEMO_ENV, DIASPORA_GA_DEMO_LIVEKIT_WS_URL: " wss://media-demo.example.net " }).values.livekitWsUrl).toBe("wss://media-demo.example.net")
+    expect(readTargetEnv("demo", { ...DEMO_ENV, DIASPORA_GA_DEMO_LIVEKIT_WS_URL: "wss://media-demo.example.net" }).problems).toEqual([])
+    for (const value of ["https://media-demo.example.net", "ws://media-demo.example.net", "wss://media-demo.example.net/", "wss://media-demo.example.net/rtc", "wss://media-demo.example.net?jeton=1", "media-demo.example.net"]) {
+      const { problems } = readTargetEnv("demo", { ...DEMO_ENV, DIASPORA_GA_DEMO_LIVEKIT_WS_URL: value })
+      expect(problems, value).toEqual(["DIASPORA_GA_DEMO_LIVEKIT_WS_URL doit être une origine wss, sans chemin ni barre finale"])
+      expect(problems.join(" ")).not.toContain("example")
+    }
+    // Le site d'administration n'ouvre aucun serveur média : la variable ne s'y lit pas.
+    expect(readTargetEnv("demo", { ...DEMO_ENV, ADMIN_DIASPORA_GA_DEMO_SITE_URL: "https://admin-demo.example.org", ADMIN_DIASPORA_GA_DEMO_VERCEL_PROJECT_ID: "projet_fictif_admin_demo", DIASPORA_GA_DEMO_LIVEKIT_WS_URL: "wss://media-demo.example.net" }, undefined, "admin_diaspora_ga").values.livekitWsUrl).toBeUndefined()
+  })
+
   test("le contrôle n'exige que le site et le moteur", () => {
     expect(readTargetEnv("production", {}, CHECK_KEYS).problems).toEqual(["DIASPORA_GA_PRODUCTION_SITE_URL manque", "DIASPORA_GA_PRODUCTION_CONVEX_URL manque"])
   })
@@ -170,10 +184,22 @@ describe("variables publiques seulement", () => {
       ["NEXT_PUBLIC_SITE_URL", envRef("DIASPORA_GA_DEMO_SITE_URL")],
       ["NEXT_PUBLIC_CONVEX_URL", envRef("DIASPORA_GA_DEMO_CONVEX_URL")],
       ["CONVEX_SITE_URL", envRef("DIASPORA_GA_DEMO_CONVEX_SITE_URL")],
+      ["NEXT_PUBLIC_CONVEX_SITE_URL", envRef("DIASPORA_GA_DEMO_CONVEX_SITE_URL")],
       ["NEXT_PUBLIC_BUILD_SHA", version],
     ])
     const withLinks = releaseVariables("demo", version, { idnPortalUrl: "x", consulateUrl: "y" }).map(([name]) => name)
     expect(withLinks.slice(-2)).toEqual(["NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL"])
+  })
+
+  test("CH-817 : le navigateur lit l'origine des actions HTTP du moteur ; le serveur média ne passe que s'il est posé", () => {
+    const version = releaseVersion({ diasporaGaCommit: DIASPORA_GA_COMMIT, antsiaCommit: ANTSIA_COMMIT, target: "production" })
+    const names = (values) => releaseVariables("production", version, values).map(([name]) => name)
+    // La même variable de la machine que `CONVEX_SITE_URL` : une seule origine, deux lecteurs.
+    expect(releaseVariables("production", version, {}).find(([name]) => name === "NEXT_PUBLIC_CONVEX_SITE_URL")).toEqual(["NEXT_PUBLIC_CONVEX_SITE_URL", envRef("DIASPORA_GA_PRODUCTION_CONVEX_SITE_URL")])
+    expect(names({})).not.toContain("LIVEKIT_WS_URL")
+    expect(releaseVariables("production", version, { livekitWsUrl: "x" }).at(-1)).toEqual(["LIVEKIT_WS_URL", envRef("DIASPORA_GA_PRODUCTION_LIVEKIT_WS_URL")])
+    // Aucune des deux n'est un secret : toutes deux sont dans la liste publique, celle du catalogue.
+    for (const name of ["NEXT_PUBLIC_CONVEX_SITE_URL", "LIVEKIT_WS_URL"]) expect(PUBLIC_RELEASE_VARIABLES).toContain(name)
   })
 })
 
@@ -438,8 +464,9 @@ const CONTRACT_CATALOG = Object.freeze({
   applications: {
     diaspora_ga: {
       path: "../DIASPORA_GA/apps/diaspora_ga",
-      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL"],
-      runtime_env: ["CONVEX_SITE_URL"],
+      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL", "NEXT_PUBLIC_CONVEX_SITE_URL"],
+      // CH-817 : lue à la construction par la configuration commune du moteur, comme CONVEX_SITE_URL, et facultative.
+      runtime_env: ["CONVEX_SITE_URL", "LIVEKIT_WS_URL"],
     },
     admin_diaspora_ga: {
       path: "../DIASPORA_GA/apps/admin_diaspora_ga",

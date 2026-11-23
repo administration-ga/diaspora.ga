@@ -17,6 +17,12 @@ export const publicEnv = {
   dataSource: resolveDataSource(process.env.NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE),
   /** Déploiement Convex du moteur (inscrit par la configuration Next commune, ou l'ARG du Dockerfile). */
   convexUrl: process.env.NEXT_PUBLIC_CONVEX_URL ?? null,
+  /**
+   * CH-817 : l'origine des actions HTTP du même déploiement, où le navigateur appelle la porte
+   * des comptes de démonstration. Absente ou vide (ARG non passé), la pastille « Compte démo » ne
+   * s'affiche pas quand la porte est armée : jamais un geste mort.
+   */
+  convexSiteUrl: process.env.NEXT_PUBLIC_CONVEX_SITE_URL || null,
   /** Portail IDN (identite.ga) — « Activer mon identité numérique IDN ». */
   idnPortalUrl: process.env.NEXT_PUBLIC_IDN_PORTAL_URL ?? null,
   /** consulat.ga — « M'inscrire au consulat ». */

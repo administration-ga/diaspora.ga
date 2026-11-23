@@ -1,10 +1,20 @@
 "use client"
 
-import { DAY_MS, DIASPORA_GA_DEMO_ACTOR_SPECS, diasporaGaDemoDisplayName, HOUR_MS, type DiasporaGaDemoActor, type DiasporaGaDemoActorSpec } from "@diaspora-ga/domain"
+import {
+  DAY_MS,
+  DIASPORA_GA_DEMO_ACTOR_SPECS,
+  DIASPORA_GA_DEMO_GESTURE_FEATURES,
+  diasporaGaDemoDisplayName,
+  HOUR_MS,
+  type DiasporaGaDemoActor,
+  type DiasporaGaDemoActorSpec,
+  type DiasporaGaDemoGesture,
+} from "@diaspora-ga/domain"
 import {
   useActions,
   useAssociationEvents,
   useDemoAccounts,
+  useFeatureGate,
   useJobs,
   useMentoring,
   useMutualAid,
@@ -21,7 +31,7 @@ import {
 } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 import { toast } from "sonner"
 
 import { forgetDemoActor, pendingDemoActor } from "@/lib/demo-account-pending"
@@ -147,14 +157,22 @@ async function playAssociationEvents(pageId: string, capabilities: GestureCapabi
 /**
  * Les VRAIS gestes de l'acteur, par les capacités du port : profil de mentor, de
  * talent, offre de service et offre d'emploi de la page d'entreprise, mission et
- * évènements de la page d'association. Rend `false` si l'un d'eux n'a pas abouti.
+ * évènements de la page d'association. Un geste dont le module est FERMÉ ne se joue
+ * pas (`DIASPORA_GA_DEMO_GESTURE_FEATURES`) : le moteur le refuserait, et l'écran ne le
+ * montrerait pas. Rend `false` si un geste joué n'a pas abouti.
  */
-async function playGestures(spec: DiasporaGaDemoActorSpec, equipment: DemoEquipmentView, capabilities: GestureCapabilities): Promise<boolean> {
+async function playGestures(
+  spec: DiasporaGaDemoActorSpec,
+  equipment: DemoEquipmentView,
+  capabilities: GestureCapabilities,
+  isOpen: (gesture: DiasporaGaDemoGesture) => boolean,
+): Promise<boolean> {
   const country = spec.country
   const city = spec.page?.city ?? MENTOR_PROFILE.city
   const pageId = equipment.pageCreated ? equipment.pageId : null
   let complete = true
   for (const gesture of spec.gestures) {
+    if (!isOpen(gesture)) continue
     let ok = true
     if (gesture === "mentor") ok = (await capabilities.mentoring?.becomeMentor({ ...MENTOR_PROFILE, country, consent: true }))?.ok ?? false
     else if (gesture === "talent") ok = (await capabilities.jobs?.saveTalentProfile({ ...TALENT_PROFILE, country, expectedVersion: null }))?.ok ?? false
@@ -169,16 +187,50 @@ async function playGestures(spec: DiasporaGaDemoActorSpec, equipment: DemoEquipm
   return complete
 }
 
+/** Le second temps de la préparation : ce que le premier a obtenu, en attendant les modules ouverts du nouveau membre. */
+interface GesturePhase {
+  readonly actor: DiasporaGaDemoActor
+  readonly equipment: DemoEquipmentView
+  readonly name: string
+  readonly destination: ReturnType<typeof peekReturnPath>
+  readonly notice: string | number
+}
+
 /**
- * Développement local : après une connexion par le panneau des comptes de
- * démonstration (`DemoAccountsButton`), rejoue le VRAI accueil (`join` : profil
- * publié, consentements, adhésion), demande au moteur ce que le compte ne peut
- * pas se donner seul (`equip` : faits fictifs, statut dérivé, rôle, équipe, page,
- * blocage, suspension), puis joue les vrais gestes de l'acteur, une seule fois, à
- * sa première entrée. L'utilisateur extérieur au réseau ne rejoue que l'accueil
- * d'ANTSIA (`welcomeOutsider`), jamais `join`, et arrive à l'accueil de DIASPORA.GA.
- * Sans acteur en attente dans cet onglet, il ne fait rien ; le moteur refuse
- * l'équipement hors des outils de développement locaux.
+ * La préparation en cours, à l'échelle de la PAGE et non d'une instance : la source de données se
+ * remonte quand les modules ouverts changent (`GatedDataSourceProvider`, après l'entrée dans le
+ * réseau), et l'amorçage avec elle. Une instance remontée ne relance pas une préparation en cours ;
+ * elle reprend le second temps (les gestes) quand le premier le lui confie.
+ */
+const preparation: { running: boolean; gestures: GesturePhase | null; version: number } = { running: false, gestures: null, version: 0 }
+const preparationListeners = new Set<() => void>()
+
+function publishPreparation(): void {
+  preparation.version += 1
+  for (const listener of [...preparationListeners]) listener()
+}
+
+function subscribePreparation(listener: () => void): () => void {
+  preparationListeners.add(listener)
+  return () => {
+    preparationListeners.delete(listener)
+  }
+}
+
+/**
+ * Développement local, ou démonstration déclarée : après une connexion par la pastille
+ * « Compte démo » (`DemoAccountsPill`), rejoue le VRAI accueil (`join` : profil publié,
+ * consentements, adhésion), demande au moteur ce que le compte ne peut pas se donner seul
+ * (`equip` : faits fictifs, statut dérivé, rôle, équipe, page, blocage, suspension), puis joue
+ * les vrais gestes de l'acteur, une seule fois, à sa première entrée — ceux dont le module est
+ * ouvert seulement. L'utilisateur extérieur au réseau ne rejoue que l'accueil d'ANTSIA
+ * (`welcomeOutsider`), jamais `join`, et arrive à l'accueil de DIASPORA.GA. Sans acteur en
+ * attente dans cet onglet, il ne fait rien ; le moteur refuse l'équipement hors des comptes de
+ * démonstration ouverts.
+ *
+ * En deux temps (CH-817) : les modules ouverts ne se lisent qu'avec une adhésion. Le premier
+ * temps (accueil, équipement) finit avant que la source ne les relise ; le second (les gestes)
+ * attend que le nouveau membre les lise, avec les capacités de la source remontée.
  */
 export function DemoAccountBootstrap() {
   const demoAccounts = useDemoAccounts()
@@ -196,14 +248,38 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
   const services = useServices()
   const mutualAid = useMutualAid()
   const associationEvents = useAssociationEvents()
+  const gate = useFeatureGate()
   const router = useRouter()
-  const running = useRef(false)
+  const version = useSyncExternalStore(subscribePreparation, () => preparation.version, () => 0)
   const signedIn = session.status === "ready" && session.data.status === "signed_in"
   const membership = signedIn && session.data.status === "signed_in" ? session.data.membership : null
   const member = membership !== null && membership.status !== "partie"
 
   useEffect(() => {
-    if (running.current || !signedIn) return
+    if (preparation.running || !signedIn) return
+    const phase = preparation.gestures
+    if (phase !== null) {
+      // Second temps : l'adhésion est là, et ses modules ouverts sont relus.
+      if (!member || !gate.ready) return
+      preparation.running = true
+      const spec = DIASPORA_GA_DEMO_ACTOR_SPECS[phase.actor]
+      void (async () => {
+        try {
+          const complete = await playGestures(spec, phase.equipment, { mentoring, jobs, services, mutualAid, associationEvents }, (gesture) => gate.isOpen(DIASPORA_GA_DEMO_GESTURE_FEATURES[gesture]))
+          if (complete) toast.success(t("demoAccounts.ready", { name: phase.name }), { id: phase.notice })
+          else toast.error(t("demoAccounts.equipFailed", { name: phase.name }), { id: phase.notice })
+          const status = phase.equipment.status
+          router.replace(entryExit(status === null || status === "partie" ? null : { status, country: spec.country }, phase.destination))
+        } catch {
+          toast.error(t("demoAccounts.equipFailed", { name: phase.name }), { id: phase.notice })
+        } finally {
+          preparation.gestures = null
+          preparation.running = false
+          publishPreparation()
+        }
+      })()
+      return
+    }
     const actor: DiasporaGaDemoActor | null = pendingDemoActor()
     if (actor === null) return
     const spec = DIASPORA_GA_DEMO_ACTOR_SPECS[actor]
@@ -213,7 +289,7 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
       forgetDemoActor()
       return
     }
-    running.current = true
+    preparation.running = true
     const name = diasporaGaDemoDisplayName(actor) ?? profile.handle
     // La page demandée avant l'entrée (UX-02, MO-03), lue avant que l'arrivée ne l'efface.
     const destination = peekReturnPath()
@@ -238,9 +314,12 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         }
         const equipped = await capability.equip(actor)
         if (!equipped.ok) throw new Error(equipped.code)
-        const complete = firstEntry ? await playGestures(spec, equipped.value, { mentoring, jobs, services, mutualAid, associationEvents }) : true
-        if (complete) toast.success(t("demoAccounts.ready", { name }), { id: notice })
-        else toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
+        if (firstEntry && !spec.outsider && spec.gestures.length > 0) {
+          // Les gestes attendent les modules ouverts du nouveau membre : le second temps les jouera.
+          preparation.gestures = { actor, equipment: equipped.value, name, destination, notice }
+          return
+        }
+        toast.success(t("demoAccounts.ready", { name }), { id: notice })
         // Sans adhésion (extérieur au réseau), l'accueil de DIASPORA.GA ; sinon la page demandée
         // avant l'entrée, ou le fil : la même sortie que la porte.
         const status = equipped.value.status
@@ -249,9 +328,11 @@ function EngineDemoAccountBootstrap(props: { capability: DemoAccountsCapability 
         toast.error(t("demoAccounts.equipFailed", { name }), { id: notice })
       } finally {
         forgetDemoActor()
+        preparation.running = false
+        publishPreparation()
       }
     })()
-  }, [signedIn, member, actions, capability, mentoring, jobs, services, mutualAid, associationEvents, router, t])
+  }, [signedIn, member, gate, version, actions, capability, mentoring, jobs, services, mutualAid, associationEvents, router, t])
 
   return null
 }
