@@ -63,7 +63,8 @@
       "metrics": "Mesure",
       "appeals": "Recours",
       "team": "Équipe et responsables",
-      "rules": "Règles"
+      "rules": "Règles",
+      "journal": "Journal"
     }
   },
   "dashboard": {
@@ -657,6 +658,67 @@
       "title": "Le module « Mesure » est fermé",
       "body": "La mesure du pilote ne se lit qu’une fois le module « Mesure » ouvert dans la section « Modules ». Tant qu’il est fermé, le moteur ne sert aucun chiffre, et aucun n’est affiché à sa place.",
       "link": "Ouvrir la section « Modules »"
+    }
+  },
+  "journal": {
+    "title": "Journal des décisions",
+    "lead": "Qui a décidé quoi, quand, à quel titre et avec quel motif dans le réseau : chaque décision du moteur y est inscrite au moment même où elle est prise, la plus récente en tête.",
+    "filter": "Type de décision",
+    "filterAll": "Toutes les décisions",
+    "loadMore": "Charger la suite",
+    "scanning": "Aucune décision de ce type dans la partie du journal déjà lue. Chargez la suite pour poursuivre la lecture.",
+    "emptyTitle": "Aucune décision au journal",
+    "emptyBody": "Le journal du réseau ne porte encore aucune ligne.",
+    "emptyFilteredTitle": "Aucune décision de ce type",
+    "emptyFilteredBody": "Le journal a été lu jusqu’au bout : aucune décision de ce type n’y figure.",
+    "by": "Par",
+    "capacityLabel": "À titre de",
+    "reason": "Motif",
+    "systemActor": "Le moteur, sans auteur humain",
+    "neutralActor": "Membre au profil non publié",
+    "action": {
+      "adminAccess": "Entrée dans l’administration du réseau",
+      "featureSet": "Module ouvert ou fermé",
+      "roleSet": "Rôle de responsable posé ou retiré",
+      "teamCreate": "Équipe de modération créée",
+      "teamMemberSet": "Composition d’une équipe changée",
+      "policySet": "Règle de modération posée",
+      "termSet": "Mot bloqué ou débloqué",
+      "appealDecide": "Recours examiné",
+      "pageCreateOfficial": "Page officielle créée",
+      "signatoryGrant": "Signataire désigné",
+      "signatoryRevoke": "Signataire retiré",
+      "pageSleep": "Page mise en sommeil",
+      "pageWake": "Page réveillée",
+      "founderAdmit": "Membre fondateur admis",
+      "founderWithdraw": "Admission fondatrice retirée",
+      "reportDecide": "Signalement tranché",
+      "contentReview": "Contenu relu",
+      "appealFile": "Recours déposé",
+      "claimDecide": "Revendication de page tranchée",
+      "other": "Autre décision ({{code}})"
+    },
+    "capacity": {
+      "platformAdmin": "Administration de la plateforme",
+      "platformOperator": "Exploitation de la plateforme",
+      "networkAdmin": "Administration du réseau",
+      "networkModerator": "Modération du réseau",
+      "pageAdmin": "Administration d’une page",
+      "member": "Membre",
+      "system": "Moteur",
+      "moderationTeamMember": "Membre d’une équipe de modération"
+    },
+    "detail": {
+      "featureOpened": "Module « {{module}} » ouvert",
+      "featureClosed": "Module « {{module}} » fermé",
+      "seniorityWaiver": "Avec dispense d’ancienneté pour parrainer",
+      "appealOverturned": "Décision annulée",
+      "appealUpheld": "Décision maintenue",
+      "teamMemberAdded": "Membre ajouté à l’équipe",
+      "teamMemberRemoved": "Membre retiré de l’équipe",
+      "sleepUntil": "En sommeil jusqu’au {{date}}",
+      "role": "De « {{from}} » à « {{to}} »",
+      "roleMember": "Membre"
     }
   }
 }

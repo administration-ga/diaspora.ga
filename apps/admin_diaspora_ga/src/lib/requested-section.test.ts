@@ -60,10 +60,10 @@ describe("section demandée avant la connexion — gardée dans l'onglet, relue 
       expect(takeRequestedSection(sections, storage), forged).toBe(routes.dashboard())
       expect(storage.entries.has(REQUESTED_SECTION_KEY), forged).toBe(false)
     }
-    // Une section absente du code (pas encore livrée) n'est pas rouverte.
+    // Une section absente du registre (pas encore livrée, ou retirée) n'est pas rouverte.
     const storage = memory()
     storage.entries.set(REQUESTED_SECTION_KEY, routes.journal())
-    expect(takeRequestedSection(SECTIONS, storage)).toBe(routes.dashboard())
+    expect(takeRequestedSection(SECTIONS.filter((section) => section.href !== routes.journal()), storage)).toBe(routes.dashboard())
   })
 
   it("un stockage refusé ou absent ne bloque rien : la connexion mène au tableau de bord", () => {

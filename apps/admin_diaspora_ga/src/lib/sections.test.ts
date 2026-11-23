@@ -44,10 +44,10 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
     }
   })
 
-  it("avec le lot A6 : tableau de bord et mesure (Pilotage), modules et aperçu (Application des membres), recours, équipe et règles (Confiance)", () => {
-    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "metrics", "modules", "menuPreview", "appeals", "team", "rules"])
+  it("avec le lot A7 (journal) : tableau de bord, mesure et journal (Pilotage), modules et aperçu (Application des membres), recours, équipe et règles (Confiance)", () => {
+    expect(SECTIONS.map((section) => section.id)).toEqual(["dashboard", "metrics", "journal", "modules", "menuPreview", "appeals", "team", "rules"])
     expect(groupedSections().map((entry) => [entry.group, entry.sections.map((section) => section.href)])).toEqual([
-      ["pilotage", [routes.dashboard(), routes.metrics()]],
+      ["pilotage", [routes.dashboard(), routes.metrics(), routes.journal()]],
       ["membersApp", [routes.modules(), routes.menuPreview()]],
       ["trust", [routes.appeals(), routes.team(), routes.rules()]],
     ])

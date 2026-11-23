@@ -63,7 +63,8 @@
       "metrics": "Metrics",
       "appeals": "Appeals",
       "team": "Team and leads",
-      "rules": "Rules"
+      "rules": "Rules",
+      "journal": "Journal"
     }
   },
   "dashboard": {
@@ -657,6 +658,67 @@
       "title": "The “Metrics” module is closed",
       "body": "The pilot metrics can only be read once the “Metrics” module is opened in the “Modules” section. While it is closed, the engine serves no figure, and none is shown in its place.",
       "link": "Open the “Modules” section"
+    }
+  },
+  "journal": {
+    "title": "Decision journal",
+    "lead": "Who decided what, when, in what capacity and for what reason in the network: every engine decision is written here the moment it is taken, newest first.",
+    "filter": "Type of decision",
+    "filterAll": "All decisions",
+    "loadMore": "Load more",
+    "scanning": "No decision of this type in the part of the journal read so far. Load more to keep reading.",
+    "emptyTitle": "No decision in the journal",
+    "emptyBody": "The network’s journal has no line yet.",
+    "emptyFilteredTitle": "No decision of this type",
+    "emptyFilteredBody": "The journal was read to the end: it holds no decision of this type.",
+    "by": "By",
+    "capacityLabel": "As",
+    "reason": "Reason",
+    "systemActor": "The engine, with no human author",
+    "neutralActor": "Member with an unpublished profile",
+    "action": {
+      "adminAccess": "Entered the network administration",
+      "featureSet": "Module opened or closed",
+      "roleSet": "Responsible role set or removed",
+      "teamCreate": "Moderation team created",
+      "teamMemberSet": "Team membership changed",
+      "policySet": "Moderation rule set",
+      "termSet": "Word blocked or unblocked",
+      "appealDecide": "Appeal reviewed",
+      "pageCreateOfficial": "Official page created",
+      "signatoryGrant": "Signatory designated",
+      "signatoryRevoke": "Signatory removed",
+      "pageSleep": "Page put to sleep",
+      "pageWake": "Page woken up",
+      "founderAdmit": "Founding member admitted",
+      "founderWithdraw": "Founding admission withdrawn",
+      "reportDecide": "Report decided",
+      "contentReview": "Content reviewed",
+      "appealFile": "Appeal filed",
+      "claimDecide": "Page claim decided",
+      "other": "Other decision ({{code}})"
+    },
+    "capacity": {
+      "platformAdmin": "Platform administration",
+      "platformOperator": "Platform operations",
+      "networkAdmin": "Network administration",
+      "networkModerator": "Network moderation",
+      "pageAdmin": "Page administration",
+      "member": "Member",
+      "system": "Engine",
+      "moderationTeamMember": "Moderation team member"
+    },
+    "detail": {
+      "featureOpened": "Module “{{module}}” opened",
+      "featureClosed": "Module “{{module}}” closed",
+      "seniorityWaiver": "With a seniority waiver for sponsoring",
+      "appealOverturned": "Decision overturned",
+      "appealUpheld": "Decision upheld",
+      "teamMemberAdded": "Member added to the team",
+      "teamMemberRemoved": "Member removed from the team",
+      "sleepUntil": "Asleep until {{date}}",
+      "role": "From “{{from}}” to “{{to}}”",
+      "roleMember": "Member"
     }
   }
 }
