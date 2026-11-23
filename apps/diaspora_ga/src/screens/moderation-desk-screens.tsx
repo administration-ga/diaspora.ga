@@ -28,6 +28,7 @@
 import { Card, EmptyState, FolderTabsNav, Skeleton } from "@diaspora-ga/features"
 import { useFeatureGate, useModerationDesk, type MembershipView, type ModerationDeskCapability, type ModerationDeskView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
+import { MODERATION_DESK_TABS, type ModerationDeskTab } from "@diaspora-ga/features/navigation"
 import { FlaskConicalIcon, ShieldOffIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
@@ -39,9 +40,9 @@ import { DESK_ACCESS_ERRORS, DeskErrorLine, deskList } from "@/components/modera
 import { ModerationDeskQueue } from "@/components/moderation-desk-queue"
 import { routes } from "@/lib/routes"
 
-/** Les onglets du guichet, mêmes valeurs que `routes.moderationDesk(tab)`. */
-export const DESK_TABS = ["file", "pages"] as const
-export type DeskTab = (typeof DESK_TABS)[number]
+/** Les onglets du guichet, ceux de `routes.moderationDesk(tab)` (adresse partagée avec admin.diaspora.ga). */
+export const DESK_TABS = MODERATION_DESK_TABS
+export type DeskTab = ModerationDeskTab
 
 /** L'onglet demandé par l'adresse ; inconnu ou absent : « File ». */
 export function parseDeskTab(raw: string | null): DeskTab {

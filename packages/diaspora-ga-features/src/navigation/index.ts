@@ -1,6 +1,7 @@
 /**
  * `@diaspora-ga/features/navigation` — le menu des membres, en règle pure (fiche CH-815, § 5) :
- * la coque de diaspora.ga et l'aperçu d'admin.diaspora.ga lisent la même fonction.
+ * la coque de diaspora.ga et l'aperçu d'admin.diaspora.ga lisent la même fonction ; l'adresse du
+ * bureau de modération, que les deux applications citent (lot A7).
  */
 export {
   audienceReached,
@@ -41,3 +42,4 @@ export {
 } from "./member-menu"
 export { MEMBER_CREATE_ICONS, MEMBER_MENU_ICONS } from "./icons"
 export { MEMBERS_APP_CODE_SWITCH_STATES, MEMBERS_APP_CODE_SWITCHES, type CodeSwitchState, type MembersAppCodeSwitch } from "./code-switches"
+export { MODERATION_DESK_TABS, moderationDeskPath, type ModerationDeskTab } from "./moderation-desk"

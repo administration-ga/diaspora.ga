@@ -72,7 +72,33 @@
   "dashboard": {
     "greeting": "Bonjour {{name}}",
     "greetingWithoutName": "Bonjour",
-    "lead": "Vous administrez le réseau {{network}}."
+    "lead": "Vous administrez le réseau {{network}}.",
+    "overviewTitle": "Le réseau en un coup d’œil",
+    "outOf": "{{value}} sur {{max}}",
+    "tile": {
+      "modules": "Modules ouverts",
+      "modulesNone": "Aucun module ouvert : le menu des membres garde son socle.",
+      "founders": "Membres fondateurs",
+      "foundersHint": "Admissions en vigueur, sur le plafond de la cohorte.",
+      "teams": "Équipes de modération",
+      "teamsHint": "Équipes vivantes du réseau, leurs membres et leurs responsables.",
+      "appeals": "Recours",
+      "appealsHint": "Les recours montés au réseau, à examiner motif à l’appui.",
+      "institutions": "Institutions et pages officielles",
+      "institutionsHint": "Créer une page officielle, désigner son signataire, la mettre en sommeil."
+    },
+    "decisionsTitle": "Dernières décisions",
+    "decisionsEmpty": "Aucune décision au journal pour l’instant.",
+    "decisionBy": "{{name}}, le {{date}}",
+    "decisionsLink": "Ouvrir le journal",
+    "desk": {
+      "title": "Bureau de modération de diaspora.ga",
+      "lead": "Les modérateurs y traitent chaque jour la file de modération et les pages à vérifier ; ces deux files restent sur l’application des membres.",
+      "queue": "File de modération",
+      "pages": "Pages à vérifier",
+      "unconfigured": "L’adresse de diaspora.ga n’est pas configurée pour cette application : les liens vers son bureau ne s’affichent pas."
+    },
+    "notCounted": "Le moteur ne tient encore aucun compte des membres par statut, des admissions en attente, des signalements et recours ouverts ni des pages à vérifier : aucun chiffre n’est affiché à leur place."
   },
   "modules": {
     "title": "Modules",

@@ -28,7 +28,6 @@ vi.mock("@/lib/env", () => ({
 }))
 
 import { AdminShell } from "./admin-shell"
-import { DashboardSection } from "./dashboard-section"
 import { NetworkAdminProvider } from "./network-admin-context"
 
 function mount(admin = ADMIN) {
@@ -37,7 +36,8 @@ function mount(admin = ADMIN) {
     <I18nextProvider i18n={i18n}>
       <NetworkAdminProvider admin={admin}>
         <AdminShell admin={admin}>
-          <DashboardSection />
+          {/* La section montée sous la coque (le tableau de bord a ses propres tests, lot A7). */}
+          <h1>Section</h1>
         </AdminShell>
       </NetworkAdminProvider>
     </I18nextProvider>,
@@ -119,17 +119,9 @@ describe("coque d'admin.diaspora.ga", () => {
     expect(screen.queryByRole("dialog")).toBeNull()
   })
 
-  it("le tableau de bord accueille l'administrateur sans aucun compteur inventé", () => {
-    mount()
-    const main = screen.getByRole("main")
-    expect(within(main).getByRole("heading", { level: 1 }).textContent).toBe("Bonjour Awa NDONG")
-    expect(main.textContent).toBe("Bonjour Awa NDONGVous administrez le réseau DIASPORA.GA.")
-    expect(main.textContent).not.toMatch(/\d/)
-  })
-
-  it("sans nom affiché : un accueil sans nom, rien d'inventé", () => {
+  it("sans nom affiché : l'en-tête ne dit aucun nom, rien d'inventé", () => {
     mount({ ...(ADMIN as object), displayName: null } as never)
-    expect(within(screen.getByRole("main")).getByRole("heading", { level: 1 }).textContent).toBe("Bonjour")
+    expect(within(screen.getByRole("main")).getByRole("heading", { level: 1 }).textContent).toBe("Section")
     expect(screen.queryByText(/Connecté en tant que/)).toBeNull()
   })
 })

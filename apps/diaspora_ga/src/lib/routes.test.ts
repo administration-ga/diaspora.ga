@@ -1,4 +1,5 @@
 import { HOME_COUNTRY } from "@diaspora-ga/domain"
+import { moderationDeskPath } from "@diaspora-ga/features/navigation"
 import { describe, expect, it } from "vitest"
 
 import { normalizeFeedTag, routes } from "./routes"
@@ -117,6 +118,15 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
     expect(forged.searchParams.get("pour")).toBe("x&jeton=secret#ancre")
     expect(forged.hash).toBe("")
     expect(routes.register()).toBe("/entrer?inscription=1")
+  })
+})
+
+describe("bureau de modération — adresse partagée avec admin.diaspora.ga (CH-815 A7)", () => {
+  it("la file et les pages à vérifier, à l'adresse que l'administration cite depuis son tableau de bord", () => {
+    expect(routes.moderationDesk()).toBe("/moderation")
+    expect(routes.moderationDesk("file")).toBe("/moderation?onglet=file")
+    expect(routes.moderationDesk("pages")).toBe("/moderation?onglet=pages")
+    for (const tab of ["file", "pages"] as const) expect(routes.moderationDesk(tab)).toBe(moderationDeskPath(tab))
   })
 })
 

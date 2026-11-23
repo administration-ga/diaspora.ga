@@ -72,7 +72,33 @@
   "dashboard": {
     "greeting": "Hello {{name}}",
     "greetingWithoutName": "Hello",
-    "lead": "You administer the {{network}} network."
+    "lead": "You administer the {{network}} network.",
+    "overviewTitle": "The network at a glance",
+    "outOf": "{{value}} out of {{max}}",
+    "tile": {
+      "modules": "Open modules",
+      "modulesNone": "No module open: the members’ menu keeps its base.",
+      "founders": "Founding members",
+      "foundersHint": "Admissions in force, out of the cohort’s cap.",
+      "teams": "Moderation teams",
+      "teamsHint": "The network’s live teams, their members and its responsibles.",
+      "appeals": "Appeals",
+      "appealsHint": "Appeals raised to the network, to review with a reason.",
+      "institutions": "Institutions and official pages",
+      "institutionsHint": "Create an official page, designate its signatory, put it to sleep."
+    },
+    "decisionsTitle": "Latest decisions",
+    "decisionsEmpty": "No decision in the journal yet.",
+    "decisionBy": "{{name}}, on {{date}}",
+    "decisionsLink": "Open the journal",
+    "desk": {
+      "title": "diaspora.ga moderation desk",
+      "lead": "Moderators handle the moderation queue and the pages to verify there every day; both queues stay on the members’ app.",
+      "queue": "Moderation queue",
+      "pages": "Pages to verify",
+      "unconfigured": "diaspora.ga’s address is not configured for this app: links to its desk are not shown."
+    },
+    "notCounted": "The engine does not count members by status, pending admissions, open reports and appeals or pages to verify yet: no number is shown in their place."
   },
   "modules": {
     "title": "Modules",

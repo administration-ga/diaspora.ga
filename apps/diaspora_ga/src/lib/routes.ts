@@ -7,6 +7,7 @@
 import { contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
 import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
 import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
+import { moderationDeskPath, type ModerationDeskTab } from "@diaspora-ga/features/navigation"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
 
 /** Le jeton peut contenir une expansion Unicode de minuscule (İ → i̇) : ne pas le redécouper. */
@@ -329,8 +330,11 @@ export const routes = {
   jobOffer: (jobId: string) => `/emploi/${encodeURIComponent(jobId)}`,
   myApplications: () => "/mes-candidatures",
   talents: (country?: CountryCode) => zoneHref("/talents", country),
-  /** Modération par pays (PD6, G9) : la file et les pages à vérifier (AS-01), équipes habilitées seulement ; les décisions du réseau se prennent dans l'application d'administration (CH-815, D5). */
-  moderationDesk: (tab?: "file" | "pages") => tab ? `/moderation?onglet=${tab}` : "/moderation",
+  /**
+   * Modération par pays (PD6, G9) : la file et les pages à vérifier (AS-01), équipes habilitées seulement ; les décisions du réseau se prennent dans l'application d'administration (CH-815, D5).
+   * L'adresse est partagée avec admin.diaspora.ga, qui y renvoie depuis son tableau de bord (CH-815 A7) : écrite une fois, dans `@diaspora-ga/features/navigation`.
+   */
+  moderationDesk: (tab?: ModerationDeskTab) => moderationDeskPath(tab),
   /** Revendiquer une page existante (preuves privées, instruction). */
   pageClaim: (handle: string) => `/pages/${handle}/revendiquer`,
   settings: () => "/parametres",
