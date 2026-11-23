@@ -145,20 +145,23 @@ annonce avant.
 ## 4. L'équipe de modération France et les responsables du réseau
 
 **Qui** : un administrateur de plateforme dans la console du moteur, puis l'administration du réseau
-dans le bureau de modération de diaspora.ga, sur les noms désignés par le propriétaire.
+dans l'application d'administration (admin.diaspora.ga, section « Équipe et responsables » ; CH-815,
+lot A6 : le bureau de modération de diaspora.ga ne décide plus), sur les noms désignés par le
+propriétaire.
 
 - « Équipes de modération » : créer l'équipe de la France pour le réseau DIASPORA.GA, avec son motif,
   puis y placer les modérateurs désignés. Règle du projet : pas de pays ouvert sans modération.
-- Responsables du réseau (administrateur et modérateur du réseau, lecteurs de `/pilote` et juges des
-  recours ; lots EX-08 du moteur, MD-01 et LX-03, décision 3 du plan 17) :
+- Responsables du réseau (administrateur et modérateur du réseau ; l'administrateur juge les recours
+  et lit la mesure du pilote dans l'application d'administration ; lots EX-08 du moteur, MD-01 et
+  LX-03, décision 3 du plan 17, CH-815 A6) :
   1. **Le premier administrateur** : un administrateur de plateforme, dans la console (section
      « Équipes », bloc « Responsables du réseau », réseau DIASPORA.GA), nomme la personne désignée,
      motif à l'appui. La console ne trouve un membre de DIASPORA.GA par son identifiant que s'il a
      choisi de paraître dans l'annuaire du réseau : la personne désignée doit l'avoir choisi au moment
      de la nomination (le rôle reste si elle le retire ensuite).
-  2. **Les suivants** : l'administrateur nommé ouvre le bureau de modération (`/moderation`, onglet
-     « Équipe », bloc « Responsables du réseau ») et nomme le second administrateur et les modérateurs
-     du réseau par leur identifiant public, motif à l'appui. Recommandation du plan 14 (décision 2) :
+  2. **Les suivants** : l'administrateur nommé ouvre l'application d'administration (section
+     « Équipe et responsables », bloc « Responsables du réseau ») et nomme le second administrateur
+     et les modérateurs du réseau par leur identifiant public, motif à l'appui. Recommandation du plan 14 (décision 2) :
      deux administrateurs, pour que nul ne juge le recours de sa propre décision.
   3. **Ce que le moteur tient sur les deux chemins** : seule une personne membre active, au statut
      « déclarée » au moins, reçoit un rôle ; aucune adhésion n'est créée ; le dernier administrateur
@@ -166,8 +169,9 @@ dans le bureau de modération de diaspora.ga, sur les noms désignés par le pro
      retrait entre au journal du moteur (`membership.role_set`) et vaut au geste suivant de la personne.
   4. **Jamais** : un rôle posé par une graine ou par la porte des comptes de démonstration.
 
-**Preuve** : l'équipe est active dans la console ; la personne nommée ouvre `/pilote` et la file des
-recours ; retirée, elle reçoit le refus indistinct au geste suivant. Le parcours est prouvé sur un
+**Preuve** : l'équipe est active dans la console ; l'administrateur nommé ouvre les sections
+« Recours » et « Mesure » de l'application d'administration, le modérateur la file du bureau de
+diaspora.ga ; retirée, la personne reçoit le refus indistinct au geste suivant. Le parcours est prouvé sur un
 backend de test, sans la porte de démonstration (`convex/modules/diaspora/responsibles.test.ts` du
 moteur) ; il reste à le constater en réel.
 
