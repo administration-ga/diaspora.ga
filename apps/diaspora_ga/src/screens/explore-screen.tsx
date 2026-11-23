@@ -2,7 +2,7 @@
 
 import type { CountryCode } from "@diaspora-ga/domain"
 import { Button, Card, CountryTag, EmptyState, Skeleton, countryName } from "@diaspora-ga/features"
-import { useFeatureGate, useOpenCountries, type MembershipView, type OpenCountryView } from "@diaspora-ga/features/data"
+import { useFeatureGate, useOpenCountries, usePostSearchCapability, type MembershipView, type OpenCountryView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ArrowRightIcon, BriefcaseIcon, GlobeIcon, GraduationCapIcon, HandHeartIcon, MapIcon, SearchIcon, StoreIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -11,6 +11,7 @@ import { useId, type ReactNode } from "react"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { PageDirectory } from "@/components/page-directory"
+import { PostSearchSection } from "@/components/post-search"
 import { hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
@@ -20,10 +21,10 @@ import { routes } from "@/lib/routes"
 
 /**
  * `/explorer`, l'entrée « Membres » de la barre (CH-816, lot P1 ; l'adresse ne change pas) —
- * « Je cherche qui ou quoi ? » : la recherche d'une personne dans l'annuaire opt-in (elle vit
- * dans `/membres`), les services, l'annuaire des pages et les pays ouverts, chacun menant à son
- * hub. Rien ici n'élargit ce qu'une personne a choisi de montrer : chaque surface garde ses
- * propres gardes.
+ * « Je cherche qui ou quoi ? » : la recherche dans les publications (DS-11, CH-817), la
+ * recherche d'une personne dans l'annuaire opt-in (elle vit dans `/membres`), les services,
+ * l'annuaire des pages et les pays ouverts, chacun menant à son hub. Rien ici n'élargit ce
+ * qu'une personne a choisi de montrer : chaque surface garde ses propres gardes.
  */
 export function ExploreScreen() {
   return (
@@ -41,17 +42,34 @@ export function ExploreScreen() {
 
 function Explore(props: { membership: MembershipView }) {
   const { t } = useDiasporaGaT()
-  const ids = useId()
-  // ADR-0041 du moteur : seuls les modules ouverts sur le réseau ont leur raccourci.
-  const gate = useFeatureGate()
-  const pagesOpen = gate.isOpen("pages")
+  // DS-11, volet recherche (CH-817) : chercher dans les publications, si le fournisseur le sert.
+  const postSearch = usePostSearchCapability()
   return (
     <>
       <div>
         <h1 className="font-display text-3xl font-bold">{t("explore.title")}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("explore.lead")}</p>
       </div>
+      {postSearch ? (
+        <PostSearchSection capability={postSearch} membership={props.membership}>
+          <Discovery membership={props.membership} />
+        </PostSearchSection>
+      ) : (
+        <Discovery membership={props.membership} />
+      )}
+    </>
+  )
+}
 
+/** Ce que la page offre hors recherche : les rubriques, l'annuaire des pages, les pays ouverts. */
+function Discovery(props: { membership: MembershipView }) {
+  const { t } = useDiasporaGaT()
+  const ids = useId()
+  // ADR-0041 du moteur : seuls les modules ouverts sur le réseau ont leur raccourci.
+  const gate = useFeatureGate()
+  const pagesOpen = gate.isOpen("pages")
+  return (
+    <>
       <div className="grid gap-3 sm:grid-cols-2">
         {/* Sous le titre « Membres », la carte dit le geste (chercher une personne), pas la rubrique. */}
         <Shortcut

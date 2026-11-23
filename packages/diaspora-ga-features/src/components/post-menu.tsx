@@ -1,7 +1,23 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { BookmarkCheckIcon, BookmarkIcon, EyeOffIcon, FlagIcon, InfoIcon, MoreHorizontalIcon, PencilIcon, Trash2Icon, VolumeXIcon, type LucideIcon } from "lucide-react"
+import {
+  BellIcon,
+  BellOffIcon,
+  BookmarkCheckIcon,
+  BookmarkIcon,
+  EyeOffIcon,
+  FlagIcon,
+  GlobeLockIcon,
+  InfoIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PinIcon,
+  PinOffIcon,
+  Trash2Icon,
+  VolumeXIcon,
+  type LucideIcon,
+} from "lucide-react"
 import { DropdownMenu } from "radix-ui"
 import { useId, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
@@ -9,6 +25,7 @@ import { toast } from "sonner"
 import { z } from "zod"
 
 import { useActions, useOptionalDataSource } from "../data/context"
+import type { DiasporaGaActions } from "../data/port"
 import { REPORT_NOTE_MAX, REPORT_REASONS, type PostView } from "../data/types"
 import { POST_BODY_MAX } from "./composer"
 import { PostExplanationSheet } from "./post-explanation"
@@ -21,11 +38,31 @@ import { RadioCard, RadioGroup } from "../primitives/radio-group"
 import { Sheet, SheetContent } from "../primitives/sheet"
 
 /**
+ * Ce que l'auteur peut faire de SA publication en plus de la modifier ou de la retirer (FD-10),
+ * et ce que le lecteur peut suivre de celle d'autrui. Chaque geste n'existe que si le fournisseur
+ * le sert ; le moteur garde toutes ses règles, l'écran ne propose que ce qui a un sens :
+ *  · épingler sur son mur : une publication personnelle, hors groupe, publiée ; « Retirer
+ *    l'épingle » sur l'épinglée, que seule la lecture du mur connaît ;
+ *  · retirer d'ANTSIA : une publication lue aussi dans ANTSIA ;
+ *  · suivre les commentaires : la publication d'autrui, publiée (l'auteur est déjà avisé).
+ */
+export function postAuthorGestures(post: PostView, actions: DiasporaGaActions) {
+  const own = post.isMine && post.author.kind === "person"
+  return {
+    pin: own && actions.pinOnMyWall !== undefined && post.audience !== "group" && post.moderation === "published" && post.pinned !== true,
+    unpin: own && actions.unpinMyWall !== undefined && post.pinned === true,
+    withdrawFromRoot: own && actions.withdrawFromRoot !== undefined && post.visibility === "root",
+    notify: !post.isMine && actions.toggleCommentNotifications !== undefined && post.moderation === "published",
+  }
+}
+
+/**
  * Le menu « … » d'une publication (EXF-DG-12) : l'enregistrer, la masquer pour
  * soi, mettre son auteur en sourdine, la signaler — ou retirer la sienne. Tout
- * est privé : l'auteur n'apprend ni le signet, ni le masquage, ni la sourdine.
- * « Pourquoi cette publication ? » dit, pour celle d'autrui, pourquoi elle est là
- * (DG-019).
+ * est privé : l'auteur n'apprend ni le signet, ni le masquage, ni la sourdine,
+ * ni qu'on suit ses commentaires. « Pourquoi cette publication ? » dit, pour
+ * celle d'autrui, pourquoi elle est là (DG-019). L'auteur l'épingle sur son mur
+ * ou la retire d'ANTSIA (FD-10).
  */
 export function PostMenu(props: { post: PostView }) {
   const { t } = useDiasporaGaT()
@@ -34,13 +71,33 @@ export function PostMenu(props: { post: PostView }) {
   const [reporting, setReporting] = useState(false)
   const [removing, setRemoving] = useState(false)
   const [editing, setEditing] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
   const { post } = props
   const person = post.author.kind === "person" && !post.isMine ? post.author : null
+  const gestures = postAuthorGestures(post, actions)
 
   const bookmark = async () => {
     const result = await actions.toggleBookmark(post.id)
     if (!result.ok) toast.error(t(`errors.${result.code}`))
     else toast.success(result.value.bookmarked ? t("postMenu.bookmarked") : t("postMenu.unbookmarked"))
+  }
+  const pin = async () => {
+    if (!actions.pinOnMyWall) return
+    const result = await actions.pinOnMyWall(post.id)
+    if (result.ok) toast.success(t("postMenu.pinned"))
+    else toast.error(t(`errors.${result.code}`))
+  }
+  const unpin = async () => {
+    if (!actions.unpinMyWall) return
+    const result = await actions.unpinMyWall()
+    if (result.ok) toast.success(t("postMenu.unpinned"))
+    else toast.error(t(`errors.${result.code}`))
+  }
+  const notify = async () => {
+    if (!actions.toggleCommentNotifications) return
+    const result = await actions.toggleCommentNotifications(post.id)
+    if (!result.ok) toast.error(t(`errors.${result.code}`))
+    else toast.success(result.value.notifying ? t("postMenu.notifying") : t("postMenu.notNotifying"))
   }
   const hide = async () => {
     const result = await actions.hidePost(post.id)
@@ -72,12 +129,32 @@ export function PostMenu(props: { post: PostView }) {
                 <MenuItem icon={PencilIcon} onSelect={() => setEditing(true)}>
                   {t("postMenu.edit")}
                 </MenuItem>
+                {gestures.pin ? (
+                  <MenuItem icon={PinIcon} onSelect={pin}>
+                    {t("postMenu.pin")}
+                  </MenuItem>
+                ) : null}
+                {gestures.unpin ? (
+                  <MenuItem icon={PinOffIcon} onSelect={unpin}>
+                    {t("postMenu.unpin")}
+                  </MenuItem>
+                ) : null}
+                {gestures.withdrawFromRoot ? (
+                  <MenuItem icon={GlobeLockIcon} onSelect={() => setWithdrawing(true)}>
+                    {t("postMenu.withdrawFromRoot")}
+                  </MenuItem>
+                ) : null}
                 <MenuItem icon={Trash2Icon} tone="danger" onSelect={() => setRemoving(true)}>
                   {t("postMenu.remove")}
                 </MenuItem>
               </>
             ) : (
               <>
+                {gestures.notify ? (
+                  <MenuItem icon={post.notifying ? BellOffIcon : BellIcon} onSelect={notify}>
+                    {post.notifying ? t("postMenu.notifyOff") : t("postMenu.notifyOn")}
+                  </MenuItem>
+                ) : null}
                 <MenuItem icon={InfoIcon} onSelect={() => setExplaining(true)}>
                   {t("postWhy.menu")}
                 </MenuItem>
@@ -100,6 +177,7 @@ export function PostMenu(props: { post: PostView }) {
       {post.isMine ? (
         <>
           <EditPostSheet post={post} open={editing} onOpenChange={setEditing} />
+          {gestures.withdrawFromRoot ? <WithdrawFromRootSheet postId={post.id} open={withdrawing} onOpenChange={setWithdrawing} /> : null}
           <RemovePostSheet postId={post.id} open={removing} onOpenChange={setRemoving} />
         </>
       ) : (
@@ -270,6 +348,48 @@ function EditPostSheet(props: { post: PostView; open: boolean; onOpenChange: (op
             </Button>
           </div>
         </form>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
+/**
+ * Retirer SA publication d'ANTSIA (FD-10) : un second geste, explicite, parce qu'il ne se défait
+ * pas. La publication reste lisible dans DIASPORA.GA, pour la même audience.
+ */
+function WithdrawFromRootSheet(props: { postId: string; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { t } = useDiasporaGaT()
+  const actions = useActions()
+  const [busy, setBusy] = useState(false)
+
+  const confirm = async () => {
+    if (!actions.withdrawFromRoot) return
+    setBusy(true)
+    const result = await actions.withdrawFromRoot(props.postId)
+    setBusy(false)
+    if (!result.ok) {
+      toast.error(t(`errors.${result.code}`))
+      return
+    }
+    toast.success(t("withdrawFromRoot.done"))
+    props.onOpenChange(false)
+  }
+
+  return (
+    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+      <SheetContent title={t("withdrawFromRoot.title")} description={t("withdrawFromRoot.description")} closeLabel={t("withdrawFromRoot.close")}>
+        <div className="flex flex-col gap-4 px-5 py-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">{t("withdrawFromRoot.irreversible")}</p>
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button variant="ghost" disabled={busy} onClick={() => props.onOpenChange(false)}>
+              {t("withdrawFromRoot.cancel")}
+            </Button>
+            <Button disabled={busy} aria-busy={busy} onClick={() => void confirm()}>
+              <GlobeLockIcon aria-hidden />
+              {t("withdrawFromRoot.confirm")}
+            </Button>
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   )

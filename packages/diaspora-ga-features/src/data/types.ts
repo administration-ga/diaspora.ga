@@ -107,6 +107,13 @@ export interface PostView {
   readonly edited: boolean
   /** Version d'édition pour les gestes collectifs de page ; absente des anciens fournisseurs. */
   readonly editedAt?: number | null
+  /**
+   * FD-10 : l'épinglée de son auteur, en tête de SON mur dans ce réseau. Seule la lecture du mur
+   * le sait (vrai ou faux) ; absent ailleurs, où le fil ne le dit pas.
+   */
+  readonly pinned?: boolean
+  /** FD-10 : le lecteur reçoit un avis à chaque nouveau commentaire (bascule privée) ; absent des anciens fournisseurs. */
+  readonly notifying?: boolean
 }
 
 /** Curseur opaque du fil : l'instant seul ne départage pas deux publications. */

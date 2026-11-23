@@ -74,6 +74,17 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
     expect(parseReturnPath(`${routes.jobs("FR", "Paris")}&jeton=secret`)?.path).toBe(routes.jobs("FR", "Paris"))
   })
 
+  it("FD-06 : le lien partagé d'une publication survit à l'entrée, sans le traceur qu'une messagerie y colle", () => {
+    const shared = routes.post("k57d2n4q8w3e")
+    expect(parseReturnPath(shared)).toEqual({ path: shared, needs: "read_network" })
+    expect(parseReturnPath(`${shared}?fbclid=traceur&utm_source=whatsapp`)?.path).toBe(shared)
+    // Un compte en attente lit le réseau : il arrive aussi sur la publication.
+    expect(entryExit({ status: "en_attente", country: "FR" }, parseReturnPath(shared))).toBe(shared)
+    // Hors adhésion : l'accueil d'abord, jamais la publication.
+    expect(entryExit(null, parseReturnPath(shared))).toBe(routes.welcome())
+    for (const raw of [`${shared}/autre`, "/publication/..", "/publication/a%2Fb"]) expect(parseReturnPath(raw), raw).toBeNull()
+  })
+
   it("garde une ancre simple et les adresses de la table à segment variable", () => {
     expect(parseReturnPath(routes.pageServices("amicale-lyon"))?.path).toBe(routes.pageServices("amicale-lyon"))
     expect(parseReturnPath(`${EVENT}#<script>`)?.path).toBe(EVENT)

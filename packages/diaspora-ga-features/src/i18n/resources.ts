@@ -92,6 +92,9 @@ import enIcomNotices from "./locales/en/icom-notices.json"
 import enFeedRail from "./locales/en/feed-rail.json"
 import enMemberBrowse from "./locales/en/member-browse.json"
 import enLive from "./locales/en/live.json"
+import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
+import enPostSharing from "./locales/en/post-sharing.json"
+import enPostSearch from "./locales/en/post-search.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -173,6 +176,9 @@ import frIcomNotices from "./locales/fr/icom-notices.json"
 import frFeedRail from "./locales/fr/feed-rail.json"
 import frMemberBrowse from "./locales/fr/member-browse.json"
 import frLive from "./locales/fr/live.json"
+import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
+import frPostSharing from "./locales/fr/post-sharing.json"
+import frPostSearch from "./locales/fr/post-search.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -265,6 +271,12 @@ export const LOCALE_PARTS = {
     "member-browse": frMemberBrowse,
     // CH-817 : la page du direct (conférences du moteur), fermée par le code.
     live: frLive,
+    // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
+    "post-author-gestures": frPostAuthorGestures,
+    // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.
+    "post-sharing": frPostSharing,
+    // CH-817 (DS-11, volet recherche) : chercher dans les publications depuis « Membres ».
+    "post-search": frPostSearch,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -349,6 +361,12 @@ export const LOCALE_PARTS = {
     // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
     "member-browse": enMemberBrowse,
     live: enLive,
+    // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
+    "post-author-gestures": enPostAuthorGestures,
+    // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.
+    "post-sharing": enPostSharing,
+    // CH-817 (DS-11, volet recherche) : chercher dans les publications depuis « Membres ».
+    "post-search": enPostSearch,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

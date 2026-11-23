@@ -73,6 +73,11 @@ export interface DemoMembership {
     readonly postSlug: string | null
     readonly requestedAt: number | null
   }
+  /**
+   * FD-10 : la publication épinglée en tête de son mur, comme l'adhésion du moteur. Facultatif :
+   * un état enregistré avant l'épingle se relit tel quel (pas de changement de version).
+   */
+  readonly pinnedPostId?: string
 }
 
 export interface DemoSponsorship {
@@ -136,11 +141,14 @@ export interface DemoPost {
   readonly editedAt: number | null
 }
 
-/** Une marque PRIVÉE d'une personne sur une publication : signet, ou publication masquée pour elle. */
+/**
+ * Une marque PRIVÉE d'une personne sur une publication : signet, publication masquée pour elle,
+ * ou avis des nouveaux commentaires (FD-10, comme la marque `notify` du moteur).
+ */
 export interface DemoMark {
   readonly personId: string
   readonly postId: string
-  readonly kind: "bookmark" | "hidden"
+  readonly kind: "bookmark" | "hidden" | "notify"
   readonly createdAt: number
   /** Identité du choix masqué ; absente des instantanés v7 antérieurs. */
   readonly choiceId?: string

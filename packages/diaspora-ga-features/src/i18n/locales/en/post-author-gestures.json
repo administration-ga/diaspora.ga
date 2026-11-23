@@ -1,0 +1,25 @@
+{
+  "post": {
+    "pinnedOnWall": "Pinned"
+  },
+  "postMenu": {
+    "pin": "Pin to my wall",
+    "unpin": "Unpin from my wall",
+    "pinned": "Post pinned to the top of your wall.",
+    "unpinned": "Pin removed: the post stays on your wall.",
+    "withdrawFromRoot": "Remove from ANTSIA…",
+    "notifyOn": "Follow comments",
+    "notifyOff": "Stop following comments",
+    "notifying": "You will be notified of every new comment.",
+    "notNotifying": "You will no longer be notified of new comments."
+  },
+  "withdrawFromRoot": {
+    "title": "Remove this post from ANTSIA?",
+    "description": "It stays readable in DIASPORA.GA, for the same audience, but is no longer shown in ANTSIA.",
+    "irreversible": "This cannot be undone: to show it in ANTSIA again, you will have to publish it again.",
+    "close": "Close",
+    "cancel": "Cancel",
+    "confirm": "Remove from ANTSIA",
+    "done": "Post removed from ANTSIA: it stays readable here."
+  }
+}
