@@ -46,18 +46,18 @@ function numbered(t: ReturnType<typeof getFixedT>, kind: LegalTextKind, section:
   return `${t("legal.sectionNumber", { number: index + 1 })} ${t(`legal.${kind}.${section}.title`)}`
 }
 
-describe("Textes du site — chaque page dit sa version, sa date et son marqueur (LX-05)", () => {
-  it.each(LEGAL_TEXT_KINDS)("« %s » : titre, version et date du domaine, marqueur de son état, toutes ses rubriques numérotées", (kind) => {
+describe("Textes du site — chaque page dit sa version et sa date (LX-05)", () => {
+  it.each(LEGAL_TEXT_KINDS)("« %s » : titre, version et date du domaine, aucun marqueur, toutes ses rubriques numérotées", (kind) => {
     const t = getFixedT("fr")
     const edition = LEGAL_TEXTS[kind]
     renderText(kind)
     expect(screen.getByRole("heading", { level: 1, name: t(`legal.${kind}.title`) })).toBeInTheDocument()
     expect(screen.getByText(normalized(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") })))).toBeInTheDocument()
-    // Aucun texte n'est définitif : le marqueur « provisoire » est visible et ne se ferme pas.
-    const marker = screen.getByRole("note")
-    expect(marker).toHaveTextContent(normalized(t("legal.provisional.heading")))
-    expect(marker).not.toHaveTextContent(normalized(t("legal.todoLawyer")))
-    expect(within(marker).queryByRole("button")).toBeNull()
+    // Un texte définitif n'a aucun marqueur : ni « à fournir », ni « provisoire ».
+    expect(edition.status).toBe("final")
+    expect(screen.queryByRole("note")).toBeNull()
+    expect(screen.queryByText(normalized(t("legal.provisional.heading")))).toBeNull()
+    expect(screen.queryByText(normalized(t("legal.todoLawyer")))).toBeNull()
     expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => normalized(heading.textContent ?? ""))).toEqual(
       edition.sections.map((section, index) => numbered(t, kind, section, index)),
     )
@@ -101,13 +101,13 @@ describe("Textes du site — chaque page dit sa version, sa date et son marqueur
     expect(`${routes.communityRules()}#${legalSectionAnchor("community", "measures")}`).toBe(routes.communityRule("measures"))
   })
 
-  it("parle anglais : titre, version et date dans la langue de la personne, marqueur provisoire", () => {
+  it("parle anglais : titre, version et date dans la langue de la personne, sans marqueur", () => {
     const t = getFixedT("en")
     const edition = LEGAL_TEXTS.terms
     renderText("terms", "en")
     expect(screen.getByRole("heading", { level: 1, name: "Terms of use" })).toBeInTheDocument()
     expect(screen.getByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "en") }))).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent(normalized(t("legal.provisional.heading")))
+    expect(screen.queryByRole("note")).toBeNull()
   })
 
   it("une date civile ne recule pas d'un jour selon le fuseau", () => {

@@ -13,7 +13,7 @@ import { COMMUNITY_RULE_ANCHORS, routes } from "@/lib/routes"
 
 /**
  * Les règles de la communauté (MD-05), page PUBLIQUE rendue avec sa vraie coque, pour une
- * personne sans compte (démonstration sans session) : texte provisoire marqué comme tel,
+ * personne sans compte (démonstration sans session) : texte définitif, sans marqueur,
  * règles rédigées en entier, chaque motif de signalement nommé sous une règle et une seule,
  * une ancre par règle. Données fictives.
  */
@@ -43,18 +43,15 @@ function renderSignedOut(locale: "fr" | "en" = "fr") {
 }
 
 describe("Règles de la communauté — une page qui se lit sans compte (MD-05)", () => {
-  it("se rend dans la coque publique, sans session, avec son marqueur « provisoire » visible et fixe", () => {
+  it("se rend dans la coque publique, sans session, sans marqueur : le texte est définitif", () => {
     const t = getFixedT("fr")
     renderSignedOut()
     expect(screen.getByRole("heading", { level: 1, name: t("legal.community.title") })).toBeInTheDocument()
     // La coque publique propose d'entrer : personne n'est connecté.
     expect(screen.getAllByRole("link", { name: t("nav.enter") }).length).toBeGreaterThan(0)
-    const marker = screen.getByRole("note")
-    expect(marker).toHaveTextContent(normalized(t("legal.provisional.heading")))
-    expect(marker).toHaveTextContent(normalized(t("legal.provisional.body")))
-    // Distinct d'un texte à fournir : jamais le marqueur « TODO JURISTE ».
-    expect(marker).not.toHaveTextContent(normalized(t("legal.todoLawyer")))
-    expect(within(marker).queryByRole("button")).toBeNull()
+    expect(LEGAL_TEXTS.community.status).toBe("final")
+    expect(screen.queryByText(normalized(t("legal.provisional.heading")))).toBeNull()
+    expect(screen.queryByText(normalized(t("legal.todoLawyer")))).toBeNull()
   })
 
   it("rend chaque règle, sous son ancre, dans l'ordre du domaine", () => {
@@ -107,11 +104,11 @@ describe("Règles de la communauté — une page qui se lit sans compte (MD-05)"
     expect(t("legal.community.measures.body")).toMatch(/Haute Autorité de la Communication/)
   })
 
-  it("parle anglais : titre, marqueur provisoire et règles rédigées", () => {
+  it("parle anglais : titre et règles rédigées, sans marqueur", () => {
     const t = getFixedT("en")
     renderSignedOut("en")
     expect(screen.getByRole("heading", { level: 1, name: "Community rules" })).toBeInTheDocument()
-    expect(screen.getByRole("note")).toHaveTextContent(normalized(t("legal.provisional.heading")))
+    expect(screen.queryByText(normalized(t("legal.provisional.heading")))).toBeNull()
     for (const rule of COMMUNITY_RULES) {
       const body = t(`legal.community.${rule}.body`)
       expect(body, rule).not.toMatch(/To be provided/)

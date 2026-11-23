@@ -226,7 +226,7 @@ describe("Réglages — « Mes données » (DG-026)", () => {
 })
 
 describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () => {
-  it("liste les cinq textes avec leur version, leur date et le repère d'un texte provisoire", () => {
+  it("liste les cinq textes avec leur version et leur date, sans repère : ils sont définitifs", () => {
     render(tree())
     const region = within(screen.getByRole("region", { name: t("nav.account.info") }))
     expect(region.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
@@ -240,10 +240,10 @@ describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () =
       const edition = LEGAL_TEXTS[kind]
       expect(region.getAllByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") }), { exact: false }).length).toBeGreaterThan(0)
     }
-    // Aucun texte n'est définitif : les cinq sont rédigés et provisoires, plus aucun ne reste à fournir.
+    // Les cinq textes sont définitifs : aucun repère « à fournir » ni « provisoire ».
     expect(pendingLegalTexts()).toEqual([])
     expect(region.queryAllByText(t("settings.texts.pending"))).toHaveLength(0)
-    expect(region.getAllByText(t("settings.texts.provisional"))).toHaveLength(LEGAL_TEXT_KINDS.length)
+    expect(region.queryAllByText(t("settings.texts.provisional"))).toHaveLength(0)
   })
 })
 
