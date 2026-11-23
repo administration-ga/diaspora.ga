@@ -16,6 +16,7 @@ import {
   foundingSeniorityWaived,
   isCountryOpen,
   isListedInDirectoryFor,
+  matchesDirectoryCountry,
   isReadableByOthers,
   isShownInHub,
   pageTrustLevel,
@@ -301,7 +302,7 @@ function matchesMember(query: string, displayName: string, handle: string): bool
  * niveau choisi, consentement en vigueur, statut, pays du lecteur, blocage —
  * puis la vue du membre, facette projetée pour le lecteur. `null` : absent.
  */
-function listedMemberView(state: DemoState, viewerId: string, personId: string, now: number): MemberHitView | null {
+export function listedMemberView(state: DemoState, viewerId: string, personId: string, now: number): MemberHitView | null {
   const person = state.persons[personId]
   const membership = state.memberships[personId]
   const viewerMembership = state.memberships[viewerId]
@@ -345,7 +346,8 @@ export function memberSearchView(state: DemoState, viewerId: string, query: stri
   for (const person of Object.values(state.persons)) {
     if (!person.profile || !matchesMember(term, person.profile.displayName, person.profile.handle)) continue
     const hit = listedMemberView(state, viewerId, person.id, now)
-    if (!hit || (country !== undefined && hit.facet.countryOfResidence !== country)) continue
+    // Le filtre de pays de la tranche : sur la facette projetée pour le lecteur.
+    if (!hit || (country !== undefined && !matchesDirectoryCountry(hit.facet, country))) continue
     hits.push(hit)
   }
   return hits.sort((a, b) => a.displayName.localeCompare(b.displayName, "fr")).slice(0, DIRECTORY_PAGE_SIZE_MAX)
