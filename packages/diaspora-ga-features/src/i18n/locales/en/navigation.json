@@ -37,6 +37,8 @@
       "title": "Create",
       "story": "A story",
       "storyHint": "A photo or a short video, in the stories bar.",
+      "live": "A conference",
+      "liveHint": "Prepare a live broadcast in the network, and start it when you are ready.",
       "association": "Register an association",
       "associationHint": "Its page, members, group and events.",
       "company": "Register a business",

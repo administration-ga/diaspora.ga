@@ -319,6 +319,8 @@ export function toPostView(item: FeedItem): PostView {
     myReaction: item.reactions.mine,
     isMine: item.isMine,
     bookmarked: item.viewer.bookmarked,
+    // FD-10 : la marque `notify` du lecteur, rendue par le moteur avec ses signets.
+    notifying: item.viewer.notifying,
     edited: item.editedAt !== null,
     editedAt: item.editedAt,
   }
@@ -329,10 +331,16 @@ export function toFeed(items: readonly FeedItem[], scope: FeedScope, viewerCount
   return items.filter((item) => admitsInFeedScope(scope, { scope: scopeOf(item), relation: relationOf(item) }, viewerCountry)).map(toPostView)
 }
 
-/** Le mur d'un auteur : l'épinglée d'abord, jamais deux fois. */
+/**
+ * Le mur d'un auteur : l'épinglée d'abord, jamais deux fois. Chaque publication du mur dit si elle
+ * est l'épinglée (FD-10) ; le moteur ne rend l'épingle qu'en première page, les suivantes n'en ont pas.
+ */
 export function toWall(wall: { readonly items: readonly FeedItem[]; readonly pinned: FeedItem | null }): PostView[] {
   const pinned = wall.pinned
-  return [...(pinned ? [pinned] : []), ...wall.items.filter((item) => item._id !== pinned?._id)].map(toPostView)
+  return [...(pinned ? [pinned] : []), ...wall.items.filter((item) => item._id !== pinned?._id)].map((item) => ({
+    ...toPostView(item),
+    pinned: item._id === pinned?._id,
+  }))
 }
 
 export function toSponsorDashboardView(dashboard: SponsorDashboard): SponsorDashboardView {

@@ -6,6 +6,7 @@
 export {
   audienceReached,
   canSeeRegistration,
+  codeSwitchAllows,
   featureMenuAdditions,
   MEMBER_ACCOUNT_ENTRIES,
   MEMBER_BAR_ENTRIES,
@@ -26,6 +27,7 @@ export {
   REGISTERING_STATUSES,
   requiredFeatures,
   type MemberBarEntryId,
+  type MemberCodeSwitchStates,
   type MemberCreateEntry,
   type MemberCreateFormatId,
   type MemberCreateFormatRule,

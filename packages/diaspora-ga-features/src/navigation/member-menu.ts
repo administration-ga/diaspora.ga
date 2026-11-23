@@ -19,6 +19,8 @@
 import { NETWORK_FEATURE_PARENTS, type NetworkFeature } from "@antsia/social-domain/networkFeatures"
 import type { MembershipStatus } from "@diaspora-ga/domain"
 
+import { MEMBERS_APP_CODE_SWITCH_STATES, type CodeSwitchState, type MembersAppCodeSwitch } from "./code-switches"
+
 // ═══════════════════════════════════════════════════════════════
 // Les entrées
 // ═══════════════════════════════════════════════════════════════
@@ -38,8 +40,8 @@ export const MEMBER_ACCOUNT_ENTRIES = ["profile", "settings"] as const
 export const MEMBER_DATA_ENTRY = "myData" as const
 /** Le groupe « Informations » du menu du compte : les textes du site. */
 export const MEMBER_INFORMATION_ENTRIES = ["legalNotice", "privacy", "terms", "communityRules", "contact", "charte"] as const
-/** Les formats de « Créer », dans l'ordre. */
-export const MEMBER_CREATE_FORMATS = ["story", "association", "company"] as const
+/** Les formats de « Créer », dans l'ordre : une actu, une conférence (le direct), puis les deux inscriptions. */
+export const MEMBER_CREATE_FORMATS = ["story", "live", "association", "company"] as const
 
 export type MemberBarEntryId = (typeof MEMBER_BAR_ENTRIES)[number]
 export type MemberMenuEntryId =
@@ -158,24 +160,39 @@ export const MEMBER_MENU_ENTRIES: Readonly<Record<MemberMenuEntryId, MemberMenuE
 
 /** La règle d'un format de « Créer ». */
 export interface MemberCreateFormatRule {
-  readonly routeKey: "newStory" | "newPage"
+  /**
+   * La clé de l'adresse du format. `null` : le format n'a pas d'adresse, il ouvre EN PLACE la surface
+   * de création du moteur — la conférence, comme « Créer → Conférence » du moteur
+   * (`requestConferenceLaunch`, consommé par l'hôte du direct de la couche de communication).
+   */
+  readonly routeKey: "newStory" | "newPage" | null
   /** La nature de la page à inscrire (`newPage` seulement). */
   readonly pageKind: "association" | "company" | null
   readonly labelKey: string
   readonly hintKey: string
   readonly feature: NetworkFeature | null
   readonly audience: MemberMenuAudience
+  /** L'interrupteur de CODE qui doit être ouvert pour offrir le format (`null` : aucun). Ni un module ni un droit. */
+  readonly codeSwitch: MembersAppCodeSwitch | null
 }
 
 /**
- * Une actu, puis l'inscription d'une association et d'une entreprise (AS-05) quand les pages sont
- * ouvertes. Les groupes thématiques n'y sont pas (décision 3 du plan 07) ; les directs restent fermés.
+ * Une actu ; une conférence (le direct) quand l'interrupteur de code `live` est ouvert ; puis
+ * l'inscription d'une association et d'une entreprise (AS-05) quand les pages sont ouvertes. Les
+ * groupes thématiques n'y sont pas (décision 3 du plan 07). La conférence suit le public de l'actu
+ * (`publisher` : publier ET iCom ouvert) : sans iCom, l'hôte du direct du moteur n'est pas monté et
+ * le geste ne mènerait à rien. Libellé et icône, ceux de « Créer → Conférence » du moteur
+ * (`creation-controller`, icône `video`).
  */
 export const MEMBER_CREATE_RULES: Readonly<Record<MemberCreateFormatId, MemberCreateFormatRule>> = {
-  story: { routeKey: "newStory", pageKind: null, labelKey: "nav.create.story", hintKey: "nav.create.storyHint", feature: CORE, audience: "publisher" },
-  association: { routeKey: "newPage", pageKind: "association", labelKey: "nav.create.association", hintKey: "nav.create.associationHint", feature: "pages", audience: "registrant" },
-  company: { routeKey: "newPage", pageKind: "company", labelKey: "nav.create.company", hintKey: "nav.create.companyHint", feature: "pages", audience: "registrant" },
+  story: { routeKey: "newStory", pageKind: null, labelKey: "nav.create.story", hintKey: "nav.create.storyHint", feature: CORE, audience: "publisher", codeSwitch: null },
+  live: { routeKey: null, pageKind: null, labelKey: "nav.create.live", hintKey: "nav.create.liveHint", feature: CORE, audience: "publisher", codeSwitch: "live" },
+  association: { routeKey: "newPage", pageKind: "association", labelKey: "nav.create.association", hintKey: "nav.create.associationHint", feature: "pages", audience: "registrant", codeSwitch: null },
+  company: { routeKey: "newPage", pageKind: "company", labelKey: "nav.create.company", hintKey: "nav.create.companyHint", feature: "pages", audience: "registrant", codeSwitch: null },
 }
+
+/** Les positions des interrupteurs de code qu'un menu lit. */
+export type MemberCodeSwitchStates = Readonly<Record<MembersAppCodeSwitch, CodeSwitchState>>
 
 // ═══════════════════════════════════════════════════════════════
 // La situation du membre
@@ -209,6 +226,12 @@ export interface MemberMenuInput extends MemberMenuSituation {
    * exigé est celle du moteur : la coque reçoit des clés déjà servies, la fonction ne la rejoue pas.
    */
   readonly openFeatures: readonly NetworkFeature[]
+  /**
+   * Les interrupteurs de code lus (absents : ceux du code, `MEMBERS_APP_CODE_SWITCH_STATES`). La
+   * coque et l'aperçu d'admin.diaspora.ga n'en passent pas : ils montrent donc ce que le code sert.
+   * Seuls les tests posent ici une autre position.
+   */
+  readonly codeSwitches?: MemberCodeSwitchStates
 }
 
 /** La situation la plus large : tout public touché. Sert à dire tout ce qu'un module PEUT ajouter. */
@@ -284,16 +307,23 @@ function shown(rule: MemberMenuEntryRule | MemberCreateFormatRule, open: Readonl
   return audienceReached(rule.audience, situation)
 }
 
+/** Le code permet-il le format ? Sans interrupteur, toujours ; avec, seulement s'il est ouvert. */
+export function codeSwitchAllows(rule: Pick<MemberCreateFormatRule, "codeSwitch">, switches: MemberCodeSwitchStates = MEMBERS_APP_CODE_SWITCH_STATES): boolean {
+  return rule.codeSwitch === null || switches[rule.codeSwitch] === "open"
+}
+
 /** Le menu exact des membres pour ces modules servis et cette situation. */
 export function memberMenu(input: MemberMenuInput): MemberMenu {
   const open = new Set(input.openFeatures)
+  const switches = input.codeSwitches ?? MEMBERS_APP_CODE_SWITCH_STATES
   const pick = (ids: readonly MemberMenuEntryId[]): MemberMenuEntry[] =>
     ids
       .filter((id) => shown(MEMBER_MENU_ENTRIES[id], open, input))
       .map((id) => ({ id, routeKey: MEMBER_MENU_ENTRIES[id].routeKey, labelKey: MEMBER_MENU_ENTRIES[id].labelKey }))
   const bar = pick(MEMBER_BAR_ENTRIES)
   const personal = pick([...MEMBER_PERSONAL_ENTRIES, ...MEMBER_RESPONSIBLE_ENTRIES])
-  const create = MEMBER_CREATE_FORMATS.filter((id) => shown(MEMBER_CREATE_RULES[id], open, input)).map((id): MemberCreateEntry => {
+  const offered = (id: MemberCreateFormatId) => codeSwitchAllows(MEMBER_CREATE_RULES[id], switches) && shown(MEMBER_CREATE_RULES[id], open, input)
+  const create = MEMBER_CREATE_FORMATS.filter(offered).map((id): MemberCreateEntry => {
     const rule = MEMBER_CREATE_RULES[id]
     return { id, routeKey: rule.routeKey, pageKind: rule.pageKind, labelKey: rule.labelKey, hintKey: rule.hintKey }
   })

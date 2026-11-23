@@ -76,8 +76,10 @@ import { createDemoJobs } from "./jobs"
 import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
+import { createDemoDeviceNotifications } from "./device-notifications"
 import { createDemoNetworkFeatures } from "./network-features"
 import { createDemoMemberBrowse } from "./member-browse"
+import { createDemoPostSearch } from "./post-search"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -109,6 +111,18 @@ function localPostsPage(posts: readonly PostView[], cursor: FeedCursorView | nul
     nextCursor: items.length > FEED_PAGE && last ? { publishedAt: last.createdAt, postId: last.id } : null,
     lacunar: false,
   }
+}
+
+/**
+ * Le mur d'un auteur, comme le moteur (FD-10) : son épinglée, si le lecteur la lit, en tête de la
+ * première page et jamais deux fois ; les autres publications par date. Chacune dit si elle est
+ * l'épinglée.
+ */
+function localWallPage(posts: readonly PostView[], pinnedPostId: string | undefined, cursor: FeedCursorView | null): FeedPageView {
+  const pinned = pinnedPostId === undefined ? undefined : posts.find((post) => post.id === pinnedPostId)
+  const page = localPostsPage(pinned ? posts.filter((post) => post.id !== pinned.id) : posts, cursor)
+  const items = page.items.map((post) => ({ ...post, pinned: false }))
+  return { ...page, items: cursor === null && pinned ? [{ ...pinned, pinned: true }, ...items] : items }
 }
 
 /**
@@ -178,10 +192,14 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
     pageDecisions: createDemoPageDecisions(store, demoPageTeams),
     // IM-02 : réglages d'appel et de présence, fictifs, le temps de la page.
     callSettings: createDemoCallSettings(store),
+    // DS-14 (volet push) : aucune notification n'est envoyée en démonstration ; l'état le dit.
+    deviceNotifications: createDemoDeviceNotifications(),
     // ADR-0041 : les fonctionnalités activables du réseau fictif, fermées tant que rien n'est décidé.
     networkFeatures: createDemoNetworkFeatures(store),
     // CH-816 P3 : parcourir l'annuaire fictif par pays et par ville, même règle que la recherche.
     memberBrowse: createDemoMemberBrowse(store),
+    // CH-817 (DS-11) : chercher dans les publications fictives lisibles, même garde que le fil.
+    postSearch: createDemoPostSearch(store),
 
     useSession() {
       const version = useVersion()
@@ -271,7 +289,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
         // Le profil applique déjà le refus indistinct et les audiences du mur.
         const profile = profileView(state, handle, viewerId, store.now())
         return {
-          data: localPostsPage(profile?.posts ?? [], publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
+          data: localWallPage(profile?.posts ?? [], profile ? state.memberships[profile.personId]?.pinnedPostId : undefined, publishedAt === undefined || postId === undefined ? null : { publishedAt, postId }),
           isLoading: false,
           error: null,
           retry: retryLocalFeed,
@@ -518,6 +536,11 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
       reportPost: (input) => store.reportPost(input),
       removePost: (postId) => store.removePost(postId),
       editPost: (postId, body) => store.editPost(postId, body),
+      // FD-10 : épingle du mur, retrait d'ANTSIA, avis des commentaires, comme le moteur.
+      pinOnMyWall: (postId) => store.pinOnMyWall(postId),
+      unpinMyWall: () => store.unpinMyWall(),
+      withdrawFromRoot: (postId) => store.withdrawFromRoot(postId),
+      toggleCommentNotifications: (postId) => store.toggleCommentNotifications(postId),
       connect: (personId) => store.connect(personId),
       respondToConnection: (connectionId, accept) => store.respondToConnection(connectionId, accept),
       follow: (handle) => store.follow(handle),
