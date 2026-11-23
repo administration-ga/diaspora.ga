@@ -16,6 +16,7 @@
  */
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { useStableConvexAuth } from "@antsia/api/hooks"
+import type { PrepareVideo } from "@antsia/social-features/features/video-upload/video-preparation"
 import type { PrepareImage } from "@antsia/social-features/media-upload"
 import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
@@ -140,6 +141,12 @@ export interface EngineSourceDeps {
    * d'image ni canvas.
    */
   readonly prepareImage?: PrepareImage
+  /**
+   * La préparation des vidéos avant tout dépôt (FD-02) : `prepareVideoForUpload` du moteur par
+   * défaut — sonde, puis conversion en MP4 ou WebM dans le navigateur. Remplaçable dans les
+   * tests — `jsdom` n'a ni décodeur vidéo ni `MediaRecorder`.
+   */
+  readonly prepareVideo?: PrepareVideo
 }
 
 export class Refusal extends Error {

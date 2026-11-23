@@ -14,12 +14,13 @@ import {
   POST_MEDIA_ACCEPT,
   POST_MEDIA_ALT_MAX_LENGTH,
   POST_MEDIA_MAX_COUNT,
+  type PostMediaInput,
   type PostMediaKind,
-  postMediaKindOf,
   postMediaRefusal,
+  selectionMediaInput,
   unsupportedMediaRefusal,
 } from "../data/media"
-import type { PublishMediaInput, UploadedMedia } from "../data/port"
+import type { MediaUploadPhase, PublishMediaInput, UploadedMedia } from "../data/port"
 import type { PagePublicationInput, PagePublicationsCapability } from "../data/page-publications-port"
 import type { PostView } from "../data/types"
 import { useDiasporaGaT } from "../i18n/client"
@@ -87,13 +88,39 @@ function writeDraft(key: string, values: DraftValues): void {
 interface Attachment {
   readonly name: string
   readonly kind: PostMediaKind
+  /** Ce que le fichier présente aux règles du moteur au moment du choix (`selectionMediaInput`). */
   readonly mimeType: string
   readonly sizeBytes: number
   readonly previewUrl: string
-  readonly state:
-    | { readonly status: "uploading" }
-    | { readonly status: "ready"; readonly upload: UploadedMedia }
-    | { readonly status: "failed"; readonly code: ActionErrorCode }
+  readonly state: AttachmentState
+}
+
+type AttachmentState =
+  /** FD-02 : une vidéo en préparation — analyse (`percent` nul), puis conversion, au pour cent près. */
+  | { readonly status: "preparing"; readonly percent: number | null }
+  | { readonly status: "uploading" }
+  | { readonly status: "ready"; readonly upload: UploadedMedia }
+  | { readonly status: "failed"; readonly code: ActionErrorCode }
+
+/** Un dépôt en cours : son annulation, et s'il en est encore à la préparation de la vidéo. */
+interface Transfer {
+  readonly controller: AbortController
+  preparing: boolean
+}
+
+/**
+ * FD-02 : l'état que dit une phase du dépôt. La conversion annonce chaque image : l'écran ne
+ * retient que le pour cent entier, arrondi vers le bas (jamais « 100 % » avant la fin).
+ */
+function stateOfPhase(phase: MediaUploadPhase): AttachmentState {
+  if (phase.phase === "uploading") return { status: "uploading" }
+  if (phase.phase === "probing") return { status: "preparing", percent: null }
+  return { status: "preparing", percent: Math.floor(Math.min(1, Math.max(0, phase.progress)) * 100) }
+}
+
+function sameState(a: AttachmentState, b: AttachmentState): boolean {
+  if (a.status === "preparing" && b.status === "preparing") return a.percent === b.percent
+  return a.status === b.status && a.status === "uploading"
 }
 
 function without<T>(record: Readonly<Record<string, T>>, key: string): Record<string, T> {
@@ -136,6 +163,13 @@ function keepEnterInField(event: KeyboardEvent<HTMLInputElement>): void {
  * Médias : quatre photos, ou une vidéo seule (règles du moteur, jugées AVANT
  * tout envoi). Chaque fichier part dès qu'il est choisi ; la publication attend
  * la fin des envois. Le texte alternatif se donne photo par photo.
+ *
+ * Vidéo (FD-02) : toute vidéo choisie est d'abord préparée — le .mov de l'iPhone
+ * converti en MP4 ou WebM dans ce navigateur, en temps réel. La pièce montre
+ * l'analyse puis la progression ; « Annuler la conversion » l'arrête. Fermer la
+ * feuille ou quitter le composeur arrête aussi toute préparation et tout envoi en
+ * cours, et libère les aperçus. Un refus de la préparation ne joint rien et le
+ * dit ; le brouillon gardé ne porte jamais de fichier.
  */
 export function PostComposerSheet(props: {
   open: boolean
@@ -242,9 +276,14 @@ export function PostComposerSheet(props: {
 
   // Les aperçus locaux (URL d'objet) se libèrent au retrait, à la publication, et quand le composeur quitte l'écran.
   const previewUrls = useRef(new Set<string>())
+  // FD-02 : chaque dépôt en cours, par clé de média — quitter le composeur arrête préparations et envois.
+  const transfers = useRef(new Map<string, Transfer>())
   useEffect(() => {
     const urls = previewUrls.current
+    const pending = transfers.current
     return () => {
+      for (const transfer of pending.values()) transfer.controller.abort()
+      pending.clear()
       for (const url of urls) URL.revokeObjectURL(url)
       urls.clear()
     }
@@ -253,47 +292,89 @@ export function PostComposerSheet(props: {
     URL.revokeObjectURL(url)
     previewUrls.current.delete(url)
   }
+  /** FD-02 : la conversion annulée par la personne, dite sans ton d'erreur jusqu'au prochain choix. */
+  const [videoCancelled, setVideoCancelled] = useState(false)
+  // Après « Annuler la conversion », le bouton disparaît : le focus revient au bouton d'ajout, de nouveau actif.
+  const addMediaButton = useRef<HTMLButtonElement>(null)
+  const focusAddMedia = useRef(false)
+  useEffect(() => {
+    if (!focusAddMedia.current || !addMediaButton.current || addMediaButton.current.disabled) return
+    focusAddMedia.current = false
+    addMediaButton.current.focus()
+  })
+  const percentFormat = useMemo(() => new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: 0 }), [locale])
 
   const attached = Object.values(attachments)
   const uploading = attached.some((item) => item.state.status === "uploading")
+  const preparing = attached.some((item) => item.state.status === "preparing")
   const canAttachMore = mediaFields.fields.length < POST_MEDIA_MAX_COUNT && !attached.some((item) => item.kind === "video")
+  // La vidéo en cours de conversion (une seule : une vidéo est seule dans sa publication).
+  const conversionKey = Object.entries(attachments).find(([, item]) => item.state.status === "preparing" && item.state.percent !== null)?.[0]
+
+  /** L'avancement d'un dépôt, tant qu'il n'est ni annulé, ni terminé. */
+  function followPhase(key: string, transfer: Transfer, phase: MediaUploadPhase) {
+    if (transfer.controller.signal.aborted) return
+    if (phase.phase === "uploading") transfer.preparing = false
+    const next = stateOfPhase(phase)
+    setAttachments((current) => {
+      const entry = current[key]
+      if (!entry || (entry.state.status !== "preparing" && entry.state.status !== "uploading") || sameState(entry.state, next)) return current
+      return { ...current, [key]: { ...entry, state: next } }
+    })
+  }
 
   function attachFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? [])
     event.target.value = ""
     if (submissionInFlight.current || files.length === 0) return
-    const chosen: { file: File; kind: PostMediaKind }[] = []
+    const chosen: { file: File; input: PostMediaInput }[] = []
     for (const file of files) {
-      const kind = postMediaKindOf(file.type)
-      if (!kind) {
-        // FD-02 : un .mov (ou tout autre conteneur vidéo) est refusé avant l'envoi, avec la marche à suivre.
+      // FD-02 : toute vidéo se prépare (le .mov de l'iPhone compris) ; un fichier qui n'est ni photo ni vidéo est refusé.
+      const input = selectionMediaInput(file)
+      if (!input) {
         setMediaError(unsupportedMediaRefusal(file.type))
         return
       }
-      chosen.push({ file, kind })
+      chosen.push({ file, input })
     }
     // Les règles du moteur jugent l'ensemble AVANT tout envoi : rien ne part qui serait refusé.
     const refusal = postMediaRefusal([
       ...attached.map((item) => ({ kind: item.kind, mimeType: item.mimeType, sizeBytes: item.sizeBytes })),
-      ...chosen.map(({ file, kind }) => ({ kind, mimeType: file.type, sizeBytes: file.size })),
+      ...chosen.map(({ input }) => input),
     ])
     if (refusal) {
       setMediaError(refusal)
       return
     }
     setMediaError(null)
-    const added = chosen.map(({ file, kind }) => {
+    setVideoCancelled(false)
+    const added = chosen.map(({ file, input }) => {
       attachedCount.current += 1
       const key = `media-${attachedCount.current}`
       const previewUrl = URL.createObjectURL(file)
       previewUrls.current.add(previewUrl)
-      const attachment: Attachment = { name: file.name, kind, mimeType: file.type, sizeBytes: file.size, previewUrl, state: { status: "uploading" } }
+      const state: AttachmentState = input.kind === "video" ? { status: "preparing", percent: null } : { status: "uploading" }
+      const attachment: Attachment = { name: file.name, kind: input.kind, mimeType: input.mimeType, sizeBytes: input.sizeBytes, previewUrl, state }
       return { key, file, attachment }
     })
     setAttachments((current) => ({ ...current, ...Object.fromEntries(added.map(({ key, attachment }) => [key, attachment])) }))
     mediaFields.append(added.map(({ key }) => ({ key, altText: "" })))
-    for (const { key, file } of added) {
-      void actions.uploadMedia(file).then((result) => {
+    for (const { key, file, attachment } of added) {
+      const transfer: Transfer = { controller: new AbortController(), preparing: attachment.state.status === "preparing" }
+      transfers.current.set(key, transfer)
+      void actions.uploadMedia(file, { signal: transfer.controller.signal, onPhase: (phase) => followPhase(key, transfer, phase) }).then((result) => {
+        if (transfers.current.get(key) === transfer) transfers.current.delete(key)
+        // Annulé (geste, fermeture, départ) : la pièce est déjà retirée, rien n'est retenu.
+        if (transfer.controller.signal.aborted) return
+        // FD-02 : une vidéo refusée par sa préparation n'est pas jointe ; le refus se dit sous le bouton d'ajout.
+        if (!result.ok && transfer.preparing) {
+          releasePreview(attachment.previewUrl)
+          setAttachments((current) => without(current, key))
+          const index = form.getValues("media").findIndex((item) => item.key === key)
+          if (index >= 0) mediaFields.remove(index)
+          setMediaError(result.code)
+          return
+        }
         setAttachments((current) => {
           const entry = current[key]
           // Retiré pendant l'envoi : le fichier déposé n'existe pour personne tant qu'aucune publication ne l'embarque.
@@ -306,11 +387,33 @@ export function PostComposerSheet(props: {
 
   function detach(index: number, key: string) {
     if (submissionInFlight.current) return
+    // Une préparation ou un envoi en cours s'arrête : le fichier converti ne reste pas en mémoire.
+    const transfer = transfers.current.get(key)
+    transfer?.controller.abort()
+    transfers.current.delete(key)
     const entry = attachments[key]
     if (entry) releasePreview(entry.previewUrl)
     setAttachments((current) => without(current, key))
     mediaFields.remove(index)
     setMediaError(null)
+    if (transfer?.preparing) setVideoCancelled(true)
+  }
+
+  /** FD-02 : arrêter la préparation d'une vidéo (le geste, ou la feuille qui se ferme) ; la pièce est retirée. */
+  function cancelPreparation(key: string) {
+    const index = form.getValues("media").findIndex((item) => item.key === key)
+    if (index >= 0) detach(index, key)
+  }
+
+  /**
+   * La feuille se ferme : une vidéo en préparation s'arrête (FD-02) — sa progression et son
+   * annulation ne se verraient plus. Les photos et une vidéo déjà préparée restent jointes.
+   */
+  function changeOpen(next: boolean) {
+    if (!next) {
+      for (const [key, transfer] of transfers.current) if (transfer.preparing) cancelPreparation(key)
+    }
+    props.onOpenChange(next)
   }
 
   // Après publication : les aperçus se libèrent ici (une URL déjà libérée se relibère sans effet au démontage).
@@ -325,7 +428,7 @@ export function PostComposerSheet(props: {
     for (const item of values.media) {
       const state = attachments[item.key]?.state
       if (state?.status !== "ready") {
-        if (state?.status !== "uploading") setMediaError("media_upload_failed")
+        if (state?.status !== "uploading" && state?.status !== "preparing") setMediaError("media_upload_failed")
         return
       }
       media.push({ upload: state.upload, altText: item.altText })
@@ -384,7 +487,7 @@ export function PostComposerSheet(props: {
   const mediaNotice = mediaError ?? mediaFieldError
 
   return (
-    <Sheet open={props.open} onOpenChange={props.onOpenChange}>
+    <Sheet open={props.open} onOpenChange={changeOpen}>
       <SheetContent
         title={page ? (fixedScope?.title ?? t("pagePublications.composeTitle")) : share ? t("composer.shareTitle") : t("composer.title")}
         description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
@@ -457,14 +560,29 @@ export function PostComposerSheet(props: {
                               attachment.state.status === "failed" ? "text-destructive" : "text-foreground",
                             )}
                           >
-                            {attachment.state.status === "uploading" ? (
-                              <LoaderCircleIcon className="size-5 animate-spin motion-reduce:animate-none" aria-hidden />
-                            ) : (
+                            {attachment.state.status === "failed" ? (
                               <TriangleAlertIcon className="size-5" aria-hidden />
+                            ) : (
+                              <LoaderCircleIcon className="size-5 animate-spin motion-reduce:animate-none" aria-hidden />
                             )}
                             <span role={attachment.state.status === "failed" ? "alert" : undefined}>
-                              {attachment.state.status === "uploading" ? t("composer.mediaUploading") : t(`errors.${attachment.state.code}`)}
+                              {attachment.state.status === "failed"
+                                ? t(`errors.${attachment.state.code}`)
+                                : attachment.state.status === "uploading"
+                                  ? t("composer.mediaUploading")
+                                  : attachment.state.percent === null
+                                    ? t("composer.videoProbing")
+                                    : t("composer.videoConverting", { percent: percentFormat.format(attachment.state.percent / 100) })}
                             </span>
+                            {/* FD-02 : la progression de la conversion, lue par les lecteurs d'écran (rôle et nom de la barre native). */}
+                            {attachment.state.status === "preparing" && attachment.state.percent !== null ? (
+                              <progress
+                                className="h-1.5 w-4/5 accent-primary"
+                                max={100}
+                                value={attachment.state.percent}
+                                aria-label={t("composer.videoProgressLabel", { name: attachment.name })}
+                              />
+                            ) : null}
                           </div>
                         )}
                         <button
@@ -496,13 +614,37 @@ export function PostComposerSheet(props: {
                 })}
               </ul>
             ) : null}
+            {/* FD-02 : la conversion se fait ici, en temps réel ; elle s'arrête d'un geste. */}
+            {conversionKey !== undefined ? (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-md bg-muted p-3">
+                <p className="min-w-0 flex-1 basis-56 text-[13px] text-muted-foreground">{t("composer.videoKeepVisible")}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    focusAddMedia.current = true
+                    cancelPreparation(conversionKey)
+                  }}
+                >
+                  <XIcon aria-hidden />
+                  {t("composer.videoCancel")}
+                </Button>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Button type="button" variant="outline" onClick={() => fileInput.current?.click()} disabled={!canAttachMore} aria-describedby={`${ids}-medias-aide`}>
+              <Button ref={addMediaButton} type="button" variant="outline" onClick={() => fileInput.current?.click()} disabled={!canAttachMore} aria-describedby={`${ids}-medias-aide`}>
                 <ImagePlusIcon aria-hidden />
                 {t("composer.mediaAdd")}
               </Button>
               <p id={`${ids}-medias-aide`} aria-live="polite" className="text-[13px] text-muted-foreground">
-                {uploading ? t("composer.mediaWaiting") : t("composer.mediaHint")}
+                {preparing
+                  ? t("composer.videoPreparing")
+                  : uploading
+                    ? t("composer.mediaWaiting")
+                    : videoCancelled
+                      ? t("composer.videoCancelled")
+                      : t("composer.mediaHint")}
               </p>
             </div>
             <input ref={fileInput} type="file" accept={POST_MEDIA_ACCEPT} multiple hidden onChange={attachFiles} />
@@ -591,10 +733,10 @@ export function PostComposerSheet(props: {
           </div> : null}
 
           <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 border-t border-border bg-card px-5 py-3">
-            <Button variant="ghost" onClick={() => props.onOpenChange(false)}>
+            <Button variant="ghost" onClick={() => changeOpen(false)}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting || uploading}>
+            <Button type="submit" disabled={form.formState.isSubmitting || uploading || preparing}>
               <SendIcon aria-hidden />
               {form.formState.isSubmitting ? t("composer.publishing") : t("composer.publish")}
             </Button>

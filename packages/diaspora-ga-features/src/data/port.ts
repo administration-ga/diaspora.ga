@@ -12,6 +12,7 @@
  * « en chargement ») ; les écritures sont des actions qui rendent un résultat
  * à code FERMÉ (traduit par `errors.<code>`), jamais une exception à l'écran.
  */
+import type { VideoPreparationPhase } from "@antsia/social-features/features/video-upload/video-preparation"
 import type {
   AttestationOutcome,
   ConsentPurpose,
@@ -185,6 +186,23 @@ export interface JoinedView {
 }
 
 /**
+ * FD-02 : où en est le dépôt d'un média, tel que le composeur l'annonce — l'analyse puis la
+ * conversion d'une vidéo (progression de 0 à 1, phases du module du moteur), puis l'envoi.
+ */
+export type MediaUploadPhase = VideoPreparationPhase | { readonly phase: "uploading" }
+
+/** Ce que l'écran suit et peut arrêter pendant un dépôt de média (FD-02). */
+export interface MediaUploadOptions {
+  /**
+   * L'annulation : le geste « Annuler la conversion », la fermeture ou le départ du composeur.
+   * Le dépôt annulé rend `media_cancelled` ; rien n'est déposé ni retenu.
+   */
+  readonly signal?: AbortSignal
+  /** L'avancement : analyse et conversion d'une vidéo, puis envoi du fichier préparé. */
+  readonly onPhase?: (phase: MediaUploadPhase) => void
+}
+
+/**
  * Un fichier déposé, prêt à rejoindre une publication. `ref` est opaque pour
  * l'écran (identifiant de stockage du moteur, ou clé de la démonstration) ; un
  * dépôt ne publie rien tant qu'une publication ne l'embarque pas.
@@ -271,8 +289,12 @@ export interface DiasporaGaActions {
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>
   join(input: JoinInput): Promise<ActionResult<JoinedView>>
-  /** Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier d'abord. */
-  uploadMedia(file: File): Promise<ActionResult<UploadedMedia>>
+  /**
+   * Déposer une photo ou une vidéo avant de publier ; les règles du moteur jugent le fichier
+   * d'abord. Une vidéo est préparée avant l'envoi (FD-02) : `options` en suit l'avancement et
+   * peut l'annuler.
+   */
+  uploadMedia(file: File, options?: MediaUploadOptions): Promise<ActionResult<UploadedMedia>>
   publish(input: PublishInput): Promise<ActionResult<PublishOutcome>>
   react(postId: string, kind: ReactionKind | null): Promise<ActionResult>
   /**
