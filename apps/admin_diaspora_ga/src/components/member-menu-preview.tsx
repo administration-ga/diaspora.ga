@@ -121,7 +121,6 @@ const AUDIENCE_KEYS: Readonly<Record<Exclude<MemberMenuChange["audience"], "ever
   pageTeam: "menuChange.audience.pageTeam",
   associationMember: "menuChange.audience.associationMember",
   moderator: "menuChange.audience.moderator",
-  pilotReader: "menuChange.audience.pilotReader",
   publisher: "menuChange.audience.publisher",
   registrant: "menuChange.audience.registrant",
 }

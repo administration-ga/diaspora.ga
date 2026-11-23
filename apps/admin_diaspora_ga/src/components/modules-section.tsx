@@ -212,7 +212,7 @@ function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: T
 
         <div className="flex flex-col gap-2">
           <h4 className="text-sm font-semibold">{t("modules.card.adds")}</h4>
-          <MenuChangeList changes={additions} tone="added" />
+          {additions.length > 0 ? <MenuChangeList changes={additions} tone="added" /> : <p className="text-sm text-muted-foreground">{t("modules.card.addsNothing")}</p>}
         </div>
 
         <div className="flex flex-col gap-1 text-[13px] text-muted-foreground">

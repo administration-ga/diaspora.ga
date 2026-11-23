@@ -18,12 +18,7 @@
       "mutualAid": "Les questions d'entraide entre membres et les missions bénévoles.",
       "mentoring": "Les mentors du réseau et les demandes de mentorat.",
       "arrivalKit": "Les fiches pratiques pour s'installer dans un pays.",
-      "pilotMetrics": "Le tableau de mesure du pilote, pour les responsables du réseau."
+      "pilotMetrics": "La mesure du pilote : des comptes agrégés, sans contenu privé, lus dans la section « Mesure » de l’administration. Elle ne change rien au menu des membres."
     }
-  },
-  "errors": {
-    "network_feature_requires_parent": "Cette fonctionnalité vit sur les pages : ouvrez d'abord les associations et entreprises.",
-    "network_feature_has_open_children": "Une fonctionnalité qui vit sur les pages est encore ouverte (groupes et évènements, services ou emploi) : fermez-la d'abord.",
-    "network_feature_reason_length": "Le motif doit compter entre {{min}} et {{max}} caractères."
   }
 }

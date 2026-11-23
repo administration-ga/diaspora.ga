@@ -14,7 +14,6 @@ import {
   type ModerationDeskView,
   type MyAssociationItemView,
   type NetworkFeature,
-  type PilotMetricsAccessView,
   type SleepingPageView,
   type TeamPageView,
 } from "@diaspora-ga/features/data"
@@ -144,17 +143,16 @@ function ComposerProbe() {
   )
 }
 
-/** Un responsable reconnu par le serveur : modérateur du réseau et lecteur de la mesure du pilote (lectures stables). */
+/** Un responsable reconnu par le serveur : modérateur du réseau (lecture stable). */
 const RESPONSIBLE_DESK: Loadable<ModerationDeskView | null> = {
   status: "ready",
   data: { role: "network_admin", networkWide: true, canReviewAppeals: true, canManageTeams: true, canManagePolicy: true, canReviewClaims: true, teams: [] },
 }
-const PILOT_ALLOWED: Loadable<PilotMetricsAccessView> = { status: "ready", data: { allowed: true } }
 
 function withResponsibleAccess(source: DiasporaGaDataSource): DiasporaGaDataSource {
-  const { moderationDesk, pilotMetrics } = source
-  if (!moderationDesk || !pilotMetrics) throw new Error("La démonstration sert la modération et la mesure du pilote.")
-  return { ...source, moderationDesk: { ...moderationDesk, useDesk: () => RESPONSIBLE_DESK }, pilotMetrics: { ...pilotMetrics, useAccess: () => PILOT_ALLOWED } }
+  const { moderationDesk } = source
+  if (!moderationDesk) throw new Error("La démonstration sert la modération.")
+  return { ...source, moderationDesk: { ...moderationDesk, useDesk: () => RESPONSIBLE_DESK } }
 }
 
 const ready = <T,>(data: T): Loadable<T> => ({ status: "ready", data })
@@ -439,7 +437,6 @@ const PERSONAL_HREFS = [
   routes.bookmarks(),
   routes.sponsor(),
   routes.moderationDesk(),
-  routes.pilotDashboard(),
 ]
 
 describe("coque — les entrées personnelles, dans le menu du compte seulement (CH-816)", () => {
@@ -470,16 +467,15 @@ describe("coque — les entrées personnelles, dans le menu du compte seulement 
     expect(within(account).getByRole("link", { name: "Parrainer" })).toHaveAttribute("href", "/parrainer")
   })
 
-  it("Modération (et la mesure du pilote) : dans le menu du compte quand le serveur le dit, absente sinon", async () => {
+  it("Modération : dans le menu du compte quand le serveur le dit, absente sinon ; plus aucune entrée de mesure, la clé ouverte (CH-815 A6)", async () => {
     renderShell({ responsible: true, features: ["pages", "pilotMetrics"] })
     let menu = await openAccountMenu()
     expect(within(menu).getByRole("menuitem", { name: "Modération" })).toHaveAttribute("href", routes.moderationDesk())
-    expect(within(menu).getByRole("menuitem", { name: t("pilotMetrics.nav") })).toHaveAttribute("href", routes.pilotDashboard())
+    expect(within(menu).queryByRole("menuitem", { name: /pilote/i })).toBeNull()
     cleanup()
     renderShell({ features: ["pages", "pilotMetrics"] })
     menu = await openAccountMenu()
     expect(within(menu).queryByRole("menuitem", { name: "Modération" })).toBeNull()
-    expect(within(menu).queryByRole("menuitem", { name: t("pilotMetrics.nav") })).toBeNull()
   })
 
   it.each([
@@ -589,7 +585,6 @@ describe("coque — une seule entrée courante pour chaque route de membre (UX-0
     bookmarks: "bookmarks.title",
     sponsor: "nav.sponsor",
     moderation: "nav.moderation",
-    pilot: "pilotMetrics.nav",
     profile: "nav.profile",
     settings: "nav.settings",
   }
@@ -1073,7 +1068,7 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
 })
 
 describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les modules ouverts", () => {
-  const MODULE_HREFS = [routes.services(), routes.myServiceRequests(), routes.myActivity(), routes.myAssociations(), routes.myApplications(), routes.myMentoring(), routes.pilotDashboard()]
+  const MODULE_HREFS = [routes.services(), routes.myServiceRequests(), routes.myActivity(), routes.myAssociations(), routes.myApplications(), routes.myMentoring()]
 
   it("tout fermé : la barre est Fil, Membres, Messages ; le menu du compte garde le socle", async () => {
     renderShell({ icom: true, network: true, responsible: true, features: [], holdings: HOLDS_ALL })
@@ -1167,7 +1162,6 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
       holdsPageRole: situation.holds,
       holdsAssociation: situation.holds,
       moderator: situation.responsible,
-      pilotReader: situation.responsible,
     })
 
     // La barre : le rail du bureau et la barre basse du téléphone.

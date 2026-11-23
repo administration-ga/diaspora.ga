@@ -190,7 +190,6 @@ const HOLDING_KEYS: Readonly<Record<PreviewHolding, string>> = {
   holdsPageRole: "preview.holding.holdsPageRole",
   holdsAssociation: "preview.holding.holdsAssociation",
   moderator: "preview.holding.moderator",
-  pilotReader: "preview.holding.pilotReader",
 }
 
 function isPreviewMembership(value: string): value is PreviewMembership {

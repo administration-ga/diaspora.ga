@@ -11,8 +11,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * `/moderation` — le guichet de modération par pays (PD6 · G9) : file, recours,
- * équipe ; l'onglet se lit dans l'adresse. Réservé aux équipes habilitées : le
+ * `/moderation` — le guichet de modération par pays (PD6 · G9) : la file et les
+ * pages à vérifier ; l'onglet se lit dans l'adresse. Les décisions du réseau se
+ * prennent dans l'application d'administration (CH-815, D5). Réservé aux équipes habilitées : le
  * moteur relit la compétence à chaque lecture, l'écran dit « indisponible » sinon.
  */
 export default function ModerationDeskPage() {

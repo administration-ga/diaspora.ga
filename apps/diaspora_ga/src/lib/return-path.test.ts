@@ -112,7 +112,7 @@ describe("parseReturnPath — un chemin interne connu de la table, rien d'autre"
       routes.myActivity("offres"),
       routes.newPage("company"),
       routes.pageManage("amicale", "equipe"),
-      routes.moderationDesk("recours"),
+      routes.moderationDesk("pages"),
       routes.mutualAid("FR", "Lyon"),
       // ET-04 : onglet, vue, thème et mots de l'entraide ; mots et rubrique du kit ; domaine, langue et ville des mentors.
       routes.mutualAid("FR", "Lyon", { view: "unanswered", theme: "housing", q: "colocation" }),

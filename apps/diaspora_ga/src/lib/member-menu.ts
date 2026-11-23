@@ -26,7 +26,6 @@ export const MEMBER_MENU_HREFS: { readonly [Key in Exclude<MemberMenuRouteKey, "
   bookmarks: () => routes.bookmarks(),
   sponsor: () => routes.sponsor(),
   moderationDesk: () => routes.moderationDesk(),
-  pilotDashboard: () => routes.pilotDashboard(),
   settingsData: () => routes.settingsData(),
   legalNotice: () => routes.legalNotice(),
   privacy: () => routes.privacy(),

@@ -6,8 +6,8 @@
  *
  * Lectures : la tranche `diaspora/moderationDesk` du moteur (capacité, file
  * filtrée par le pays de la cible, dossier et décisions antérieures, relecture
- * préalable, recours du réseau, composition des équipes), toutes bornées par le
- * réseau `diaspora-ga` et par la personne ATTENDUE (`expectedPersonId`) ; l'aperçu
+ * préalable), toutes bornées par le réseau `diaspora-ga` et par la personne
+ * ATTENDUE (`expectedPersonId`) ; l'aperçu
  * est la projection bornée du moteur (`moderation/reviewProjection.preview`).
  * Une lecture ne part qu'une fois la session et l'adhésion lisibles ; un refus
  * ne laisse aucune ligne à l'écran.
@@ -17,23 +17,16 @@
  * cible ni la personne attendue : l'écran ne la lit que sous un guichet ouvert
  * pour la personne attendue (`myDesk`), qui se ferme au changement de session.
  *
- * Écritures : les mutations EXISTANTES du moteur (`moderation/cases` :
- * `decide`, `reviewContent`, `reviewNetworkAppeal`, `createTeam`,
- * `setTeamMember`), qui motivent, journalisent et préviennent l'auteur. Le
- * motif et les mesures sont jugés avant tout appel, la personne de la session
- * est relue : une autre session ferme le geste (`not_found`) avant toute écriture.
+ * Écritures : les mutations EXISTANTES du moteur (`moderation/cases` : `decide`,
+ * `reviewContent` ; `pages/claims.decidePageClaim`), qui motivent, journalisent et
+ * préviennent l'auteur. Le motif et les mesures sont jugés avant tout appel, la
+ * personne de la session est relue : une autre session ferme le geste (`not_found`)
+ * avant toute écriture.
  *
- * MD-01 : les responsables du réseau se lisent dans la tranche `diaspora/moderationDesk`
- * (`responsibles`) et se nomment par `diaspora/membership` (`setResponsibleRole`), qui appelle l'aide
- * du moteur (EX-08) et journalise ; la règle `NETWORK_LAST_ADMIN` se dit
- * `moderation_desk_last_admin`, le refus indistinct `moderation_desk_role_refused`.
- *
- * MD-04 : les réglages se lisent et se posent par les fonctions du moteur livrées
- * par MC-02 (`moderation/cases` : `policies`, `blockedTermsPage`, `setPolicy`,
- * `setBlockedTerm`), réservées à l'administration du réseau (refus indistinct
- * sinon) et journalisées par le moteur. Comme la voie des délais légaux, elles ne
- * connaissent pas la personne attendue : l'écran ne les lit que sous un guichet
- * ouvert pour elle, avec `canManagePolicy`.
+ * CH-815, D5 et lot A6 : les recours du réseau, la composition des équipes, les
+ * responsables et les réglages de modération se décident dans l'application
+ * d'administration du réseau ; le moteur refuse ces gestes à toute session de
+ * diaspora.ga, et cet adaptateur ne les sert plus.
  *
  * AS-01 : la file des revendications en attente vient de la tranche
  * (`diaspora/moderationDesk` : `pageClaimQueue`, filtrée par pays de la page, conflit
@@ -46,21 +39,14 @@ import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import type { PageTrustLevel } from "@diaspora-ga/domain"
 import {
-  DESK_BLOCKED_TERMS_PAGE,
   DESK_PAGE_SIZE,
-  deskBlockedTermRefusal,
   deskCountry,
   deskGround,
-  deskPolicyFieldRefusal,
-  deskPolicyRefusal,
   deskReasonRefusal,
   deskSanctions,
-  deskTeamNameRefusal,
   withoutDeadlineCases,
   type ActionErrorCode,
   type ActionResult,
-  type DeskAppealView,
-  type DeskBlockedTermView,
   type DeskClaimDetailView,
   type DeskClaimView,
   type DeskCaseDetailView,
@@ -70,9 +56,6 @@ import {
   type DeskPage,
   type DeskPendingView,
   type DeskPreviewView,
-  type DeskResponsiblesView,
-  type DeskRosterView,
-  type DeskSettingsView,
   type DeskSurface,
   type DeskZone,
   type Loadable,
@@ -100,7 +83,6 @@ import {
 const DESK = api.modules.diaspora.moderationDesk
 const CASES = api.modules.moderation.cases
 const PREVIEW = api.modules.moderation.reviewProjection.preview
-const SET_RESPONSIBLE_ROLE = api.modules.diaspora.membership.setResponsibleRole
 const CLAIMS = api.modules.pages.claims
 
 type DeskRow = FunctionReturnType<typeof DESK.myDesk>
@@ -111,12 +93,7 @@ type DeadlineRows = FunctionReturnType<typeof CASES.deadlineQueue>
 type DeadlineRow = DeadlineRows["items"][number]
 type CaseDetailRow = FunctionReturnType<typeof DESK.caseDetail>
 type PendingRow = FunctionReturnType<typeof DESK.pendingQueue>["items"][number]
-type AppealRow = FunctionReturnType<typeof DESK.appealQueue>["items"][number]
-type RosterRow = FunctionReturnType<typeof DESK.teamRoster>
-type ResponsiblesRow = FunctionReturnType<typeof DESK.responsibles>
 type PreviewRow = FunctionReturnType<typeof PREVIEW>
-type SettingsRow = FunctionReturnType<typeof CASES.policies>
-type BlockedTermsRow = FunctionReturnType<typeof CASES.blockedTermsPage>
 type EngineZone = FunctionArgs<typeof DESK.queue>["zone"]
 type EngineTarget = FunctionArgs<typeof CASES.reviewContent>["target"]
 type Window<Row> = { readonly items: readonly Row[]; readonly continueCursor: string | null; readonly isDone: boolean }
@@ -144,35 +121,7 @@ export function moderationDeskErrorCode(error: unknown): ActionErrorCode {
   if (code === "policyRefused") return "moderation_desk_limit"
   const field = invalidField(error)
   if (field === "sanctions" || field === "until") return "moderation_desk_measure_refused"
-  if (field === "name") return "moderation_desk_team_name_length"
   return engineActionErrorCode(error)
-}
-
-/**
- * MD-01 : les refus d'un geste sur un rôle de réseau. Le refus indistinct du
- * moteur (personne qui n'est pas membre active « déclarée » au moins, ou geste
- * hors de l'administration du réseau) se dit sans en livrer la raison ; une
- * autre session reste `not_found`, comme pour tout geste du guichet.
- */
-export function responsibleRoleErrorCode(error: unknown): ActionErrorCode {
-  if (!(error instanceof Refusal) && engineErrorCode(error) === "notFound") return "moderation_desk_role_refused"
-  return moderationDeskErrorCode(error)
-}
-
-/** MD-04 : les refus d'un réglage ; le champ hors bornes nommé par le moteur se dit par son code. */
-export function moderationPolicyErrorCode(error: unknown): ActionErrorCode {
-  if (error instanceof Refusal) return error.code
-  const field = invalidField(error)
-  const refusal = field === null ? null : deskPolicyFieldRefusal(field)
-  return refusal ?? moderationDeskErrorCode(error)
-}
-
-/** MD-04 : les refus d'un mot bloqué (mot trop court ou trop long, plafond des mots actifs atteint). */
-export function blockedTermErrorCode(error: unknown): ActionErrorCode {
-  if (error instanceof Refusal) return error.code
-  if (invalidField(error) === "term") return "moderation_desk_term_length"
-  if (engineErrorCode(error) === "policyRefused") return "moderation_desk_terms_full"
-  return moderationDeskErrorCode(error)
 }
 
 async function run<T>(work: () => Promise<T>, errorCode: (error: unknown) => ActionErrorCode = moderationDeskErrorCode): Promise<ActionResult<T>> {
@@ -271,50 +220,6 @@ export function toPendingView(row: PendingRow): DeskPendingView {
   }
 }
 
-export function toAppealView(row: AppealRow): DeskAppealView {
-  return {
-    appealId: row.appealId,
-    reportId: row.reportId,
-    surface: row.surface,
-    country: deskCountry(row.country),
-    ground: deskGround(row.reason),
-    appealReason: row.appealReason,
-    createdAt: row.createdAt,
-    decisionReason: row.decisionReason,
-    decidedAt: row.decidedAt,
-    sanctions: row.sanctions.map((sanction) => ({ kind: sanction.kind, until: sanction.until })),
-    party: row.party,
-  }
-}
-
-export function toRosterView(row: RosterRow): DeskRosterView {
-  return {
-    members: row.members.map((member) => ({
-      personId: member.personId,
-      handle: member.handle,
-      displayName: member.displayName,
-      inNetwork: member.inNetwork,
-      isMe: member.isMe,
-    })),
-    more: row.more,
-  }
-}
-
-/** MD-01 : les responsables, tels que la tranche les sert (profil publié seul). */
-export function toResponsiblesView(row: ResponsiblesRow): DeskResponsiblesView {
-  return {
-    members: row.members.map((member) => ({
-      personId: member.personId,
-      role: member.role,
-      handle: member.handle,
-      displayName: member.displayName,
-      active: member.active,
-      isMe: member.isMe,
-    })),
-    more: row.more,
-  }
-}
-
 /** Le badge CALCULÉ par le moteur ; une valeur inconnue se dit « Communauté », jamais plus. */
 function pageBadgeOf(badge: string): PageTrustLevel {
   return badge === "official" || badge === "verified" ? badge : "community"
@@ -353,29 +258,6 @@ export function toClaimDetailView(row: ClaimDetailRow): DeskClaimDetailView {
   }
 }
 
-/** MD-04 : les réglages tels que le moteur les sert, défauts compris ; aucune valeur n'est complétée ici. */
-export function toSettingsView(row: SettingsRow): DeskSettingsView {
-  return {
-    defaults: { preReview: row.defaults.preReview, maxLinks: row.defaults.maxLinks, maxWrites: row.defaults.maxWrites, windowMs: row.defaults.windowMs },
-    surfaces: row.surfaces.map((item) => ({
-      surface: item.surface,
-      withoutPolicy: item.withoutPolicy,
-      policy: item.policy === null
-        ? null
-        : { preReview: item.policy.preReview, maxLinks: item.policy.maxLinks, maxWrites: item.policy.maxWrites, windowMs: item.policy.windowMs, updatedAt: item.policy.updatedAt },
-    })),
-  }
-}
-
-/** MD-04 : une fenêtre des mots bloqués actifs. */
-export function toBlockedTermsWindow(row: BlockedTermsRow): DeskPage<DeskBlockedTermView> {
-  return {
-    items: row.page.map((item) => ({ termId: item.termId, term: item.term, updatedAt: item.updatedAt })),
-    continueCursor: row.isDone ? null : row.continueCursor,
-    isDone: row.isDone,
-  }
-}
-
 /** Un média retenu par la garde des fichiers garde sa place, sans adresse. */
 function toMediaView(media: PreviewRow["media"][number]): PostMediaView {
   const withheld = media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null
@@ -401,7 +283,6 @@ function windowOf<Row, View>(rows: Window<Row>, view: (row: Row) => View): DeskP
 const projectDesk = (row: DeskRow): ModerationDeskView | null => (row === null ? null : toDeskView(row))
 const projectCases = (rows: FunctionReturnType<typeof DESK.queue>): DeskPage<DeskCaseView> => windowOf(rows, toCaseView)
 const projectPending = (rows: FunctionReturnType<typeof DESK.pendingQueue>): DeskPage<DeskPendingView> => windowOf(rows, toPendingView)
-const projectAppeals = (rows: FunctionReturnType<typeof DESK.appealQueue>): DeskPage<DeskAppealView> => windowOf(rows, toAppealView)
 const projectClaims = (rows: FunctionReturnType<typeof DESK.pageClaimQueue>): DeskPage<DeskClaimView> => windowOf(rows, toClaimView)
 
 /** La voie des délais légaux d'une file : celle d'une équipe, ou toute la file accessible (rôle réseau). */
@@ -592,148 +473,6 @@ export function createEngineModerationDesk(deps: EngineSourceDeps): ModerationDe
         await deps.convex.mutation(CASES.reviewContent, { networkId, target: engineTarget(input.targetKind, input.targetId), approve: input.approve, reason })
         return null
       })
-    },
-
-    useAppeals({ personId, zone, surface, cursor }) {
-      const reader = useDeskReader(personId)
-      const loaded = useLoaded(DESK.appealQueue, reader.networkId
-        ? {
-            networkId: reader.networkId,
-            expectedPersonId: personId as Id<"persons">,
-            zone: engineZone(zone),
-            ...(surface ? { surface } : {}),
-            paginationOpts: { cursor, numItems: DESK_PAGE_SIZE },
-          }
-        : "skip")
-      return useProjected(reader, loaded, projectAppeals)
-    },
-
-    async decideAppeal(input) {
-      return await run(async () => {
-        const reason = requireReason(input.reason)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        await deps.convex.mutation(CASES.reviewNetworkAppeal, { networkId, appealId: input.appealId as Id<"appeals">, overturn: input.overturn, reason })
-        return null
-      })
-    },
-
-    useRoster({ personId, teamId }) {
-      const reader = useDeskReader(personId)
-      const loaded = useLoaded(DESK.teamRoster, reader.networkId
-        ? { networkId: reader.networkId, expectedPersonId: personId as Id<"persons">, teamId: teamId as Id<"moderationTeams"> }
-        : "skip")
-      return useProjected(reader, loaded, toRosterView)
-    },
-
-    async findMember({ personId, handle }) {
-      return await run(async () => {
-        const raw = handle.trim().replace(/^@/, "")
-        if (raw.length === 0) throw new Refusal("moderation_desk_handle_required")
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        const row = await deps.convex.query(DESK.teamCandidate, { networkId, expectedPersonId: personId as Id<"persons">, handle: raw })
-        return row === null ? null : { personId: row.personId, handle: row.handle, displayName: row.displayName }
-      })
-    },
-
-    async createTeam(input) {
-      return await run(async () => {
-        const nameRefusal = deskTeamNameRefusal(input.name)
-        if (nameRefusal) throw new Refusal(nameRefusal)
-        const reason = requireReason(input.reason)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        const created = await deps.convex.mutation(CASES.createTeam, {
-          networkId,
-          name: input.name.trim(),
-          ...(input.scope ? { scope: input.scope } : {}),
-          reason,
-        })
-        return { teamId: created.teamId }
-      })
-    },
-
-    async setTeamMember(input) {
-      return await run(async () => {
-        const reason = requireReason(input.reason)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        await deps.convex.mutation(CASES.setTeamMember, {
-          networkId,
-          teamId: input.teamId as Id<"moderationTeams">,
-          personId: input.memberPersonId as Id<"persons">,
-          active: input.active,
-          reason,
-        })
-        return null
-      })
-    },
-
-    useResponsibles(personId) {
-      const reader = useDeskReader(personId)
-      const loaded = useLoaded(DESK.responsibles, reader.networkId ? { networkId: reader.networkId, expectedPersonId: personId as Id<"persons"> } : "skip")
-      return useProjected(reader, loaded, toResponsiblesView)
-    },
-
-    async setResponsibleRole(input) {
-      return await run(async () => {
-        const reason = requireReason(input.reason)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        const result = await deps.convex.mutation(SET_RESPONSIBLE_ROLE, {
-          networkId,
-          personId: input.memberPersonId as Id<"persons">,
-          role: input.role,
-          reason,
-        })
-        return { role: result.role, changed: result.changed }
-      }, responsibleRoleErrorCode)
-    },
-
-    useSettings(personId) {
-      const reader = useDeskReader(personId)
-      const loaded = useLoaded(CASES.policies, reader.networkId ? { networkId: reader.networkId } : "skip")
-      return useProjected(reader, loaded, toSettingsView)
-    },
-
-    useBlockedTerms({ personId, cursor }) {
-      const reader = useDeskReader(personId)
-      const loaded = useLoaded(CASES.blockedTermsPage, reader.networkId
-        ? { networkId: reader.networkId, paginationOpts: { cursor, numItems: DESK_BLOCKED_TERMS_PAGE } }
-        : "skip")
-      return useProjected(reader, loaded, toBlockedTermsWindow)
-    },
-
-    async setPolicy(input) {
-      return await run(async () => {
-        const reason = requireReason(input.reason)
-        const refusal = deskPolicyRefusal(input)
-        if (refusal) throw new Refusal(refusal)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        await deps.convex.mutation(CASES.setPolicy, {
-          networkId,
-          surface: input.surface,
-          preReview: input.preReview,
-          maxLinks: input.maxLinks,
-          maxWrites: input.maxWrites,
-          windowMs: input.windowMs,
-          reason,
-        })
-        return null
-      }, moderationPolicyErrorCode)
-    },
-
-    async setBlockedTerm(input) {
-      return await run(async () => {
-        const reason = requireReason(input.reason)
-        const refusal = deskBlockedTermRefusal(input.term)
-        if (refusal) throw new Refusal(refusal)
-        await expectPerson(input.personId)
-        const networkId = await resolveDiasporaGaNetworkId(deps.convex)
-        await deps.convex.mutation(CASES.setBlockedTerm, { networkId, term: input.term.trim(), active: input.active, reason })
-        return null
-      }, blockedTermErrorCode)
     },
 
     useClaims({ personId, zone, cursor }) {

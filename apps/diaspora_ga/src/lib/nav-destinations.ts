@@ -42,7 +42,6 @@ export const PERSONAL_DESTINATIONS = [
   "bookmarks",
   "sponsor",
   "moderation",
-  "pilot",
 ] as const
 export type PersonalDestination = (typeof PERSONAL_DESTINATIONS)[number]
 
@@ -171,7 +170,6 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   sponsor: member("sponsor", routes.sponsor()),
   sponsorFor: member("sponsor", routes.sponsorFor(SEGMENT)),
   moderationDesk: member("moderation", routes.moderationDesk()),
-  pilotDashboard: member("pilot", routes.pilotDashboard()),
   // Le compte : les réglages, leurs ancres et la vérification consulaire.
   settings: member("settings", routes.settings()),
   settingsFeed: member("settings", routes.settingsFeed()),

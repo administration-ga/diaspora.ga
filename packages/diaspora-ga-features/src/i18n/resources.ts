@@ -55,7 +55,6 @@ import enMentoring from "./locales/en/mentoring.json"
 import enJobs from "./locales/en/jobs.json"
 import enModerationDesk from "./locales/en/moderation-desk.json"
 import enModerationDeadlines from "./locales/en/moderation-deadlines.json"
-import enPilotMetrics from "./locales/en/pilot-metrics.json"
 import enPageDecisions from "./locales/en/page-decisions.json"
 import enContextualConversations from "./locales/en/contextual-conversations.json"
 import enCommunityNotifications from "./locales/en/community-notifications.json"
@@ -83,13 +82,10 @@ import enEntryReliability from "./locales/en/entry-reliability.json"
 import enSponsorshipRequest from "./locales/en/sponsorship-request.json"
 import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
-import enNetworkResponsibles from "./locales/en/network-responsibles.json"
-import enModerationSettings from "./locales/en/moderation-settings.json"
 import enNetworkFeatures from "./locales/en/network-features.json"
 import enPageClaimsDesk from "./locales/en/page-claims-desk.json"
 import enAidFinding from "./locales/en/aid-finding.json"
 import enAidOnTheWay from "./locales/en/aid-on-the-way.json"
-import enAidUsefulness from "./locales/en/aid-usefulness.json"
 import enInstallableApp from "./locales/en/installable-app.json"
 import enNotificationsCenter from "./locales/en/notifications-center.json"
 import enIcomNotices from "./locales/en/icom-notices.json"
@@ -139,7 +135,6 @@ import frMentoring from "./locales/fr/mentoring.json"
 import frJobs from "./locales/fr/jobs.json"
 import frModerationDesk from "./locales/fr/moderation-desk.json"
 import frModerationDeadlines from "./locales/fr/moderation-deadlines.json"
-import frPilotMetrics from "./locales/fr/pilot-metrics.json"
 import frPageDecisions from "./locales/fr/page-decisions.json"
 import frContextualConversations from "./locales/fr/contextual-conversations.json"
 import frCommunityNotifications from "./locales/fr/community-notifications.json"
@@ -167,13 +162,10 @@ import frEntryReliability from "./locales/fr/entry-reliability.json"
 import frSponsorshipRequest from "./locales/fr/sponsorship-request.json"
 import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
-import frNetworkResponsibles from "./locales/fr/network-responsibles.json"
-import frModerationSettings from "./locales/fr/moderation-settings.json"
 import frNetworkFeatures from "./locales/fr/network-features.json"
 import frPageClaimsDesk from "./locales/fr/page-claims-desk.json"
 import frAidFinding from "./locales/fr/aid-finding.json"
 import frAidOnTheWay from "./locales/fr/aid-on-the-way.json"
-import frAidUsefulness from "./locales/fr/aid-usefulness.json"
 import frInstallableApp from "./locales/fr/installable-app.json"
 import frNotificationsCenter from "./locales/fr/notifications-center.json"
 import frIcomNotices from "./locales/fr/icom-notices.json"
@@ -228,7 +220,6 @@ export const LOCALE_PARTS = {
     jobs: frJobs,
     "moderation-desk": frModerationDesk,
     "moderation-deadlines": frModerationDeadlines,
-    "pilot-metrics": frPilotMetrics,
     "page-decisions": frPageDecisions,
     "contextual-conversations": frContextualConversations,
     "community-notifications": frCommunityNotifications,
@@ -259,13 +250,10 @@ export const LOCALE_PARTS = {
     "sponsorship-request": frSponsorshipRequest,
     "mission-volunteer-notices": frMissionVolunteerNotices,
     "event-outcome-notices": frEventOutcomeNotices,
-    "network-responsibles": frNetworkResponsibles,
-    "moderation-settings": frModerationSettings,
     "network-features": frNetworkFeatures,
     "page-claims-desk": frPageClaimsDesk,
     "aid-finding": frAidFinding,
     "aid-on-the-way": frAidOnTheWay,
-    "aid-usefulness": frAidUsefulness,
     "installable-app": frInstallableApp,
     "notifications-center": frNotificationsCenter,
     "icom-notices": frIcomNotices,
@@ -316,7 +304,6 @@ export const LOCALE_PARTS = {
     jobs: enJobs,
     "moderation-desk": enModerationDesk,
     "moderation-deadlines": enModerationDeadlines,
-    "pilot-metrics": enPilotMetrics,
     "page-decisions": enPageDecisions,
     "contextual-conversations": enContextualConversations,
     "community-notifications": enCommunityNotifications,
@@ -347,13 +334,10 @@ export const LOCALE_PARTS = {
     "sponsorship-request": enSponsorshipRequest,
     "mission-volunteer-notices": enMissionVolunteerNotices,
     "event-outcome-notices": enEventOutcomeNotices,
-    "network-responsibles": enNetworkResponsibles,
-    "moderation-settings": enModerationSettings,
     "network-features": enNetworkFeatures,
     "page-claims-desk": enPageClaimsDesk,
     "aid-finding": enAidFinding,
     "aid-on-the-way": enAidOnTheWay,
-    "aid-usefulness": enAidUsefulness,
     "installable-app": enInstallableApp,
     "notifications-center": enNotificationsCenter,
     "icom-notices": enIcomNotices,

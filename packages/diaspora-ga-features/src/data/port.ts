@@ -76,7 +76,6 @@ import type { ArrivalKitCapability } from "./arrival-kit-port"
 import type { MentoringCapability } from "./mentoring-port"
 import type { JobsCapability } from "./jobs-port"
 import type { ModerationDeskCapability } from "./moderation-desk-port"
-import type { PilotMetricsCapability } from "./pilot-metrics-port"
 import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
@@ -385,8 +384,6 @@ export interface DiasporaGaDataSource {
   readonly jobs?: JobsCapability
   /** Modération par pays (PD6 · G9, `moderation-desk-port.ts`). */
   readonly moderationDesk?: ModerationDeskCapability
-  /** Mesure du pilote (DG-027 · G11, `pilot-metrics-port.ts`). */
-  readonly pilotMetrics?: PilotMetricsCapability
   /** Décisions qui ont retiré un contenu porté par une page, et leur recours (P16 · G9, `page-decisions-port.ts`). */
   readonly pageDecisions?: PageDecisionsCapability
   /** Le fil de mise en relation d'un objet, lu et ouvert depuis l'objet (CC-6, `conversations-port.ts`). */

@@ -9,60 +9,24 @@
  *
  * L'application n'invente rien : un module fermé est une CAPACITÉ ABSENTE de la
  * source (`gateSource`). Les écrans qui lisent une capacité facultative s'en
- * passent déjà ; la navigation, elle, lit `useFeatureGate()`.
+ * passent déjà ; la navigation, elle, lit `useFeatureGate()`. Les modules s'ouvrent
+ * et se ferment dans l'application d'administration du réseau (fiche CH-815, D5) :
+ * le site des membres ne fait que lire les modules ouverts.
  */
 import {
   NETWORK_FEATURE_PARENTS,
   NETWORK_FEATURES,
   type NetworkFeature,
-  networkFeatureToggleRefusal,
 } from "@antsia/social-domain/networkFeatures"
 
-import type { ActionResult, DiasporaGaDataSource } from "./port"
+import type { DiasporaGaDataSource } from "./port"
 import type { Loadable } from "./types"
 
 export { NETWORK_FEATURE_PARENTS, NETWORK_FEATURES, type NetworkFeature }
 
-/** Le motif d'une bascule, comme au moteur (`NETWORK_FEATURE_REASON_MIN`) et au guichet de modération. */
-export const NETWORK_FEATURE_REASON_MIN = 10
-export const NETWORK_FEATURE_REASON_MAX = 500
-
-/** Codes de refus propres aux bascules (fragment `network-features`). */
-export const NETWORK_FEATURES_ERROR_CODES = [
-  // Ouvrir une fonctionnalité qui vit sur les pages, pages fermées.
-  "network_feature_requires_parent",
-  // Fermer les pages quand l'une de leurs fonctionnalités est encore ouverte.
-  "network_feature_has_open_children",
-  // Motif trop court ou trop long.
-  "network_feature_reason_length",
-] as const
-export type NetworkFeaturesErrorCode = (typeof NETWORK_FEATURES_ERROR_CODES)[number]
-
-/** L'état d'une fonctionnalité, tel que l'administrateur du réseau le lit. */
-export interface NetworkFeatureState {
-  readonly feature: NetworkFeature
-  /** La décision posée (fermée sans décision). */
-  readonly enabled: boolean
-  /** L'état servi : décision ouverte ET fonctionnalité exigée ouverte. */
-  readonly open: boolean
-  /** La fonctionnalité qu'elle exige ouverte, ou `null`. */
-  readonly requires: NetworkFeature | null
-  readonly updatedAt: number | null
-}
-
-export interface NetworkFeatureToggleInput {
-  readonly feature: NetworkFeature
-  readonly enabled: boolean
-  readonly reason: string
-}
-
 export interface NetworkFeaturesCapability {
   /** Les fonctionnalités OUVERTES du réseau pour la personne ; aucune hors adhésion. */
   useOpen(): Loadable<readonly NetworkFeature[]>
-  /** L'administration du réseau : l'état des huit ; refus indistinct pour tout autre membre. */
-  useSettings(): Loadable<readonly NetworkFeatureState[]>
-  /** Ouvrir ou fermer une fonctionnalité, motif obligatoire ; `changed` faux si rien n'était à décider. */
-  setFeature(input: NetworkFeatureToggleInput): Promise<ActionResult<{ readonly changed: boolean }>>
 }
 
 /**
@@ -78,7 +42,8 @@ export const FEATURE_CAPABILITIES = {
   mutualAid: ["mutualAid"],
   mentoring: ["mentoring"],
   arrivalKit: ["arrivalKit"],
-  pilotMetrics: ["pilotMetrics"],
+  // La mesure du pilote ne sert plus rien au site des membres (fiche CH-815, lot A6) : elle se lit dans l'administration.
+  pilotMetrics: [],
 } as const satisfies Readonly<Record<NetworkFeature, readonly (keyof DiasporaGaDataSource)[]>>
 
 /** Une liste lue (moteur, démonstration) ramenée aux clés connues, dans l'ordre des clés. */
@@ -120,14 +85,4 @@ export function featureGateOf(source: Pick<DiasporaGaDataSource, "openFeatures" 
     ready: source?.featuresReady ?? true,
     isOpen: (feature) => open === undefined || open.includes(feature),
   }
-}
-
-/** Le refus d'une bascule, jugé comme au moteur (motif, puis dépendance) ; `null` : admise. */
-export function networkFeatureToggleError(input: NetworkFeatureToggleInput, open: readonly NetworkFeature[]): NetworkFeaturesErrorCode | null {
-  const reason = input.reason.trim().length
-  if (reason < NETWORK_FEATURE_REASON_MIN || reason > NETWORK_FEATURE_REASON_MAX) return "network_feature_reason_length"
-  const refusal = networkFeatureToggleRefusal({ feature: input.feature, enabled: input.enabled, open })
-  if (refusal === "NETWORK_FEATURE_REQUIRES_PARENT") return "network_feature_requires_parent"
-  if (refusal === "NETWORK_FEATURE_HAS_OPEN_CHILDREN") return "network_feature_has_open_children"
-  return null
 }

@@ -2,73 +2,42 @@
 
 /**
  * Briques communes du guichet de modération (PD6 · G9) : libellés fermés, pays
- * de la cible, filtres, aperçu borné du moteur, champ et formulaire de motif,
- * recherche d'un membre par identifiant, étape de confirmation des mesures
- * lourdes, refus traduits.
+ * de la cible, filtres, aperçu borné du moteur, champ de motif, étape de
+ * confirmation des mesures lourdes, refus traduits. Celles des décisions du
+ * réseau (recours, équipes, responsables, réglages) ont déménagé avec elles dans
+ * l'application d'administration (CH-815, lot A6).
  * PROPRIÉTAIRE : chantier « modération par pays ».
  */
 import type { CountryCode } from "@diaspora-ga/domain"
-import { Button, CountryTag, Field, PostMediaGrid, Skeleton, Textarea, formatDate, handleRefusal, normalizeHandle, residenceCountryOptions } from "@diaspora-ga/features"
+import { Button, CountryTag, Field, PostMediaGrid, Skeleton, Textarea, formatDate, residenceCountryOptions } from "@diaspora-ga/features"
 import {
-  DESK_BLOCKED_TERM_LENGTH,
-  DESK_BLOCKED_TERMS_MAX,
-  DESK_POLICY_BOUNDS,
   DESK_REASON_MAX,
   DESK_REASON_MIN,
   DESK_SURFACES,
-  DESK_TEAM_NAME_MAX,
-  DESK_TEAM_NAME_MIN,
-  DESK_WINDOW_MINUTES,
   useOpenCountries,
   type DeskCaseLevel,
   type DeskGround,
   type DeskParty,
   type DeskPreviewView,
   type DeskSanctionKind,
-  type ActionErrorCode,
   type DeskSurface,
   type Loadable,
 } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useId, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from "react"
-import { useForm, type UseFormRegisterReturn } from "react-hook-form"
+import { useId, useLayoutEffect, useRef, type ReactNode, type RefObject } from "react"
+import type { UseFormRegisterReturn } from "react-hook-form"
 import { z } from "zod"
 
 export const deskSelectClass = "h-11 w-full rounded-md border border-input bg-card px-3 text-[15px] focus-visible:shadow-focus aria-invalid:border-destructive"
 
-/** Les bornes que citent les phrases d'erreur du guichet (motif, nom d'équipe, réglages et mots bloqués du moteur). */
+/** Les bornes que citent les phrases d'erreur du guichet (le motif d'une décision). */
 export const DESK_ERROR_VALUES = {
   min: DESK_REASON_MIN,
   max: DESK_REASON_MAX,
-  nameMin: DESK_TEAM_NAME_MIN,
-  nameMax: DESK_TEAM_NAME_MAX,
-  linksMin: DESK_POLICY_BOUNDS.maxLinks.min,
-  linksMax: DESK_POLICY_BOUNDS.maxLinks.max,
-  writesMin: DESK_POLICY_BOUNDS.maxWrites.min,
-  writesMax: DESK_POLICY_BOUNDS.maxWrites.max,
-  windowMin: DESK_WINDOW_MINUTES.min,
-  windowMax: DESK_WINDOW_MINUTES.max,
-  termMin: DESK_BLOCKED_TERM_LENGTH.min,
-  termMax: DESK_BLOCKED_TERM_LENGTH.max,
-  termsMax: DESK_BLOCKED_TERMS_MAX,
 } as const
 
 /** Le motif d'une décision, tel que le guichet le borne (clé d'erreur fermée). */
 export const deskReasonSchema = z.string().trim().min(DESK_REASON_MIN, "moderation_desk_reason_length").max(DESK_REASON_MAX, "moderation_desk_reason_length")
-
-const deskReasonOnlySchema = z.object({ reason: deskReasonSchema })
-type DeskReasonValues = z.infer<typeof deskReasonOnlySchema>
-
-/** L'identifiant public d'un membre à chercher (ajout à une équipe, nomination d'un responsable). */
-export const deskHandleLookupSchema = z.object({
-  handle: z.string().superRefine((raw, context) => {
-    const handle = normalizeHandle(raw)
-    const refusal = handle.length === 0 ? "moderation_desk_handle_required" : handleRefusal(handle)
-    if (refusal) context.addIssue({ code: z.ZodIssueCode.custom, message: refusal })
-  }),
-})
-export type DeskHandleLookupValues = z.infer<typeof deskHandleLookupSchema>
 
 /** Les refus d'accès : le guichet se dit alors indisponible, sans rien révéler de plus. */
 export const DESK_ACCESS_ERRORS: ReadonlySet<string> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
@@ -302,58 +271,5 @@ export function DeskConfirmStep(props: {
         <Button type="button" variant="ghost" disabled={props.busy} onClick={props.onBack}>{t("moderationDesk.confirm.back")}</Button>
       </div>
     </div>
-  )
-}
-
-/** Un motif seul, puis le geste : la confirmation d'un retrait, d'un ajout ou d'un changement de rôle. */
-export function DeskReasonForm(props: {
-  readonly submitLabel: string
-  readonly destructive?: boolean
-  readonly onBusyChange?: (busy: boolean) => void
-  readonly onSubmit: (reason: string) => Promise<ActionErrorCode | null>
-  readonly onCancel: () => void
-}) {
-  const { t } = useDiasporaGaT()
-  const id = useId()
-  const mounted = useMounted()
-  const locked = useRef(false)
-  const [error, setError] = useState<ActionErrorCode | null>(null)
-  const form = useForm<DeskReasonValues>({ resolver: zodResolver(deskReasonOnlySchema), defaultValues: { reason: "" } })
-  const busy = form.formState.isSubmitting
-
-  const send = async (values: DeskReasonValues) => {
-    if (locked.current) return
-    locked.current = true
-    props.onBusyChange?.(true)
-    setError(null)
-    try {
-      const code = await props.onSubmit(values.reason)
-      if (mounted.current && code !== null) setError(code)
-    } catch {
-      if (mounted.current) setError("unknown")
-    } finally {
-      locked.current = false
-      props.onBusyChange?.(false)
-    }
-  }
-
-  return (
-    <form noValidate onSubmit={(event) => void form.handleSubmit(send)(event)} className="flex min-w-0 flex-col gap-3">
-      <DeskReasonField
-        id={`${id}-motif`}
-        label={t("moderationDesk.decision.reason")}
-        hint={t("moderationDesk.decision.reasonHint", DESK_ERROR_VALUES)}
-        error={form.formState.errors.reason?.message}
-        disabled={busy}
-        registration={form.register("reason")}
-      />
-      <DeskErrorLine code={error} />
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" variant={props.destructive ? "destructive" : "primary"} disabled={busy}>
-          {busy ? t("common.pleaseWait") : props.submitLabel}
-        </Button>
-        <Button type="button" variant="ghost" disabled={busy} onClick={props.onCancel}>{t("common.cancel")}</Button>
-      </div>
-    </form>
   )
 }

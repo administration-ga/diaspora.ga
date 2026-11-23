@@ -59,7 +59,11 @@
     "section": {
       "dashboard": "Dashboard",
       "modules": "Modules",
-      "menuPreview": "Menu preview"
+      "menuPreview": "Menu preview",
+      "metrics": "Metrics",
+      "appeals": "Appeals",
+      "team": "Team and leads",
+      "rules": "Rules"
     }
   },
   "dashboard": {
@@ -93,7 +97,8 @@
       "open": "Open the module",
       "close": "Close the module",
       "blockedByParent": "Opens once {{module}} is open.",
-      "blockedByChildren": "Closes once the modules that live on it are closed: {{modules}}."
+      "blockedByChildren": "Closes once the modules that live on it are closed: {{modules}}.",
+      "addsNothing": "Nothing: this module does not change the members’ menu."
     },
     "prerequisite": {
       "parentOpen": "The required module is open: {{module}}.",
@@ -153,7 +158,6 @@
       "pageTeam": "for those who hold a role on a page",
       "associationMember": "for those who belong to an association",
       "moderator": "for moderators",
-      "pilotReader": "for leads who read the metrics",
       "publisher": "for members who publish",
       "registrant": "for members who can register a page"
     }
@@ -179,8 +183,7 @@
     "holding": {
       "holdsPageRole": "Holds a role on a page",
       "holdsAssociation": "Belongs to an association",
-      "moderator": "Moderates the network or a country",
-      "pilotReader": "Reads the pilot metrics"
+      "moderator": "Moderates the network or a country"
     },
     "comparison": "Compared with today’s menu",
     "noChange": "No change compared with today’s menu.",
@@ -231,5 +234,429 @@
     "title": "Page not found",
     "lead": "This address does not match any administration section.",
     "back": "Back to the dashboard"
+  },
+  "section": {
+    "loading": "Loading…",
+    "failed": "The reading did not succeed.",
+    "retry": "Read again",
+    "loadMore": "Show more",
+    "loadingMore": "Loading more…"
+  },
+  "decision": {
+    "reason": "Reason for the decision",
+    "reasonHint": "Required, {{min}} to {{max}} characters. The person concerned will read it: do not include contact details or private data.",
+    "reasonLength": "The reason must be between {{min}} and {{max}} characters.",
+    "pending": "Please wait…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back to the decision"
+  },
+  "filters": {
+    "label": "Appeal filters",
+    "zone": "Content country",
+    "zoneAll": "All countries",
+    "zoneNone": "No country (diaspora reach, accounts, messages)",
+    "zoneOpen": "Open countries",
+    "zoneOther": "Other countries",
+    "surface": "Content type",
+    "surfaceAll": "All types",
+    "noCountry": "No country"
+  },
+  "lookup": {
+    "required": "Enter the person's public handle.",
+    "invalid": "This public handle is not valid.",
+    "unknown": "No active network member has this handle.",
+    "failed": "The search did not succeed.",
+    "hint": "For example firstname.lastname: only an active network member is found.",
+    "search": "Search"
+  },
+  "appeals": {
+    "title": "Appeals",
+    "lead": "Appeals against a team decision that reached the network, oldest first. Neither the previous decision-maker nor the person appealing reviews them. Every review carries a reason and is written to the decision log.",
+    "emptyTitle": "No appeal to review",
+    "emptyFilteredTitle": "No appeal matches",
+    "emptyBody": "An appeal appears here when a person contests a team decision.",
+    "decidedAt": "Decided on",
+    "decisionReason": "Reason for the decision",
+    "noReason": "No reason recorded.",
+    "measures": "Measures",
+    "noMeasure": "No measure",
+    "measureUntil": "{{measure}} until {{date}}",
+    "appealReason": "Reason for the appeal",
+    "filedAt": "Appeal filed on",
+    "open": "Review the appeal",
+    "sheetTitle": "Appeal: {{surface}}",
+    "sheetDescription": "The contested decision, the reason for the appeal, then your reasoned review.",
+    "decisionTitle": "Your review",
+    "outcomeLegend": "Outcome",
+    "uphold": "Uphold the decision",
+    "upholdHint": "The decision and its measures stay in force; the person can still turn to the platform team.",
+    "overturn": "Overturn the decision",
+    "overturnHint": "The measures are lifted and the content is restored if it had been removed.",
+    "submit": "Save the review",
+    "doneUpheld": "Decision upheld: the appeal has left the queue.",
+    "doneOverturned": "Decision overturned: the appeal has left the queue.",
+    "ground": "Case ground",
+    "view": "View the appeal",
+    "outcomeRequired": "Choose an outcome.",
+    "reasonHint": "Required. The person concerned will read it: do not include contact details or private data.",
+    "confirmTitle": "Confirm the overturn",
+    "confirmOverturn": "Overturn the contested decision",
+    "confirmBody": "Overturning the decision lifts its measures and restores the content if it had been removed.",
+    "conflict": "This appeal changed in the meantime: it has probably been reviewed already. Reread the queue.",
+    "failed": "The review was not saved.",
+    "party": {
+      "title": "You do not review this appeal",
+      "handOver": "Another network administrator must review it."
+    }
+  },
+  "team": {
+    "title": "Team and leads",
+    "lead": "The network's leads, then the teams handling the diaspora.ga moderation queue. Every appointment, addition and removal carries a reason and is written to the decision log.",
+    "countryNote": "The engine does not yet attach a team to a country: a team name may say so, it defines no remit.",
+    "scopeAll": "All content types",
+    "scopeOne": "Content type handled: {{surface}}",
+    "picker": "Team to compose",
+    "noneYet": "No team exists yet: create the first one below.",
+    "roster": "Members of the {{name}} team",
+    "rosterEmpty": "This team has no active member yet.",
+    "rosterMore": "Other members exist; only the first ones are shown.",
+    "me": "(you)",
+    "neutralName": "Member with an unpublished profile",
+    "outsideNetwork": "No longer an active network member.",
+    "remove": "Remove",
+    "removeTitle": "Remove {{name}} from the team",
+    "removeBody": "This person will no longer read the {{team}} team queue. The removal is reasoned and recorded in the engine's decision log.",
+    "removeConfirm": "Remove from the team",
+    "removed": "{{name}} is no longer part of the team.",
+    "addTitle": "Add a member to the {{name}} team",
+    "handle": "Member's public handle",
+    "addConfirm": "Add to the team",
+    "added": "{{name}} is now part of the team.",
+    "createTitle": "Create a team",
+    "createLead": "A team handles every content type or a single one; creating it requires a reason.",
+    "name": "Team name",
+    "nameHint": "{{nameMin}} to {{nameMax}} characters, for example “France”.",
+    "scope": "Content type handled",
+    "create": "Create the team",
+    "created": "Team “{{name}}” created.",
+    "teamsTitle": "Moderation teams",
+    "nameLength": "The team name must be between {{nameMin}} and {{nameMax}} characters.",
+    "failed": "The team action did not succeed."
+  },
+  "responsibles": {
+    "title": "Network leads",
+    "lead": "The network administration decides here: appeals, teams, leads, rules and modules. The network moderation reads and decides the whole queue on diaspora.ga. Every appointment, change and removal carries a reason and is written to the engine’s decision log; it applies from the person’s next action.",
+    "role": {
+      "network_admin": "Network administration",
+      "network_moderator": "Network moderation"
+    },
+    "inactive": "Dormant role: this person's membership is pending or suspended.",
+    "more": "Other leads exist; only the first ones are shown.",
+    "change": "Change role",
+    "remove": "Remove role",
+    "changeTitle": "Change {{name}}'s role",
+    "changeBody": "{{name}} will move from “{{from}}” to “{{to}}” from their next action. The change is reasoned and recorded in the engine's decision log.",
+    "changeConfirm": "Confirm the change",
+    "removeTitle": "Remove {{name}} from the network leads",
+    "removeBody": "{{name}} stays a member of the network, without the “{{role}}” role, from their next action. The removal is reasoned and recorded in the engine's decision log.",
+    "removeConfirm": "Confirm the removal",
+    "selfWarning": "This is your own role: you will lose its rights with this action.",
+    "appointTitle": "Appoint a lead",
+    "appointLead": "Only an active network member, with at least “declared” status, can receive a role; no membership is created. The network always keeps at least one active administrator.",
+    "handle": "Public handle of the person to appoint",
+    "roleField": "Role given",
+    "appointConfirm": "Appoint",
+    "appointed": "Appointment recorded: {{name}}, {{role}}.",
+    "changed": "Role changed: {{name}}, {{role}}.",
+    "removed": "{{name}} is no longer a network lead.",
+    "unchanged": "{{name}} already has this role: nothing changed.",
+    "refused": "This action did not succeed: a role is only given to an active network member, with at least the “declared” status.",
+    "failed": "The role action did not succeed."
+  },
+  "rules": {
+    "lead": "What the network reviews before publication, section by section, and the words that send content to review. Reserved to the network administration; every setting and every word carries a reason and is written to the engine's decision log.",
+    "loading": "Loading settings…",
+    "defaults": {
+      "title": "Without a network setting",
+      "preReviewOff": "No review before publication: content appears as soon as it is written.",
+      "preReviewOn": "Review before publication: every piece of content waits for a moderator.",
+      "links_one": "Beyond {{count}} link, content goes to review: it is not refused.",
+      "links_other": "Beyond {{count}} links, content goes to review: it is not refused.",
+      "writes_one": "Beyond {{count}} write in {{window}}, across all sections, the next one also goes to review.",
+      "writes_other": "Beyond {{count}} writes in {{window}}, across all sections, the next one also goes to review.",
+      "terms": "Content containing a blocked word goes to review.",
+      "source": "These are the defaults of the ANTSIA engine, read as it applies them. They apply to every section without a setting, except the content reviewed by default, listed separately, and the mutual aid, mentoring, arrival kit and jobs sections, published without any rule until a setting is set for them."
+    },
+    "held": {
+      "title": "Reviewed by default in DIASPORA.GA",
+      "lead": "Until a setting is set for their section, this content waits for a moderator before it appears:",
+      "associationEvents": "association events (section “Event”);",
+      "reviews": "reviews of a service (section “Review of a service”);",
+      "reviewReplies": "a page's replies to a review (section “Page reply to a review”);",
+      "eventGallery": "additions to an event gallery (section “Post”).",
+      "note": "A setting on one of these sections makes this content follow that setting. On “Event” and “Post”, it also applies to personal events and to every post."
+    },
+    "heldNote": {
+      "associationEvents": "Association events stay reviewed by default until a setting is set.",
+      "eventGallery": "Additions to an event gallery stay reviewed by default until a setting is set."
+    },
+    "without": {
+      "defaults": "Without a setting: the engine defaults apply.",
+      "held": "Without a setting: every piece of content in this section waits for a moderator before it appears.",
+      "unchecked": "Without a setting: published as soon as it is written and moderated after a report, with no link cap, no pace limit and no blocked words."
+    },
+    "window": {
+      "hours_one": "{{count}} hour",
+      "hours_other": "{{count}} hours",
+      "minutes_one": "{{count}} minute",
+      "minutes_other": "{{count}} minutes",
+      "seconds_one": "{{count}} second",
+      "seconds_other": "{{count}} seconds"
+    },
+    "surfaces": {
+      "title": "By section",
+      "lead": "The sections of DIASPORA.GA. A setting replaces, for its section, the rule without a setting; it cannot be removed, only changed."
+    },
+    "policy": {
+      "since": "Setting in force since {{date}}.",
+      "preReviewOn": "Review before publication: yes.",
+      "preReviewOff": "Review before publication: no.",
+      "links_one": "Beyond {{count}} link: review.",
+      "links_other": "Beyond {{count}} links: review.",
+      "writes_one": "At most {{count}} write in {{window}}; beyond that, review.",
+      "writes_other": "At most {{count}} writes in {{window}}; beyond that, review.",
+      "set": "Set a setting",
+      "change": "Change the setting"
+    },
+    "sheet": {
+      "title": "Setting: {{surface}}",
+      "description": "Review before publication, link cap and pace for this section. The setting carries a reason and is written to the engine's decision log.",
+      "preReview": "Review before publication",
+      "preReviewHint": "Every piece of content in this section waits for a moderator before it appears.",
+      "maxLinks": "Link cap",
+      "maxLinksHint": "Beyond it, content goes to review; from {{linksMin}} to {{linksMax}}.",
+      "maxWrites": "Writes at most within the window",
+      "maxWritesHint": "Beyond it, the next one goes to review; from {{writesMin}} to {{writesMax}}.",
+      "window": "Pace window, in minutes",
+      "windowHint": "From {{windowMin}} to {{windowMax}} minutes.",
+      "liftsHeld": {
+        "associationEvents": "Association events are reviewed by default today. This setting applies to every event, association events included: without review before publication, the next one will appear directly if it respects the link cap, the pace and the blocked words.",
+        "reviews": "Reviews are reviewed by default today. This setting makes them follow it: without review before publication, the next review will appear directly if it respects the link cap, the pace and the blocked words.",
+        "reviewReplies": "A page's replies to a review are reviewed by default today. This setting makes them follow it: without review before publication, the next one will appear directly if it respects the link cap, the pace and the blocked words.",
+        "eventGallery": "Additions to an event gallery are reviewed by default today. This setting applies to every post, gallery included: without review before publication, the next addition will appear directly if it respects the link cap, the pace and the blocked words."
+      },
+      "permanent": "A setting cannot be removed once set: it can only be changed.",
+      "reasonHint": "Why this setting; the reason stays in the decision log ({{min}} to {{max}} characters).",
+      "submit": "Save the setting",
+      "saved": "Setting saved: {{surface}}."
+    },
+    "terms": {
+      "title": "Blocked words",
+      "lead": "Content containing one of these words goes to review: it is not refused. Case and accents do not matter, and the word is also matched inside other words. The network keeps {{termsMax}} at most.",
+      "waveNote": "The mutual aid, mentoring, arrival kit and jobs sections only read blocked words once a setting is set for them.",
+      "emptyTitle": "No blocked word",
+      "emptyBody": "The network has not blocked any word yet.",
+      "since": "Blocked on {{date}}",
+      "remove": "Unblock",
+      "removeTitle": "Unblock “{{term}}”",
+      "removeBody": "Content containing this word will no longer go to review for that reason. The removal carries a reason and is written to the engine's decision log.",
+      "removeConfirm": "Unblock this word",
+      "removed": "“{{term}}” is no longer blocked.",
+      "addTitle": "Block a word",
+      "term": "Word or phrase",
+      "termHint": "From {{termMin}} to {{termMax}} characters, case and accents removed.",
+      "reasonHint": "Why this word; the reason stays in the decision log ({{min}} to {{max}} characters).",
+      "add": "Block this word",
+      "added": "“{{term}}” is blocked."
+    },
+    "title": "Moderation rules",
+    "failed": "The rule was not saved.",
+    "refusal": {
+      "links": "The link cap goes from {{linksMin}} to {{linksMax}}, as a whole number.",
+      "writes": "The pace allows {{writesMin}} to {{writesMax}} writes, as a whole number.",
+      "window": "The pace window goes from {{windowMin}} to {{windowMax}} minutes, as a whole number.",
+      "termLength": "A blocked word has {{termMin}} to {{termMax}} characters, case and accents removed.",
+      "termsFull": "The network already keeps {{termsMax}} blocked words: unblock one before adding another."
+    }
+  },
+  "metrics": {
+    "title": "Pilot measurement",
+    "lead": "Counts aggregated by day and by country, recomputed by a nightly run, to follow the pilot’s usefulness without observing anyone.",
+    "privacyBadge": "Pilot measurements, with no private content",
+    "loading": "Loading the measurement…",
+    "notMeasuredTitle": "No measurement run yet",
+    "notMeasuredBody": "Counts are recomputed every night. They will appear here after the first run.",
+    "filters": {
+      "title": "Scope and period",
+      "country": "Country",
+      "countryHint": "The whole network, or one of its open countries.",
+      "period": "Period",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days"
+    },
+    "scope": {
+      "network": "Whole network"
+    },
+    "summary": {
+      "scope": "Scope: {{scope}}",
+      "window": "UTC days from {{start}} to {{end}}",
+      "computedAt": "Last run: {{date}}",
+      "partial_one": "Partial measurement: {{count}} day measured out of {{days}}.",
+      "partial_other": "Partial measurement: {{count}} days measured out of {{days}}."
+    },
+    "table": {
+      "indicator": "Indicator",
+      "value": "Value"
+    },
+    "group": {
+      "services": "Services and requests",
+      "associations": "Associations",
+      "events": "Page events",
+      "reviews": "Reviews",
+      "mutual_aid": "Mutual aid, mentoring and arrival kit"
+    },
+    "indicator": {
+      "offers_active": {
+        "label": "Active offers",
+        "hint": "Offers published in the catalogue by readable pages, taken at the last run."
+      },
+      "requests_sent": {
+        "label": "Requests sent",
+        "hint": "Requests created during the period."
+      },
+      "requests_answered": {
+        "label": "Requests answered",
+        "hint": "A proposal or a refusal from the page, to date."
+      },
+      "requests_confirmed": {
+        "label": "Requests confirmed",
+        "hint": "An agreed appointment, even if cancelled later."
+      },
+      "requests_completed": {
+        "label": "Services completed",
+        "hint": "Completion declared by the page."
+      },
+      "requests_cancelled": {
+        "label": "Requests cancelled",
+        "hint": "Cancelled by the person or by the page."
+      },
+      "requests_expired": {
+        "label": "Requests expired",
+        "hint": "Deadline reached without agreement."
+      },
+      "memberships_requested": {
+        "label": "Memberships requested",
+        "hint": "First requests to join an association."
+      },
+      "memberships_accepted": {
+        "label": "Memberships accepted",
+        "hint": "Accepted to date, even if left later."
+      },
+      "event_registrations": {
+        "label": "Event registrations",
+        "hint": "Confirmed places at page events of the period."
+      },
+      "event_attendances": {
+        "label": "Event attendance",
+        "hint": "Attendance checked among these places."
+      },
+      "reviews_published": {
+        "label": "Reviews published",
+        "hint": "Reviews written during the period and published to date."
+      },
+      "aid_questions_asked": {
+        "label": "Mutual aid questions asked",
+        "hint": "Questions created during the period; a question withdrawn by its author or by moderation does not count."
+      },
+      "aid_questions_answered": {
+        "label": "Questions that received an answer",
+        "hint": "At least one published answer, to date."
+      },
+      "aid_questions_resolved": {
+        "label": "Successful help",
+        "hint": "Questions whose author kept an answer, to date, even if closed afterwards."
+      },
+      "aid_signups": {
+        "label": "Volunteer sign-ups",
+        "hint": "Mission sign-ups made during the period and still confirmed."
+      },
+      "mentoring_requested": {
+        "label": "Mentoring requests",
+        "hint": "Requests sent during the period."
+      },
+      "mentoring_accepted": {
+        "label": "Accepted mentoring requests",
+        "hint": "Accepted to date, even if closed afterwards."
+      },
+      "kit_resources_listed": {
+        "label": "Published arrival kit resources",
+        "hint": "Reviewed resources served in the kit, recorded at the last pass."
+      },
+      "kit_resources_to_review": {
+        "label": "Arrival kit resources to review",
+        "hint": "Flagged as outdated, verified more than twelve months ago or marked by a reviewer, at the last pass."
+      }
+    },
+    "base": {
+      "requests_sent": "out of {{value}} requests sent",
+      "requests_confirmed": "out of {{value}} confirmed requests",
+      "memberships_requested": "out of {{value}} memberships requested",
+      "event_registrations": "out of {{value}} confirmed places",
+      "aid_questions_asked": "out of {{value}} questions asked",
+      "mentoring_requested": "out of {{value}} mentoring requests",
+      "kit_resources_listed": "out of {{value}} published resources"
+    },
+    "baseBelow": {
+      "requests_sent": "out of fewer than {{threshold}} requests sent",
+      "requests_confirmed": "out of fewer than {{threshold}} confirmed requests",
+      "memberships_requested": "out of fewer than {{threshold}} memberships requested",
+      "event_registrations": "out of fewer than {{threshold}} confirmed places",
+      "aid_questions_asked": "out of fewer than {{threshold}} questions asked",
+      "mentoring_requested": "out of fewer than {{threshold}} mentoring requests",
+      "kit_resources_listed": "out of fewer than {{threshold}} published resources"
+    },
+    "ratioDetail": "{{base}} · {{rate}}",
+    "rate": {
+      "value": "rate: {{rate}}%",
+      "withheld": "rate not published (part below the threshold)",
+      "complement": "rate not published (gap with the base below the threshold)"
+    },
+    "value": {
+      "belowThreshold": "fewer than {{threshold}}",
+      "masked": "hidden"
+    },
+    "duration": {
+      "median": "First response time, median",
+      "p75": "First response time, third quartile",
+      "hint": "From sending to the page’s first proposal or refusal, grouped into hour classes.",
+      "sample": "out of {{value}} answered requests",
+      "sampleBelow": "out of fewer than {{threshold}} answered requests"
+    },
+    "hours": {
+      "atMost": "{{hours}} h or less",
+      "above": "more than {{hours}} h",
+      "withheld": "not published"
+    },
+    "notes": {
+      "title": "What this measurement does not do",
+      "noContent": "No request, search, message or review text enters these counts.",
+      "noPeople": "No person identifier is kept in the aggregates and no individual journey is tracked.",
+      "threshold": "A count below {{threshold}} is shown as “fewer than {{threshold}}”. A rate is only published when its part and its gap with the base reach that threshold.",
+      "cohorts": "A request, membership or review counts on the day it was created, with its state at the last run. A place counts on the day of its event.",
+      "notMeasured": "Searches without results and drop-offs are not measured."
+    },
+    "durationAid": {
+      "median": "Time to first answer to a question, median",
+      "p75": "Time to first answer to a question, 75th percentile",
+      "hint": "From the question to its oldest answer still published, grouped by hour class.",
+      "sample": "out of {{value}} answered questions",
+      "sampleBelow": "out of fewer than {{threshold}} answered questions"
+    },
+    "closed": {
+      "title": "The “Metrics” module is closed",
+      "body": "The pilot metrics can only be read once the “Metrics” module is opened in the “Modules” section. While it is closed, the engine serves no figure, and none is shown in its place.",
+      "link": "Open the “Modules” section"
+    }
   }
 }

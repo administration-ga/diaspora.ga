@@ -836,8 +836,9 @@ export class DemoStore {
   }
 
   /**
-   * ADR-0041 : la décision de l'administration du réseau fictif sur une fonctionnalité. La règle
-   * (motif, dépendance) est jugée par la capacité avant l'appel ; ici, l'écriture seule.
+   * ADR-0041 : la décision du réseau fictif sur une fonctionnalité, posée par les recettes de la
+   * démonstration (l'administration du réseau décide hors du site des membres, fiche CH-815, D5) ;
+   * l'écriture seule, le module exigé est relu à la lecture (`demoOpenFeatures`).
    * `false` : rien à décider (l'état demandé est déjà en place).
    */
   async setNetworkFeature(feature: NetworkFeature, enabled: boolean): Promise<ActionResult<{ readonly changed: boolean }>> {

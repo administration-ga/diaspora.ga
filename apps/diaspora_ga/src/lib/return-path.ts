@@ -109,7 +109,6 @@ const DESTINATIONS: readonly DestinationRule[] = [
   rule(routes.myApplications(), "read_network"),
   rule(routes.talents(), "read_network"),
   rule(routes.moderationDesk(), "read_network"),
-  rule(routes.pilotDashboard(), "read_network"),
   rule(routes.settings(), "read_network"),
   rule(routes.sponsor(), "sponsor"),
   rule(routes.attestation(), "read_network"),

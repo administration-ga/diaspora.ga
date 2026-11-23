@@ -39,7 +39,6 @@ const MEMBER: MemberMenuSituation = {
   holdsPageRole: false,
   holdsAssociation: false,
   moderator: false,
-  pilotReader: false,
 }
 
 const ids = (entries: readonly { readonly id: string }[]) => entries.map((entry) => entry.id)
@@ -80,7 +79,8 @@ describe("menu des membres — chaque module, seul (ses modules exigés ouverts)
     mutualAid: { bar: ["communities"], account: [], create: [] },
     mentoring: { bar: ["communities"], account: ["myMentoring"], create: [] },
     arrivalKit: { bar: ["communities"], account: [], create: [] },
-    pilotMetrics: { bar: [], account: ["pilot"], create: [] },
+    // La mesure du pilote ne montre rien aux membres (fiche CH-815, lot A6) : elle se lit dans l'administration.
+    pilotMetrics: { bar: [], account: [], create: [] },
   }
 
   it.each(NETWORK_FEATURES)("%s : ses ajouts exacts, à leur place", (feature) => {
@@ -95,10 +95,11 @@ describe("menu des membres — chaque module, seul (ses modules exigés ouverts)
     }
   })
 
-  it("aucun module n'ajoute rien au groupe « Informations », et chacun ajoute au moins une entrée", () => {
-    for (const feature of NETWORK_FEATURES) {
+  it("aucun module n'ajoute rien au groupe « Informations » ; chacun ajoute au moins une entrée, sauf la mesure du pilote", () => {
+    for (const feature of NETWORK_FEATURES.filter((key) => key !== "pilotMetrics")) {
       expect(featureMenuAdditions(feature).length, feature).toBeGreaterThan(0)
     }
+    expect(featureMenuAdditions("pilotMetrics")).toEqual([])
     for (const features of ALL_FEATURE_SETS) expect(menu(features).information).toEqual(menu([]).information)
   })
 
@@ -135,11 +136,12 @@ describe("menu des membres — la situation du membre", () => {
     expect(ids(menu([], holder).personal)).toEqual(["relations", "bookmarks", "sponsor"])
   })
 
-  it("les responsables : Modération selon le serveur, Pilote selon le serveur ET le module", () => {
-    const responsible = { ...MEMBER, moderator: true, pilotReader: true }
+  it("les responsables : Modération selon le serveur ; plus aucune entrée « Pilote », même la mesure ouverte (lot A6)", () => {
+    const responsible = { ...MEMBER, moderator: true }
     expect(ids(menu([], responsible).personal).slice(-1)).toEqual(["moderation"])
-    expect(ids(menu(["pilotMetrics"], responsible).personal).slice(-2)).toEqual(["moderation", "pilot"])
-    expect(ids(menu(["pilotMetrics"], MEMBER).personal)).not.toContain("pilot")
+    expect(ids(menu(["pilotMetrics"], responsible).personal).slice(-1)).toEqual(["moderation"])
+    expect(ids(menu(["pilotMetrics"], responsible).account)).not.toContain("pilot")
+    expect(ids(menu(["pilotMetrics"], MEMBER).personal)).not.toContain("moderation")
   })
 
   it("l'inscription d'une page : en attente, déclarée, vérifiée ; jamais suspendue ni partie", () => {
@@ -152,7 +154,7 @@ describe("menu des membres — la situation du membre", () => {
 
   it("chaque public est touché par la situation la plus large, et seulement par ce qu'il dit", () => {
     for (const audience of MEMBER_MENU_AUDIENCES) expect(audienceReached(audience, MEMBER_MENU_WIDEST_SITUATION), audience).toBe(true)
-    const nobody: MemberMenuSituation = { icom: false, engineNetwork: false, canPublish: false, status: "suspendue", holdsPageRole: false, holdsAssociation: false, moderator: false, pilotReader: false }
+    const nobody: MemberMenuSituation = { icom: false, engineNetwork: false, canPublish: false, status: "suspendue", holdsPageRole: false, holdsAssociation: false, moderator: false }
     expect(MEMBER_MENU_AUDIENCES.filter((audience) => audienceReached(audience, nobody))).toEqual(["everyone"])
   })
 })
