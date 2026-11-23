@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 /**
- * Retour arrière du site diaspora.ga (LX-02) — procédure : docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
+ * Retour arrière du site diaspora.ga ou d'admin.diaspora.ga (LX-02, CH-815) — procédure :
+ * docs/37_PUBLICATION_ET_RETOUR_ARRIERE.md.
  *
  *   node scripts/rollback.mjs --target demo --to <déploiement> --version <étiquette>
  *       affiche le plan (par défaut) : RIEN ne part
  *   node scripts/rollback.mjs --target demo --to <déploiement> --version <étiquette> --execute
  *       remet en service le déploiement désigné, après une confirmation tapée
+ *   node scripts/rollback.mjs --app admin_diaspora_ga --target demo --to <déploiement> --version <étiquette>
+ *       la même chose pour admin.diaspora.ga, dans SON projet d'hébergement
+ *
+ * Une application à la fois : `--app all` est refusé ; après une publication des deux,
+ * chaque retour arrière se joue par sa propre commande (celles que `release.mjs` propose).
  *
  * `--to` est le déploiement servi AVANT la dernière bascule (relevé par `release.mjs`
  * dans `release.json`, hors des dépôts) ; `--version` est l'étiquette qu'il doit dire.
@@ -22,14 +28,17 @@ import { pathToFileURL } from "node:url"
 import { checkRelease } from "./release-check.mjs"
 import {
   agreementNotice,
+  appVariableNames,
   confirmationPhrase,
   confirmPhrase,
+  DEFAULT_RELEASE_APP,
   envRef,
+  parseApp,
   parseInspect,
   parseOptions,
   parseTarget,
-  parseVersionLabel,
   readTargetEnv,
+  releaseApp,
   renderArg,
   renderCommand,
   resolveCommand,
@@ -38,10 +47,11 @@ import {
   RELEASE_REPOSITORIES,
   runCommand,
   SHARED_VARIABLE_NAMES,
-  targetVariableNames,
+  versionProblems,
 } from "./release-lib.mjs"
 
-export const USAGE = "Usage : node scripts/rollback.mjs --target demo|production --to <déploiement> --version <étiquette> [--execute]"
+export const USAGE =
+  "Usage : node scripts/rollback.mjs [--app diaspora_ga|admin_diaspora_ga] --target demo|production --to <déploiement> --version <étiquette> [--execute]"
 
 /** Un déploiement désigné : son adresse https (origine seule) ou son identifiant. */
 export function isDeploymentReference(raw) {
@@ -56,33 +66,44 @@ export function isDeploymentReference(raw) {
   }
 }
 
-/** Les options ; la version doit être une étiquette de la même cible. */
+/**
+ * Les options ; la version doit être une étiquette de la même application et de la même
+ * cible. `app` reste `undefined` sans `--app` (diaspora.ga).
+ */
 export function parseRollbackArgs(argv) {
-  const { options, problems } = parseOptions(argv, { values: ["target", "to", "version"], flags: ["execute"] })
+  const { options, problems } = parseOptions(argv, { values: ["app", "target", "to", "version"], flags: ["execute"] })
+  const { app, problem } = parseApp(options.app)
+  if (problem) problems.push(problem)
   const target = parseTarget(options.target)
   if (target === null) problems.push("--target doit valoir demo ou production")
   if (!isDeploymentReference(options.to)) problems.push("--to doit désigner un déploiement (adresse https ou identifiant)")
-  const label = parseVersionLabel(options.version)
-  if (!label) problems.push("--version doit être une étiquette diaspora-ga-<12>-antsia-<12>-<cible>")
-  else if (target !== null && label.target !== target) problems.push("--version désigne une autre cible que --target")
-  return { target, to: options.to, version: options.version, execute: options.execute === true, problems }
+  problems.push(...versionProblems(options.version, { app, target }))
+  return { app, target, to: options.to, version: options.version, execute: options.execute === true, problems }
+}
+
+/** `--app <clé>` dans une commande, sauf pour diaspora.ga (la forme d'avant `--app`). */
+export function appArgs(app = DEFAULT_RELEASE_APP) {
+  releaseApp(app)
+  return app === DEFAULT_RELEASE_APP ? [] : ["--app", app]
 }
 
 /** La commande de retour arrière, telle que `release.mjs` la propose après un contrôle public en échec. */
-export function rollbackCommand(target, deployment, version) {
-  return `node scripts/rollback.mjs --target ${target} --to ${renderArg(deployment)} --version ${version ?? "<étiquette servie avant la bascule>"}`
+export function rollbackCommand(target, deployment, version, app = DEFAULT_RELEASE_APP) {
+  const prefix = ["node", "scripts/rollback.mjs", ...appArgs(app)].join(" ")
+  return `${prefix} --target ${target} --to ${renderArg(deployment)} --version ${version ?? "<étiquette servie avant la bascule>"}`
 }
 
 /**
  * Le plan de retour arrière, sans rien exécuter.
- * @param {{ target: "demo" | "production", to: string, version: string }} input
+ * @param {{ app?: string, target: "demo" | "production", to: string, version: string }} input
  */
-export function buildRollbackPlan({ target, to, version }) {
-  const names = targetVariableNames(target)
+export function buildRollbackPlan({ app = DEFAULT_RELEASE_APP, target, to, version }) {
+  const names = appVariableNames(app, target)
   const scope = envRef(SHARED_VARIABLE_NAMES.scope)
   const vercelEnv = { VERCEL_ORG_ID: envRef(SHARED_VARIABLE_NAMES.orgId), VERCEL_PROJECT_ID: envRef(names.projectId) }
   const phrase = confirmationPhrase("REVENIR", target, version)
   return {
+    app,
     target,
     to,
     version,
@@ -99,7 +120,7 @@ export function buildRollbackPlan({ target, to, version }) {
       {
         id: "public-check",
         title: `Contrôle public : la sonde dit la version ${version}, la source « engine », le moteur visé`,
-        commands: [["node", "scripts/release-check.mjs", "--target", target, "--version", version]],
+        commands: [["node", "scripts/release-check.mjs", ...appArgs(app), "--target", target, "--version", version]],
       },
     ],
   }
@@ -107,7 +128,7 @@ export function buildRollbackPlan({ target, to, version }) {
 
 /** Le plan rendu en texte, sans aucune valeur de la machine. */
 export function renderRollbackPlan(plan, { problems = [] } = {}) {
-  const lines = [`Plan de retour arrière de diaspora.ga — cible ${plan.target}`, `  version attendue après le retour : ${plan.version}`]
+  const lines = [`Plan de retour arrière de ${releaseApp(plan.app).title} — cible ${plan.target}`, `  version attendue après le retour : ${plan.version}`]
   plan.steps.forEach((step, index) => {
     lines.push("", `${index + 1}. ${step.title}`)
     if (step.gate) lines.push(`   phrase à taper : ${step.gate}`)
@@ -124,7 +145,7 @@ export function renderRollbackPlan(plan, { problems = [] } = {}) {
  * @returns {Promise<{ ok: boolean, stage: string, reason?: string }>}
  */
 export async function executeRollback(plan, deps) {
-  const names = targetVariableNames(plan.target)
+  const names = appVariableNames(plan.app, plan.target)
   const context = { env: deps.env, runtime: {}, repos: deps.repos }
   const step = (id) => plan.steps.find((candidate) => candidate.id === id)
   const runStep = (id) => deps.run(resolveCommand(step(id).commands[0], context), { env: resolveStepEnv(step(id).env, context) })
@@ -156,6 +177,7 @@ export async function executeRollback(plan, deps) {
   deps.log("✓ déploiement remis en service")
 
   const check = await checkRelease({
+    app: plan.app,
     target: plan.target,
     siteUrl: deps.env[names.siteUrl]?.trim(),
     convexUrl: deps.env[names.convexUrl]?.trim(),
@@ -176,7 +198,7 @@ async function main() {
     process.exitCode = 1
     return
   }
-  const { problems } = readTargetEnv(args.target, process.env, ROLLBACK_KEYS)
+  const { problems } = readTargetEnv(args.target, process.env, ROLLBACK_KEYS, args.app)
   const plan = buildRollbackPlan(args)
   console.log(renderRollbackPlan(plan, { problems }))
   if (!args.execute) {

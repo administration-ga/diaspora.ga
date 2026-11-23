@@ -6,7 +6,7 @@ import { join } from "node:path"
 import { validateFacetSchema } from "../../ANTSIA/packages/social-domain/src/facets.ts"
 import { consoleFacetSchemaJson, diasporaGaConsoleNetworkForm } from "../packages/diaspora-ga-domain/src/index.ts"
 import { buildReleasePlan } from "./release.mjs"
-import { DIASPORA_GA_ROOT, PUBLIC_RELEASE_VARIABLES, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
+import { ALL_APPS_ORDER, appVariableNames, DIASPORA_GA_ROOT, PUBLIC_RELEASE_VARIABLES, RELEASE_APPS, releaseApp, SHARED_VARIABLE_NAMES, targetVariableNames } from "./release-lib.mjs"
 
 /**
  * Les documents de publication restent vrais (mêmes variables, mêmes étapes que les
@@ -68,6 +68,43 @@ describe("le document de publication dit ce que font les scripts", () => {
     const rows = section.split("\n").map((line) => /^\| (\d+) \|/.exec(line)?.[1]).filter(Boolean).map(Number)
     const steps = buildReleasePlan({ target: "demo", antsia: { commit: "a".repeat(40), tree: "b".repeat(40) }, diasporaGa: { commit: "d".repeat(40), tree: "e".repeat(40) } }).steps
     expect(rows).toEqual(steps.map((_, index) => index + 1))
+  })
+
+  test("chaque variable d'admin.diaspora.ga y est nommée, et chaque nom passé à son site", () => {
+    for (const name of Object.values(appVariableNames("admin_diaspora_ga", "demo"))) expect(doc).toContain(name.replace("DIASPORA_GA_DEMO_", "DIASPORA_GA_<CIBLE>_"))
+    for (const name of releaseApp("admin_diaspora_ga").publicVariables) expect(doc).toContain(`\`${name}`)
+  })
+
+  test("chaque application et --app all y figurent, avec leurs commandes", () => {
+    for (const app of Object.keys(RELEASE_APPS)) expect(doc).toContain(`\`${app}\``)
+    expect(doc).toContain("node scripts/release.mjs --app admin_diaspora_ga --target demo --antsia")
+    expect(doc).toContain("node scripts/release.mjs --app all --target demo --antsia")
+    expect(doc).toContain("node scripts/release-check.mjs --app admin_diaspora_ga --target demo --version")
+    expect(doc).toContain("node scripts/rollback.mjs --app admin_diaspora_ga --target demo --to")
+    expect(doc).toContain("`admin-diaspora-ga-<12>-antsia-<12>-<cible>`")
+  })
+
+  test("le tableau de la publication des deux a autant de lignes que son plan, dans l'ordre, chacune sous son application", () => {
+    const section = doc.slice(doc.indexOf("### 8.2"), doc.indexOf("### 8.3"))
+    const rows = section
+      .split("\n")
+      .map((line) => /^\| (\d+) \| ([^|]+) \|/.exec(line))
+      .filter(Boolean)
+      .map(([, number, app]) => [Number(number), app.trim()])
+    const plan = buildReleasePlan({ app: "all", target: "demo", antsia: { commit: "a".repeat(40), tree: "b".repeat(40) }, diasporaGa: { commit: "d".repeat(40), tree: "e".repeat(40) } })
+    const expected = plan.steps.map((step, index) => {
+      const app = step.id.split(":")[1]
+      return [index + 1, app ? RELEASE_APPS[app].title : "—"]
+    })
+    expect(rows).toEqual(expected)
+    expect(ALL_APPS_ORDER.map((app) => RELEASE_APPS[app].title)).toEqual(["admin.diaspora.ga", "diaspora.ga"])
+  })
+
+  test("les gestes du propriétaire pour admin.diaspora.ga y sont, noms seulement", () => {
+    const section = doc.slice(doc.indexOf("## 9."), doc.indexOf("## 10."))
+    expect(section).toContain(`\`DIASPORA_GA/${releaseApp("admin_diaspora_ga").directory}\``)
+    for (const word of ["projet d'hébergement", "`admin.diaspora.ga`", "DNS", "`TRUSTED_ORIGINS`", "phrases", "premier administrateur du réseau"]) expect(section).toContain(word)
+    expect(section).toContain("**Non vérifié**")
   })
 
   test("la porte y est écrite : accord écrit, quatre points, aucune option qui la contourne", () => {
