@@ -80,8 +80,26 @@ DIASPORA.GA `089f4c1` et moteur `a06c0ea5`.
 
 La porte n'est pas armée et rien n'est publié : sans son secret, le moteur se comporte comme avant.
 
+## Pastille « Compte démo » et catalogue de déploiement (23/11, 21 h 25)
+
+Sur accord écrit du propriétaire, la PR 206 du moteur (catalogue de déploiement : `diaspora_ga` reçoit l'origine
+des actions HTTP à la construction et l'adresse du serveur vidéo à l'exécution ; deux lignes de substitution
+Cloud Build) puis la PR 120 du site (pastille tout en bas de la porte d'entrée, feuille en trois temps, en-tête
+de la porte sur les deux requêtes de connexion) sont entrées dans leur `main`.
+
+Le couple a été vérifié deux fois : une première fois sur le `main` du site d'alors, puis, ce `main` ayant reçu
+entre-temps les PR 123 et 124 (textes du site), une seconde fois sur l'assemblage final, moteur `a06c0ea5` +
+PR 206 avec site `c9827ec` + PR 120. `bun run --cwd ../ANTSIA verify`, sous le verrou commun, à 21 h 20 :
+**verte** (code 0, aucun écart). Tests du moteur 4 115 ; cliquets 189 ; diaspora.ga 2 648.
+
+Fusions à la tête relue ; le `main` du moteur est `8dda9d93` et celui du site `77e6800`, chacun d'arbre
+identique à l'arbre vérifié. Le couple inscrit dans `engine-compat.json` devient DIASPORA.GA `77e6800` et
+moteur `8dda9d93`.
+
+Non prouvé : la pastille n'a pas été vue au navigateur (elle n'apparaît que branchée sur un moteur qui autorise
+les comptes de démonstration) ; aucun code n'a été envoyé par WhatsApp ; la porte n'est pas armée.
+
 ## Suite
 
-La pastille « Compte démo » du site (PR 120) suit la porte : elle attend la déclaration d'une variable de
-construction au catalogue de déploiement du moteur. Ordre à tenir ensuite : publier le moteur et le site, puis
-armer la porte.
+Ordre à tenir : publier le moteur et le site, puis armer la porte (remise à zéro puis liste des numéros, par le
+script du moteur). Avant d'armer, constater en recette l'adresse de l'appelant sur les actions HTTP.
