@@ -67,3 +67,7 @@ Module « Associations et entreprises » ouvert (motif de recette au journal) ; 
 ## Avis de l'outil
 
 La commande `next dev` a affiché un avis de sécurité recommandant une mise à jour de Next.js (version du catalogue du moteur). Il n'a pas été appliqué : la version se décide dans le catalogue du moteur, hors de ce chantier.
+
+## Vérification après F3 (console du moteur liée à son application)
+
+`bun run --cwd ../ANTSIA verify` rejoué le 23/11/2026 à 13 h 34 sur le moteur `765fd9ea` (pile CH-815 avec F3, antsia#201) et DIASPORA.GA `be1e92c` (ce rapport) : **verte** (code 0) ; tests Convex du moteur (257 fichiers, 3 978 tests), cliquets (32 fichiers, 188 tests), console du moteur (169 tests), admin.diaspora.ga (277), diaspora.ga (2 431). C'est le couple inscrit au registre `engine-compat.json`. Les PR du moteur antsia#194 à #201 ont été fusionnées sur accord écrit du propriétaire ; l'arbre de `main` du moteur est identique à `765fd9ea`.
