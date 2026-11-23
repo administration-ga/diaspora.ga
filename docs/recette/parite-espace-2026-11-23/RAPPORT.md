@@ -103,3 +103,21 @@ les comptes de démonstration) ; aucun code n'a été envoyé par WhatsApp ; la 
 
 Ordre à tenir : publier le moteur et le site, puis armer la porte (remise à zéro puis liste des numéros, par le
 script du moteur). Avant d'armer, constater en recette l'adresse de l'appelant sur les actions HTTP.
+
+## Envoi WhatsApp par la plateforme actuelle de Bird (23/11, 23 h 40)
+
+Le compte Bird du propriétaire est sur la plateforme actuelle (clé d'espace de travail en `bk_`), dont l'API diffère
+de celle des SMS du socle. La PR 208 du moteur ajoute l'adaptateur correspondant : `WHATSAPP_PROVIDER=bird` désigne
+désormais cette API (en-tête `Bearer`, modèle désigné par son nom), l'ancien adaptateur reste disponible sous
+`bird-channels`. Un modèle créé par le propriétaire exige son numéro expéditeur ; sans lui, la porte se dit
+indisponible. Le tableau de bord du propriétaire offre le modèle géré `bird_otp` (français et anglais, aucun
+expéditeur à fournir), dont l'exemple d'appel a exactement la forme de l'adaptateur.
+
+`bun run --cwd ../ANTSIA verify`, sous le verrou commun, à 23 h 36, sur le moteur `2623cde9` + PR 208 avec
+DIASPORA.GA `6c94fd8` : **verte** (code 0, aucun écart). Tests du moteur 4 168 ; cliquets 200 ; diaspora.ga 2 649.
+Fusion à la tête relue ; le `main` du moteur est `0c4b283b`, d'arbre identique à l'arbre vérifié. Le couple inscrit
+dans `engine-compat.json` devient DIASPORA.GA `6c94fd8` et moteur `0c4b283b`.
+
+Non prouvé : aucun code n'a été envoyé par WhatsApp ; la porte n'est pas armée ; l'acceptation d'un code de six
+chiffres et une lettre par le modèle `bird_otp` reste à constater au premier essai.
+
