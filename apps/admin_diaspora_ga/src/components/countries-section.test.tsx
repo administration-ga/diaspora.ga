@@ -122,6 +122,17 @@ describe("section Pays ouverts — lecture", () => {
     expect(mocks.setOpen).not.toHaveBeenCalled()
   })
 
+  it("dit le routage par pays : un contenu va à l'équipe de son pays, et un deuxième pays s'ouvre dès que son équipe existe", () => {
+    mount()
+    const note = screen.getByText(n(t("countries.routingNote")))
+    expect(note).toHaveTextContent(/à l.équipe de son pays, puis de sa nature/)
+    expect(note).toHaveTextContent(/deuxième pays peut donc s.ouvrir dès que son équipe existe/)
+    const english = i18n.getFixedT("en", APP_NAMESPACE)("countries.routingNote")
+    expect(english).toMatch(/A second country can therefore open as soon as its team exists/)
+    // CH-815 : plus rien ne dit que le pays d'une équipe ne délimite aucune compétence.
+    for (const copy of [t("countries.routingNote"), english]) expect(copy).not.toMatch(/aucune compétence|routage par pays|does not delimit|routing by country/)
+  })
+
   it("un pays sans équipe, au hub pas encore compté : il le dit, sans chiffre", () => {
     mocks.rows = [country({ teams: [], activeModerators: 0, canOpen: false, countersComputedAt: null })]
     mount()

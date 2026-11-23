@@ -47,7 +47,7 @@
       "team": "Équipe",
       "teamAll": "Toute la file accessible",
       "teamScoped": "{{name}} ({{surface}})",
-      "countryNote": "Le pays est celui du contenu signalé (publication locale, page, évènement, zone d'une offre), jamais celui d'une personne. Le moteur ne rattache pas encore une équipe à un pays : ce filtre ne délimite aucune compétence."
+      "countryNote": "Le pays est celui du contenu signalé (publication locale, page, évènement, zone d'une offre), jamais celui d'une personne. Le moteur adresse chaque dossier à l'équipe du pays du contenu, puis de sa nature : la file d'une équipe ne porte que ses dossiers, ce filtre la trie."
     },
     "zone": {
       "none": "Sans pays"

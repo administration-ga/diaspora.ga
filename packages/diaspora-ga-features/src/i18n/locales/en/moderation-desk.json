@@ -47,7 +47,7 @@
       "team": "Team",
       "teamAll": "Whole accessible queue",
       "teamScoped": "{{name}} ({{surface}})",
-      "countryNote": "The country is that of the reported content (local post, page, event, offer area), never that of a person. The engine does not yet attach a team to a country: this filter defines no remit."
+      "countryNote": "The country is that of the reported content (local post, page, event, offer area), never that of a person. The engine sends each case to the team of the content's country, then of its content type: a team's queue only holds its own cases, and this filter sorts it."
     },
     "zone": {
       "none": "No country"
