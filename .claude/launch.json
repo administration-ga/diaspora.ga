@@ -18,6 +18,12 @@
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "--cwd", "apps/diaspora_ga", "dev:engine"],
       "port": 3031
+    },
+    {
+      "name": "admin-diaspora-ga",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "--cwd", "apps/admin_diaspora_ga", "dev"],
+      "port": 3033
     }
   ]
 }

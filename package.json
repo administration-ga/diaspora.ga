@@ -7,12 +7,14 @@
   "scripts": {
     "dev": "bun run --cwd apps/diaspora_ga dev",
     "dev:engine": "bun run --cwd apps/diaspora_ga dev:engine",
+    "dev:admin": "bun run --cwd apps/admin_diaspora_ga dev",
     "build": "bun run --cwd apps/diaspora_ga build",
+    "build:admin": "bun run --cwd apps/admin_diaspora_ga build",
     "test:domain": "bun run --cwd packages/diaspora-ga-domain test",
     "test:scripts": "bun test ./scripts",
-    "test": "bun run test:domain && bun run test:scripts && bun run --cwd packages/diaspora-ga-features test && bun run --cwd apps/diaspora_ga test",
-    "typecheck": "bun run --cwd packages/diaspora-ga-domain typecheck && bun run --cwd packages/diaspora-ga-features typecheck && bun run --cwd apps/diaspora_ga typecheck",
-    "lint": "bun run --cwd packages/diaspora-ga-features lint && bun run --cwd apps/diaspora_ga lint",
+    "test": "bun run test:domain && bun run test:scripts && bun run --cwd packages/diaspora-ga-features test && bun run --cwd apps/diaspora_ga test && bun run --cwd apps/admin_diaspora_ga test",
+    "typecheck": "bun run --cwd packages/diaspora-ga-domain typecheck && bun run --cwd packages/diaspora-ga-features typecheck && bun run --cwd apps/diaspora_ga typecheck && bun run --cwd apps/admin_diaspora_ga typecheck",
+    "lint": "bun run --cwd packages/diaspora-ga-features lint && bun run --cwd apps/diaspora_ga lint && bun run --cwd apps/admin_diaspora_ga lint",
     "verify": "bun run typecheck && bun run test && bun run lint"
   }
 }
