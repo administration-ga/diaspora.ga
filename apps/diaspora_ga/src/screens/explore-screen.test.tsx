@@ -3,6 +3,7 @@ import { DataSourceProvider, type DiasporaGaDataSource, type Loadable, type Open
 import { DemoStore, createDemoDataSource, createDemoSeed } from "@diaspora-ga/features/demo"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { cleanup, render, screen, within } from "@testing-library/react"
+import userEvent from "@testing-library/user-event"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -144,6 +145,33 @@ describe("/explorer — le point d'entrée de la découverte", () => {
     renderExplore(demoSource("p-mireille", { useOpenCountries: () => ({ status: "ready", data: [] }) }))
     expect(within(countries()).getByText("Aucun pays n'est encore ouvert.")).toBeInTheDocument()
     expect(within(countries()).getByRole("link", { name: "Voir ma communauté" })).toHaveAttribute("href", "/communautes")
+  })
+
+  it("DS-11 : la recherche dans les publications est en tête ; une recherche en cours remplace les rubriques, qui reviennent sans mots", async () => {
+    const searched = vi.fn()
+    renderExplore(demoSource("p-mireille", {
+      postSearch: { usePostSearch: (args) => { searched(args); return { status: "ready", data: { items: [], hasMore: false, capped: false } } } },
+    }))
+    const section = screen.getByRole("region", { name: "Chercher dans les publications" })
+    const field = within(section).getByRole("searchbox", { name: "Mots à chercher dans les publications" })
+    expect(countries()).toBeInTheDocument()
+
+    const user = userEvent.setup()
+    await user.type(field, "valise")
+    expect(await screen.findByText(/Aucune publication pour/)).toBeInTheDocument()
+    expect(searched).toHaveBeenLastCalledWith({ query: "valise", limit: 20 })
+    expect(screen.queryByRole("region", { name: "Pays ouverts" })).toBeNull()
+
+    await user.clear(field)
+    expect(await screen.findByRole("region", { name: "Pays ouverts" })).toBeInTheDocument()
+  })
+
+  it("DS-11 : sans la capacité, aucun champ de recherche des publications n'est inventé", () => {
+    const { postSearch, ...withoutSearch } = demoSource("p-mireille")
+    void postSearch
+    renderExplore(withoutSearch)
+    expect(screen.queryByRole("region", { name: "Chercher dans les publications" })).toBeNull()
+    expect(countries()).toBeInTheDocument()
   })
 
   it("sans session, ne montre rien et renvoie vers l'entrée", () => {

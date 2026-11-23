@@ -103,10 +103,14 @@ export const usePageDecisions = () => useDataSource().pageDecisions ?? null
 export const useConversations = () => useDataSource().conversations ?? null
 export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
 export const useCallSettings = () => useDataSource().callSettings ?? null
+/** DS-14 (volet push) : les notifications de cet appareil ; `null` si le fournisseur ne les sert pas. */
+export const useDeviceNotifications = () => useDataSource().deviceNotifications ?? null
 /** Les fonctionnalités activables du réseau (clés ouvertes ; état et bascule pour l'administration). */
 export const useNetworkFeatures = () => useDataSource().networkFeatures ?? null
 /** Parcourir l'annuaire par pays et par ville (CH-816 P3) ; `null` : la recherche par nom seule. */
 export const useMemberBrowse = () => useDataSource().memberBrowse ?? null
+/** Chercher dans les publications lisibles du réseau (DS-11) ; `null` : le fournisseur ne la sert pas. */
+export const usePostSearchCapability = () => useDataSource().postSearch ?? null
 
 /**
  * Les modules ouverts, pour la navigation et les adresses. Hors fournisseur, ou sur une

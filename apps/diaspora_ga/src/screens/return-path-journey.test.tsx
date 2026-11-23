@@ -84,6 +84,48 @@ describe("Un lien reçu, la porte, le code, puis la page demandée (UX-02, MO-03
     expect(peekReturnPath()).toBeNull()
   })
 
+  /** Ouvre le lien hors session, puis saisit le code reçu à cette adresse ; rend la cible de la sortie. */
+  async function openSharedLinkAndEnter(store: DemoStore, link: string, email: string) {
+    window.history.replaceState(null, "", link)
+    mount(store, <PostPage />)
+    await vi.waitFor(() => expect(navigation.replace).toHaveBeenCalledWith(routes.enter()))
+    expect(screen.queryByTestId("publication")).toBeNull()
+    cleanup()
+    navigation.replace.mockClear()
+
+    window.history.replaceState(null, "", routes.enterCode())
+    const user = userEvent.setup()
+    mount(store, <CodeScreen />)
+    await user.type(screen.getByRole("textbox", { name: t("code.emailLabel") }), email)
+    await user.click(screen.getByRole("button", { name: t("code.send") }))
+    const code = await vi.waitFor(() => {
+      const pending = store.getState().pendingCode?.code
+      if (!pending) throw new Error("aucun code")
+      return pending
+    })
+    await user.type(await screen.findByRole("textbox", { name: t("code.codeLabel") }), code)
+    await user.click(screen.getByRole("button", { name: t("code.verify") }))
+    await vi.waitFor(() => expect(navigation.replace).toHaveBeenCalled())
+    return navigation.replace.mock.calls.at(-1)?.[0]
+  }
+
+  /** La page d'une publication : une page de membre, telle que la garde la protège. */
+  const PostPage = () => <Gate require="member">{() => <p data-testid="publication">publication</p>}</Gate>
+
+  it("FD-06 : le lien partagé d'une publication, ouvert hors session, mène après le code à la publication", async () => {
+    const store = new DemoStore(null, () => Date.UTC(2026, 10, 10, 12), 0)
+    const shared = routes.post("post-2")
+    expect(await openSharedLinkAndEnter(store, `${shared}?fbclid=traceur`, "mireille@example.com")).toBe(shared)
+    expect(window.location.search).toBe("")
+  })
+
+  it("FD-06 : une personne hors du réseau qui ouvre le lien voit l'accueil, rien de la publication", async () => {
+    const store = new DemoStore(null, () => Date.UTC(2026, 10, 10, 12), 0)
+    const shared = routes.post("post-2")
+    expect(await openSharedLinkAndEnter(store, shared, "personne.exterieure@example.com")).toBe(routes.welcome())
+    expect(navigation.replace).not.toHaveBeenCalledWith(shared)
+  })
+
   it("une valeur altérée dans l'onglet ne mène jamais dehors : la porte mène au fil", async () => {
     const store = new DemoStore(null, () => Date.UTC(2026, 10, 10, 12), 0)
     window.sessionStorage.setItem(RETURN_PATH_KEY, JSON.stringify({ path: "//exemple.test/piege", at: Date.now() }))

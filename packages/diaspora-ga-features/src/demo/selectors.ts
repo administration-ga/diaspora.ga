@@ -463,6 +463,7 @@ export function postView(state: DemoState, post: DemoPost, viewerId: string, now
     myReaction: mine,
     isMine: post.author.kind === "person" && post.author.id === viewerId,
     bookmarked: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "bookmark"),
+    notifying: state.marks.some((mark) => mark.personId === viewerId && mark.postId === post.id && mark.kind === "notify"),
     edited: post.editedAt !== null,
     editedAt: post.editedAt,
   }
@@ -497,7 +498,7 @@ export function bookmarksView(state: DemoState, viewerId: string, now: number): 
 }
 
 /** Un blocage, dans un sens ou dans l'autre, entre deux personnes. */
-function blockedBetween(state: DemoState, a: string, b: string): boolean {
+export function blockedBetween(state: DemoState, a: string, b: string): boolean {
   return state.blocks.some((block) => (block.byId === a && block.targetId === b) || (block.byId === b && block.targetId === a))
 }
 

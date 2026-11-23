@@ -43,7 +43,12 @@ export function memberMenuHref(entry: Pick<MemberMenuEntry, "routeKey">, handle:
   return MEMBER_MENU_HREFS[entry.routeKey](handle)
 }
 
-/** L'adresse d'un format de « Créer » : une actu, ou l'inscription d'une page de cette nature. */
-export function memberCreateHref(entry: Pick<MemberCreateEntry, "routeKey" | "pageKind">): string {
+/**
+ * L'adresse d'un format de « Créer » : une actu, ou l'inscription d'une page de cette nature.
+ * `null` pour la conférence (CH-817) : elle n'a pas d'adresse, elle ouvre en place la création du
+ * direct du moteur.
+ */
+export function memberCreateHref(entry: Pick<MemberCreateEntry, "routeKey" | "pageKind">): string | null {
+  if (entry.routeKey === null) return null
   return entry.routeKey === "newPage" ? routes.newPage(entry.pageKind ?? undefined) : routes.newStory()
 }

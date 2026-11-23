@@ -122,6 +122,8 @@ import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
+import { createEngineDeviceNotifications } from "./engine-device-notifications"
+import { createEnginePostSearch } from "./engine-post-search"
 import {
   toAccountView,
   toConsentViews,
@@ -265,10 +267,14 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     demoAccounts: createEngineDemoAccounts(deps),
     // IM-02 : réglages d'appel et de présence de la personne, valables aussi dans ANTSIA.
     callSettings: createEngineCallSettings(deps),
+    // DS-14 (volet push) : abonner cet appareil aux notifications du navigateur, par les fonctions existantes du moteur.
+    deviceNotifications: createEngineDeviceNotifications(deps),
     // ADR-0041 du moteur : les fonctionnalités activables du réseau (clés ouvertes, réglages de l'administration).
     networkFeatures: createEngineNetworkFeatures(deps),
     // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.
     memberBrowse: createEngineMemberBrowse(deps),
+    // CH-817 (DS-11) : chercher dans les publications lisibles (`posts.search`) ; elles alimentent aussi « retirer ma réaction ».
+    postSearch: createEnginePostSearch(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()
@@ -1025,6 +1031,38 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       attempt(async () => {
         await deps.convex.mutation(api.modules.posts.posts.edit, { networkId: await diasporaGa(), postId: postId as Id<"posts">, body })
         return null
+      }),
+
+    // FD-10 : les gestes de l'auteur que le moteur sert déjà ; il garde ses règles (ma publication,
+    // personnelle, hors groupe, publiée) et rend le même « introuvable » pour tout le reste.
+    pinOnMyWall: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.pinOnMyWall, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    unpinMyWall: () =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.unpinMyWall, { networkId: await diasporaGa() })
+        return null
+      }),
+
+    // La lecture dans ANTSIA seulement : la publication reste dans DIASPORA.GA, pour la même audience.
+    withdrawFromRoot: (postId) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.posts.posts.withdrawFromRoot, { networkId: await diasporaGa(), postId: postId as Id<"posts"> })
+        return null
+      }),
+
+    // La marque `notify` du moteur : une bascule privée, que l'auteur n'apprend pas.
+    toggleCommentNotifications: (postId) =>
+      attempt(async () => {
+        const result = await deps.convex.mutation(api.modules.marks.marks.toggleMark, {
+          networkId: await diasporaGa(),
+          postId: postId as Id<"posts">,
+          kind: "notify",
+        })
+        return { notifying: result.marked }
       }),
 
     removePost: (postId) =>

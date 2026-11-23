@@ -1,0 +1,25 @@
+{
+  "post": {
+    "pinnedOnWall": "Épinglée"
+  },
+  "postMenu": {
+    "pin": "Épingler sur mon mur",
+    "unpin": "Retirer l’épingle de mon mur",
+    "pinned": "Publication épinglée en tête de votre mur.",
+    "unpinned": "Épingle retirée : la publication reste sur votre mur.",
+    "withdrawFromRoot": "Retirer d’ANTSIA…",
+    "notifyOn": "Suivre les commentaires",
+    "notifyOff": "Ne plus suivre les commentaires",
+    "notifying": "Vous recevrez un avis à chaque nouveau commentaire.",
+    "notNotifying": "Vous ne recevrez plus d’avis pour les nouveaux commentaires."
+  },
+  "withdrawFromRoot": {
+    "title": "Retirer cette publication d’ANTSIA ?",
+    "description": "Elle reste lisible dans DIASPORA.GA, pour la même audience, mais n’est plus lue dans ANTSIA.",
+    "irreversible": "Ce geste ne se défait pas : pour qu’elle soit de nouveau lue dans ANTSIA, il faudra la publier à nouveau.",
+    "close": "Fermer",
+    "cancel": "Annuler",
+    "confirm": "Retirer d’ANTSIA",
+    "done": "Publication retirée d’ANTSIA : elle reste lisible ici."
+  }
+}

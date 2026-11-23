@@ -9,6 +9,7 @@ import { MEMBER_CREATE_ICONS, MEMBER_MENU_ICONS } from "./icons"
 import {
   audienceReached,
   canSeeRegistration,
+  codeSwitchAllows,
   featureMenuAdditions,
   MEMBER_COMMUNITY_FEATURES,
   MEMBER_CREATE_FORMATS,
@@ -20,15 +21,20 @@ import {
   memberMenu,
   menuDifference,
   requiredFeatures,
+  type MemberCodeSwitchStates,
   type MemberMenu,
   type MemberMenuSituation,
 } from "./member-menu"
 
 /**
  * CH-815 A5 — le menu des membres en règle pure : exhaustif sur les huit clés du moteur, les
- * vingt-quatre entrées et les trois formats de « Créer ». La coque de diaspora.ga et l'aperçu
- * d'admin.diaspora.ga lisent cette fonction ; diaspora.ga prouve ailleurs que sa coque la rend.
+ * vingt-quatre entrées et les quatre formats de « Créer » (la conférence derrière l'interrupteur de
+ * code du direct, CH-817). La coque de diaspora.ga et l'aperçu d'admin.diaspora.ga lisent cette
+ * fonction ; diaspora.ga prouve ailleurs que sa coque la rend.
  */
+
+/** Le direct ouvert par le code : une position posée par le test, jamais celle du dépôt. */
+const LIVE_OPEN: MemberCodeSwitchStates = { ...MEMBERS_APP_CODE_SWITCH_STATES, live: "open" }
 
 /** Un membre ordinaire du moteur : il peut publier, iCom ouvert, rien d'autre. */
 const MEMBER: MemberMenuSituation = {
@@ -59,13 +65,38 @@ describe("menu des membres — le socle, modules tous fermés", () => {
   })
 
   it("chaque entrée porte la clé de son adresse et de son libellé, telles que la table les déclare", () => {
-    const open = menu(NETWORK_FEATURES)
+    const open = memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: NETWORK_FEATURES, codeSwitches: LIVE_OPEN })
     for (const entry of [...open.rail, ...open.account, ...open.information]) {
       expect(entry).toEqual({ id: entry.id, routeKey: MEMBER_MENU_ENTRIES[entry.id].routeKey, labelKey: MEMBER_MENU_ENTRIES[entry.id].labelKey })
     }
     expect(open.create).toEqual(
       MEMBER_CREATE_FORMATS.map((id) => ({ id, routeKey: MEMBER_CREATE_RULES[id].routeKey, pageKind: MEMBER_CREATE_RULES[id].pageKind, labelKey: MEMBER_CREATE_RULES[id].labelKey, hintKey: MEMBER_CREATE_RULES[id].hintKey })),
     )
+  })
+})
+
+describe("menu des membres — la conférence, derrière l'interrupteur de code du direct (CH-817)", () => {
+  it("fermé par le code (la position du dépôt) : jamais offerte, quels que soient les modules et la situation", () => {
+    expect(MEMBERS_APP_CODE_SWITCH_STATES.live).toBe("closed")
+    for (const features of ALL_FEATURE_SETS) expect(ids(menu(features).create), features.join(",")).not.toContain("live")
+    // L'aperçu d'admin.diaspora.ga lit les ajouts de chaque module : la conférence n'en est pas un.
+    for (const feature of NETWORK_FEATURES) expect(featureMenuAdditions(feature).map((change) => change.id)).not.toContain("live")
+  })
+
+  it("ouvert : offerte juste après l'actu, au même public (publier ET iCom), sans adresse ni module", () => {
+    const open = (situation: MemberMenuSituation, features: readonly NetworkFeature[] = ["pages"]) => ids(memberMenu({ ...situation, openFeatures: features, codeSwitches: LIVE_OPEN }).create)
+    expect(open(MEMBER)).toEqual(["story", "live", "association", "company"])
+    expect(open(MEMBER, [])).toEqual(["story", "live"])
+    expect(open({ ...MEMBER, canPublish: false })).toEqual(["association", "company"])
+    expect(open({ ...MEMBER, icom: false })).toEqual(["association", "company"])
+    expect(MEMBER_CREATE_RULES.live).toMatchObject({ routeKey: null, pageKind: null, feature: null, audience: MEMBER_CREATE_RULES.story.audience, codeSwitch: "live" })
+  })
+
+  it("seule la conférence dépend d'un interrupteur ; la position « open » seule l'ouvre", () => {
+    expect(MEMBER_CREATE_FORMATS.filter((id) => MEMBER_CREATE_RULES[id].codeSwitch !== null)).toEqual(["live"])
+    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live)).toBe(false)
+    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live, LIVE_OPEN)).toBe(true)
+    expect(codeSwitchAllows(MEMBER_CREATE_RULES.story)).toBe(true)
   })
 })
 
@@ -171,7 +202,7 @@ describe("menu des membres — propriétés sur toutes les parties des huit clé
       }
       for (const id of MEMBER_CREATE_FORMATS) {
         const rule = MEMBER_CREATE_RULES[id]
-        expect(ids(shown.create).includes(id)).toBe(rule.feature === null || features.includes(rule.feature))
+        expect(ids(shown.create).includes(id)).toBe(codeSwitchAllows(rule) && (rule.feature === null || features.includes(rule.feature)))
       }
     }
   })

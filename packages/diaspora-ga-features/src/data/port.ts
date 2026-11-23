@@ -82,8 +82,10 @@ import type { DemoAccountsCapability } from "./demo-accounts-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
+import type { DeviceNotificationsCapability } from "./device-notifications-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 import type { MemberBrowseCapability } from "./member-browse-port"
+import type { PostSearchCapability } from "./post-search-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -323,6 +325,21 @@ export interface DiasporaGaActions {
   removePost(postId: string): Promise<ActionResult>
   /** Modifier le texte de MA publication ; la carte dira « modifiée ». */
   editPost(postId: string, body: string): Promise<ActionResult>
+  /**
+   * FD-10 : épingler MA publication (personnelle, hors groupe, publiée) en tête de mon mur dans
+   * DIASPORA.GA. Une seule épingle : la nouvelle remplace l'ancienne, qui reste publiée.
+   * Capacité facultative du fournisseur, comme les trois suivantes.
+   */
+  pinOnMyWall?(postId: string): Promise<ActionResult>
+  /** FD-10 : retirer l'épingle de mon mur ; la publication reste publiée, à sa place. */
+  unpinMyWall?(): Promise<ActionResult>
+  /**
+   * FD-10 : ne plus lire MA publication dans ANTSIA. Elle reste lisible dans DIASPORA.GA, pour la
+   * même audience ; ce geste ne se défait pas (rien ne la republie sur ANTSIA).
+   */
+  withdrawFromRoot?(postId: string): Promise<ActionResult>
+  /** FD-10 : recevoir, ou ne plus recevoir, un avis à chaque nouveau commentaire d'une publication lisible (bascule privée). */
+  toggleCommentNotifications?(postId: string): Promise<ActionResult<{ readonly notifying: boolean }>>
   /** « Ne plus me proposer » : un choix privé, réversible, que l'autre n'apprend pas. */
   dismissSuggestion(handle: string): Promise<ActionResult>
   /** Demander une connexion. Un blocage, dans un sens ou dans l'autre, rend la même réponse, sans rien écrire. */
@@ -415,6 +432,11 @@ export interface DiasporaGaDataSource {
   /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
   readonly callSettings?: CallSettingsCapability
   /**
+   * DS-14 (volet push) : abonner CET appareil aux notifications du navigateur, et l'en retirer
+   * (`device-notifications-port.ts`). En démonstration : rien n'est envoyé, l'état le dit.
+   */
+  readonly deviceNotifications?: DeviceNotificationsCapability
+  /**
    * Les fonctionnalités activables du réseau (ADR-0041 du moteur, `network-features-port.ts`) :
    * les clés ouvertes, et pour l'administration du réseau, leur état et la bascule.
    */
@@ -424,6 +446,11 @@ export interface DiasporaGaDataSource {
    * à côté de la recherche par nom : mêmes membres, même règle, vingt par fenêtre.
    */
   readonly memberBrowse?: MemberBrowseCapability
+  /**
+   * Chercher dans les publications lisibles du réseau (DS-11, volet recherche, `post-search-port.ts`) :
+   * la même garde que le fil, une fenêtre de plus à chaque « Voir plus », jusqu'à la borne.
+   */
+  readonly postSearch?: PostSearchCapability
   /**
    * Posés par `gateSource` seulement : les fonctionnalités ouvertes de la source montée, et
    * si leur lecture a répondu. Absents : la source n'est pas gardée (elle sert tout ce qu'elle porte).

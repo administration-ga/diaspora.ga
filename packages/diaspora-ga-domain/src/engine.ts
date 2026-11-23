@@ -46,6 +46,25 @@ export type EngineFacetFieldKind = (typeof ENGINE_FACET_FIELD_KINDS)[number]
 export const ENGINE_FACET_VISIBILITIES = ["hidden", "network", "root"] as const
 export type EngineFacetVisibility = (typeof ENGINE_FACET_VISIBILITIES)[number]
 
+/**
+ * Miroir de `NETWORK_FEATURES` du moteur (`@antsia/social-domain/networkFeatures`) : les
+ * modules qu'un réseau gouverné ouvre un à un, le socle (fil, profils, relations,
+ * messagerie, modération) restant toujours servi. Le test relit la liste du moteur et
+ * échoue si les deux divergent.
+ */
+export const ENGINE_NETWORK_FEATURES = ["pages", "groupsAndEvents", "services", "jobs", "mutualAid", "mentoring", "arrivalKit", "pilotMetrics"] as const
+export type EngineNetworkFeature = (typeof ENGINE_NETWORK_FEATURES)[number]
+
+/** Miroir de `PERSONAL_REACTION_KINDS` du moteur (`@antsia/social-domain/content`). */
+export const ENGINE_REACTION_KINDS = ["like", "bravo", "soutien", "instructif"] as const
+export type EngineReactionKind = (typeof ENGINE_REACTION_KINDS)[number]
+
+/** Miroir de `PERSONAL_POST_MAX_LENGTH` du moteur : la longueur d'une publication. */
+export const ENGINE_POST_MAX_LENGTH = 2000
+
+/** Miroir de `PERSONAL_COMMENT_MAX_LENGTH` du moteur : un commentaire répond, il ne republie pas. */
+export const ENGINE_COMMENT_MAX_LENGTH = 1000
+
 export interface EngineFacetField {
   readonly key: FacetField
   readonly kind: EngineFacetFieldKind
