@@ -21,7 +21,7 @@ import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { memberMenu, type MemberCreateEntry, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
-import { act, cleanup, render, screen, within } from "@testing-library/react"
+import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { ComponentProps, ReactNode } from "react"
 import { toast } from "sonner"
@@ -755,6 +755,8 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ["Contact", "/contact"],
     ["Charte graphique", "/charte"],
   ]
+  /** Le groupe des textes du site, replié en UNE entrée : sous-menu au bureau, volet au téléphone. */
+  const INFORMATION_LABEL = "Informations"
   const SIGN_OUT = "Se déconnecter partout"
 
   it("au bureau : un menu au clavier — Entrée l'ouvre, les flèches le parcourent, Échap rend le focus à l'avatar", async () => {
@@ -766,15 +768,30 @@ describe("coque — le menu du compte, sous l'avatar", () => {
 
     const menu = await screen.findByRole("menu")
     const items = within(menu).getAllByRole("menuitem")
-    // Le compte, puis les informations du site, puis la sortie (une action, pas un lien).
-    expect(items.map((item) => [item.textContent, item.getAttribute("href")])).toEqual([...ACCOUNT, ...INFORMATION, [SIGN_OUT, null]])
-    expect(menuItemsOf(within(menu).getByRole("group", { name: "Informations" }))).toEqual(INFORMATION)
+    // Le compte, puis UNE entrée « Informations » (un sous-menu, sans adresse), puis la sortie (une action, pas un lien).
+    expect(items.map((item) => [item.textContent, item.getAttribute("href")])).toEqual([...ACCOUNT, [INFORMATION_LABEL, null], [SIGN_OUT, null]])
+    // Les textes du site n'encombrent plus le menu : ils attendent dans le sous-menu.
+    for (const [label] of INFORMATION) expect(screen.queryByRole("menuitem", { name: label })).toBeNull()
     expect(items.filter((item) => item.getAttribute("aria-current") === "page").map((item) => item.textContent)).toEqual(["Réglages"])
     expect(items[0]).toHaveFocus()
     await user.keyboard("{ArrowDown}")
     expect(items[1]).toHaveFocus()
     await user.keyboard("{End}")
     expect(items[items.length - 1]).toHaveFocus()
+
+    // Flèche haut : « Informations » ; Flèche droite ouvre le sous-menu, le focus sur le premier texte.
+    await user.keyboard("{ArrowUp}")
+    const information = within(menu).getByRole("menuitem", { name: INFORMATION_LABEL })
+    expect(information).toHaveFocus()
+    expect(information).toHaveAttribute("aria-haspopup", "menu")
+    await user.keyboard("{ArrowRight}")
+    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
+    expect(menuItemsOf(submenu)).toEqual(INFORMATION)
+    await waitFor(() => expect(within(submenu).getAllByRole("menuitem")[0]).toHaveFocus())
+    // Flèche gauche le referme et rend le focus à l'entrée.
+    await user.keyboard("{ArrowLeft}")
+    await waitFor(() => expect(screen.queryByRole("menu", { name: INFORMATION_LABEL })).toBeNull())
+    expect(information).toHaveFocus()
 
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("menu")).toBeNull()
@@ -790,20 +807,33 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     await user.click(trigger)
     let sheet = await screen.findByRole("dialog", { name: "Mon compte" })
     expect(linksOf(within(sheet).getByRole("navigation", { name: "Mon compte" }))).toEqual(ACCOUNT)
-    expect(linksOf(within(sheet).getByRole("navigation", { name: "Informations" }))).toEqual(INFORMATION)
-    // La sortie, en bouton neutre, est le seul bouton de la feuille hors de sa fermeture.
+    // « Informations » : un seul volet, replié ; ses six liens n'apparaissent qu'une fois déplié.
+    const information = within(sheet).getByRole("navigation", { name: INFORMATION_LABEL })
+    const toggle = within(information).getByRole("button", { name: INFORMATION_LABEL })
+    expect(toggle).toHaveAttribute("aria-expanded", "false")
+    expect(within(information).queryAllByRole("link")).toEqual([])
+    // Hors de sa fermeture, la feuille n'a que deux boutons : le volet « Informations » et la sortie, neutre.
     expect(within(sheet).getAllByRole("button").map((button) => button.textContent || button.getAttribute("aria-label"))).toEqual([
       "Fermer le menu du compte",
+      INFORMATION_LABEL,
       SIGN_OUT,
     ])
     expect(currentLinks(sheet)).toEqual(["Profil"])
     expect(sheet).toHaveTextContent("@awa.demo")
+    await user.click(toggle)
+    expect(toggle).toHaveAttribute("aria-expanded", "true")
+    expect(linksOf(information)).toEqual(INFORMATION)
+    await user.click(toggle)
+    expect(within(information).queryAllByRole("link")).toEqual([])
+    await user.click(toggle)
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
     expect(trigger).toHaveFocus()
 
     await user.click(trigger)
     sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    // Déplié à la fermeture, le volet se replie à la réouverture de la feuille.
+    expect(within(sheet).getByRole("button", { name: INFORMATION_LABEL })).toHaveAttribute("aria-expanded", "false")
     await user.click(within(sheet).getByRole("link", { name: "Parrainer" }))
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
   })
@@ -829,22 +859,48 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ["Règles de la communauté", "/regles-communaute"],
     ["Contact", "/contact"],
     ["Charte graphique", "/charte"],
-  ])("« %s » est à deux gestes depuis tout écran : l'avatar, puis le lien, au bureau comme au téléphone", async (label, href) => {
+  ])("« %s » est à trois gestes depuis tout écran : l'avatar, « Informations », puis le lien, au bureau comme au téléphone", async (label, href) => {
     const user = userEvent.setup()
     renderShell({ pathname: "/services/offre-coiffure" })
 
     await user.click(accountTrigger("menu"))
     const menu = await screen.findByRole("menu")
-    expect(within(within(menu).getByRole("group", { name: "Informations" })).getByRole("menuitem", { name: label })).toHaveAttribute("href", href)
+    await user.click(within(menu).getByRole("menuitem", { name: INFORMATION_LABEL }))
+    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
+    expect(within(submenu).getByRole("menuitem", { name: label })).toHaveAttribute("href", href)
     await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
 
     mocks.desktop = false
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    const link = within(within(sheet).getByRole("navigation", { name: "Informations" })).getByRole("link", { name: label })
+    const information = within(sheet).getByRole("navigation", { name: INFORMATION_LABEL })
+    await user.click(within(information).getByRole("button", { name: INFORMATION_LABEL }))
+    const link = within(information).getByRole("link", { name: label })
     expect(link).toHaveAttribute("href", href)
     await user.click(link)
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+  })
+
+  it("sur un texte du site, « Informations » le dit : la page courante dans le sous-menu, le volet du téléphone déjà déplié", async () => {
+    const user = userEvent.setup()
+    renderShell({ pathname: "/confidentialite" })
+
+    await user.click(accountTrigger("menu"))
+    const menu = await screen.findByRole("menu")
+    await user.click(within(menu).getByRole("menuitem", { name: INFORMATION_LABEL }))
+    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
+    expect(within(submenu).getAllByRole("menuitem").filter((item) => item.getAttribute("aria-current") === "page").map((item) => item.textContent)).toEqual([
+      "Confidentialité",
+    ])
+    await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
+
+    mocks.desktop = false
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(within(sheet).getByRole("button", { name: INFORMATION_LABEL })).toHaveAttribute("aria-expanded", "true")
+    expect(currentLinks(sheet)).toEqual(["Confidentialité"])
   })
 
   it("se déconnecter partout depuis le menu du bureau, au clavier : la porte unique est appelée une fois, le menu dit l'attente", async () => {
@@ -901,7 +957,8 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     renderShell({ locale: "en" })
     await user.click(accountTrigger("menu", "Account menu (Awa Ogooué)"))
     const menu = await screen.findByRole("menu")
-    expect(menuItemsOf(within(menu).getByRole("group", { name: "Information" }))).toEqual([
+    await user.click(within(menu).getByRole("menuitem", { name: "Information" }))
+    expect(menuItemsOf(await screen.findByRole("menu", { name: "Information" }))).toEqual([
       ["Legal notice", "/mentions-legales"],
       ["Privacy", "/confidentialite"],
       ["Terms of use", "/conditions-utilisation"],
@@ -1247,10 +1304,15 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     expected.create.forEach((entry, index) => expect(create[index]).toHaveTextContent(t(entry.labelKey)))
     await user.keyboard("{Escape}")
 
-    // Le menu du compte, au bureau : profil, réglages, « Mon espace », mes données, puis les informations.
-    const account = menuItemsOf(await openAccountMenu()).filter(([, href]) => href !== null)
-    expect(account).toEqual([...expected.account, ...expected.information].map(entryLink))
+    // Le menu du compte, au bureau : profil, réglages, « Mon espace », mes données ; puis les
+    // informations, dans le sous-menu de leur entrée unique.
+    const accountMenu = await openAccountMenu()
+    const account = menuItemsOf(accountMenu).filter(([, href]) => href !== null)
+    expect(account).toEqual(expected.account.map(entryLink))
+    await user.click(within(accountMenu).getByRole("menuitem", { name: "Informations" }))
+    expect(menuItemsOf(await screen.findByRole("menu", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
     await user.keyboard("{Escape}")
+    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
 
     // La feuille du compte, au téléphone : les mêmes entrées, « Créer » et les informations.
     await user.click(accountTrigger("dialog"))
@@ -1258,6 +1320,8 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     expect(linksOf(sheet.getByRole("navigation", { name: "Mon compte" }))).toEqual(expected.account.map(entryLink))
     expect(sheetCreateHrefs(sheet.getByRole("navigation", { name: "Créer" }))).toEqual(createHrefs(expected.create))
     expect(expected.create.some((entry) => entry.id === "live")).toBe(liveOpen)
-    expect(linksOf(sheet.getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
+    const information = sheet.getByRole("navigation", { name: "Informations" })
+    await user.click(within(information).getByRole("button", { name: "Informations" }))
+    expect(linksOf(information)).toEqual(expected.information.map(entryLink))
   })
 })
