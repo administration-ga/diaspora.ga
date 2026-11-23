@@ -83,6 +83,7 @@ import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
 import type { NetworkFeature, NetworkFeaturesCapability } from "./network-features-port"
 import type { MemberBrowseCapability } from "./member-browse-port"
+import type { PostSearchCapability } from "./post-search-port"
 
 export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
@@ -417,6 +418,11 @@ export interface DiasporaGaDataSource {
    * à côté de la recherche par nom : mêmes membres, même règle, vingt par fenêtre.
    */
   readonly memberBrowse?: MemberBrowseCapability
+  /**
+   * Chercher dans les publications lisibles du réseau (DS-11, volet recherche, `post-search-port.ts`) :
+   * la même garde que le fil, une fenêtre de plus à chaque « Voir plus », jusqu'à la borne.
+   */
+  readonly postSearch?: PostSearchCapability
   /**
    * Posés par `gateSource` seulement : les fonctionnalités ouvertes de la source montée, et
    * si leur lecture a répondu. Absents : la source n'est pas gardée (elle sert tout ce qu'elle porte).

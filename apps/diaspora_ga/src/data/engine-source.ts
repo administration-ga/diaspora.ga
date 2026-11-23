@@ -122,6 +122,7 @@ import { createEnginePageDecisions } from "./engine-page-decisions"
 import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
+import { createEnginePostSearch } from "./engine-post-search"
 import {
   toAccountView,
   toConsentViews,
@@ -269,6 +270,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
     networkFeatures: createEngineNetworkFeatures(deps),
     // CH-816 P3 : parcourir l'annuaire de la tranche par pays ouvert, ville et confiance.
     memberBrowse: createEngineMemberBrowse(deps),
+    // CH-817 (DS-11) : chercher dans les publications lisibles (`posts.search`) ; elles alimentent aussi « retirer ma réaction ».
+    postSearch: createEnginePostSearch(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
     contentPreferences: {
       usePage(args: ContentPreferencesRequest): ContentPreferencesQuery {
         const { auth, networkId, membership } = useMember()

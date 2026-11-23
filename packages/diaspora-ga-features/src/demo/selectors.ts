@@ -498,7 +498,7 @@ export function bookmarksView(state: DemoState, viewerId: string, now: number): 
 }
 
 /** Un blocage, dans un sens ou dans l'autre, entre deux personnes. */
-function blockedBetween(state: DemoState, a: string, b: string): boolean {
+export function blockedBetween(state: DemoState, a: string, b: string): boolean {
   return state.blocks.some((block) => (block.byId === a && block.targetId === b) || (block.byId === b && block.targetId === a))
 }
 

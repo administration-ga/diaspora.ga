@@ -78,6 +78,7 @@ import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
 import { createDemoNetworkFeatures } from "./network-features"
 import { createDemoMemberBrowse } from "./member-browse"
+import { createDemoPostSearch } from "./post-search"
 import type { DemoStore } from "./store"
 
 const LOADING = { status: "loading" } as const
@@ -194,6 +195,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
     networkFeatures: createDemoNetworkFeatures(store),
     // CH-816 P3 : parcourir l'annuaire fictif par pays et par ville, même règle que la recherche.
     memberBrowse: createDemoMemberBrowse(store),
+    // CH-817 (DS-11) : chercher dans les publications fictives lisibles, même garde que le fil.
+    postSearch: createDemoPostSearch(store),
 
     useSession() {
       const version = useVersion()

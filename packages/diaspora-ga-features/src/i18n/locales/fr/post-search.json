@@ -1,0 +1,16 @@
+{
+  "postSearch": {
+    "title": "Chercher dans les publications",
+    "lead": "Un mot, un nom ou un #mot-dièse : seules les publications que vous pouvez lire dans DIASPORA.GA sont cherchées.",
+    "label": "Mots à chercher dans les publications",
+    "placeholder": "Chercher dans les publications",
+    "hint": "Saisissez au moins deux caractères.",
+    "resultsLabel": "Publications trouvées",
+    "count_one": "{{count}} publication trouvée",
+    "count_other": "{{count}} publications trouvées",
+    "emptyTitle": "Aucune publication pour « {{query}} »",
+    "emptyBody": "Essayez un autre mot, ou un mot plus court.",
+    "loadMore": "Voir plus de publications",
+    "capped": "Seules les premières publications trouvées s’affichent. Précisez votre recherche pour en voir d’autres."
+  }
+}
