@@ -27,9 +27,9 @@ import {
   useOpenCountries,
   usePageAdmin,
   usePilotMetrics,
+  NETWORK_FEATURES,
   type AssociationListPage,
   type AssociationsCapability,
-  type FeatureGate,
   type Loadable,
   type MembershipView,
   type ModerationDeskCapability,
@@ -39,50 +39,25 @@ import {
 } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import {
-  ArrowLeftIcon,
-  ArrowRightIcon,
-  BookmarkIcon,
-  BookTextIcon,
-  BriefcaseBusinessIcon,
-  Building2Icon,
-  CameraIcon,
-  ChartColumnIcon,
-  ChevronsUpDownIcon,
-  ClipboardListIcon,
-  ContactRoundIcon,
-  DatabaseIcon,
-  EarthIcon,
-  FileTextIcon,
-  GraduationCapIcon,
-  HandshakeIcon,
-  HeartHandshakeIcon,
-  HouseIcon,
-  LockKeyholeIcon,
-  LogOutIcon,
-  MessageCircleIcon,
-  PaletteIcon,
-  PenSquareIcon,
-  PlusIcon,
-  ScaleIcon,
-  ScrollTextIcon,
-  Settings2Icon,
-  ShieldCheckIcon,
-  StoreIcon,
-  UserRoundCheckIcon,
-  UserRoundIcon,
-  UsersRoundIcon,
-  XIcon,
-  type LucideIcon,
-} from "lucide-react"
+  MEMBER_CREATE_ICONS,
+  MEMBER_DATA_ENTRY,
+  MEMBER_INFORMATION_ENTRIES,
+  MEMBER_MENU_ICONS,
+  memberMenu,
+  type MemberMenuEntry,
+  type MemberMenuEntryId,
+} from "@diaspora-ga/features/navigation"
+import { ArrowLeftIcon, ArrowRightIcon, ChevronsUpDownIcon, LogOutIcon, PenSquareIcon, PlusIcon, XIcon, type LucideIcon } from "lucide-react"
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
 import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
-import { createFormats, type CreateFormat, type CreateFormatId } from "@/lib/create-menu"
+import { createFormatOf, type CreateFormat } from "@/lib/create-menu"
+import { memberMenuHref } from "@/lib/member-menu"
 import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
-import { communitiesOffered, featureOfPath, hrefServed } from "@/lib/network-features"
+import { featureOfPath } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
@@ -109,10 +84,11 @@ export function useComposer(): ComposerControl {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Les entrées : celles de la table des destinations (`lib/nav-destinations`), sous lesquelles
+ * Les entrées : celles du menu des membres partagé (`@diaspora-ga/features/navigation`), dont les
+ * identifiants sont ceux de la table des destinations (`lib/nav-destinations`), sous lesquelles
  * chaque page de membre se range, puis l'ancre « Mes données » et les textes du site.
  */
-type EntryId = NavDestination | "myData" | "legalNotice" | "privacy" | "terms" | "communityRules" | "contact" | "charte"
+type EntryId = MemberMenuEntryId
 
 /** Une entrée de navigation : une adresse de la table des routes, son icône, sa clé de libellé, son état courant. */
 interface NavEntry {
@@ -174,67 +150,23 @@ function withinAny(pathname: string, hrefs: readonly string[]): boolean {
 }
 
 /**
- * ADR-0041 du moteur : une entrée qui mène à un module fermé sur le réseau n'est pas offerte
- * (sa fonctionnalité se lit dans la table des adresses, comme pour la garde des pages).
+ * Une entrée du menu partagé, telle que la coque la monte : son adresse (table des routes), son
+ * icône (table partagée), son état courant et, pour Messages, ses non-lus. Une seule entrée relève
+ * du chemin courant (UX-05) ; « Mes données » est une ancre des réglages, jamais « courante » ; un
+ * texte du site l'est sur sa rubrique.
  */
-function served(gate: FeatureGate): (entry: NavEntry) => boolean {
-  return (entry) => hrefServed(gate, entry.href)
-}
-
-/**
- * La barre, cinq entrées au plus, dans cet ordre : Fil, Membres, Services, Communautés, Messages
- * (menu léger, CH-816 lot P1). Fil et Membres toujours (Membres est la destination `explore`,
- * servie à `/explorer`) ; Services quand son module est ouvert (filtre `served`) ; Communautés
- * quand un module rangé sous elle est ouvert (`communitiesOffered`), son pays restant joignable
- * par « Mon pays » ; Messages avec iCom (même règle qu'avant). Une entrée absente ne laisse pas
- * de trou. Ce qui relève de chacune ne s'écrit pas ici : la table des destinations le dit pour
- * toute adresse de la table des routes (UX-05, décision 5). Messages porte ses non-lus (UX-06),
- * lus seulement quand iCom est ouvert.
- */
-function primaryEntries(current: NavDestination | null, offer: { readonly communities: boolean; readonly messages: boolean }, messagesUnread: number): NavEntry[] {
-  const entries: NavEntry[] = [
-    { id: "feed", href: routes.feed(), icon: HouseIcon, labelKey: "nav.feed", active: current === "feed" },
-    // Des personnes pour « Membres », la Terre pour « Communautés » : les deux icônes ne se confondent jamais.
-    { id: "explore", href: routes.explore(), icon: UsersRoundIcon, labelKey: "nav.members", active: current === "explore" },
-    { id: "services", href: routes.services(), icon: StoreIcon, labelKey: "nav.services", active: current === "services" },
-  ]
-  if (offer.communities) {
-    entries.push({ id: "communities", href: routes.communities(), icon: EarthIcon, labelKey: "nav.communities", active: current === "communities" })
+function navEntryOf(entry: MemberMenuEntry, context: { readonly handle: string; readonly current: NavDestination | null; readonly pathname: string; readonly messagesUnread: number }): NavEntry {
+  const href = memberMenuHref(entry, context.handle)
+  const information = (MEMBER_INFORMATION_ENTRIES as readonly string[]).includes(entry.id)
+  const active = entry.id === MEMBER_DATA_ENTRY ? false : information ? withinAny(context.pathname, [href]) : context.current === entry.id
+  return {
+    id: entry.id,
+    href,
+    icon: MEMBER_MENU_ICONS[entry.id],
+    labelKey: entry.labelKey,
+    active,
+    ...(entry.id === "messages" ? { unread: context.messagesUnread } : {}),
   }
-  if (offer.messages) {
-    entries.push({ id: "messages", href: routes.messages(), icon: MessageCircleIcon, labelKey: "nav.messages", active: current === "messages", unread: messagesUnread })
-  }
-  return entries
-}
-
-/**
- * Les entrées personnelles, dans le menu du compte seulement (le rail du bureau ne les porte plus,
- * CH-816) : une entrée n'y paraît qu'avec un contenu. « Mes pages » et « Mes associations »
- * attendent la lecture qui le prouve ; les entrées d'un module (demandes, candidatures, mentorats)
- * suivent son ouverture (filtre `served`) ; relations (réseau du moteur), enregistrements et
- * parrainage restent toujours.
- */
-function personalEntries(current: NavDestination | null, holds: { readonly relations: boolean; readonly pages: boolean; readonly associations: boolean }): NavEntry[] {
-  const relations: NavEntry[] = holds.relations
-    ? [{ id: "relations", href: routes.relations(), icon: UserRoundCheckIcon, labelKey: "nav.relations", active: current === "relations" }]
-    : []
-  const pages: NavEntry[] = holds.pages
-    ? [{ id: "myActivity", href: routes.myActivity(), icon: BriefcaseBusinessIcon, labelKey: "nav.myActivity", active: current === "myActivity" }]
-    : []
-  const associations: NavEntry[] = holds.associations
-    ? [{ id: "myAssociations", href: routes.myAssociations(), icon: HeartHandshakeIcon, labelKey: "nav.myAssociations", active: current === "myAssociations" }]
-    : []
-  return [
-    { id: "myRequests", href: routes.myServiceRequests(), icon: ClipboardListIcon, labelKey: "nav.myRequests", active: current === "myRequests" },
-    ...pages,
-    ...associations,
-    // Vague H du plan global : candidatures (DG-025) et mentorat (DG-024).
-    { id: "myApplications", href: routes.myApplications(), icon: FileTextIcon, labelKey: "nav.myApplications", active: current === "myApplications" },
-    { id: "myMentoring", href: routes.myMentoring(), icon: GraduationCapIcon, labelKey: "nav.myMentoring", active: current === "myMentoring" },
-    ...relations,
-    { id: "bookmarks", href: routes.bookmarks(), icon: BookmarkIcon, labelKey: "bookmarks.title", active: current === "bookmarks" },
-    { id: "sponsor", href: routes.sponsor(), icon: HandshakeIcon, labelKey: "nav.sponsor", active: current === "sponsor" },
-  ]
 }
 
 /**
@@ -281,49 +213,6 @@ const ASSOCIATION_HELD: ReadonlySet<AssociationMembershipStatus> = new Set<Assoc
 function useHoldsAssociation(): boolean {
   const mine = (useAssociations() ?? NO_ASSOCIATIONS).useMyAssociations(FIRST_ASSOCIATIONS_WINDOW)
   return mine.status === "ready" && mine.data.items.some((item) => ASSOCIATION_HELD.has(item.status))
-}
-
-/**
- * Les entrées réservées aux responsables que le serveur reconnaît (modération par pays, mesure du
- * pilote) : absentes pour tout autre membre, et le serveur rejuge chaque lecture derrière elles.
- */
-function responsibleEntries(current: NavDestination | null, access: { readonly moderation: boolean; readonly pilot: boolean }): NavEntry[] {
-  const entries: NavEntry[] = []
-  if (access.moderation) {
-    entries.push({ id: "moderation", href: routes.moderationDesk(), icon: ShieldCheckIcon, labelKey: "nav.moderation", active: current === "moderation" })
-  }
-  if (access.pilot) {
-    entries.push({ id: "pilot", href: routes.pilotDashboard(), icon: ChartColumnIcon, labelKey: "pilotMetrics.nav", active: current === "pilot" })
-  }
-  return entries
-}
-
-/** Le menu du compte, ouvert depuis l'avatar : profil, réglages, les entrées personnelles et réservées, mes données. */
-function accountEntries(membership: MembershipView, current: NavDestination | null, personal: readonly NavEntry[]): NavEntry[] {
-  return [
-    { id: "profile", href: routes.profile(membership.handle), icon: UserRoundIcon, labelKey: "nav.profile", active: current === "profile" },
-    { id: "settings", href: routes.settings(), icon: Settings2Icon, labelKey: "nav.settings", active: current === "settings" },
-    ...personal,
-    // Une ancre des réglages : le chemin seul ne la distingue pas, elle n'est donc jamais « courante ».
-    { id: "myData", href: routes.settingsData(), icon: DatabaseIcon, labelKey: "nav.myData", active: false },
-  ]
-}
-
-/**
- * Le groupe « Informations » du menu du compte (UX-03) : les textes du site, à deux gestes
- * depuis tout écran une fois connecté — ils n'étaient qu'au pied des pages publiques.
- * Mêmes libellés que ce pied de page, dont les trois textes de LX-05 (conditions d'utilisation,
- * règles de la communauté, contact). L'aide s'y ajoutera avec UX-04.
- */
-function informationEntries(pathname: string): NavEntry[] {
-  return [
-    { id: "legalNotice", href: routes.legalNotice(), icon: ScaleIcon, labelKey: "footer.legalNotice", active: withinAny(pathname, [routes.legalNotice()]) },
-    { id: "privacy", href: routes.privacy(), icon: LockKeyholeIcon, labelKey: "footer.privacy", active: withinAny(pathname, [routes.privacy()]) },
-    { id: "terms", href: routes.terms(), icon: ScrollTextIcon, labelKey: "footer.terms", active: withinAny(pathname, [routes.terms()]) },
-    { id: "communityRules", href: routes.communityRules(), icon: BookTextIcon, labelKey: "footer.community", active: withinAny(pathname, [routes.communityRules()]) },
-    { id: "contact", href: routes.contact(), icon: ContactRoundIcon, labelKey: "footer.contact", active: withinAny(pathname, [routes.contact()]) },
-    { id: "charte", href: routes.charte(), icon: PaletteIcon, labelKey: "footer.charte", active: withinAny(pathname, [routes.charte()]) },
-  ]
 }
 
 /**
@@ -418,25 +307,33 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const current = navDestinationOf(pathname, membership.handle)
   // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et le menu du compte n'offrent que ceux-là.
   const features = useFeatureGate()
-  const offered = served(features)
-  const primary = primaryEntries(current, { communities: communitiesOffered(features), messages: icom !== null }, icom === null ? 0 : messagesUnread).filter(offered)
-  // Sur le hub de son pays sans « Communautés » dans la barre, « Mon pays » est l'entrée courante (une entrée l'est toujours).
-  const homeCountryCurrent = current === "communities" && !primary.some((entry) => entry.id === "communities")
   const desk = (useModerationDesk() ?? NO_MODERATION_DESK).useDesk(membership.personId)
   const pilot = (usePilotMetrics() ?? NO_PILOT_METRICS).useAccess()
   const holdsPageRole = useHoldsPageRole()
   const holdsAssociation = useHoldsAssociation()
-  const personal = [
-    ...personalEntries(current, { relations: network !== null, pages: holdsPageRole, associations: holdsAssociation }),
-    ...responsibleEntries(current, {
-      moderation: desk.status === "ready" && desk.data !== null,
-      pilot: pilot.status === "ready" && pilot.data.allowed,
-    }),
-  ].filter(offered)
-  const account = accountEntries(membership, current, personal)
-  const information = informationEntries(pathname)
+  // Le menu exact, par la règle partagée avec l'aperçu d'admin.diaspora.ga (fiche CH-815, § 5) :
+  // la barre (Fil, Membres, Services, Communautés, Messages selon les modules et iCom), le menu du
+  // compte (dont « Mon espace » et les entrées des responsables) et « Créer ».
+  const menu = memberMenu({
+    openFeatures: NETWORK_FEATURES.filter((key) => features.isOpen(key)),
+    icom: icom !== null,
+    engineNetwork: network !== null,
+    canPublish,
+    status: membership.status,
+    holdsPageRole,
+    holdsAssociation,
+    moderator: desk.status === "ready" && desk.data !== null,
+    pilotReader: pilot.status === "ready" && pilot.data.allowed,
+  })
+  const entryContext = { handle: membership.handle, current, pathname, messagesUnread: icom === null ? 0 : messagesUnread }
+  const rail = menu.rail.map((entry) => navEntryOf(entry, entryContext))
+  const phoneBar = menu.phoneBar.map((entry) => navEntryOf(entry, entryContext))
+  // Sur le hub de son pays sans « Communautés » dans la barre, « Mon pays » est l'entrée courante (une entrée l'est toujours).
+  const homeCountryCurrent = current === "communities" && !rail.some((entry) => entry.id === "communities")
+  const account = menu.account.map((entry) => navEntryOf(entry, entryContext))
+  const information = menu.information.map((entry) => navEntryOf(entry, entryContext))
   // Le menu « Créer » (modèle du réseau de l'administration) : les actus suivent iCom, l'inscription la règle partagée.
-  const create = createFormats({ canPublish, stories: icom !== null, status: membership.status, pages: features.isOpen("pages") })
+  const create = menu.create.map(createFormatOf)
   // La garde des adresses : un module fermé dit « introuvable », comme une page qui n'existe pas.
   const feature = featureOfPath(pathname)
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
@@ -452,7 +349,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={primary} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
+          <DesktopRail membership={membership} primary={rail} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
 
           <div className="min-w-0 flex-1">
             <MobileHeader membership={membership} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
@@ -487,7 +384,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
           </div>
         </div>
 
-        <MobileTabBar entries={primary} />
+        <MobileTabBar entries={phoneBar} />
         {/* Le lecteur des non-lus de Messages : sous l'îlot iCom, et seulement iCom ouvert
             (aucune lecture en démonstration ni pour un membre qui ne peut pas écrire). */}
         {icom ? (
@@ -800,11 +697,6 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
   )
 }
 
-const CREATE_ICONS: Readonly<Record<CreateFormatId, LucideIcon>> = {
-  story: CameraIcon,
-  association: UsersRoundIcon,
-  company: Building2Icon,
-}
 
 /**
  * « Créer » au bureau, sous « Publier » : un menu de formats, chacun dit en une ligne
@@ -830,7 +722,7 @@ function CreateMenu(props: { formats: readonly CreateFormat[] }) {
         >
           <DropdownMenu.Label className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{t("nav.create.title")}</DropdownMenu.Label>
           {props.formats.map((format) => {
-            const Icon = CREATE_ICONS[format.id]
+            const Icon = MEMBER_CREATE_ICONS[format.id]
             return (
               <DropdownMenu.Item key={format.id} asChild>
                 <NextLink
@@ -854,7 +746,7 @@ function CreateMenu(props: { formats: readonly CreateFormat[] }) {
 
 function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) {
   const { t } = useDiasporaGaT()
-  const Icon = CREATE_ICONS[props.format.id]
+  const Icon = MEMBER_CREATE_ICONS[props.format.id]
   return (
     <li>
       <NextLink

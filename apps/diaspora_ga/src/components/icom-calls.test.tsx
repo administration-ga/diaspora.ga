@@ -1,7 +1,8 @@
 // @vitest-environment jsdom
-import { useCallsAvailable } from "@antsia/api/network"
+import { useCallsAvailable, useNetwork } from "@antsia/api/network"
 import { ConversationHeader } from "@antsia/social-features/messagerie"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
+import { MEMBERS_APP_CODE_SWITCH_STATES } from "@diaspora-ga/features/navigation"
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -67,5 +68,23 @@ describe("iCom — l'interrupteur des appels déclaré au moteur (callsAvailable
     expect(screen.getByTestId("calls-available")).toHaveTextContent("true")
     expect(screen.getByRole("button", { name: "Appel audio" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Appel vidéo" })).toBeInTheDocument()
+  })
+
+  it("admin.diaspora.ga dit vrai : direct et iCom Pro, fermés par le code, sont ce que l'îlot déclare au moteur (CH-815 A5)", () => {
+    function Declared() {
+      const network = useNetwork()
+      return <output data-testid="declared">{JSON.stringify({ live: network.liveAvailable, icomPro: network.icomPro })}</output>
+    }
+    render(
+      <I18nProvider locale="fr">
+        <IcomIsland network={NETWORK}>
+          <Declared />
+        </IcomIsland>
+      </I18nProvider>,
+    )
+    expect(JSON.parse(screen.getByTestId("declared").textContent ?? "")).toEqual({
+      live: MEMBERS_APP_CODE_SWITCH_STATES.live === "open",
+      icomPro: MEMBERS_APP_CODE_SWITCH_STATES.icomPro === "open",
+    })
   })
 })

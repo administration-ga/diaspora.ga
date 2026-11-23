@@ -1,7 +1,8 @@
-import { featureGateOf, NETWORK_FEATURES, type NetworkFeature } from "@diaspora-ga/features/data"
+import { featureGateOf, NETWORK_FEATURES, type FeatureGate, type NetworkFeature } from "@diaspora-ga/features/data"
+import { MEMBER_MENU_WIDEST_SITUATION, memberMenu } from "@diaspora-ga/features/navigation"
 import { describe, expect, it } from "vitest"
 
-import { COMMUNITY_FEATURES, communitiesOffered, featureOfPath, featuresUnderDestination, ROUTE_FEATURES } from "./network-features"
+import { featureOfPath, featuresUnderDestination, ROUTE_FEATURES } from "./network-features"
 import { ROUTE_DESTINATIONS, type RouteKey } from "./nav-destinations"
 import { routes } from "./routes"
 
@@ -63,10 +64,13 @@ describe("adresses et fonctionnalités du réseau", () => {
 describe("les modules rangés sous une destination, dérivés des deux tables", () => {
   /** Une garde comme l'application la monte : ces seules clés ouvertes, lecture faite. */
   const gate = (open: readonly NetworkFeature[]) => featureGateOf({ openFeatures: open, featuresReady: true })
+  /** « Communautés » dans la barre, comme la coque la décide : la garde, puis le menu partagé. */
+  const communitiesOffered = (features: FeatureGate) =>
+    memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: NETWORK_FEATURES.filter((feature) => features.isOpen(feature)) }).rail.some((entry) => entry.id === "communities")
+  const COMMUNITY_FEATURES = featuresUnderDestination("communities")
 
   it("sous Communautés : groupes et évènements, emploi, entraide, mentorat, kit d'arrivée — ni les pages, ni les services, ni la mesure du pilote", () => {
     expect(COMMUNITY_FEATURES).toEqual(["groupsAndEvents", "jobs", "mutualAid", "mentoring", "arrivalKit"])
-    expect(featuresUnderDestination("communities")).toEqual(COMMUNITY_FEATURES)
   })
 
   it("suit les tables : un module y figure si et seulement si une de ses adresses se range sous la destination", () => {

@@ -7,7 +7,6 @@
  * création du réseau de l'administration (`creation-controller`). Les clés de texte
  * sont écrites en toutes lettres : le cliquet i18n les relève ici.
  */
-import type { MembershipStatus } from "@diaspora-ga/domain"
 import type { MemberPageKind } from "@diaspora-ga/features/data"
 
 import { offeredManageTabs } from "./page-manage-tabs"
@@ -21,12 +20,10 @@ import { routes } from "./routes"
  * Les adhésions qui voient « Inscrire une association / une entreprise » dans l'annuaire des
  * pages : tout membre en règle (dans le fil, la carte d'identité ne paraît qu'à qui publie). Le serveur exige ensuite `verifiee`, et l'écran d'inscription dit à
  * un membre non vérifié comment le devenir. Une adhésion suspendue ou quittée n'inscrit rien.
+ * La règle vit dans le menu des membres partagé (« Créer » la lit aussi, et l'aperçu
+ * d'admin.diaspora.ga avec lui) : une seule source.
  */
-export const REGISTERING_STATUSES: readonly MembershipStatus[] = ["en_attente", "declaree", "verifiee"]
-
-export function canSeeRegistration(status: MembershipStatus): boolean {
-  return REGISTERING_STATUSES.includes(status)
-}
+export { canSeeRegistration, REGISTERING_STATUSES } from "@diaspora-ga/features/navigation"
 
 // ═══════════════════════════════════════════════════════════════
 // Les étapes

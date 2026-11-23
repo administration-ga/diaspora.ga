@@ -3,14 +3,18 @@
  * (`creation-controller`) : chaque format dit en une ligne ce qu'il crée, et n'apparaît
  * que s'il est ouvert à ce membre. « Publier » garde son bouton à part, à la même place
  * sur chaque écran ; le menu porte les autres gestes de création.
- * PROPRIÉTAIRE : chantier « coque ». Règle pure, clés de texte en toutes lettres.
+ *
+ * La règle vit dans le menu des membres partagé (`@diaspora-ga/features/navigation`,
+ * fiche CH-815 § 5) : une actu, puis l'inscription d'une association et d'une entreprise
+ * quand les pages sont ouvertes (ADR-0041 du moteur). Ici, les adresses seulement.
+ * PROPRIÉTAIRE : chantier « coque ».
  */
 import type { MembershipStatus } from "@diaspora-ga/domain"
+import { memberMenu, type MemberCreateEntry, type MemberCreateFormatId } from "@diaspora-ga/features/navigation"
 
-import { canSeeRegistration } from "./page-registration"
-import { routes } from "./routes"
+import { memberCreateHref } from "./member-menu"
 
-export type CreateFormatId = "story" | "association" | "company"
+export type CreateFormatId = MemberCreateFormatId
 
 export interface CreateFormat {
   readonly id: CreateFormatId
@@ -29,21 +33,23 @@ export interface CreateMenuInput {
   readonly pages: boolean
 }
 
-/**
- * Les formats offerts, dans l'ordre : une actu, puis l'inscription d'une association et
- * d'une entreprise (AS-05), quand les pages sont ouvertes sur le réseau (ADR-0041 du moteur). Les groupes thématiques n'y sont pas : leur création attend la
- * règle du pilote (décision 3 du plan 07), et les directs restent fermés.
- */
+/** Un format du menu partagé, avec son adresse. */
+export function createFormatOf(entry: MemberCreateEntry): CreateFormat {
+  return { id: entry.id, href: memberCreateHref(entry), labelKey: entry.labelKey, hintKey: entry.hintKey }
+}
+
+/** Les formats offerts, dans l'ordre, d'après les seuls faits qui les décident. */
 export function createFormats(input: CreateMenuInput): readonly CreateFormat[] {
-  const formats: CreateFormat[] = []
-  if (input.canPublish && input.stories) {
-    formats.push({ id: "story", href: routes.newStory(), labelKey: "nav.create.story", hintKey: "nav.create.storyHint" })
-  }
-  if (input.pages && canSeeRegistration(input.status)) {
-    formats.push(
-      { id: "association", href: routes.newPage("association"), labelKey: "nav.create.association", hintKey: "nav.create.associationHint" },
-      { id: "company", href: routes.newPage("company"), labelKey: "nav.create.company", hintKey: "nav.create.companyHint" },
-    )
-  }
-  return formats
+  return memberMenu({
+    icom: input.stories,
+    canPublish: input.canPublish,
+    status: input.status,
+    openFeatures: input.pages ? ["pages"] : [],
+    // Sans effet sur « Créer » : la règle partagée ne les lit que pour la barre et le menu du compte.
+    engineNetwork: false,
+    holdsPageRole: false,
+    holdsAssociation: false,
+    moderator: false,
+    pilotReader: false,
+  }).create.map(createFormatOf)
 }
