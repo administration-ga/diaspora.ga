@@ -71,9 +71,10 @@
     "title": "Join DIASPORA.GA",
     "signUpTitle": "Create your DIASPORA.GA account",
     "signUpLead": "Light account: you read right away, you post after a sponsorship or the verification of your consular registration.",
+    "signUpLeadSponsored": "Light account: you read right away, you post as soon as a verified member sponsors you.",
     "existingAccount": "I already have an account: sign in",
     "smsInstead": "Get the code by text message instead",
-    "noPassword": "No password: IDN or a one-time code. Your contact details are never shown to other members."
+    "noPassword": "No password to create or remember. Your contact details are never shown to other members."
   },
   "idn": {
     "title": "Sign in with IDN",
