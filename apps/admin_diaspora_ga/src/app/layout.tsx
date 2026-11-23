@@ -36,6 +36,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={locale} data-charte={DEFAULT_CHARTE} suppressHydrationWarning>
       <head>
+        {/* Aucune adresse de page ne part en `Referer` (revue A1, F2), comme l'en-tête `Referrer-Policy` de `next.config.ts`. */}
+        <meta name="referrer" content="no-referrer" />
         <AppearanceBootScript />
       </head>
       <body className="min-h-dvh bg-background text-foreground">

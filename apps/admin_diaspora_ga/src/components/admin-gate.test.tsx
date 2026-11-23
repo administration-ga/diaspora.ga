@@ -8,6 +8,7 @@ import { I18nextProvider } from "react-i18next"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { APP_NAMESPACE, appResources } from "@/i18n/resources"
+import { REQUESTED_SECTION_KEY } from "@/lib/requested-section"
 
 /**
  * CH-815 A4 — la garde : rien de la coque ni d'une section ne se monte, ni ne lit, avant
@@ -99,6 +100,7 @@ beforeEach(() => {
   mocks.args = new Map()
   mocks.pathname = "/"
   mocks.record.mockResolvedValue(null)
+  window.sessionStorage.clear()
 })
 afterEach(() => {
   cleanup()
@@ -138,8 +140,22 @@ describe("garde d'admin.diaspora.ga — rien ne se monte avant les deux réponse
   it("sans session sur une adresse inconnue du registre : l'entrée sans section à rouvrir", () => {
     mocks.auth = { isAuthenticated: false, isUnauthenticated: true, isPending: false }
     mocks.pathname = "/inconnue"
+    window.sessionStorage.setItem(REQUESTED_SECTION_KEY, "/modules")
     mount()
     expect(mocks.replace).toHaveBeenCalledWith("/entrer")
+    // Une section retenue plus tôt ne survit pas à une demande qui n'en porte pas.
+    expect(window.sessionStorage.getItem(REQUESTED_SECTION_KEY)).toBeNull()
+  })
+
+  it.each(["/modules", "/modules/une-cle"])("sans session sur une section (%s) : l'entrée NUE, la section retenue dans l'onglet (revue A1, F2)", (pathname) => {
+    mocks.auth = { isAuthenticated: false, isUnauthenticated: true, isPending: false }
+    mocks.pathname = pathname
+    mount()
+    expect(mocks.replace.mock.calls).toEqual([["/entrer"]])
+    expect(screen.getByRole("link", { name: "Se connecter" }).getAttribute("href")).toBe("/entrer")
+    expect(window.sessionStorage.getItem(REQUESTED_SECTION_KEY)).toBe("/modules")
+    expect(mocks.queried).toEqual([])
+    expectNothingMounted()
   })
 
   it("réseau puis droits en cours de lecture : ni coque ni section, et l'administration n'est lue qu'une fois le réseau connu", () => {

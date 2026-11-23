@@ -1,4 +1,5 @@
 import { createEngineNextConfig } from "@antsia/api/next-config"
+import type { NextConfig } from "next"
 
 /**
  * Configuration Next.js 16 d'admin.diaspora.ga — celle du moteur ANTSIA
@@ -7,8 +8,40 @@ import { createEngineNextConfig } from "@antsia/api/next-config"
  * (lu dans `ANTSIA/.env.local` en développement, dans les ARG du Dockerfile en
  * production). Seuls les paquets de DIASPORA.GA lus par la coque sont ajoutés ici.
  * Aucune source de démonstration : l'application est branchée sur le moteur seul (D1).
+ *
+ * Un seul écart avec le moteur (revue de sécurité A1, F2) : `Referrer-Policy` vaut
+ * `no-referrer` sur toutes les routes. Le retour d'IDN arrive sur `/entrer` avec le
+ * jeton à usage unique de la session dans l'adresse ; aucune requête ne doit emporter
+ * cette adresse, même un instant. Les autres en-têtes du moteur (CSP comprise) restent
+ * tels quels, dans leur ordre.
  */
-export default createEngineNextConfig({
+const engineConfig = createEngineNextConfig({
   appDir: process.cwd(),
   transpilePackages: ["@diaspora-ga/domain", "@diaspora-ga/features"],
 })
+
+const REFERRER_POLICY = { key: "Referrer-Policy", value: "no-referrer" } as const
+/** La source « toutes les routes » de la configuration commune. */
+const EVERY_ROUTE = "/(.*)"
+
+type HeaderRule = Awaited<ReturnType<NonNullable<NextConfig["headers"]>>>[number]
+
+/** La politique du moteur remplacée à sa place, ou ajoutée si la règle n'en porte pas. */
+function withNoReferrer(headers: HeaderRule["headers"]): HeaderRule["headers"] {
+  const replaced = headers.map((header) => (header.key.toLowerCase() === "referrer-policy" ? { ...REFERRER_POLICY } : header))
+  return replaced.some((header) => header.key === REFERRER_POLICY.key) ? replaced : [...replaced, { ...REFERRER_POLICY }]
+}
+
+const config: NextConfig = {
+  ...engineConfig,
+  async headers() {
+    const rules = (await engineConfig.headers?.()) ?? []
+    const covered = rules.some((rule) => rule.source === EVERY_ROUTE && rule.has === undefined && rule.missing === undefined)
+    return [
+      ...rules.map((rule) => ({ ...rule, headers: withNoReferrer(rule.headers) })),
+      ...(covered ? [] : [{ source: EVERY_ROUTE, headers: [{ ...REFERRER_POLICY }] }]),
+    ]
+  },
+}
+
+export default config

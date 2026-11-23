@@ -6,7 +6,7 @@ import { LayoutDashboard } from "lucide-react"
 import { describe, expect, it } from "vitest"
 
 import { routes } from "./routes"
-import { groupedSections, isSectionActive, returnPathFrom, SECTION_GROUPS, SECTIONS, sectionHrefOf, type AdminSection } from "./sections"
+import { groupedSections, isSectionActive, SECTION_GROUPS, SECTIONS, sectionHrefOf, type AdminSection } from "./sections"
 
 /** Le dossier du gabarit gardé : une page par section, et une section par page. */
 const CONSOLE_DIR = fileURLToPath(new URL("../app/(console)", import.meta.url))
@@ -62,7 +62,7 @@ describe("registre des sections — le menu ne montre que ce qui existe", () => 
   })
 })
 
-describe("section courante et section à rouvrir", () => {
+describe("section courante et section d'une adresse", () => {
   const dashboard = SECTIONS[0]!
   const journal: AdminSection = { id: "journal", group: "pilotage", href: routes.journal(), labelKey: "nav.section.journal", icon: LayoutDashboard }
 
@@ -73,16 +73,6 @@ describe("section courante et section à rouvrir", () => {
     expect(isSectionActive(journal, "/journal/entree")).toBe(true)
     expect(isSectionActive(journal, "/journaux")).toBe(false)
     expect(isSectionActive(journal, null)).toBe(false)
-  })
-
-  it("seule une adresse du registre est rouverte ; tout le reste mène au tableau de bord", () => {
-    const sections = [dashboard, journal]
-    expect(returnPathFrom("?retour=%2Fjournal", sections)).toBe("/journal")
-    for (const forged of ["?retour=%2F%2Failleurs.exemple", "?retour=https%3A%2F%2Failleurs.exemple%2Fjournal", "?retour=%2Fjournal%2F..%2Fx", "?retour=", "", "?autre=1"]) {
-      expect(returnPathFrom(forged, sections), forged).toBe("/")
-    }
-    // Une section pas encore présente dans le code n'est pas rouverte.
-    expect(returnPathFrom("?retour=%2Fjournal")).toBe("/")
   })
 
   it("la section d'une adresse, pour la renvoyer à l'entrée", () => {
