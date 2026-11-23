@@ -8,6 +8,7 @@ import { useId, useRef, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
+import { DemoAccountsPill } from "./demo-accounts-panel"
 import { LiquidWordmark } from "./liquid-wordmark"
 import { OpenCountriesList, useHasOpenCountries } from "./open-countries"
 import { LanguageSwitch } from "./preferences"
@@ -28,6 +29,10 @@ import { AppDemoChip, SiteFooter } from "./site-chrome"
  *
  * `after` : ce qui suit la porte dans la page (la vision, sur l'accueil et /entrer),
  * toujours APRÈS la carte d'accès, qui reste la première action.
+ *
+ * Tout en bas, sous le pied de page compact : la pastille « Compte démo » (CH-817), seule entrée
+ * des comptes de démonstration, discrète ; elle ne s'affiche que si la porte du moteur n'est pas
+ * fermée (ou, en démonstration, vers les comptes fictifs).
  */
 export function EntryDoor(props: { children: ReactNode; align?: "center" | "start"; after?: ReactNode }) {
   const { t } = useDiasporaGaT()
@@ -81,6 +86,8 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
         {props.after}
       </main>
       <SiteFooter compact />
+      {/* CH-817 : la pastille « Compte démo », discrète, tout en bas ; absente quand la porte est fermée. */}
+      <DemoAccountsPill />
     </div>
   )
 }

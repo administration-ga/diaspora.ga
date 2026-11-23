@@ -203,7 +203,8 @@ Ni `ANTSIA_DEMO_DEPLOYMENT`, ni `ANTSIA_DEV_TOOLS`, ni `ANTSIA_SEEDS_ALLOWED` (�
 
 ### 6.2 Site (passées par `scripts/release.mjs`, cible `production`)
 
-Les six variables publiques du catalogue et `CONVEX_SITE_URL`. Le script les tire des variables de la
+Les sept variables publiques du catalogue (`build_args`) et ses deux variables d'exécution
+(`runtime_env` : `CONVEX_SITE_URL`, `LIVEKIT_WS_URL`). Le script les tire des variables de la
 machine qui publie (`docs/37`, § 3) ; aucune ne se saisit à la main.
 
 | Variable du site | Origine |
@@ -212,9 +213,11 @@ machine qui publie (`docs/37`, § 3) ; aucune ne se saisit à la main.
 | `NEXT_PUBLIC_SITE_URL` | `DIASPORA_GA_PRODUCTION_SITE_URL` : l'origine du domaine retenu (étape 7) |
 | `NEXT_PUBLIC_CONVEX_URL` | `DIASPORA_GA_PRODUCTION_CONVEX_URL` : le backend de l'étape 1 |
 | `CONVEX_SITE_URL` | `DIASPORA_GA_PRODUCTION_CONVEX_SITE_URL` : les actions HTTP du même backend |
+| `NEXT_PUBLIC_CONVEX_SITE_URL` | la même variable de la machine, lue par le navigateur (porte des comptes de démonstration, § 6.4) ; en production, la porte est fermée et la pastille absente |
 | `NEXT_PUBLIC_BUILD_SHA` | posée par le script : l'étiquette tirée des deux commits |
 | `NEXT_PUBLIC_IDN_PORTAL_URL` | `DIASPORA_GA_PRODUCTION_IDN_PORTAL_URL`, facultative : absente, le lien d'élévation ne s'affiche pas |
 | `NEXT_PUBLIC_CONSULATE_URL` | `DIASPORA_GA_PRODUCTION_CONSULATE_URL`, facultative : idem |
+| `LIVEKIT_WS_URL` | `DIASPORA_GA_PRODUCTION_LIVEKIT_WS_URL`, facultative, origine `wss://` exacte : celle du serveur vidéo, que la politique de sécurité du site ouvre (§ 6.3) ; absente, aucune origine média n'est ouverte |
 
 Le projet d'hébergement de production se désigne par `DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID`, avec
 `DIASPORA_GA_VERCEL_ORG_ID` et `DIASPORA_GA_VERCEL_SCOPE`. Une même ressource déclarée pour la
@@ -239,11 +242,14 @@ Ouvrir demande, dans l'ordre :
    relais du webhook d'enregistrement, jamais requis). Ce sont les mêmes variables pour les appels.
 2. **L'origine du serveur vidéo dans la politique de sécurité du site.** La configuration commune du
    moteur (`@antsia/api/next-config`, que `apps/diaspora_ga/next.config.ts` emploie) ajoute à
-   `connect-src` l'origine tirée de `LIVEKIT_WS_URL` **lue à la construction du site**. Aujourd'hui ni
-   le catalogue de publication du moteur (`build_args` de `diaspora_ga`) ni `scripts/release.mjs` ne
-   la passent : sans elle, la page s'ouvre mais le navigateur refuse la connexion au serveur vidéo.
-   L'ajouter est un lot à part (catalogue du moteur d'abord, puis le script et le Dockerfile de
-   diaspora.ga) ; le contrôle public (`scripts/release-check.mjs`) ne juge que les origines Convex.
+   `connect-src` l'origine tirée de `LIVEKIT_WS_URL` **lue à la construction du site**. Depuis CH-817
+   (lot A1), le catalogue du moteur la déclare pour `diaspora_ga` (`runtime_env`, comme
+   `CONVEX_SITE_URL`) et `scripts/release.mjs` la passe à la construction quand la variable
+   facultative de la machine `DIASPORA_GA_<CIBLE>_LIVEKIT_WS_URL` est posée (origine `wss://` exacte,
+   sans chemin, sinon le plan refuse). Sans elle, la page s'ouvre mais le navigateur refuse la
+   connexion au serveur vidéo. L'image autoportante (Cloud Build) ne la reçoit pas à la construction,
+   comme `CONVEX_SITE_URL` ; le contrôle public (`scripts/release-check.mjs`) ne juge que les origines
+   Convex.
 3. **L'interrupteur, une valeur** : `MEMBERS_APP_CODE_SWITCH_STATES.live = "open"` dans
    `packages/diaspora-ga-features/src/navigation/code-switches.ts` (celle que lisent
    `apps/diaspora_ga/src/lib/live.ts`, le menu des membres et admin.diaspora.ga). Les tests qui
@@ -261,6 +267,55 @@ Ouvrir demande, dans l'ordre :
    lisible que de l'hôte tant qu'il n'a pas décidé de la publier, jamais au-delà de l'audience du
    direct, puis se purge à son échéance. La recette le rejoue une fois avec l'enregistrement coché.
    Les durées et plafonds (décisions 6 à 9 du plan 04 du moteur) restent au propriétaire.
+
+### 6.4 La porte des comptes de démonstration (déploiement de démonstration seulement)
+
+La pastille « Compte démo » (`docs/34`) ouvre les comptes de démonstration du **déploiement de
+démonstration déclaré** du moteur, jamais d'un backend de production : en production, la porte est
+`closed` et rien ne s'affiche. Sur la démonstration, la porte s'arme par la seule présence de son
+secret ; toute pièce manquante la rend `unavailable` pour tous.
+
+Variables du backend de démonstration du moteur (noms seulement, posées par le propriétaire,
+documentées dans `../ANTSIA/.env.example`) :
+
+| Variable | Rôle |
+|---|---|
+| `ANTSIA_DEMO_GATE_SECRET` | arme la porte (32 caractères au moins) ; la changer invalide la liste des numéros, à rejouer |
+| `WHATSAPP_PROVIDER` | `bird`, seul adaptateur du moteur aujourd'hui (celui de Meta WhatsApp Cloud API est à venir) |
+| `WHATSAPP_ENDPOINT` | adresse https de l'envoi du fournisseur |
+| `WHATSAPP_API_KEY` | clé du fournisseur (secret) |
+| `WHATSAPP_TEMPLATE` | le modèle d'authentification WhatsApp du fournisseur (projet et version, variable `code`) |
+| `WHATSAPP_FROM` | expéditeur, facultatif (l'adaptateur Bird ne le lit pas) |
+
+Variable du site de démonstration : `NEXT_PUBLIC_CONVEX_SITE_URL`, tirée de
+`DIASPORA_GA_DEMO_CONVEX_SITE_URL` par `scripts/release.mjs` (§ 6.2) ; sans elle, la pastille ne
+s'affiche pas quand la porte est armée. La politique de sécurité du site autorise déjà l'origine des
+actions HTTP : elle se dérive de `NEXT_PUBLIC_CONVEX_URL` (`.convex.cloud` vers `.convex.site`). Un
+domaine personnalisé du backend ne serait pas dérivé : à ajouter à la politique avant de s'en servir.
+
+Porte armée, le verrou réel est la **connexion** (lot E5 du moteur) : le moteur refuse d'envoyer un
+code à une adresse de démonstration de DIASPORA.GA, et de s'y connecter, sans le jeton de session de
+porte que le site pose dans un en-tête (`docs/34`, « La porte »). Un site d'avant cet en-tête, face à
+un moteur armé, ne connecterait plus aucun acteur : **on publie le moteur et le site, PUIS on arme
+la porte**, jamais l'inverse. Porte non armée, toute combinaison fonctionne.
+
+Gestes du propriétaire, dans l'ordre :
+
+1. **Le compte du fournisseur WhatsApp** (Bird ; Meta demanderait d'abord son adaptateur dans le moteur) : WhatsApp disponible,
+   un modèle d'authentification qui accepte un code de 7 caractères avec une lettre, le nom de
+   l'expéditeur, le tarif.
+2. **La publication** du moteur de démonstration (avec le lot E5), puis du site de démonstration
+   (avec l'en-tête de la porte), la porte encore NON armée. Les variables `WHATSAPP_*` peuvent être
+   posées avant : sans le secret, elles n'arment rien. En recette, avant d'armer : présence de
+   `X-Forwarded-For` sur les actions HTTP, latence du fournisseur, code avec lettre.
+3. **L'armement** : `ANTSIA_DEMO_GATE_SECRET` sur le déploiement de démonstration du moteur, en
+   dernier des six variables.
+4. **La liste des numéros**, par le script du moteur `scripts/demo-gate-list.mjs` (seule voie
+   documentée ; numéros sur l'entrée standard, jamais un numéro dans un dépôt ni en argument) :
+   `reset` d'abord, puis `allow` (portée `diaspora-ga`, 20 numéros actifs au plus) ; `revoke` pour
+   en retirer. À refaire, `reset` puis `allow`, à chaque rotation du secret.
+5. **Une première entrée sur chaque acteur** juste après l'armement (elle réserve identifiants et
+   pages), puis un premier envoi réel avec le propriétaire (modèle, code avec lettre, délai).
 
 ## 7. Le domaine
 
@@ -299,7 +354,8 @@ limitée au backend de production. Il se rejoue seul :
 node scripts/release-check.mjs --target production --version <étiquette>
 ```
 
-Puis, à la main : `/entrer` ne montre aucun panneau de comptes de démonstration ; les routes clés
+Puis, à la main : `/entrer` ne montre ni pastille « Compte démo » ni panneau de comptes de
+démonstration (porte `closed`) ; les routes clés
 s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01, lot EA-06).
 
 **Preuve** : la version servie est l'étiquette de l'accord ; le rapport de recette daté (dans
@@ -355,3 +411,6 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
 13. **Le direct et les appels** : les clés du serveur vidéo, puis l'ouverture par le code après la
     recette à deux comptes ; tous deux restent fermés au lancement tant qu'elle n'est pas faite
     (§ 6.3).
+14. **La porte des comptes de démonstration** (démonstration seulement, § 6.4) : compte et modèle du
+    fournisseur WhatsApp ; publication du moteur et du site, PUIS armement (six variables) ; liste
+    des numéros par le script du moteur `scripts/demo-gate-list.mjs` (`reset` puis `allow`).

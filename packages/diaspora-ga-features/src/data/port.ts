@@ -79,6 +79,7 @@ import type { JobsCapability } from "./jobs-port"
 import type { ModerationDeskCapability } from "./moderation-desk-port"
 import type { ConversationsCapability } from "./conversations-port"
 import type { DemoAccountsCapability } from "./demo-accounts-port"
+import type { DemoGateCapability } from "./demo-gate-port"
 import type { PageDecisionsCapability } from "./page-decisions-port"
 import type { EntryDoorsView } from "./entry-doors-port"
 import type { CallSettingsCapability } from "./call-settings-port"
@@ -271,6 +272,18 @@ export interface ReportInput {
   readonly note?: string
 }
 
+/**
+ * CH-817 E5 — une connexion par code lancée pour un acteur de démonstration choisi dans la feuille
+ * de la pastille « Compte démo » (`demoActor: true`) : l'adresse vient du catalogue. Porte armée,
+ * le moteur ne laisse ni envoyer ce code ni s'y connecter sans le jeton d'une session de porte ;
+ * le fournisseur du moteur le joint alors aux DEUX requêtes, pour une adresse déclarée d'un acteur
+ * et une session de porte présente dans l'onglet seulement — jamais pour une adresse saisie au
+ * formulaire ordinaire. Le jeton ne quitte jamais le fournisseur ; la démonstration l'ignore.
+ */
+export interface SignInCodeOptions {
+  readonly demoActor?: boolean
+}
+
 export interface DiasporaGaActions {
   /**
    * Entrer par IDN (EA-02).
@@ -280,14 +293,20 @@ export interface DiasporaGaActions {
    *     `/bienvenue` sans aucun paramètre ; `ok` veut dire que le navigateur part chez IDN.
    */
   signInWithIdn(input?: IdnSignInInput): Promise<ActionResult>
-  requestCode(destination: CodeDestination): Promise<ActionResult<{ demoCode: string | null }>>
+  /**
+   * Demander un code. `demoCode` : le code à recopier, quand le fournisseur peut le montrer
+   * (moteur : porte de démonstration non armée seulement, `open` — développement local compris) ;
+   * sinon `null`. Porte armée, la feuille de la pastille est la seule à relire un code.
+   */
+  requestCode(destination: CodeDestination, options?: SignInCodeOptions): Promise<ActionResult<{ demoCode: string | null }>>
   /**
    * Vérifier le code reçu. `destination` : l'adresse à laquelle il est parti, que l'écran garde
    * dans l'onglet (EA-08, MO-04) — la saisie reprend après un rechargement ou un aller-retour vers
    * la messagerie, sans redemander de code. Sans elle, le fournisseur reprend l'adresse du
-   * dernier envoi de cette session ; sans envoi connu, `code_expired`.
+   * dernier envoi de cette session ; sans envoi connu, `code_expired`. `options` : comme pour
+   * `requestCode` (acteur de démonstration de la feuille).
    */
-  verifyCode(code: string, destination?: CodeDestination): Promise<ActionResult>
+  verifyCode(code: string, destination?: CodeDestination, options?: SignInCodeOptions): Promise<ActionResult>
   /** Révocation de toutes les sessions côté serveur, puis purge locale (EXT-DG-01). */
   signOutEverywhere(): Promise<void>
   checkHandle(handle: string): Promise<ActionResult<{ available: boolean }>>
@@ -430,6 +449,12 @@ export interface DiasporaGaDataSource {
   readonly conversations?: ConversationsCapability
   /** Comptes de démonstration par acteur, DÉVELOPPEMENT LOCAL du moteur seulement (`demo-accounts-port.ts`). */
   readonly demoAccounts?: DemoAccountsCapability
+  /**
+   * CH-817 (lot A1) : la porte des comptes de démonstration du moteur (numéro WhatsApp autorisé,
+   * code de 6 chiffres et 1 lettre, session courte de cet onglet ; `demo-gate-port.ts`). Absente
+   * en démonstration, qui garde ses propres comptes fictifs sans porte.
+   */
+  readonly demoGate?: DemoGateCapability
   /** Réglages d'appel et de présence de la personne, valables aussi dans ANTSIA (IM-02, `call-settings-port.ts`). */
   readonly callSettings?: CallSettingsCapability
   /**

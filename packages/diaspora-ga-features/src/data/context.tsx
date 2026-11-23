@@ -102,6 +102,8 @@ export const useModerationDesk = () => useDataSource().moderationDesk ?? null
 export const usePageDecisions = () => useDataSource().pageDecisions ?? null
 export const useConversations = () => useDataSource().conversations ?? null
 export const useDemoAccounts = () => useDataSource().demoAccounts ?? null
+/** CH-817 : la porte des comptes de démonstration du moteur ; `null` si le fournisseur ne la sert pas (démonstration). */
+export const useDemoGate = () => useDataSource().demoGate ?? null
 export const useCallSettings = () => useDataSource().callSettings ?? null
 /** DS-14 (volet push) : les notifications de cet appareil ; `null` si le fournisseur ne les sert pas. */
 export const useDeviceNotifications = () => useDataSource().deviceNotifications ?? null
