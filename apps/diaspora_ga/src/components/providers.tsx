@@ -7,6 +7,7 @@ import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { I18nProvider, useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import type { Locale } from "@diaspora-ga/features/i18n"
 import NextLink from "next/link"
+import { usePathname } from "next/navigation"
 import { useState, type ReactNode } from "react"
 
 import { EngineDataProviders } from "@/data/engine-providers"
@@ -14,6 +15,7 @@ import { APPEARANCE } from "@/lib/appearance"
 import { callJournalRoute } from "@/lib/calls"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
+import { isStaticPublicPath } from "@/lib/static-public-routes"
 
 import { AccountLocale } from "./account-locale"
 import { AccountTheme } from "./account-theme"
@@ -125,35 +127,68 @@ function FloatingStack() {
 }
 
 /**
+ * Une arrivée DIRECTE sur un texte du site (`isStaticPublicPath`), sur le moteur : ces pages ne
+ * lisent aucune donnée, elles n'attendent donc pas la session. Sans cela, la garde de session du
+ * moteur rend « Ouverture de votre session… » au serveur, et le texte n'existe qu'après le script.
+ * Verrou à sens unique : dès qu'on quitte les textes, la pile complète se monte (session, iCom,
+ * compte) et reste montée ; un membre qui ouvre un texte depuis l'application garde donc sa
+ * session et ses appels. La démonstration n'attend aucune session : rien n'y change.
+ */
+function useStaticPublicEntry(): boolean {
+  const pathname = usePathname()
+  const [entry, setEntry] = useState(() => publicEnv.dataSource === "engine" && isStaticPublicPath(pathname))
+  // État dérivé conditionnel : React rejoue aussitôt ce rendu avec la pile complète.
+  if (entry && !isStaticPublicPath(pathname)) setEntry(false)
+  return entry
+}
+
+/**
  * L'apparence est celle du moteur (`AppearanceProvider`) : mode Système, Clair ou
  * Sombre et thème au choix du membre (Sable par défaut, ou Gaboma), mémorisés sur
  * l'appareil sous le préfixe du réseau, posés sur `<html>` avant l'affichage par le
  * script d'amorçage de la mise en page, puis tenus ici. En session, le thème est aussi
  * celui du compte (`AccountTheme`, sous la source de données qui le lit et l'écrit), et
- * la langue aussi (`AccountLocale`).
+ * la langue aussi (`AccountLocale`). Une arrivée directe sur un texte du site se rend sans
+ * source de données (`useStaticPublicEntry`).
  */
 export function Providers(props: { locale: Locale; children: ReactNode }) {
+  const staticEntry = useStaticPublicEntry()
   return (
     <AppearanceProvider storagePrefix={APPEARANCE.storagePrefix} themes={APPEARANCE.themes}>
       <I18nProvider locale={props.locale}>
-        <DataProviders>
-          <AccountTheme>
-            <AccountLocale>
-              <RoutingProvider routes={featureRoutes} Link={AppLink}>
-                {props.children}
-                <FloatingStack />
-                <DemoFloatingCard />
-                {/* Développement local : prépare le compte de démonstration choisi à la porte. */}
-                <DemoAccountBootstrap />
-                {/* Le script de fond unique du site (MO-05) : page hors-ligne en réserve, rien d'autre. */}
-                <ServiceWorkerRegistration />
-                {/* EA-03 : le statut relu quand l'identité a changé, seulement si le moteur signale un écart. */}
-                <MembershipStatusRefresh />
-              </RoutingProvider>
-            </AccountLocale>
-          </AccountTheme>
-        </DataProviders>
+        {staticEntry ? (
+          <RoutingProvider routes={featureRoutes} Link={AppLink}>
+            {props.children}
+            <FloatingStack />
+            <ServiceWorkerRegistration />
+          </RoutingProvider>
+        ) : (
+          <FullProviders>{props.children}</FullProviders>
+        )}
       </I18nProvider>
     </AppearanceProvider>
+  )
+}
+
+/** La pile complète : source de données (moteur ou démonstration), compte, routes et ce qui flotte. */
+function FullProviders(props: { children: ReactNode }) {
+  return (
+    <DataProviders>
+      <AccountTheme>
+        <AccountLocale>
+          <RoutingProvider routes={featureRoutes} Link={AppLink}>
+            {props.children}
+            <FloatingStack />
+            <DemoFloatingCard />
+            {/* Développement local : prépare le compte de démonstration choisi à la porte. */}
+            <DemoAccountBootstrap />
+            {/* Le script de fond unique du site (MO-05) : page hors-ligne en réserve, rien d'autre. */}
+            <ServiceWorkerRegistration />
+            {/* EA-03 : le statut relu quand l'identité a changé, seulement si le moteur signale un écart. */}
+            <MembershipStatusRefresh />
+          </RoutingProvider>
+        </AccountLocale>
+      </AccountTheme>
+    </DataProviders>
   )
 }

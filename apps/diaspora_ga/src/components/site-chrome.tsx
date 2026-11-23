@@ -2,7 +2,7 @@
 
 import { LEGAL_TEXT_KINDS } from "@diaspora-ga/domain"
 import { Button, DemoBanner, DemoChip, cn } from "@diaspora-ga/features"
-import { useDataSource } from "@diaspora-ga/features/data"
+import { useDataSource, useOptionalDataSource } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import NextLink from "next/link"
 import type { ReactNode } from "react"
@@ -50,11 +50,14 @@ export function DemoFloatingCard() {
   return null
 }
 
-/** Le repère permanent du mode démonstration ; un clic rouvre la carte qui l'explique. */
+/**
+ * Le repère permanent du mode démonstration ; un clic rouvre la carte qui l'explique. Sans
+ * source de données (arrivée directe sur un texte du site, sur le moteur), il n'y a rien à dire.
+ */
 export function AppDemoChip() {
-  const source = useDataSource()
+  const source = useOptionalDataSource()
   const { restore } = useDismissal(DEMO_CARD.dismissKey, "session")
-  if (source.kind !== "demo") return null
+  if (source?.kind !== "demo") return null
   return <DemoChip onClick={restore} />
 }
 
