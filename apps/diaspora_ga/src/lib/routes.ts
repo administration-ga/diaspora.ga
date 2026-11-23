@@ -204,6 +204,9 @@ export const COMMUNITY_RULE_ANCHORS: Readonly<Record<CommunityRule, string>> = {
   politics: "debat-politique",
   privacy: "vie-privee",
   prohibited: "contenus-interdits",
+  authorship: "droits-d-auteur",
+  integrity: "authenticite-et-securite",
+  pages: "pages-et-groupes",
   reporting: "signaler",
   measures: "mesures-et-recours",
 }

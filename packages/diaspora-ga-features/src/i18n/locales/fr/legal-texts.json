@@ -1,66 +1,246 @@
 {
   "legal": {
     "edition": "Version {{version}} du {{date}}",
+    "sectionNumber": "{{number}}.",
+    "summary": "Sommaire",
+    "notice": {
+      "title": "Mentions légales",
+      "publisher": {
+        "title": "Éditeur du site",
+        "body": "DIASPORA.GA est édité et exploité par {{publisherName}}, société à responsabilité limitée de droit gabonais.\n\n– Dénomination sociale : {{publisherName}}\n– Forme juridique : société à responsabilité limitée (SARL) de droit gabonais\n– Capital social : {{publisherCapital}}\n– Siège social : {{publisherAddress}}\n– Registre du commerce et du crédit mobilier (RCCM) : {{publisherRccm}}\n– Numéro d'identification fiscale (NIF) : {{publisherNif}}\n– Représentant légal : M. {{publisherRepresentative}}, gérant\n– Téléphone : {{publisherPhone}}\n– Courriel : {{publisherEmail}}\n– Site de la société : {{publisherWebsite}}\n\n{{publisherName}} a la qualité d'éditeur du réseau au sens de l'ordonnance n° 0011/PR/2026 du 26 février 2026 portant réglementation de l'usage des réseaux sociaux via les plateformes numériques, ratifiée par la loi n° 003/2026 du 5 octobre 2026. Ces mentions sont publiées en application de son article 25."
+      },
+      "director": {
+        "title": "Directeur de la publication",
+        "body": "Le directeur de la publication est M. {{publisherRepresentative}}, en sa qualité de gérant de {{publisherName}}. Il peut être joint par courrier au siège social ou par courriel, à l'adresse {{publisherEmail}}.\n\nDIASPORA.GA n'a pas de rédaction. Les informations publiées au nom du réseau (annonces de l'équipe, règles, pages d'aide) le sont sous la responsabilité de l'éditeur. Les autres contenus sont publiés par les membres et par les pages des associations et des entreprises, sous leur responsabilité."
+      },
+      "hosting": {
+        "title": "Hébergement et prestataires techniques",
+        "body": "L'application web est servie par Vercel Inc., 440 N Barranca Avenue #4133, Covina, CA 91723, États-Unis d'Amérique.\n\nLa base de données, les fichiers et les fonctions serveur du réseau sont exploités sur l'infrastructure de Convex, Inc., société établie aux États-Unis d'Amérique.\n\nDIASPORA.GA est une application du moteur social ANTSIA, édité par la même société : un seul compte sert aux deux réseaux.\n\nLa page Confidentialité donne la liste des prestataires qui traitent des données, leur rôle et les règles qui encadrent les transferts hors du Gabon. Tout changement de prestataire est porté ici et dans cette page, avec une nouvelle version du texte."
+      },
+      "service": {
+        "title": "Nature du service",
+        "body": "DIASPORA.GA est un réseau social fermé, réservé aux Gabonaises et aux Gabonais qui résident hors du Gabon. Il est édité par une société privée : ce n'est ni un service de l'État gabonais, ni celui d'une ambassade ou d'un consulat. Aucune démarche consulaire ne s'y traite et aucun document officiel n'y est délivré.\n\nL'adhésion est gratuite. DIASPORA.GA n'encaisse aucun paiement et ne diffuse aucune publicité.\n\nLe réseau relève de la Haute Autorité de la Communication (HAC) pour ses contenus, et de l'Autorité pour la Protection des Données Personnelles et de la Vie Privée (APDPVP) pour les données personnelles."
+      },
+      "intellectualProperty": {
+        "title": "Propriété intellectuelle",
+        "body": "Le nom DIASPORA.GA, son logotype, sa charte graphique, ses interfaces, ses textes et les logiciels qui font fonctionner le réseau appartiennent à {{publisherName}} ou sont utilisés avec l'accord de leurs titulaires. Ils sont protégés par la loi n° 1/87 du 29 juillet 1987 sur le droit d'auteur et les droits voisins et par l'Accord de Bangui, qui institue l'Organisation africaine de la propriété intellectuelle (OAPI).\n\nToute reproduction, représentation ou adaptation de ces éléments sans l'accord écrit de l'éditeur est interdite, sauf dans les cas que la loi autorise et dans les limites des licences sous lesquelles l'éditeur publie certains de ses logiciels.\n\nLes contenus publiés par les membres et par les pages restent la propriété de leurs auteurs. Les Conditions d'utilisation disent ce que leur publication autorise."
+      },
+      "illegalContent": {
+        "title": "Signaler un contenu illicite",
+        "body": "Chaque contenu du réseau porte un geste « Signaler ». Une personne qui n'est pas membre peut écrire à l'éditeur, à l'adresse {{publisherEmail}}, en indiquant l'adresse du contenu, ce qu'elle lui reproche et le moyen de la joindre.\n\nL'éditeur retire promptement un contenu manifestement illicite dès qu'il en a connaissance. Les Règles de la communauté décrivent le traitement d'un signalement, ses délais et les recours."
+      },
+      "rightOfReply": {
+        "title": "Droit de réponse",
+        "body": "Toute personne nommément citée dans un contenu du réseau dispose d'un droit de réponse (ordonnance n° 0011/PR/2026, articles 26 et 27).\n\nLa demande est adressée à l'éditeur, par courriel ou par courrier au siège, dans les trois mois qui suivent la publication. Elle désigne le contenu visé et donne le texte de la réponse. La réponse est insérée dans les 48 heures qui suivent la réception d'une demande régulière ; lorsque le contenu vient d'un membre ou d'une page, l'éditeur lui transmet la demande."
+      },
+      "personalData": {
+        "title": "Données personnelles",
+        "body": "{{publisherName}} est responsable du traitement des données personnelles des membres. Ce traitement est régi par la loi n° 001/2011 du 25 septembre 2011 relative à la protection des données à caractère personnel, modifiée par la loi n° 025/2023 du 12 juillet 2023, sous le contrôle de l'APDPVP.\n\nLa page Confidentialité dit quelles données sont traitées, pourquoi, pendant combien de temps, qui les reçoit et comment exercer vos droits."
+      },
+      "contact": {
+        "title": "Nous joindre",
+        "body": "Pour toute question sur le service, écrivez à {{publisherEmail}} ou à {{publisherName}}, {{publisherAddress}}.\n\nLa page Contact indique la voie directe pour signaler un contenu, exercer vos droits sur vos données ou saisir une autorité de contrôle."
+      },
+      "law": {
+        "title": "Droit applicable",
+        "body": "Le site et ces mentions sont soumis au droit gabonais, sans priver les membres des protections impératives du pays où ils résident. Les principaux textes applicables sont :\n\n– l'ordonnance n° 0011/PR/2026 du 26 février 2026 portant réglementation de l'usage des réseaux sociaux via les plateformes numériques, ratifiée par la loi n° 003/2026 du 5 octobre 2026 ;\n– la loi n° 019/2016 du 9 août 2016 portant Code de la communication, modifiée par l'ordonnance n° 0012/PR/2026 ;\n– la loi n° 001/2011 du 25 septembre 2011 relative à la protection des données à caractère personnel, modifiée par la loi n° 025/2023 du 12 juillet 2023 ;\n– la loi n° 025/2021 du 28 décembre 2021 sur les transactions électroniques ;\n– la loi n° 027/2023 du 12 juillet 2023 portant réglementation de la cybersécurité et de la lutte contre la cybercriminalité ;\n– pour les membres qui résident dans l'Union européenne, le règlement (UE) 2016/679 sur la protection des données (RGPD)."
+      }
+    },
+    "privacy": {
+      "title": "Confidentialité",
+      "controller": {
+        "title": "Responsable du traitement",
+        "body": "Le responsable du traitement de vos données est {{publisherName}}, société à responsabilité limitée de droit gabonais, {{publisherAddress}} (RCCM {{publisherRccm}}), éditeur de DIASPORA.GA et du moteur ANTSIA.\n\nPour toute question sur vos données, écrivez à {{publisherEmail}} ou par courrier au siège, en indiquant « Données personnelles — DIASPORA.GA ».\n\nCette page décrit ce que le service fait aujourd'hui. Votre compte étant commun à DIASPORA.GA et à ANTSIA, l'export et l'effacement portent sur le compte entier."
+      },
+      "framework": {
+        "title": "Cadre légal",
+        "body": "Le traitement de vos données est régi par la loi n° 001/2011 du 25 septembre 2011 relative à la protection des données à caractère personnel, modifiée par la loi n° 025/2023 du 12 juillet 2023, sous le contrôle de l'Autorité pour la Protection des Données Personnelles et de la Vie Privée (APDPVP). Cette loi vise les traitements mis en œuvre par un responsable établi au Gabon (article 4) : elle vous protège quel que soit votre pays de résidence.\n\nSi vous résidez dans l'Union européenne, le règlement (UE) 2016/679 (RGPD) s'applique en outre, parce que le réseau s'adresse à des personnes qui y vivent (article 3). Lorsque les deux textes diffèrent, la règle la plus protectrice pour vous est retenue.\n\nLa loi soumet ce traitement à une déclaration auprès de l'APDPVP (articles 78 et 175), et les transferts de données hors du Gabon à son autorisation (article 171). Le numéro du récépissé délivré par l'Autorité sera indiqué sur cette page.\n\nL'ordonnance n° 0011/PR/2026 du 26 février 2026 sur l'usage des réseaux sociaux, ratifiée par la loi n° 003/2026 du 5 octobre 2026, fixe par ailleurs des obligations propres aux réseaux sociaux : identification de l'éditeur, protection des mineurs, délais de traitement des signalements."
+      },
+      "data": {
+        "title": "Les données que nous traitons",
+        "body": "Nous ne traitons que les données utiles au fonctionnement du réseau (loi n° 001/2011 modifiée, article 70). Elles viennent de vous, sauf mention contraire.\n\n– Compte et connexion : votre adresse électronique, les codes de connexion à usage unique (conservés sous forme d'empreinte, valables 5 minutes) et vos sessions. Il n'y a pas de mot de passe.\n– Identité numérique : si vous vous connectez par identite.ga, ce service nous transmet, avec l'accord que vous lui donnez, votre identifiant, votre adresse électronique vérifiée, votre nom, le niveau de garantie de votre identité, votre nationalité et votre type de profil. Nous n'en retenons, pour établir votre statut, que l'identifiant, le niveau de garantie, la nationalité et le type de profil ; les jetons techniques de cette connexion sont conservés avec votre compte.\n– Profil : nom affiché, identifiant public, phrase de présentation, photo et bannière, langue, fuseau horaire, apparence choisie.\n– Situation dans la diaspora : pays de résidence (obligatoire) et, si vous les donnez, ville, poste consulaire de rattachement, associations, année d'arrivée, disponibilité pour aider.\n– Adhésion : statut, date d'entrée, parrain, parrainages donnés, mesures de suspension.\n– Consentements : pour chaque finalité, la version du texte accepté, la date de l'accord et celle de son retrait.\n– Contenus : publications, commentaires, réactions, statuts, albums, publications enregistrées, photos et vidéos déposées. Les informations cachées dans une photo, comme le lieu de la prise de vue, sont retirées avant l'envoi.\n– Relations : demandes et relations, abonnements, blocages, mises en sourdine.\n– Messages : messages personnels et de groupe, pièces jointes, accusés de lecture. Les messages ne sont pas chiffrés de bout en bout. L'équipe de modération ne consulte pas vos conversations ; elle n'examine un message que s'il est signalé.\n– Notifications : la liste de vos notifications, vos préférences et, si vous activez les notifications de l'appareil, l'adresse d'abonnement de votre navigateur.\n– Pages : pour les pages que vous animez, les informations de la page, votre rôle et, en cas de revendication, les pièces fournies.\n– Modération : signalements que vous faites ou qui vous visent, décisions, mesures et recours.\n– Données techniques : identifiants de session, type de navigateur, compteurs servant à limiter les abus. Comme pour tout site, l'acheminement des pages fait transiter votre adresse IP par nos prestataires techniques ; le réseau ne s'en sert pas pour établir un profil.\n\nLes espaces qui s'ouvriront plus tard (groupes et évènements, services, emploi, entraide, mentorat) traiteront les données que vous y saisirez ; chacun vous demandera son propre accord lorsqu'il en faut un."
+      },
+      "neverCollected": {
+        "title": "Ce que nous ne traitons pas",
+        "body": "– aucune donnée consulaire : ni passeport, ni numéro d'identification personnel, ni état civil, ni dossier. L'attestation d'inscription consulaire, lorsqu'elle sera ouverte, se limitera à un oui ou un non, un pays, un poste et une date ;\n– à l'entrée dans le réseau, aucune date de naissance, aucune adresse postale, aucune pièce d'identité ;\n– aucune donnée sensible au sens de la loi (santé, religion, opinions, origine ethnique, vie sexuelle). Si vous en publiez vous-même, elles deviennent visibles de l'audience que vous avez choisie ;\n– aucune position géographique : la localisation de votre appareil n'est jamais demandée ;\n– aucune mesure d'audience, aucun traceur publicitaire, aucun script d'un tiers."
+      },
+      "purposes": {
+        "title": "Pourquoi nous les traitons",
+        "body": "Chaque traitement a une finalité et un fondement prévus par la loi (loi n° 001/2011 modifiée, article 71) :\n\n– créer votre compte, vous connecter et vérifier que vous pouvez entrer dans le réseau — fondement : l'exécution des Conditions d'utilisation ;\n– afficher votre profil aux membres, vous inscrire à l'annuaire, vous envoyer des notifications, demander une attestation consulaire — fondement : votre consentement, donné finalité par finalité ;\n– faire fonctionner le fil, les relations, la messagerie et les pages — fondement : l'exécution des Conditions d'utilisation ;\n– recevoir et traiter les signalements, appliquer les règles, tenir les délais légaux, conserver un contenu signalé, répondre aux autorités — fondement : les obligations légales de l'éditeur ;\n– protéger le réseau contre les abus, la fraude et les intrusions, et garder la trace des décisions d'administration — fondement : l'intérêt légitime de l'éditeur et des membres.\n\nVos données ne servent ni à la publicité, ni à la revente, ni à établir un profil commercial."
+      },
+      "consents": {
+        "title": "Vos consentements",
+        "body": "Chaque consentement est distinct et daté. Vous le retirez à tout moment dans vos réglages, sans effet sur ce qui a été fait avant le retrait (loi n° 001/2011 modifiée, articles 72 et 73). Aucune case n'est cochée d'avance.\n\n– Profil social : votre nom affiché, votre identifiant et votre pays sont visibles des membres. C'est le seul consentement nécessaire : sans lui, il n'y a pas d'adhésion.\n– Annuaire : vous y êtes masqué par défaut ; vous choisissez qui peut vous y trouver, entre personne, les membres de votre pays et tout le réseau.\n– Notifications : une notification ne porte jamais le contenu d'un message.\n– Attestation consulaire : demande d'une confirmation à consulat.ga, lorsque ce service sera ouvert.\n– Talents : affichage de votre profil professionnel, lorsque l'espace emploi sera ouvert.\n\nCertains gestes demandent un accord propre au moment où vous les faites, par exemple publier un avis ou transmettre votre identité à l'auteur d'une offre."
+      },
+      "visibility": {
+        "title": "Qui voit quoi",
+        "body": "Vous décidez de l'audience de chaque information.\n\n– Profil : le nom affiché, l'identifiant et le pays de résidence sont visibles des membres. Pour les autres informations, vous choisissez entre vous seul, vos relations, les membres de votre pays et tout le réseau. Par défaut, la ville n'est visible que de vos relations ; le poste consulaire, les associations et l'année d'arrivée ne le sont que de vous.\n– Publications : lisibles par les membres de DIASPORA.GA, ou réservées à vos relations. Elles ne sont lisibles dans ANTSIA, le réseau public, que si vous le décidez.\n– Messages : lus par vous et par vos correspondants.\n– Coordonnées : votre adresse électronique n'est jamais affichée ni communiquée à un autre membre.\n– Hors du réseau : DIASPORA.GA est fermé, et ses pages ne sont pas proposées aux moteurs de recherche.\n\nLes personnes habilitées de l'équipe de modération et de l'éditeur accèdent aux seules informations nécessaires à leur mission ; leurs décisions d'administration sont journalisées."
+      },
+      "recipients": {
+        "title": "Destinataires et prestataires",
+        "body": "En dehors des membres, selon vos choix, vos données ne sont communiquées qu'aux prestataires qui font fonctionner le service. Ils sont liés à l'éditeur par contrat et n'agissent que sur ses instructions (loi n° 001/2011 modifiée, articles 115 à 117) :\n\n– Convex, Inc. (États-Unis d'Amérique) : base de données, fichiers et fonctions serveur du réseau ;\n– Vercel Inc. (États-Unis d'Amérique) : service de l'application web ; il traite votre adresse IP et les données techniques de navigation ;\n– Resend, Inc. (États-Unis d'Amérique) : envoi des codes de connexion par courriel ; il reçoit votre adresse électronique et le code, jamais vos publications ni vos messages ;\n– identite.ga, service d'identité numérique édité par {{publisherName}} : lorsque vous choisissez cette connexion ;\n– les services de notification de votre navigateur (Apple, Google, Mozilla, Microsoft) : si vous activez les notifications de l'appareil ; ils reçoivent un signal sans contenu ;\n– consulat.ga, lorsque l'attestation consulaire sera ouverte et si vous y consentez : il recevra votre identifiant d'identité numérique ou une empreinte de votre adresse électronique, et répondra par un oui ou un non, un pays, un poste et des dates.\n\nLes appels et les directs ne sont pas ouverts dans DIASPORA.GA. S'ils le deviennent, leur prestataire sera ajouté à cette liste avant l'ouverture.\n\nVos données peuvent être communiquées aux autorités judiciaires et administratives qui le demandent dans les formes prévues par la loi. Elles ne sont ni vendues, ni louées, ni cédées."
+      },
+      "transfers": {
+        "title": "Transferts hors du Gabon",
+        "body": "Convex, Inc., Vercel Inc. et Resend, Inc. sont établies aux États-Unis d'Amérique, et les services de notification relèvent des éditeurs de navigateurs : des données sont donc traitées hors du Gabon.\n\nLa loi soumet ces transferts à l'autorisation de l'APDPVP et à l'existence de garanties suffisantes (loi n° 001/2011 modifiée, articles 171 et 173). Ils reposent sur les engagements contractuels de ces prestataires en matière de confidentialité et de sécurité, et se limitent à ce que le fonctionnement du service exige.\n\nSi vous résidez dans l'Union européenne, vos données sont de même traitées hors de l'Union, par l'éditeur et par ces prestataires."
+      },
+      "retention": {
+        "title": "Durées de conservation",
+        "body": "Vos données sont conservées tant que votre compte existe, puis effacées. Dans le détail :\n\n– compte, profil, relations, publications, commentaires et messages : jusqu'à ce que vous les retiriez, ou jusqu'à l'effacement de votre compte ;\n– codes de connexion : 5 minutes ; session : 7 jours, renouvelée tant que vous utilisez le service ;\n– statuts : 24 heures ;\n– notifications : 180 jours après leur lecture, 365 jours si elles n'ont pas été lues ;\n– pièces d'une revendication de page : supprimées dès le retrait de la demande, ou 90 jours après la décision ;\n– fichiers refusés par l'analyse antivirus : 90 jours ;\n– export de vos données : le fichier est assemblé dans votre navigateur ; la trace de la demande est gardée 24 heures ;\n– signalements, décisions de modération et journal d'administration : conservés pour justifier les décisions ; à l'effacement de votre compte, ils sont détachés de votre personne.\n\nEffacement du compte : rien n'est effacé pendant les 30 jours qui suivent votre demande, et vous pouvez l'annuler. Passé ce délai, vos sessions sont fermées et vos données sont effacées, y compris les messages que vous avez envoyés. Seule une trace sans nom atteste que l'effacement a eu lieu.\n\nUne conservation plus longue n'a lieu que si une loi l'impose à l'éditeur ou si une procédure est en cours : contenu signalé, réquisition d'une autorité, litige. Elle se limite alors aux données concernées et à la durée nécessaire."
+      },
+      "security": {
+        "title": "Sécurité",
+        "body": "L'éditeur met en œuvre des mesures techniques et d'organisation adaptées aux risques (loi n° 001/2011 modifiée, article 113) :\n\n– les échanges entre votre appareil et le service sont chiffrés pendant leur transport ;\n– la connexion se fait sans mot de passe, par code à usage unique ou par identité numérique, et le nombre de tentatives est limité ;\n– chaque lecture et chaque écriture est contrôlée par le serveur : adhésion au réseau, droits de la personne, cadence ;\n– un refus d'accès ne dit jamais si le contenu existe, s'il est privé ou si son auteur vous a bloqué ;\n– les fichiers déposés passent une analyse antivirus avant d'être servis ;\n– les notifications envoyées hors de l'application ne portent aucun contenu ;\n– les décisions d'administration et de modération sont journalisées ;\n– aucune donnée consulaire n'entre dans le réseau.\n\nLes messages ne sont pas chiffrés de bout en bout. Aucun système n'étant infaillible, protégez l'accès à votre boîte de réception et fermez vos sessions sur un appareil que vous ne contrôlez plus, par « Se déconnecter partout »."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "body": "La loi n° 001/2011 modifiée vous reconnaît les droits suivants :\n\n– être informé de ce qui est fait de vos données (article 98) : c'est l'objet de cette page ;\n– accéder à vos données et en obtenir une copie (articles 43 à 47) ;\n– les faire rectifier ou compléter (articles 50 à 52) ;\n– les faire effacer (article 53) ;\n– faire limiter leur traitement (articles 55 à 57) ;\n– les recevoir dans un format réutilisable, ou les faire transmettre à un autre service (articles 58 et 59) ;\n– vous opposer à un traitement, et dans tous les cas à la prospection (articles 60 à 65) ;\n– ne pas faire l'objet d'une décision fondée sur un seul traitement automatisé (articles 66 à 69) ;\n– retirer un consentement à tout moment (article 73) ;\n– saisir l'APDPVP d'une réclamation.\n\nL'ordonnance n° 0011/PR/2026 reconnaît en outre à tout utilisateur d'un réseau social le droit de faire rectifier, compléter, mettre à jour ou effacer ses données, et de les récupérer (articles 12 à 15).\n\nSi vous résidez dans l'Union européenne, le RGPD vous reconnaît des droits équivalents (articles 15 à 22)."
+      },
+      "exercise": {
+        "title": "Exercer vos droits",
+        "body": "La plupart de vos droits s'exercent directement dans le service, sans rien demander à personne :\n\n– modifier votre profil et régler la visibilité de chaque information : dans votre profil et vos réglages ;\n– retirer un consentement : dans vos réglages ;\n– exporter toutes vos données dans un fichier : dans « Mes données » ;\n– demander l'effacement de votre compte, ou seulement quitter DIASPORA.GA : dans « Mes données » ;\n– consulter les décisions de modération qui vous concernent et les contester : dans « Mes données ».\n\n« Mes données » reste ouvert sans adhésion, après un départ ou pendant une suspension.\n\nPour toute autre demande, écrivez à {{publisherEmail}} depuis l'adresse électronique de votre compte, ou par courrier à {{publisherName}}, {{publisherAddress}}. La réponse est gratuite. Elle vous parvient dans le mois qui suit la réception de la demande ; ce délai peut être prolongé de deux mois pour une demande complexe, et vous en êtes alors informé dans le premier mois (articles 93 et 95)."
+      },
+      "minors": {
+        "title": "Mineurs",
+        "body": "DIASPORA.GA est réservé aux personnes majeures. Nous ne traitons pas sciemment les données d'une personne de moins de 18 ans : la loi subordonne ce traitement à l'accord de ses parents (loi n° 001/2011 modifiée, articles 74 et 190) et interdit toute création de compte avant 16 ans (ordonnance n° 0011/PR/2026, articles 16 et 17).\n\nSi vous pensez qu'un mineur a ouvert un compte, signalez son profil ou écrivez à l'éditeur : le compte est fermé et ses données sont effacées. Le parent d'un mineur de moins de 16 ans peut demander lui-même cet effacement (ordonnance n° 0011/PR/2026, article 14)."
+      },
+      "cookies": {
+        "title": "Cookies et stockage sur votre appareil",
+        "body": "DIASPORA.GA n'utilise aucun cookie publicitaire ni aucun traceur de mesure d'audience. Il n'enregistre sur votre appareil que ce qui est strictement nécessaire au service que vous demandez ; la loi n'exige pas d'accord préalable dans ce cas (loi n° 001/2011 modifiée, article 104).\n\n– des cookies de session : ils vous gardent connecté et prennent fin à la déconnexion ;\n– un cookie de langue, conservé un an ;\n– dans le stockage du navigateur : votre apparence (thème, mode clair ou sombre), vos brouillons de publication, vos derniers choix de pays et de pages, les cartes d'information que vous avez fermées et, si vous activez les notifications, un identifiant de l'appareil tiré au hasard ;\n– une page consultable hors connexion, gardée par le navigateur.\n\nÀ la déconnexion, les données de session et les brouillons sont effacés de l'appareil ; l'apparence est conservée. Vous pouvez tout effacer depuis les réglages de votre navigateur."
+      },
+      "automated": {
+        "title": "Fil, suggestions et décisions automatisées",
+        "body": "Le fil range les publications par date, de la plus récente à la plus ancienne. Il ne tient compte ni de vos clics, ni de votre temps de lecture, et aucun profil n'est établi à partir de votre activité. Le menu d'une publication vous dit pourquoi elle vous est montrée.\n\nAucune décision qui produit des effets sur vous n'est prise par un traitement entièrement automatisé. Des limites automatiques (cadence d'écriture, nombre de liens, termes bloqués) peuvent retenir un contenu ; toute mesure de modération est décidée par une personne.\n\nLe réseau n'emploie aucun système d'intelligence artificielle pour analyser vos contenus ou vos messages."
+      },
+      "breach": {
+        "title": "En cas de violation de données",
+        "body": "Si une violation de données survient, l'éditeur en informe l'APDPVP sans délai (loi n° 001/2011 modifiée, article 142). Lorsqu'elle fait courir un risque élevé à vos droits, vous en êtes informé dans les meilleurs délais, avec les mesures prises et celles que vous pouvez prendre (articles 145 à 147)."
+      },
+      "complaint": {
+        "title": "Réclamation",
+        "body": "Si vous estimez que vos droits ne sont pas respectés, écrivez d'abord à l'éditeur. Vous pouvez aussi saisir, à tout moment :\n\n– l'Autorité pour la Protection des Données Personnelles et de la Vie Privée (APDPVP), Haut de Gué-Gué, en face de l'entrée de service de l'hôtel Radisson Blu, Libreville — téléphone +241 01 44 31 34 — contact@apdpvp.ga — apdpvp.ga ;\n– si vous résidez dans l'Union européenne, l'autorité de protection des données de votre pays de résidence : en France, la Commission nationale de l'informatique et des libertés (CNIL)."
+      },
+      "changes": {
+        "title": "Évolution de cette page",
+        "body": "Cette page porte un numéro de version et une date. Elle est mise à jour quand le service change : nouveau prestataire, nouvel espace, nouvelle durée de conservation. Une modification importante est annoncée dans le réseau ; lorsqu'elle touche un traitement fondé sur votre consentement, votre accord vous est redemandé."
+      }
+    },
     "terms": {
       "title": "Conditions d'utilisation",
       "purpose": {
         "title": "Objet",
-        "body": "À fournir : ce que le service offre et ce que couvrent ces conditions."
+        "body": "Ces conditions fixent les règles d'accès et d'usage de DIASPORA.GA, le réseau social des Gabonaises et des Gabonais de l'étranger, édité par {{publisherName}} (voir les Mentions légales). Avec les Règles de la communauté, elles forment le contrat qui lie chaque membre à l'éditeur ; la page Confidentialité décrit le traitement des données personnelles.\n\nDIASPORA.GA permet à ses membres :\n\n– de tenir un profil et de choisir qui en voit chaque information ;\n– de publier, de commenter et de réagir dans le fil du réseau et dans celui de leur pays de résidence ;\n– d'entrer en relation avec d'autres membres et de leur écrire par la messagerie ;\n– de suivre et d'animer les pages des associations et des entreprises de la diaspora.\n\nD'autres espaces (groupes et évènements, services, emploi, entraide, mentorat, kit d'arrivée) s'ouvrent au fur et à mesure, sur décision de l'administration du réseau. Ces conditions s'y appliquent dès leur ouverture."
+      },
+      "acceptance": {
+        "title": "Acceptation",
+        "body": "Créer un compte, entrer dans le réseau ou continuer à l'utiliser vaut acceptation de ces conditions et des Règles de la communauté. Si vous ne les acceptez pas, n'utilisez pas le service : vous pouvez quitter le réseau ou demander l'effacement de votre compte à tout moment, depuis « Mes données ».\n\nAccepter ces conditions n'est pas consentir au traitement de vos données. Chaque consentement vous est demandé à part, par un geste distinct, et vous le retirez quand vous le voulez (loi n° 001/2011 modifiée, articles 72 et 73)."
       },
       "access": {
         "title": "Accès au réseau",
-        "body": "À fournir : qui peut entrer dans le réseau, et à quelles conditions."
+        "body": "DIASPORA.GA est un réseau fermé. Pour y entrer, il faut :\n\n– être Gabonaise ou Gabonais ;\n– résider hors du Gabon, dans un pays où le réseau est ouvert ; la liste des pays ouverts est donnée à l'entrée ;\n– être majeur, c'est-à-dire avoir 18 ans révolus.\n\nLe réseau n'est pas ouvert aux mineurs. La loi fixe la majorité numérique à 16 ans et interdit toute création de compte avant cet âge (ordonnance n° 0011/PR/2026, articles 16 et 17) ; elle subordonne en outre le traitement des données d'une personne de moins de 18 ans à l'accord de ses parents (loi n° 001/2011 modifiée, article 74). En entrant, vous déclarez être majeur. Un compte ouvert par un mineur est fermé et ses données sont effacées.\n\nVotre adhésion a un statut, calculé par le service à partir des preuves apportées :\n\n– en attente : vous lisez le réseau sans pouvoir y publier, tant qu'aucune preuve n'est apportée ;\n– déclarée : un membre vérifié vous a parrainé, ou vous vous êtes connecté avec votre identité numérique identite.ga ;\n– vérifiée : votre identité numérique est d'un niveau de garantie suffisant et un membre vérifié vous a parrainé, ou vous avez été admis parmi les membres fondateurs. L'attestation d'inscription consulaire donnera aussi ce statut lorsque ce service sera ouvert.\n\nParrainer une personne, c'est attester que vous la connaissez et qu'elle remplit ces conditions. Un parrainage peut être retiré. Les badges affichés sur un profil sont calculés par le service : aucun ne s'achète ni ne se déclare.\n\nL'éditeur peut refuser ou retirer une adhésion qui ne remplit pas ces conditions."
+      },
+      "account": {
+        "title": "Votre compte",
+        "body": "Un compte par personne. Il est personnel : vous ne le prêtez pas, vous ne le cédez pas et vous n'en ouvrez pas un second.\n\nVotre compte est un compte ANTSIA, le réseau public dont DIASPORA.GA est un réseau fermé : entrer dans DIASPORA.GA crée votre adhésion à ANTSIA, et une suspension prononcée dans ANTSIA vaut dans DIASPORA.GA. Ce que vous publiez dans DIASPORA.GA y reste, sauf si vous choisissez vous-même de le rendre lisible dans ANTSIA.\n\nVous vous connectez par un code à usage unique reçu par courriel, ou par votre identité numérique identite.ga. Il n'y a pas de mot de passe. Gardez la maîtrise de votre boîte de réception et ne communiquez jamais un code : personne, pas même l'équipe du réseau, ne vous le demandera.\n\nVous donnez des informations exactes et vous les tenez à jour, en particulier votre pays de résidence. La loi impose à tout titulaire de compte de s'identifier (ordonnance n° 0011/PR/2026, article 4) : l'éditeur peut vous demander de confirmer ou de compléter votre identification.\n\nVous répondez de l'usage qui est fait de votre compte. Si vous pensez qu'une autre personne y a accès, fermez toutes vos sessions par « Se déconnecter partout » et prévenez l'éditeur."
+      },
+      "free": {
+        "title": "Gratuité",
+        "body": "L'adhésion et l'usage du réseau sont gratuits pour les membres. DIASPORA.GA n'encaisse aucun paiement, ne prélève aucune commission sur les échanges entre membres et ne diffuse aucune publicité. Les frais de connexion à Internet restent à votre charge.\n\nSi des services payants sont un jour proposés à des organisations, ils seront distincts, présentés comme tels et soumis à leurs propres conditions. Un membre ne paiera jamais pour entrer dans le réseau ni pour y rester."
       },
       "conduct": {
         "title": "Règles d'usage",
-        "body": "À fournir : ce qui est permis et ce qui est interdit."
+        "body": "Vous utilisez le réseau de façon licite et loyale. Les Règles de la communauté disent ce qui est admis et ce qui ne l'est pas ; elles font partie de ces conditions.\n\nIl est notamment interdit :\n\n– de publier, de partager ou de relayer un contenu illicite, haineux, violent, sexuel ou trompeur ;\n– de harceler, de menacer ou d'intimider une personne ;\n– de vous faire passer pour une autre personne, une organisation ou une institution ;\n– de publier les données personnelles d'autrui sans son accord ;\n– de collecter les données des membres, d'utiliser un robot ou tout autre moyen automatisé, ou de contourner une limite technique du service ;\n– de tenter d'accéder à un compte, à des données ou à une partie du service qui ne vous sont pas ouverts ;\n– de démarcher les membres sans y avoir été invité, ou de leur envoyer des messages en nombre ;\n– de contourner une mesure de modération, par exemple en ouvrant un autre compte.\n\nVous répondez de ce que vous publiez, partagez ou relayez. L'ordonnance n° 0011/PR/2026 engage la responsabilité de la personne qui élabore, diffuse ou amplifie un contenu illicite."
       },
       "content": {
-        "title": "Contenus publiés",
-        "body": "À fournir : les droits sur les contenus publiés par les membres et leur diffusion."
+        "title": "Vos contenus",
+        "body": "Vous restez propriétaire de ce que vous publiez. En publiant, vous accordez à l'éditeur le droit, non exclusif et gratuit, de conserver vos contenus, de les reproduire, de les adapter aux formats techniques et de les afficher auprès de l'audience que vous avez choisie, pour le monde entier et pour la durée de leur publication. Ce droit ne sert qu'à faire fonctionner le réseau : l'éditeur ne vend pas vos contenus et ne s'en sert pas à des fins publicitaires.\n\nPar défaut, une publication est lisible par les membres de DIASPORA.GA. Vous pouvez la réserver à vos relations. Elle n'est lisible dans ANTSIA que si vous le décidez.\n\nVous pouvez retirer un contenu à tout moment : il est alors retiré partout où il était diffusé. Un contenu signalé peut toutefois être conservé le temps de la procédure, comme la loi le demande à l'éditeur.\n\nVous garantissez que vous avez le droit de publier ce que vous publiez : c'est votre propre création, ou vous avez l'accord de son auteur et des personnes qui y apparaissent.\n\nSi vous publiez une image, un son ou une vidéo produits ou modifiés par une intelligence artificielle et qui peuvent passer pour réels, dites-le clairement dans la publication."
+      },
+      "pages": {
+        "title": "Pages des associations et des entreprises",
+        "body": "Une page présente une association ou une entreprise. Seul un membre vérifié peut en inscrire une. La personne qui inscrit ou revendique une page déclare qu'elle a qualité pour agir au nom de l'organisation.\n\nDes pièces peuvent être demandées à l'appui d'une revendication. Elles ne sont lues que par l'équipe chargée de l'examiner ; elles sont supprimées dès le retrait de la demande, ou 90 jours après la décision.\n\nLes responsables d'une page (administrateur, éditeur, modérateur) répondent de ce qui s'y publie : ils veillent à l'exactitude des informations, retirent les contenus illicites et répondent aux signalements. La loi rend l'administrateur d'une page ou d'un groupe responsable des contenus illicites qui y circulent (ordonnance n° 0011/PR/2026, article 11).\n\nSes responsables peuvent mettre une page en sommeil et la réveiller dans les 30 jours ; passé ce délai, sa remise en service se décide avec l'administration du réseau. Une page qui n'a plus de responsable, qui trompe sur l'organisation qu'elle présente ou qui enfreint les règles peut être suspendue ou retirée."
+      },
+      "exchanges": {
+        "title": "Échanges entre membres",
+        "body": "Les services, les offres d'emploi, les missions d'entraide et les mises en relation proposés dans le réseau le sont par les membres et par les pages, sous leur seule responsabilité. L'éditeur n'est partie à aucun accord conclu entre membres : il ne garantit ni la réalité d'une offre, ni la qualité d'un service, ni la solvabilité de qui que ce soit.\n\nAucun paiement ne passe par DIASPORA.GA. Ne versez jamais d'argent pour obtenir un emploi, un logement, un visa ou un rendez-vous, et signalez toute demande de ce genre."
+      },
+      "consular": {
+        "title": "Institutions et démarches consulaires",
+        "body": "DIASPORA.GA n'est pas un service consulaire. Aucune démarche (passeport, carte consulaire, état civil, visa) ne s'y traite, et le service ne vous demande ni pièce d'identité, ni numéro de passeport, ni numéro d'identification personnel. Ne les publiez pas et ne les envoyez à personne par la messagerie.\n\nLorsque l'attestation d'inscription consulaire sera ouverte, elle se limitera, avec votre accord, à une réponse par oui ou par non, un pays, un poste consulaire et une date. Aucun autre élément de votre dossier consulaire n'entrera dans le réseau.\n\nUne page officielle parle au nom de l'institution qu'elle présente. Ce qu'un membre publie n'engage que lui, même s'il travaille pour une institution."
       },
       "moderation": {
         "title": "Modération",
-        "body": "À fournir : comment un contenu est examiné, retiré ou rétabli, et comment contester une décision."
+        "body": "L'équipe de modération du réseau examine les signalements, sous l'autorité de l'administration du réseau. Le signalement d'un profil, commun à DIASPORA.GA et à ANTSIA, est examiné par la modération d'ANTSIA.\n\nL'éditeur n'exerce pas de contrôle général avant publication. Trois moyens complètent les signalements :\n\n– certains contenus sont relus avant de paraître ;\n– des limites automatiques (nombre de liens, cadence d'écriture, termes bloqués) peuvent retenir un contenu jusqu'à sa relecture ;\n– les fichiers déposés passent une analyse antivirus.\n\nAucune sanction n'est prononcée par un automate : toute mesure est décidée par une personne, qui ne tranche jamais un dossier où elle est partie.\n\nLes mesures possibles sont le retrait du contenu, l'avertissement, la mise en sourdine, la suspension et l'exclusion. Une mise en sourdine ou une suspension a une durée, de 365 jours au plus ; une exclusion n'en a pas. Chaque décision est motivée et notifiée à la personne concernée, qui la retrouve dans « Mes données » et peut la contester à deux niveaux, sans délai imposé.\n\nL'éditeur exécute les décisions de justice et les mesures ordonnées par les autorités compétentes. Il informe ces autorités des activités illicites dont il a connaissance et répond à leurs réquisitions, comme la loi l'y oblige."
+      },
+      "intellectualProperty": {
+        "title": "Propriété intellectuelle du service",
+        "body": "Le nom DIASPORA.GA, son logotype, sa charte graphique, ses interfaces et ses logiciels appartiennent à l'éditeur ou sont utilisés avec l'accord de leurs titulaires (voir les Mentions légales). Ces conditions vous donnent le droit d'utiliser le service pour vos besoins personnels ou pour ceux de votre organisation ; elles ne vous transfèrent aucun droit sur ces éléments."
+      },
+      "personalData": {
+        "title": "Données personnelles",
+        "body": "Le traitement de vos données est décrit dans la page Confidentialité : données traitées, finalités, destinataires, durées de conservation, droits et manière de les exercer. Vous exportez vos données et vous demandez l'effacement de votre compte depuis « Mes données »."
+      },
+      "availability": {
+        "title": "Disponibilité et évolution du service",
+        "body": "L'éditeur s'efforce de rendre le service accessible en permanence, sans le garantir : une maintenance, une panne ou un incident chez un prestataire peuvent l'interrompre. Il peut faire évoluer le service, ouvrir, modifier ou fermer un espace.\n\nSi le réseau devait s'arrêter, les membres en seraient prévenus à l'avance, dans le réseau et par courriel, et mis en mesure d'exporter leurs données."
       },
       "liability": {
         "title": "Responsabilités",
-        "body": "À fournir : les responsabilités de l'éditeur et celles des membres."
+        "body": "Chaque membre répond de ses contenus, de ses échanges et de l'usage de son compte. Les responsables d'une page répondent de ce qui s'y publie.\n\nL'éditeur répond du fonctionnement du service et de la diligence de sa modération. Il retire promptement un contenu illicite dès qu'il en a connaissance et tient les délais que la loi lui fixe.\n\nDans les limites que la loi autorise, l'éditeur ne répond pas :\n\n– des accords conclus entre membres ni de leurs suites ;\n– du contenu des sites vers lesquels un membre renvoie ;\n– d'une interruption du service due à un tiers ou à un cas de force majeure ;\n– d'un dommage né du non-respect de ces conditions par le membre qui s'en plaint.\n\nRien dans ces conditions n'écarte une responsabilité que la loi interdit d'écarter, ni les droits que la loi de votre pays de résidence vous reconnaît en qualité de consommateur."
       },
       "termination": {
         "title": "Suspension et fin du compte",
-        "body": "À fournir : quand un compte peut être suspendu ou fermé, et comment le quitter."
+        "body": "Vous pouvez à tout moment quitter DIASPORA.GA en gardant votre compte ANTSIA, ou demander l'effacement de tout votre compte. L'effacement commence 30 jours après la demande ; d'ici là, vous pouvez l'annuler. Passé ce délai, il est définitif.\n\nL'éditeur peut suspendre ou fermer un compte dans les cas prévus par les Règles de la communauté, ou lorsque le compte ne remplit pas les conditions d'accès : personne mineure, personne qui ne peut pas entrer dans le réseau, second compte, fausse identité.\n\nUne personne suspendue ou exclue garde l'accès à « Mes données » : elle peut y lire la décision, la contester, exporter ses données et demander l'effacement de son compte."
       },
       "changes": {
         "title": "Modification des conditions",
-        "body": "À fournir : comment les membres sont prévenus d'un changement de ces conditions."
+        "body": "Chaque version de ces conditions porte un numéro et une date, affichés en tête de cette page et dans vos réglages. Une modification importante est annoncée dans le réseau avant d'entrer en vigueur. Continuer à utiliser le service après cette date vaut acceptation ; si vous refusez la nouvelle version, vous pouvez quitter le réseau."
       },
       "law": {
-        "title": "Droit applicable",
-        "body": "À fournir : le droit applicable et le règlement des litiges."
+        "title": "Droit applicable et litiges",
+        "body": "Ces conditions sont soumises au droit gabonais.\n\nEn cas de différend, écrivez d'abord à l'éditeur : il vous répond et recherche avec vous une solution amiable. Vous pouvez aussi saisir la Haute Autorité de la Communication d'une réclamation (ordonnance n° 0011/PR/2026, article 38).\n\nÀ défaut d'accord, le litige relève des tribunaux de Libreville, sous réserve des règles de compétence d'ordre public. Si vous résidez dans l'Union européenne et agissez en qualité de consommateur, vous gardez le bénéfice des dispositions impératives de la loi de votre pays de résidence et la possibilité de saisir les tribunaux de votre domicile."
+      },
+      "contact": {
+        "title": "Contact",
+        "body": "Pour toute question sur ces conditions, écrivez à {{publisherEmail}} ou à {{publisherName}}, {{publisherAddress}}. La page Contact indique les autres voies."
       }
     },
     "contact": {
       "title": "Contact",
       "report": {
         "title": "Signaler un contenu",
-        "body": "Le menu d'une publication propose « Signaler… », comme les contenus de l'entraide, du mentorat et de l'emploi. L'équipe de modération du réseau examine le signalement ; son auteur ne sait pas qui l'a signalé."
+        "body": "Chaque publication, commentaire, profil ou page porte un geste « Signaler… » dans son menu, comme les autres contenus du réseau. Choisissez le motif : l'équipe de modération examine le signalement, et la personne signalée ne sait pas qui l'a signalée.\n\nVous suivez vos signalements dans « Mes signalements » : accusé de réception, échéance quand la loi en fixe une, puis décision. Les Règles de la communauté donnent les délais et les recours."
+      },
+      "emergency": {
+        "title": "En cas d'urgence",
+        "body": "Un signalement n'alerte pas les secours. Si vous ou une autre personne êtes en danger, appelez les secours du pays où vous vous trouvez : dans les pays de l'Union européenne, le 112."
       },
       "messages": {
         "title": "Écrire à un membre",
-        "body": "Le contact entre membres passe par la messagerie, ouverte entre relations. Aucune adresse ni aucun numéro de membre n'est publié."
+        "body": "Le contact entre membres passe par la messagerie, ouverte entre relations. Aucune adresse électronique ni aucun numéro de téléphone de membre n'est publié, et l'éditeur n'en communique aucun."
       },
       "data": {
         "title": "Vos données et vos signalements",
-        "body": "Exporter vos données, effacer votre compte, suivre une décision qui vous concerne ou l'issue de vos signalements : tout se fait depuis « Mes données », même sans adhésion."
+        "body": "Exporter vos données, demander l'effacement de votre compte, suivre une décision de modération qui vous concerne, la contester ou connaître l'issue de vos signalements : tout se fait depuis « Mes données », même sans adhésion, après un départ ou pendant une suspension."
       },
       "publisher": {
         "title": "Écrire à l'éditeur",
-        "body": "À fournir : l'adresse de contact de l'éditeur."
+        "body": "Pour une question sur le service, un partenariat, la presse ou un problème que votre compte ne permet pas de régler :\n\n– Courriel : {{publisherEmail}}\n– Courrier : {{publisherName}}, {{publisherAddress}}\n– Téléphone : {{publisherPhone}}\n\nIndiquez « DIASPORA.GA » dans l'objet et, si vous êtes membre, votre identifiant public. N'envoyez jamais un code de connexion ni une pièce d'identité par courriel : personne ne vous les demandera."
       },
       "dataProtection": {
         "title": "Données personnelles",
-        "body": "À fournir : à qui adresser une demande sur vos données personnelles."
+        "body": "Pour exercer un droit que « Mes données » ne couvre pas (accès détaillé, rectification, limitation, opposition) ou pour poser une question sur le traitement de vos données, écrivez à l'éditeur, par courriel ou par courrier, avec l'objet « Données personnelles — DIASPORA.GA ».\n\nÉcrivez depuis l'adresse électronique de votre compte : elle sert à vérifier que la demande vient bien de vous. La réponse est gratuite. Elle vous parvient dans le mois qui suit la réception de votre demande ; ce délai peut être prolongé de deux mois pour une demande complexe, et vous en êtes alors informé dans le premier mois (loi n° 001/2011 modifiée, articles 93 et 95)."
+      },
+      "legalRequests": {
+        "title": "Autorités, droit de réponse et demandes légales",
+        "body": "Les autorités judiciaires et administratives adressent leurs notifications, leurs réquisitions et leurs demandes de retrait à l'éditeur, à son siège ou à l'adresse {{publisherEmail}}. Les échanges se font en français ou en anglais.\n\nLe droit de réponse d'une personne citée dans un contenu s'exerce à la même adresse, dans les conditions rappelées dans les Mentions légales."
+      },
+      "regulators": {
+        "title": "Autorités de contrôle",
+        "body": "Si la réponse de l'éditeur ne vous satisfait pas, vous pouvez saisir :\n\n– pour vos données personnelles, l'Autorité pour la Protection des Données Personnelles et de la Vie Privée (APDPVP), Haut de Gué-Gué, en face de l'entrée de service de l'hôtel Radisson Blu, Libreville — téléphone +241 01 44 31 34 — contact@apdpvp.ga — apdpvp.ga ;\n– pour un contenu ou une décision de modération, la Haute Autorité de la Communication (HAC), à Libreville (ordonnance n° 0011/PR/2026, article 38) ;\n– si vous résidez dans l'Union européenne, l'autorité de protection des données de votre pays de résidence : en France, la Commission nationale de l'informatique et des libertés (CNIL)."
+      },
+      "consular": {
+        "title": "Démarches consulaires",
+        "body": "DIASPORA.GA ne traite aucune démarche consulaire : passeport, carte consulaire, état civil, visa, légalisation. Adressez-vous à l'ambassade ou au consulat du Gabon dont dépend votre lieu de résidence. L'éditeur n'a accès à aucun dossier consulaire et ne peut pas intervenir dans une démarche."
       }
     }
   },

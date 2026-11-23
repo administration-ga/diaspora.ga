@@ -8,13 +8,14 @@ import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import CommunityRulesPage from "@/app/regles-communaute/page"
+import { legalBodyLines } from "@/lib/legal-body"
 import { COMMUNITY_RULE_ANCHORS, routes } from "@/lib/routes"
 
 /**
  * Les règles de la communauté (MD-05), page PUBLIQUE rendue avec sa vraie coque, pour une
  * personne sans compte (démonstration sans session) : texte provisoire marqué comme tel,
- * passages « À fournir » qui nomment la question posée au juriste, chaque motif de
- * signalement nommé sous une règle et une seule, une ancre par règle. Données fictives.
+ * règles rédigées en entier, chaque motif de signalement nommé sous une règle et une seule,
+ * une ancre par règle. Données fictives.
  */
 const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }))
@@ -59,8 +60,9 @@ describe("Règles de la communauté — une page qui se lit sans compte (MD-05)"
   it("rend chaque règle, sous son ancre, dans l'ordre du domaine", () => {
     const t = getFixedT("fr")
     renderSignedOut()
-    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent)).toEqual(
-      COMMUNITY_RULES.map((rule) => t(`legal.community.${rule}.title`)),
+    // Chaque règle est numérotée : son numéro, puis son titre.
+    expect(screen.getAllByRole("heading", { level: 2 }).map((heading) => normalized(heading.textContent ?? ""))).toEqual(
+      COMMUNITY_RULES.map((rule, index) => `${t("legal.sectionNumber", { number: index + 1 })} ${t(`legal.community.${rule}.title`)}`),
     )
     for (const rule of COMMUNITY_RULES) {
       const section = document.getElementById(COMMUNITY_RULE_ANCHORS[rule])
@@ -79,36 +81,41 @@ describe("Règles de la communauté — une page qui se lit sans compte (MD-05)"
     expect([...named].sort()).toEqual(REPORT_REASONS.map((reason) => t(`report.reason.${reason}`)).sort())
     for (const reason of REPORT_REASONS) {
       const section = document.getElementById(COMMUNITY_RULE_ANCHORS[REPORT_REASON_RULES[reason]])!
-      expect(within(within(section).getByRole("list")).getByText(t(`report.reason.${reason}`)), reason).toBeInTheDocument()
+      const reasons = within(section).getByRole("list", { name: t("communityRules.reasonsLabel") })
+      expect(within(reasons).getByText(t(`report.reason.${reason}`)), reason).toBeInTheDocument()
     }
   })
 
-  it("n'invente aucune règle de droit : chaque passage qui attend le juriste dit « À fournir » et nomme sa question", () => {
+  it("chaque règle est rédigée en entier : plus aucun passage « À fournir », et son texte est à l'écran", () => {
     const t = getFixedT("fr")
     renderSignedOut()
-    const awaiting = Object.entries(LEGAL_TEXTS.community.awaiting)
-    expect(awaiting.length).toBeGreaterThan(0)
-    for (const [rule, questions] of awaiting) {
-      const pending = t(`legal.community.${rule}.pending`)
-      // Espace insécable avant les deux-points, comme le veut la typographie française.
-      expect(pending, rule).toMatch(/^À fournir \(question Q\d au juriste\)\s: /)
-      for (const question of questions) expect(pending, rule).toContain(question)
-      expect(screen.getByText(normalized(pending))).toBeInTheDocument()
+    expect(LEGAL_TEXTS.community.awaiting).toEqual({})
+    for (const rule of COMMUNITY_RULES) {
+      const body = t(`legal.community.${rule}.body`)
+      expect(body, rule).not.toMatch(/À fournir/)
+      const section = within(document.getElementById(COMMUNITY_RULE_ANCHORS[rule])!)
+      for (const line of legalBodyLines(body)) expect(section.getByText(normalized(line)), rule).toBeInTheDocument()
     }
-    // Les autres passages sont rédigés : aucun « À fournir » dans le corps d'une règle.
-    for (const rule of COMMUNITY_RULES) expect(t(`legal.community.${rule}.body`), rule).not.toMatch(/À fournir/)
   })
 
-  it("parle anglais : titre, marqueur provisoire et passages « To be provided »", () => {
+  it("dit les délais que la loi fixe, les mesures et les deux niveaux de recours", () => {
+    const t = getFixedT("fr")
+    expect(t("legal.community.reporting.body")).toMatch(/72 heures \(article 24\)/)
+    expect(t("legal.community.reporting.body")).toMatch(/24 heures \(article 33\)/)
+    expect(t("legal.community.measures.body")).toMatch(/365 jours au plus/)
+    expect(t("legal.community.measures.body")).toMatch(/second recours/)
+    expect(t("legal.community.measures.body")).toMatch(/Haute Autorité de la Communication/)
+  })
+
+  it("parle anglais : titre, marqueur provisoire et règles rédigées", () => {
     const t = getFixedT("en")
     renderSignedOut("en")
     expect(screen.getByRole("heading", { level: 1, name: "Community rules" })).toBeInTheDocument()
     expect(screen.getByRole("note")).toHaveTextContent(normalized(t("legal.provisional.heading")))
-    for (const [rule, questions] of Object.entries(LEGAL_TEXTS.community.awaiting)) {
-      const pending = t(`legal.community.${rule}.pending`)
-      expect(pending, rule).toMatch(/^To be provided \(question Q\d to the lawyer\): /)
-      for (const question of questions) expect(pending, rule).toContain(question)
+    for (const rule of COMMUNITY_RULES) {
+      const body = t(`legal.community.${rule}.body`)
+      expect(body, rule).not.toMatch(/To be provided/)
+      expect(body.length, rule).toBeGreaterThan(40)
     }
-    for (const rule of COMMUNITY_RULES) expect(t(`legal.community.${rule}.body`), rule).not.toMatch(/To be provided/)
   })
 })

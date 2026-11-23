@@ -38,9 +38,20 @@ describe("textes du site (LX-05)", () => {
     for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].status, kind).not.toBe("final")
   })
 
-  test("les règles de la communauté sont provisoires (MD-05) ; les quatre autres textes restent à fournir", () => {
-    expect(LEGAL_TEXTS.community.status).toBe("provisional")
-    expect(pendingLegalTexts()).toEqual(LEGAL_TEXT_KINDS.filter((kind) => kind !== "community"))
+  test("les cinq textes sont rédigés et provisoires : plus aucun ne reste à fournir", () => {
+    for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].status, kind).toBe("provisional")
+    expect(pendingLegalTexts()).toEqual([])
+  })
+
+  test("les mentions légales portent les rubriques qu'impose l'identification de l'éditeur", () => {
+    // Ordonnance n° 0011/PR/2026, article 25 : éditeur, directeur de la publication, hébergeur.
+    expect(LEGAL_TEXTS.notice.sections).toEqual(expect.arrayContaining(["publisher", "director", "hosting"]))
+  })
+
+  test("la confidentialité dit le responsable, les données, les destinataires, les durées, les droits et la réclamation", () => {
+    expect(LEGAL_TEXTS.privacy.sections).toEqual(
+      expect.arrayContaining(["controller", "data", "purposes", "recipients", "transfers", "retention", "rights", "exercise", "complaint"]),
+    )
   })
 
   test("le registre est figé : aucun écran ne peut le réécrire", () => {
@@ -51,7 +62,11 @@ describe("textes du site (LX-05)", () => {
 describe("règles de la communauté (MD-05)", () => {
   test("leurs rubriques sont les règles, dans l'ordre d'affichage", () => {
     expect(LEGAL_TEXTS.community.sections).toEqual([...COMMUNITY_RULES])
-    expect(COMMUNITY_RULES).toEqual(expect.arrayContaining(["respect", "scams", "impersonation", "politics", "privacy", "prohibited", "measures"]))
+    expect(COMMUNITY_RULES).toEqual(
+      expect.arrayContaining(["respect", "scams", "impersonation", "politics", "privacy", "prohibited", "authorship", "integrity", "pages", "measures"]),
+    )
+    // Signaler et les recours ferment la page : ils s'appliquent à toutes les règles qui précèdent.
+    expect(COMMUNITY_RULES.slice(-2)).toEqual(["reporting", "measures"])
   })
 
   test("reconnaît une règle, refuse tout autre identifiant", () => {
@@ -74,7 +89,7 @@ describe("règles de la communauté (MD-05)", () => {
     }
   })
 
-  test("les règles attendent le juriste pour les interdits légaux, les délais et le recours", () => {
-    expect(LEGAL_TEXTS.community.awaiting).toEqual({ prohibited: ["Q1"], reporting: ["Q6"], measures: ["Q3"] })
+  test("plus aucun passage n'attend une réponse : les textes sont rédigés en entier", () => {
+    for (const kind of LEGAL_TEXT_KINDS) expect(LEGAL_TEXTS[kind].awaiting, kind).toEqual({})
   })
 })

@@ -7,10 +7,12 @@
  * version et sa date. Il tient aussi ses rubriques, dans l'ordre d'affichage — des
  * identifiants de clés de texte, jamais un contenu.
  *
- * Aucun contenu juridique n'entre ici ni dans les fichiers de langue sans relecture : le
- * fond est au juriste et au propriétaire (porte A11, lot DS-07). Trois états
- * (`LEGAL_TEXT_STATUSES`) : à fournir, provisoire, définitif. Seul un texte définitif lève
- * la porte de mise en ligne.
+ * Le fond est au propriétaire et à son conseil juridique (porte A11, lot DS-07). Trois états
+ * (`LEGAL_TEXT_STATUSES`) : à fournir, provisoire, définitif. Les cinq textes sont RÉDIGÉS
+ * depuis le 23/11/2026, sur demande du propriétaire, d'après ce que le service fait et
+ * d'après les textes en vigueur (loi n° 001/2011 modifiée par la loi n° 025/2023, ordonnance
+ * n° 0011/PR/2026 ratifiée par la loi n° 003/2026) ; ils restent PROVISOIRES tant que leur
+ * relecture n'est pas faite. Seul un texte définitif lève la porte de mise en ligne.
  */
 
 export const LEGAL_TEXT_KINDS = ["notice", "privacy", "terms", "community", "contact"] as const
@@ -54,6 +56,9 @@ export const COMMUNITY_RULES = [
   "politics",
   "privacy",
   "prohibited",
+  "authorship",
+  "integrity",
+  "pages",
   "reporting",
   "measures",
 ] as const
@@ -81,34 +86,86 @@ export interface LegalTextEdition {
 }
 
 /**
- * L'édition en vigueur de chaque texte. Les mentions légales et la confidentialité sont les
- * charpentes du 14/10/2026 ; les conditions et le contact, celles du 10/11/2026 (LX-05).
- * Les règles de la communauté sont rédigées depuis le 10/11/2026 (MD-05) : PROVISOIRES, en
- * attente de relecture. Aucun texte n'est définitif.
+ * L'édition en vigueur de chaque texte. Les cinq textes sont rédigés depuis le 23/11/2026 et
+ * PROVISOIRES : aucun passage n'attend plus une réponse (`awaiting` vide), mais aucun n'est
+ * définitif tant que le propriétaire et son conseil ne l'ont pas relu. Les mentions légales
+ * suivent l'article 25 de l'ordonnance n° 0011/PR/2026 ; la confidentialité, les articles 70 à
+ * 73, 98, 104 et 171 de la loi n° 001/2011 modifiée.
  */
 const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
-  notice: { version: "0.1", date: "2026-10-14", status: "missing", sections: ["section1", "section2", "section3", "section4"], awaiting: {} },
-  privacy: { version: "0.1", date: "2026-10-14", status: "missing", sections: ["section1", "section2", "section3", "section4"], awaiting: {} },
+  notice: {
+    version: "0.2",
+    date: "2026-11-23",
+    status: "provisional",
+    sections: ["publisher", "director", "hosting", "service", "intellectualProperty", "illegalContent", "rightOfReply", "personalData", "contact", "law"],
+    awaiting: {},
+  },
+  privacy: {
+    version: "0.2",
+    date: "2026-11-23",
+    status: "provisional",
+    sections: [
+      "controller",
+      "framework",
+      "data",
+      "neverCollected",
+      "purposes",
+      "consents",
+      "visibility",
+      "recipients",
+      "transfers",
+      "retention",
+      "security",
+      "rights",
+      "exercise",
+      "minors",
+      "cookies",
+      "automated",
+      "breach",
+      "complaint",
+      "changes",
+    ],
+    awaiting: {},
+  },
   terms: {
-    version: "0.1",
-    date: "2026-11-10",
-    status: "missing",
-    sections: ["purpose", "access", "conduct", "content", "moderation", "liability", "termination", "changes", "law"],
+    version: "0.2",
+    date: "2026-11-23",
+    status: "provisional",
+    sections: [
+      "purpose",
+      "acceptance",
+      "access",
+      "account",
+      "free",
+      "conduct",
+      "content",
+      "pages",
+      "exchanges",
+      "consular",
+      "moderation",
+      "intellectualProperty",
+      "personalData",
+      "availability",
+      "liability",
+      "termination",
+      "changes",
+      "law",
+      "contact",
+    ],
     awaiting: {},
   },
   community: {
-    version: "0.2",
-    date: "2026-11-10",
+    version: "0.3",
+    date: "2026-11-23",
     status: "provisional",
     sections: COMMUNITY_RULES,
-    // Au juriste : la liste exacte des interdits légaux, les délais hors du Gabon, le délai de recours.
-    awaiting: { prohibited: ["Q1"], reporting: ["Q6"], measures: ["Q3"] },
+    awaiting: {},
   },
   contact: {
-    version: "0.1",
-    date: "2026-11-10",
-    status: "missing",
-    sections: ["report", "messages", "data", "publisher", "dataProtection"],
+    version: "0.2",
+    date: "2026-11-23",
+    status: "provisional",
+    sections: ["report", "emergency", "messages", "data", "publisher", "dataProtection", "legalRequests", "regulators", "consular"],
     awaiting: {},
   },
 }
