@@ -282,7 +282,7 @@ export const routes = {
   stories: () => "/actus",
   story: (handle: string | null) => handle === null ? "/actus" : `/actus?${new URLSearchParams({ auteur: handle })}`,
   newStory: () => `/actus/${STORIES_NEW_SEGMENT}`,
-  /** Conférence en direct (lot `live` du moteur, PD7 point 4) : pas encore servie ici. */
+  /** Conférence en direct (lot `live` du moteur, PD7 point 4) : servie par `app/direct/[id]` l'interrupteur du direct ouvert (`lib/live.ts`, CH-817). */
   conference: (sessionId: string) => `/direct/${encodeURIComponent(sessionId)}`,
   /** Explorer : membres, pages et pays (destination principale, DG-005). */
   explore: () => "/explorer",

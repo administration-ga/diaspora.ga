@@ -52,7 +52,8 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   bookmarks: CORE,
   sponsor: CORE,
   sponsorFor: CORE,
-  // Le volet des conférences n'est pas servi ici (les directs restent fermés par le code).
+  // La page d'un direct (CH-817) : du socle, pas un module ; c'est l'interrupteur de CODE du direct
+  // (`lib/live.ts`) qui la ferme, jamais l'administration du réseau.
   conference: CORE,
   // Les pays et leurs actus.
   communities: CORE,

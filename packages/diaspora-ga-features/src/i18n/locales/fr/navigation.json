@@ -37,6 +37,8 @@
       "title": "Créer",
       "story": "Une actu",
       "storyHint": "Une photo ou une courte vidéo, dans le bandeau des actus.",
+      "live": "Une conférence",
+      "liveHint": "Préparer un direct dans le réseau, et le lancer quand vous êtes prêt.",
       "association": "Inscrire une association",
       "associationHint": "Sa page, ses adhérents, son groupe et ses évènements.",
       "company": "Inscrire une entreprise",

@@ -1,5 +1,7 @@
 "use client"
 
+// Le magasin seul (module pur) : la coque ne charge ni la couche d'appel ni le direct du moteur.
+import { requestConferenceLaunch } from "@antsia/social-features/features/iappel/conference-launch-store"
 import { MessagerieDock } from "@antsia/social-features/messagerie"
 import { MESSAGES_UNREAD_CAP } from "@antsia/social-features/shell/reseau-menu-destinations"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
@@ -694,8 +696,21 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
 
 
 /**
+ * « Créer → Une conférence » (CH-817) : la même demande que « Créer → Conférence » du moteur
+ * (`use-creation-controller`), sans adresse ni réseau à faire descendre. L'hôte du direct, monté
+ * une fois dans la couche de communication d'iCom quand le direct est ouvert (`liveAvailable`), la
+ * consomme et ouvre le dialogue de création du moteur ; la conférence créée, il mène à sa page.
+ */
+function launchConference(): void {
+  requestConferenceLaunch({ userIds: [] })
+}
+
+const CREATE_MENU_ITEM_CLASS = "flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"
+
+/**
  * « Créer » au bureau, sous « Publier » : un menu de formats, chacun dit en une ligne
  * (comme le menu de création du réseau de l'administration). Flèches, Échap et focus rendu par Radix.
+ * Un format sans adresse (la conférence) est un geste du menu, pas un lien.
  */
 function CreateMenu(props: { formats: readonly CreateFormat[] }) {
   const { t } = useDiasporaGaT()
@@ -718,17 +733,23 @@ function CreateMenu(props: { formats: readonly CreateFormat[] }) {
           <DropdownMenu.Label className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{t("nav.create.title")}</DropdownMenu.Label>
           {props.formats.map((format) => {
             const Icon = MEMBER_CREATE_ICONS[format.id]
-            return (
+            const body = (
+              <>
+                <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{t(format.labelKey)}</span>
+                  <span className="block text-[13px] leading-snug text-muted-foreground">{t(format.hintKey)}</span>
+                </span>
+              </>
+            )
+            return format.href === null ? (
+              <DropdownMenu.Item key={format.id} onSelect={launchConference} className={CREATE_MENU_ITEM_CLASS}>
+                {body}
+              </DropdownMenu.Item>
+            ) : (
               <DropdownMenu.Item key={format.id} asChild>
-                <NextLink
-                  href={format.href}
-                  className="flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"
-                >
-                  <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">{t(format.labelKey)}</span>
-                    <span className="block text-[13px] leading-snug text-muted-foreground">{t(format.hintKey)}</span>
-                  </span>
+                <NextLink href={format.href} className={CREATE_MENU_ITEM_CLASS}>
+                  {body}
                 </NextLink>
               </DropdownMenu.Item>
             )
@@ -739,19 +760,36 @@ function CreateMenu(props: { formats: readonly CreateFormat[] }) {
   )
 }
 
+const CREATE_SHEET_ITEM_CLASS = "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
+
+/** Un format de « Créer » dans la feuille du compte : un lien, ou, sans adresse (la conférence), un bouton qui referme la feuille. */
 function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) {
   const { t } = useDiasporaGaT()
   const Icon = MEMBER_CREATE_ICONS[props.format.id]
+  const body = (
+    <>
+      <Icon className="size-5 shrink-0" aria-hidden />
+      <span className="min-w-0 truncate">{t(props.format.labelKey)}</span>
+    </>
+  )
   return (
     <li>
-      <NextLink
-        href={props.format.href}
-        onClick={props.onFollow}
-        className="flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
-      >
-        <Icon className="size-5 shrink-0" aria-hidden />
-        <span className="min-w-0 truncate">{t(props.format.labelKey)}</span>
-      </NextLink>
+      {props.format.href === null ? (
+        <button
+          type="button"
+          onClick={() => {
+            props.onFollow()
+            launchConference()
+          }}
+          className={CREATE_SHEET_ITEM_CLASS}
+        >
+          {body}
+        </button>
+      ) : (
+        <NextLink href={props.format.href} onClick={props.onFollow} className={CREATE_SHEET_ITEM_CLASS}>
+          {body}
+        </NextLink>
+      )}
     </li>
   )
 }

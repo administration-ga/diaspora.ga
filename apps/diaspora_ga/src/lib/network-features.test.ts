@@ -27,6 +27,11 @@ describe("adresses et fonctionnalités du réseau", () => {
     }
   })
 
+  it("la page d'un direct relève du socle, pas d'un module : seul l'interrupteur de code du direct la ferme (CH-817)", () => {
+    expect(ROUTE_FEATURES.conference).toBeNull()
+    expect(featureOfPath(routes.conference("s-1"))).toBeNull()
+  })
+
   it("chaque module a ses adresses, sous-adresses comprises ; le gabarit le plus précis l'emporte", () => {
     expect(featureOfPath(routes.pages())).toBe("pages")
     expect(featureOfPath(routes.page("amicale"))).toBe("pages")

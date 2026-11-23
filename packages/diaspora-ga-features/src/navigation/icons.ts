@@ -29,6 +29,7 @@ import {
   UserRoundCheckIcon,
   UserRoundIcon,
   UsersRoundIcon,
+  VideoIcon,
   type LucideIcon,
 } from "lucide-react"
 
@@ -62,6 +63,8 @@ export const MEMBER_MENU_ICONS: Readonly<Record<MemberMenuEntryId, LucideIcon>> 
 
 export const MEMBER_CREATE_ICONS: Readonly<Record<MemberCreateFormatId, LucideIcon>> = {
   story: CameraIcon,
+  // La conférence : la caméra vidéo de « Créer → Conférence » du moteur (icône `video`).
+  live: VideoIcon,
   association: UsersRoundIcon,
   company: Building2Icon,
 }
