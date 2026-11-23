@@ -235,6 +235,24 @@ const SEED_OFFERS: readonly SeedOffer[] = [
       pricing: { mode: "from", amountMinor: 4000, currency: "EUR" },
     },
   },
+  {
+    // CH-816 (lot P4) : une catégorie de l'élargissement du 22/11/2026, portée par le traiteur fictif.
+    id: "offer-demo-traiteur",
+    pageId: "page-saveurs",
+    ageDays: 15,
+    status: "active",
+    input: {
+      title: "Buffet gabonais pour vos fêtes (démo)",
+      description: "Offre FICTIVE de démonstration : plats du pays préparés pour une fête de famille ou la réunion d'une association, à Paris.",
+      category: "catering",
+      country: "FR",
+      city: "Paris",
+      delivery: "onsite",
+      languages: ["fr"],
+      durationMinutes: null,
+      pricing: { mode: "quote" },
+    },
+  },
 ]
 
 /** L'état de départ, daté par rapport à l'état principal ; chaque offre passe LA règle du domaine. */

@@ -50,3 +50,23 @@ export const callPreferencesReturn = engineReturnFactory<CallPreferencesReturn>(
   journalSeenAt: null,
   saved: false,
 })
+
+export type MemberBrowseReturn = FunctionReturnType<typeof api.modules.diaspora.directory.browseMembers>
+export type DirectoryEntryReturn = MemberBrowseReturn["page"][number]
+
+/** Une carte de l'annuaire de la tranche (recherche ou parcours) : un membre déclaré, la facette projetée. */
+export const directoryEntryReturn = engineReturnFactory<DirectoryEntryReturn>({
+  handle: "ada.exemple",
+  displayName: "Ada EXEMPLE",
+  headline: null,
+  avatarUrl: null,
+  badges: ["community"],
+  facet: { countryOfResidence: "FR" },
+})
+
+/** `diaspora/directory:browseMembers` : une fenêtre vide et close, à remplir par le test. */
+export const memberBrowseReturn = engineReturnFactory<MemberBrowseReturn>({
+  page: [],
+  isDone: true,
+  continueCursor: "",
+})
