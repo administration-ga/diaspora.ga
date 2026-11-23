@@ -24,6 +24,7 @@ const CANDIDATE = "modules/diaspora/moderationDesk:teamCandidate"
 const SET_ROLE = "modules/diaspora/membership:setResponsibleRole"
 const SET_MEMBER = "modules/moderation/networkAdmin:setTeamMember"
 const CREATE = "modules/moderation/networkAdmin:createTeam"
+const SET_COUNTRY = "modules/moderation/networkAdmin:setTeamCountry"
 
 const mocks = vi.hoisted(() => ({
   results: new Map<string, unknown>(),
@@ -63,8 +64,8 @@ const members = i18n.getFixedT("fr", "diaspora-ga")
 const rules = i18n.getFixedT("fr", "rules")
 
 const TEAMS = [
-  { teamId: "team-france", name: "France", scope: null, isMember: false },
-  { teamId: "team-avis", name: "Avis", scope: "serviceReview", isMember: true },
+  { teamId: "team-france", name: "France", scope: null, country: "FR", isMember: false },
+  { teamId: "team-avis", name: "Avis", scope: "serviceReview", country: null, isMember: true },
 ]
 const lastArgs = (path: string) => mocks.args.get(path)?.at(-1)
 /** Le texte tel que Testing Library le compare : espaces insécables de la typographie française ramenées à l'espace. */
@@ -105,6 +106,7 @@ beforeEach(() => {
     [SET_ROLE, vi.fn().mockResolvedValue({ role: "network_moderator", changed: true })],
     [SET_MEMBER, vi.fn().mockResolvedValue(null)],
     [CREATE, vi.fn().mockResolvedValue({ teamId: "team-new" })],
+    [SET_COUNTRY, vi.fn().mockResolvedValue(null)],
   ])
   mocks.oneShot.mockResolvedValue({ personId: "person-jean", handle: "jean.mba", displayName: "Jean MBA" })
 })
@@ -165,6 +167,59 @@ describe("section Équipe et responsables — équipes", () => {
       expect(mocks.writes.get(CREATE)).toHaveBeenCalledWith({ networkId: NETWORK_ID, name: "Sénégal", scope: "post", reason: "Ouvrir la modération du Sénégal." }),
     )
     expect(mocks.success).toHaveBeenCalledWith(t("team.created", { name: "Sénégal" }))
+  })
+
+  it("créer une équipe d'un pays : le pays choisi part au moteur (CH-815 A7)", async () => {
+    const user = userEvent.setup()
+    mount()
+    const create = within(screen.getByRole("heading", { level: 2, name: t("team.createTitle") }).closest("div")!)
+    await user.type(create.getByLabelText(t("team.name")), "Belgique")
+    await user.selectOptions(create.getByLabelText(t("team.country")), "BE")
+    await user.type(create.getByLabelText(t("decision.reason")), "Ouvrir la modération de la Belgique.")
+    await user.click(create.getByRole("button", { name: t("team.create") }))
+    await waitFor(() =>
+      expect(mocks.writes.get(CREATE)).toHaveBeenCalledWith({ networkId: NETWORK_ID, name: "Belgique", country: "BE", reason: "Ouvrir la modération de la Belgique." }),
+    )
+  })
+
+  it("le pays de chaque équipe se lit ; « sans pays » quand le moteur n'en rend aucun", () => {
+    mount()
+    const items = region(t("team.teamsTitle")).getAllByRole("listitem").slice(0, 2)
+    // L'équipe « France » porte le pays France (étiquette du pays) ; l'équipe « Avis », aucun.
+    expect(items[0]!.querySelector('[data-slot="country-tag"]')).toHaveTextContent("France")
+    expect(items[1]!.querySelector('[data-slot="country-tag"]')).toBeNull()
+    expect(within(items[1]!).getByText(t("team.noCountry"))).toBeInTheDocument()
+  })
+
+  it("régler le pays d'une équipe : une feuille, un motif, l'appel exact au moteur ; le même pays n'écrit rien", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(screen.getByRole("button", { name: t("team.countryChangeFor", { name: "France" }) }))
+    const dialog = within(await screen.findByRole("dialog"))
+    expect(dialog.getByLabelText(t("team.country"))).toHaveValue("FR")
+    await user.type(dialog.getByLabelText(t("decision.reason")), "L'équipe couvre désormais la Belgique.")
+    await user.click(dialog.getByRole("button", { name: t("team.countrySave") }))
+    expect(await dialog.findByText(n(t("team.countryUnchanged")))).toBeInTheDocument()
+    expect(mocks.writes.get(SET_COUNTRY)).not.toHaveBeenCalled()
+    await user.selectOptions(dialog.getByLabelText(t("team.country")), "BE")
+    await user.click(dialog.getByRole("button", { name: t("team.countrySave") }))
+    await waitFor(() =>
+      expect(mocks.writes.get(SET_COUNTRY)).toHaveBeenCalledWith({ networkId: NETWORK_ID, teamId: "team-france", country: "BE", reason: "L'équipe couvre désormais la Belgique." }),
+    )
+    expect(mocks.success).toHaveBeenCalledWith(t("team.countrySet", { name: "France", country: "Belgique" }))
+  })
+
+  it("retirer le pays d'une équipe : « Aucun pays » envoie null", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(screen.getByRole("button", { name: t("team.countryChangeFor", { name: "France" }) }))
+    const dialog = within(await screen.findByRole("dialog"))
+    await user.selectOptions(dialog.getByLabelText(t("team.country")), "")
+    await user.type(dialog.getByLabelText(t("decision.reason")), "L'équipe redevient transversale.")
+    await user.click(dialog.getByRole("button", { name: t("team.countrySave") }))
+    await waitFor(() =>
+      expect(mocks.writes.get(SET_COUNTRY)).toHaveBeenCalledWith({ networkId: NETWORK_ID, teamId: "team-france", country: null, reason: "L'équipe redevient transversale." }),
+    )
   })
 
   it("ajouter un membre : recherche par identifiant public, puis l'ajout motivé", async () => {

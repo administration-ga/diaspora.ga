@@ -10,7 +10,8 @@
  * le moteur le rend ; une action que l'écran ne nomme pas reçoit un libellé neutre.
  */
 import { api } from "@convex/_generated/api"
-import { EmptyState } from "@diaspora-ga/features"
+import { isResidenceCountry } from "@diaspora-ga/domain"
+import { countryName, EmptyState } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import type { FunctionReturnType } from "convex/server"
 import { ScrollTextIcon } from "lucide-react"
@@ -161,6 +162,7 @@ function JournalDetailLine(props: { readonly detail: JournalDetail }) {
   const { t } = useTranslation(APP_NAMESPACE)
   const { t: members, locale } = useDiasporaGaT()
   const { detail } = props
+  const countryLabel = (code: string) => (isResidenceCountry(code) ? countryName(code, locale) : code)
   const roleLabel = (role: string) => t(role === "network_admin" ? "responsibles.role.network_admin" : role === "network_moderator" ? "responsibles.role.network_moderator" : "journal.detail.roleMember")
   const text = (() => {
     switch (detail.kind) {
@@ -176,6 +178,13 @@ function JournalDetailLine(props: { readonly detail: JournalDetail }) {
         return t("journal.detail.sleepUntil", { date: dateTime(detail.until, locale) })
       case "role":
         return t("journal.detail.role", { from: roleLabel(detail.from), to: roleLabel(detail.to) })
+      case "country": {
+        const country = countryLabel(detail.country)
+        const state = t(detail.open ? "journal.detail.countryOpened" : "journal.detail.countryClosed", { country })
+        return detail.relaysAttested ? `${state} · ${t("journal.detail.relaysAttested")}` : state
+      }
+      case "teamCountry":
+        return detail.country === null ? t("journal.detail.teamCountryRemoved") : t("journal.detail.teamCountry", { country: countryLabel(detail.country) })
     }
   })()
   return <p className="min-w-0 break-words text-sm">{text}</p>

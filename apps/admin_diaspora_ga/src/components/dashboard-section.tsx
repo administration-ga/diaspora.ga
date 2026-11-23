@@ -4,7 +4,7 @@
  * Tableau de bord (groupe Pilotage, fiche CH-815 § 4.2 et lot A7) : l'accueil de l'administrateur,
  * puis ce que le moteur TIENT, et rien d'autre — chaque tuile mène à sa section :
  *  · les compteurs maintenus du réseau (`diaspora/networkSettings.overview`) : modules ouverts
- *    (nommés d'après `networks/features.settings`), cohorte fondatrice ;
+ *    (nommés d'après `networks/features.settings`), cohorte fondatrice, pays ouverts ;
  *  · les équipes de modération vivantes, comptées sur la liste que le moteur rend (`myDesk().teams`) ;
  *  · les dernières décisions du journal (`platform/audit.paginateNetworkAdminAudit`, entrées dans
  *    l'administration écartées) ;
@@ -18,7 +18,7 @@ import { api } from "@convex/_generated/api"
 import { Card, cn, formatNumber, Skeleton } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { useQuery } from "convex/react"
-import { ArrowRightIcon, AwardIcon, BlocksIcon, ExternalLinkIcon, LandmarkIcon, ScaleIcon, ScrollTextIcon, ShieldCheckIcon, UsersIcon } from "lucide-react"
+import { ArrowRightIcon, AwardIcon, BlocksIcon, ExternalLinkIcon, GlobeIcon, LandmarkIcon, ScaleIcon, ScrollTextIcon, ShieldCheckIcon, UsersIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useId, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -127,7 +127,7 @@ function TileFailure(props: { readonly error: unknown; readonly retry: () => voi
   )
 }
 
-/** Les compteurs tenus par le moteur : modules ouverts (nommés), cohorte fondatrice. */
+/** Les compteurs tenus par le moteur : modules ouverts (nommés), cohorte fondatrice, pays ouverts. */
 function CountedTiles() {
   const { t } = useTranslation(APP_NAMESPACE)
   const { t: members, locale } = useDiasporaGaT()
@@ -153,6 +153,9 @@ function CountedTiles() {
         value={t("dashboard.outOf", { value: formatNumber(overview.founders.active, locale), max: formatNumber(overview.founders.cap, locale) })}
       >
         {t("dashboard.tile.foundersHint")}
+      </Tile>
+      <Tile href={routes.countries()} icon={<GlobeIcon aria-hidden="true" />} title={t("dashboard.tile.countries")} value={formatNumber(overview.countries.open, locale)}>
+        {t("dashboard.tile.countriesHint")}
       </Tile>
     </>
   )

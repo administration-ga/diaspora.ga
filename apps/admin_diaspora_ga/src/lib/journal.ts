@@ -18,8 +18,8 @@ export const JOURNAL_PAGE = 20
 
 /**
  * Les actions que l'écran nomme : toutes celles que l'administration du réseau produit depuis
- * cette application (accès, modules, responsables, équipes, règles, recours, pages officielles,
- * fondateurs), puis les gestes quotidiens de la modération du réseau qui y figurent aussi. Une
+ * cette application (accès, modules, responsables, équipes et leur pays, règles, recours, pages
+ * officielles, fondateurs, pays ouverts), puis les gestes quotidiens de la modération du réseau qui y figurent aussi. Une
  * autre action du journal reçoit le libellé neutre. Le filtre propose ces actions, dans cet ordre.
  */
 export const JOURNAL_ACTION_LABEL_KEYS = {
@@ -28,6 +28,7 @@ export const JOURNAL_ACTION_LABEL_KEYS = {
   "membership.role_set": "journal.action.roleSet",
   "moderation.team_create": "journal.action.teamCreate",
   "moderation.team_member_set": "journal.action.teamMemberSet",
+  "moderation.team_country_set": "journal.action.teamCountrySet",
   "moderation.policy_set": "journal.action.policySet",
   "moderation.term_set": "journal.action.termSet",
   "moderation.appeal_decide": "journal.action.appealDecide",
@@ -38,6 +39,7 @@ export const JOURNAL_ACTION_LABEL_KEYS = {
   "page.wake": "journal.action.pageWake",
   "diaspora.founder_admit": "journal.action.founderAdmit",
   "diaspora.founder_withdraw": "journal.action.founderWithdraw",
+  "diaspora.country_set": "journal.action.countrySet",
   "moderation.report_decide": "journal.action.reportDecide",
   "moderation.content_review": "journal.action.contentReview",
   "moderation.appeal_file": "journal.action.appealFile",
@@ -89,7 +91,8 @@ function roleOf(value: unknown): JournalRole | null {
 /**
  * Ce que la décision a posé, quand son détail le dit d'une valeur fermée : le module et son
  * nouvel état, la dispense d'ancienneté, l'issue d'un recours, l'ajout ou le retrait d'un membre
- * d'équipe, l'échéance d'un sommeil, le passage d'un rôle à un autre. Rien d'autre n'est lu.
+ * d'équipe, l'échéance d'un sommeil, le passage d'un rôle à un autre, le pays ouvert ou fermé (et
+ * l'attestation des relais), le pays posé sur une équipe. Rien d'autre n'est lu.
  */
 export type JournalDetail =
   | { readonly kind: "feature"; readonly feature: NetworkFeature; readonly enabled: boolean }
@@ -98,6 +101,13 @@ export type JournalDetail =
   | { readonly kind: "teamMember"; readonly active: boolean }
   | { readonly kind: "sleepUntil"; readonly until: number }
   | { readonly kind: "role"; readonly from: JournalRole; readonly to: JournalRole }
+  | { readonly kind: "country"; readonly country: string; readonly open: boolean; readonly relaysAttested: boolean }
+  | { readonly kind: "teamCountry"; readonly country: string | null }
+
+/** Un code pays du détail : deux lettres capitales, jamais une autre valeur. */
+function countryCodeOf(value: unknown): string | null {
+  return typeof value === "string" && /^[A-Z]{2}$/.test(value) ? value : null
+}
 
 export function journalDetailOf(entry: Pick<JournalEntry, "action" | "details">): JournalDetail | null {
   const details = entry.details
@@ -119,6 +129,15 @@ export function journalDetailOf(entry: Pick<JournalEntry, "action" | "details">)
       const from = roleOf(details.from)
       const to = roleOf(details.to)
       return from !== null && to !== null ? { kind: "role", from, to } : null
+    }
+    case "diaspora.country_set": {
+      const country = countryCodeOf(details.country)
+      return country !== null && typeof details.open === "boolean" ? { kind: "country", country, open: details.open, relaysAttested: details.relayAssociationsAttested === true } : null
+    }
+    case "moderation.team_country_set": {
+      if (details.country === null) return { kind: "teamCountry", country: null }
+      const country = countryCodeOf(details.country)
+      return country === null ? null : { kind: "teamCountry", country }
     }
     default:
       return null

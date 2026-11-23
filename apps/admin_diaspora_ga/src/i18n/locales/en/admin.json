@@ -66,7 +66,8 @@
       "rules": "Rules",
       "journal": "Journal",
       "institutions": "Institutions and official pages",
-      "founders": "Founders"
+      "founders": "Founders",
+      "countries": "Open countries"
     }
   },
   "dashboard": {
@@ -85,7 +86,9 @@
       "appeals": "Appeals",
       "appealsHint": "Appeals raised to the network, to review with a reason.",
       "institutions": "Institutions and official pages",
-      "institutionsHint": "Create an official page, designate its signatory, put it to sleep."
+      "institutionsHint": "Create an official page, designate its signatory, put it to sleep.",
+      "countries": "Open countries",
+      "countriesHint": "A country opens when its moderation team has an active moderator."
     },
     "decisionsTitle": "Latest decisions",
     "decisionsEmpty": "No decision in the journal yet.",
@@ -342,7 +345,7 @@
   "team": {
     "title": "Team and leads",
     "lead": "The network's leads, then the teams handling the diaspora.ga moderation queue. Every appointment, addition and removal carries a reason and is written to the decision log.",
-    "countryNote": "The engine does not yet attach a team to a country: a team name may say so, it defines no remit.",
+    "countryNote": "A team’s country opens the door to that country (“Open countries” section); it does not narrow the queue yet: reports are still routed by content type.",
     "scopeAll": "All content types",
     "scopeOne": "Content type handled: {{surface}}",
     "picker": "Team to compose",
@@ -371,7 +374,18 @@
     "created": "Team “{{name}}” created.",
     "teamsTitle": "Moderation teams",
     "nameLength": "The team name must be between {{nameMin}} and {{nameMax}} characters.",
-    "failed": "The team action did not succeed."
+    "failed": "The team action did not succeed.",
+    "noCountry": "No country",
+    "country": "Team country",
+    "countryNone": "No country",
+    "countryTitle": "Country of the team {{name}}",
+    "countrySave": "Save the country",
+    "countryUnchanged": "This is already the team’s country: nothing to save.",
+    "countrySet": "The team {{name}} now carries the country {{country}}.",
+    "countryRemoved": "The team {{name}} no longer carries a country.",
+    "countryChange": "Change the country",
+    "countryChangeFor": "Change the country of the team {{name}}",
+    "countryBody": "A team’s country opens the door to that country: a country opens when a team of that country has an active moderator. The change is justified and written to the decision journal."
   },
   "responsibles": {
     "title": "Network leads",
@@ -724,7 +738,9 @@
       "contentReview": "Content reviewed",
       "appealFile": "Appeal filed",
       "claimDecide": "Page claim decided",
-      "other": "Other decision ({{code}})"
+      "other": "Other decision ({{code}})",
+      "countrySet": "Country opened or closed",
+      "teamCountrySet": "Team country set"
     },
     "capacity": {
       "platformAdmin": "Platform administration",
@@ -746,7 +762,12 @@
       "teamMemberRemoved": "Member removed from the team",
       "sleepUntil": "Asleep until {{date}}",
       "role": "From “{{from}}” to “{{to}}”",
-      "roleMember": "Member"
+      "roleMember": "Member",
+      "countryOpened": "{{country}} opened",
+      "countryClosed": "{{country}} closed",
+      "relaysAttested": "Relay associations attested by the administration",
+      "teamCountry": "Team country: {{country}}",
+      "teamCountryRemoved": "Team country removed"
     }
   },
   "picker": {
@@ -871,6 +892,51 @@
       "alreadyAdmitted": "This person is already in the founding cohort.",
       "cohortFull": "The cohort is full ({{limit}} admissions): withdraw an admission to grant another one.",
       "notAdmitted": "This person no longer has a founding admission in force: reload the cohort."
+    }
+  },
+  "countries": {
+    "title": "Open countries",
+    "lead": "The network’s countries: those that are open, those a moderation team carries and those with a hub. A country opens when a team of that country has at least {{moderators}} active moderator, an active member of the network, which the engine checks, and when the administration attests {{relays}} committed relay associations. Closing is always possible. Every action is justified and written to the decision journal.",
+    "routingNote": "A team’s country is set in “Team and responsibles”. It does not delimit any competence yet: reports are still routed by content type, and a second country first needs routing by country.",
+    "emptyTitle": "No country to set",
+    "emptyBody": "No country is open, carried by a team or has a hub. First give a country to a moderation team.",
+    "teamLink": "Go to Team and responsibles",
+    "open": "Open",
+    "closed": "Closed",
+    "anomaly": "Open with no active moderator in a team of this country: appoint one, or close the country.",
+    "teams": "Country teams",
+    "noTeam": "No team carries this country",
+    "teamWithScope": "{{name}} ({{surface}})",
+    "moderators": "Active moderators",
+    "moderatorsCount_one": "{{shown}} active moderator",
+    "moderatorsCount_other": "{{shown}} active moderators",
+    "countedOn": "Counted on {{date}}.",
+    "notCounted": "Hub not counted yet: no number is shown.",
+    "openAction": "Open the country",
+    "openFor": "Open the country {{country}}",
+    "closeAction": "Close the country",
+    "closeFor": "Close the country {{country}}",
+    "openTitle": "Open {{country}}",
+    "openBody": "Members who live in this country will be able to post in its hub. The engine checks the moderator; relay associations are attested here.",
+    "moderatorOk_one": "{{count}} active moderator in a team of the country (at least {{required}} required): checked by the engine.",
+    "moderatorOk_other": "{{count}} active moderators in a team of the country (at least {{required}} required): checked by the engine.",
+    "moderatorMissing": "No active moderator in a team of this country: at least {{required}} is required.",
+    "relaysToAttest": "{{relays}} committed relay associations: nothing records them in the app, the administration attests them.",
+    "attestation": "I attest that {{relays}} relay associations have committed to relay the opening of {{country}}.",
+    "attestationRequired": "The relay associations attestation is required to open the country.",
+    "cannotOpen": "This country cannot open yet: give it to a moderation team and appoint an active moderator there.",
+    "openConfirm": "Open the country",
+    "opened": "{{country}} is open.",
+    "unchangedOpen": "Nothing changed: {{country}} was already open.",
+    "closeTitle": "Close {{country}}",
+    "closeBody": "Members still read this hub; posting in the hub waits for a new opening. Nothing is erased. Closing is justified and written to the decision journal.",
+    "closeConfirm": "Close the country",
+    "closedDone": "{{country}} is closed.",
+    "unchangedClosed": "Nothing changed: {{country}} was already closed.",
+    "failed": "The action did not go through. Reload the list, then try again.",
+    "refusal": {
+      "moderatorMissing": "The engine refuses the opening: no team of this country has {{required}} active moderator who is an active member of the network. Appoint one in “Team and responsibles”.",
+      "relayMissing": "The engine refuses the opening: the attestation of the {{required}} relay associations is missing."
     }
   }
 }

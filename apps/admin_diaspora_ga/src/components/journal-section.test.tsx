@@ -138,6 +138,23 @@ describe("section Journal — lecture", () => {
     expect(screen.getByText(n(t("journal.detail.role", { from: t("journal.detail.roleMember"), to: t("responsibles.role.network_moderator") })))).toBeInTheDocument()
   })
 
+  it("un pays ouvert, relais attestés ; le pays posé sur une équipe, ou retiré (CH-815 A7)", () => {
+    mocks.windows.set(
+      "*:",
+      done([
+        entry({ auditId: "c-1", action: "diaspora.country_set", details: { reason: "Équipe en place.", country: "BE", open: true, activeModerators: 1, relayAssociationsAttested: true } }),
+        entry({ auditId: "c-2", action: "moderation.team_country_set", details: { reason: "Équipe de Belgique.", country: "BE", previousCountry: null } }),
+        entry({ auditId: "c-3", action: "moderation.team_country_set", details: { reason: "Équipe transversale.", country: null, previousCountry: "BE" } }),
+      ]),
+    )
+    mount()
+    const [opened, set, removed] = screen.getAllByRole("listitem").map((item) => within(item))
+    expect(opened!.getByText(t("journal.action.countrySet"))).toBeInTheDocument()
+    expect(opened!.getByText(`${t("journal.detail.countryOpened", { country: "Belgique" })} · ${t("journal.detail.relaysAttested")}`)).toBeInTheDocument()
+    expect(set!.getByText(n(t("journal.detail.teamCountry", { country: "Belgique" })))).toBeInTheDocument()
+    expect(removed!.getByText(t("journal.detail.teamCountryRemoved"))).toBeInTheDocument()
+  })
+
   it("journal vide et lu jusqu'au bout : il le dit", () => {
     mocks.windows.set("*:", done([]))
     mount()
@@ -220,6 +237,8 @@ describe("libellés du journal", () => {
       "page.wake",
       "diaspora.founder_admit",
       "diaspora.founder_withdraw",
+      "diaspora.country_set",
+      "moderation.team_country_set",
     ]
     for (const action of produced) expect(Object.keys(JOURNAL_ACTION_LABEL_KEYS), action).toContain(action)
   })

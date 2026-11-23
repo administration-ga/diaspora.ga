@@ -66,7 +66,8 @@
       "rules": "Règles",
       "journal": "Journal",
       "institutions": "Institutions et pages officielles",
-      "founders": "Fondateurs"
+      "founders": "Fondateurs",
+      "countries": "Pays ouverts"
     }
   },
   "dashboard": {
@@ -85,7 +86,9 @@
       "appeals": "Recours",
       "appealsHint": "Les recours montés au réseau, à examiner motif à l’appui.",
       "institutions": "Institutions et pages officielles",
-      "institutionsHint": "Créer une page officielle, désigner son signataire, la mettre en sommeil."
+      "institutionsHint": "Créer une page officielle, désigner son signataire, la mettre en sommeil.",
+      "countries": "Pays ouverts",
+      "countriesHint": "Un pays s’ouvre quand son équipe de modération a un modérateur actif."
     },
     "decisionsTitle": "Dernières décisions",
     "decisionsEmpty": "Aucune décision au journal pour l’instant.",
@@ -342,7 +345,7 @@
   "team": {
     "title": "Équipe et responsables",
     "lead": "Les responsables du réseau, puis les équipes qui traitent la file de modération de diaspora.ga. Chaque nomination, chaque ajout et chaque retrait est motivé et inscrit au journal des décisions.",
-    "countryNote": "Le moteur ne rattache pas encore une équipe à un pays : le nom d’une équipe peut l’indiquer, il ne délimite aucune compétence.",
+    "countryNote": "Le pays d’une équipe ouvre la porte de ce pays (section « Pays ouverts ») ; il ne délimite pas encore la file : les signalements restent routés par nature de contenu.",
     "scopeAll": "Toutes les natures de contenu",
     "scopeOne": "Nature traitée : {{surface}}",
     "picker": "Équipe à composer",
@@ -371,7 +374,18 @@
     "created": "Équipe « {{name}} » créée.",
     "teamsTitle": "Équipes de modération",
     "nameLength": "Le nom de l’équipe doit compter entre {{nameMin}} et {{nameMax}} caractères.",
-    "failed": "Le geste sur l’équipe n’a pas abouti."
+    "failed": "Le geste sur l’équipe n’a pas abouti.",
+    "noCountry": "Sans pays",
+    "country": "Pays de l’équipe",
+    "countryNone": "Aucun pays",
+    "countryTitle": "Pays de l’équipe {{name}}",
+    "countrySave": "Enregistrer le pays",
+    "countryUnchanged": "Ce pays est déjà celui de l’équipe : rien n’est à enregistrer.",
+    "countrySet": "L’équipe {{name}} porte désormais le pays {{country}}.",
+    "countryRemoved": "L’équipe {{name}} ne porte plus de pays.",
+    "countryChange": "Changer le pays",
+    "countryChangeFor": "Changer le pays de l’équipe {{name}}",
+    "countryBody": "Le pays d’une équipe ouvre la porte de ce pays : un pays s’ouvre quand une équipe de ce pays compte un modérateur actif. Le changement est motivé et inscrit au journal des décisions."
   },
   "responsibles": {
     "title": "Responsables du réseau",
@@ -724,7 +738,9 @@
       "contentReview": "Contenu relu",
       "appealFile": "Recours déposé",
       "claimDecide": "Revendication de page tranchée",
-      "other": "Autre décision ({{code}})"
+      "other": "Autre décision ({{code}})",
+      "countrySet": "Pays ouvert ou fermé",
+      "teamCountrySet": "Pays d’une équipe réglé"
     },
     "capacity": {
       "platformAdmin": "Administration de la plateforme",
@@ -746,7 +762,12 @@
       "teamMemberRemoved": "Membre retiré de l’équipe",
       "sleepUntil": "En sommeil jusqu’au {{date}}",
       "role": "De « {{from}} » à « {{to}} »",
-      "roleMember": "Membre"
+      "roleMember": "Membre",
+      "countryOpened": "{{country}} ouvert",
+      "countryClosed": "{{country}} fermé",
+      "relaysAttested": "Associations relais attestées par l’administration",
+      "teamCountry": "Pays de l’équipe : {{country}}",
+      "teamCountryRemoved": "Pays de l’équipe retiré"
     }
   },
   "picker": {
@@ -871,6 +892,51 @@
       "alreadyAdmitted": "Cette personne fait déjà partie de la cohorte fondatrice.",
       "cohortFull": "La cohorte est complète ({{limit}} admissions) : retirez une admission pour en prononcer une autre.",
       "notAdmitted": "Cette personne n’a plus d’admission fondatrice en vigueur : relisez la cohorte."
+    }
+  },
+  "countries": {
+    "title": "Pays ouverts",
+    "lead": "Les pays du réseau : ceux qui sont ouverts, ceux qu’une équipe de modération porte et ceux qui ont un hub. Un pays s’ouvre quand une équipe de ce pays compte au moins {{moderators}} modérateur actif, membre actif du réseau, ce que le moteur vérifie, et quand l’administration atteste {{relays}} associations relais engagées. Fermer reste toujours possible. Chaque geste est motivé et inscrit au journal des décisions.",
+    "routingNote": "Le pays d’une équipe se règle dans « Équipe et responsables ». Il ne délimite encore aucune compétence : les signalements restent routés par nature de contenu, et un deuxième pays demande d’abord le routage par pays.",
+    "emptyTitle": "Aucun pays à régler",
+    "emptyBody": "Aucun pays n’est ouvert, porté par une équipe ni doté d’un hub. Donnez d’abord un pays à une équipe de modération.",
+    "teamLink": "Aller à Équipe et responsables",
+    "open": "Ouvert",
+    "closed": "Fermé",
+    "anomaly": "Ouvert sans modérateur actif dans une équipe de ce pays : nommez-en un, ou fermez le pays.",
+    "teams": "Équipes du pays",
+    "noTeam": "Aucune équipe ne porte ce pays",
+    "teamWithScope": "{{name}} ({{surface}})",
+    "moderators": "Modérateurs actifs",
+    "moderatorsCount_one": "{{shown}} modérateur actif",
+    "moderatorsCount_other": "{{shown}} modérateurs actifs",
+    "countedOn": "Comptés le {{date}}.",
+    "notCounted": "Hub pas encore compté : aucun chiffre n’est affiché.",
+    "openAction": "Ouvrir le pays",
+    "openFor": "Ouvrir le pays {{country}}",
+    "closeAction": "Fermer le pays",
+    "closeFor": "Fermer le pays {{country}}",
+    "openTitle": "Ouvrir {{country}}",
+    "openBody": "Les membres qui résident dans ce pays pourront publier dans son hub. Le moteur vérifie le modérateur ; les associations relais s’attestent ici.",
+    "moderatorOk_one": "{{count}} modérateur actif dans une équipe du pays (au moins {{required}} exigé) : vérifié par le moteur.",
+    "moderatorOk_other": "{{count}} modérateurs actifs dans une équipe du pays (au moins {{required}} exigé) : vérifié par le moteur.",
+    "moderatorMissing": "Aucun modérateur actif dans une équipe de ce pays : au moins {{required}} est exigé.",
+    "relaysToAttest": "{{relays}} associations relais engagées : rien ne les enregistre dans l’application, l’administration les atteste.",
+    "attestation": "J’atteste que {{relays}} associations relais se sont engagées à relayer l’ouverture de {{country}}.",
+    "attestationRequired": "L’attestation des associations relais est obligatoire pour ouvrir le pays.",
+    "cannotOpen": "Ce pays ne peut pas encore s’ouvrir : donnez-le à une équipe de modération et nommez-y un modérateur actif.",
+    "openConfirm": "Ouvrir le pays",
+    "opened": "{{country}} est ouvert.",
+    "unchangedOpen": "Rien n’a changé : {{country}} était déjà ouvert.",
+    "closeTitle": "Fermer {{country}}",
+    "closeBody": "Les membres lisent toujours ce hub ; la publication dans le hub attend une nouvelle ouverture. Rien n’est effacé. La fermeture est motivée et inscrite au journal des décisions.",
+    "closeConfirm": "Fermer le pays",
+    "closedDone": "{{country}} est fermé.",
+    "unchangedClosed": "Rien n’a changé : {{country}} était déjà fermé.",
+    "failed": "Le geste n’a pas abouti. Relisez la liste, puis réessayez.",
+    "refusal": {
+      "moderatorMissing": "Le moteur refuse l’ouverture : aucune équipe de ce pays ne compte {{required}} modérateur actif, membre actif du réseau. Nommez-en un dans « Équipe et responsables ».",
+      "relayMissing": "Le moteur refuse l’ouverture : l’attestation des {{required}} associations relais manque."
     }
   }
 }

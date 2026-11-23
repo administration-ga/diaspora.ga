@@ -129,6 +129,9 @@ describe("tableau de bord — lectures réelles seulement", () => {
     const founders = tiles.getByRole("link", { name: new RegExp(t("dashboard.tile.founders")) })
     expect(founders).toHaveAttribute("href", "/fondateurs")
     expect(founders).toHaveTextContent(n(t("dashboard.outOf", { value: "3", max: "30" })))
+    const countries = tiles.getByRole("link", { name: new RegExp(t("dashboard.tile.countries")) })
+    expect(countries).toHaveAttribute("href", "/pays")
+    expect(countries).toHaveTextContent("1")
     const teams = tiles.getByRole("link", { name: new RegExp(t("dashboard.tile.teams")) })
     expect(teams).toHaveAttribute("href", "/equipe")
     expect(teams).toHaveTextContent("1")
@@ -144,7 +147,7 @@ describe("tableau de bord — lectures réelles seulement", () => {
   it("aucun chiffre que les lectures ne donnent pas : les chiffres affichés sont ceux du moteur, et le reste est dit non compté", () => {
     mount()
     const tiles = screen.getByRole("region", { name: t("dashboard.overviewTitle") })
-    expect((tiles.textContent ?? "").match(/\d+/g)?.sort()).toEqual(["1", "2", "3", "30", "8"])
+    expect((tiles.textContent ?? "").match(/\d+/g)?.sort()).toEqual(["1", "1", "2", "3", "30", "8"])
     expect(screen.getByText(n(t("dashboard.notCounted")))).toBeInTheDocument()
   })
 
