@@ -57,13 +57,141 @@
       "trust": "Confiance"
     },
     "section": {
-      "dashboard": "Tableau de bord"
+      "dashboard": "Tableau de bord",
+      "modules": "Modules",
+      "menuPreview": "Aperçu du menu"
     }
   },
   "dashboard": {
     "greeting": "Bonjour {{name}}",
     "greetingWithoutName": "Bonjour",
     "lead": "Vous administrez le réseau {{network}}."
+  },
+  "modules": {
+    "title": "Modules",
+    "lead": "Les volets du menu des membres de diaspora.ga. Le réseau sert d’emblée l’essentiel : le fil, les membres, les pays, iCom et le compte. Chaque module s’ouvre ou se ferme ici, motif à l’appui, et la décision est inscrite au journal. Fermer un module ne supprime aucune donnée : le rouvrir les retrouve.",
+    "previewLink": "Voir l’aperçu du menu",
+    "loading": "Lecture des modules du réseau…",
+    "empty": "Ce réseau n’a aucun module à ouvrir.",
+    "listTitle": "Modules du réseau",
+    "state": {
+      "open": "Ouvert",
+      "closed": "Fermé",
+      "blocked": "Fermé : son module exigé est fermé"
+    },
+    "card": {
+      "requires": "Exige : {{module}}",
+      "adds": "Ce qu’il ajoute au menu des membres",
+      "lastDecision": "Dernière décision : {{date}}",
+      "lastDecisionBy": "Dernière décision : {{date}}, par {{name}}",
+      "viaConsole": "Décision prise depuis la console de la plateforme.",
+      "reason": "Motif : {{reason}}",
+      "reasonInJournal": "Le motif se lit au journal des décisions.",
+      "neverDecided": "Aucune décision : fermé depuis l’ouverture du réseau.",
+      "decidedButBlocked": "Ouverture décidée, sans effet tant que {{module}} reste fermé.",
+      "prerequisites": "Avant d’ouvrir, à relire",
+      "open": "Ouvrir le module",
+      "close": "Fermer le module",
+      "blockedByParent": "S’ouvre une fois {{module}} ouvert.",
+      "blockedByChildren": "Se ferme une fois fermés les modules qui vivent sur lui : {{modules}}."
+    },
+    "prerequisite": {
+      "parentOpen": "Le module exigé est ouvert : {{module}}.",
+      "team": "Une équipe de modération est en place pour chaque pays ouvert.",
+      "texts": "Les textes du module sont relus, en français et en anglais.",
+      "rehearsal": "La recette du module est faite en démonstration."
+    },
+    "code": {
+      "title": "Fermés par le code",
+      "lead": "Ces fonctions de l’application des membres ne sont pas des modules du réseau : elles s’ouvrent dans le code de diaspora.ga, jamais depuis cette application.",
+      "closedByCode": "Fermé par le code",
+      "openByCode": "Ouvert par le code",
+      "names": {
+        "calls": "Appels",
+        "live": "Direct",
+        "icomPro": "iCom Pro"
+      },
+      "descriptions": {
+        "calls": "Les appels audio et vidéo d’iCom, à deux et en groupe.",
+        "live": "Les directs et les conférences.",
+        "icomPro": "L’espace professionnel d’iCom : boutiques et mises en relation."
+      }
+    },
+    "dialog": {
+      "openTitle": "Ouvrir « {{module}} »",
+      "closeTitle": "Fermer « {{module}} »",
+      "openDescription": "Le module apparaîtra pour tous les membres du réseau, et le moteur servira ses pages.",
+      "closeDescription": "Le module disparaîtra pour tous les membres du réseau, et le moteur refusera ses pages. Aucune donnée n’est supprimée : le rouvrir les retrouve.",
+      "effectAdded": "Apparaît dans le menu des membres",
+      "effectRemoved": "Disparaît du menu des membres",
+      "effectNone": "Le menu des membres ne change pas : ses entrées sont déjà offertes par un autre module ouvert.",
+      "requires": "Module exigé : {{module}}, ouvert.",
+      "childrenClosed": "Les modules qui vivent sur lui sont fermés : {{modules}}.",
+      "reason": "Motif",
+      "reasonHint": "Entre {{min}} et {{max}} caractères. Le motif est inscrit au journal des décisions.",
+      "reasonLength": "Le motif doit compter entre {{min}} et {{max}} caractères.",
+      "confirmOpen": "Ouvrir le module",
+      "confirmClose": "Fermer le module",
+      "cancel": "Annuler",
+      "pending": "Enregistrement…",
+      "close": "Fermer la fenêtre",
+      "opened": "{{module}} : module ouvert.",
+      "closed": "{{module}} : module fermé.",
+      "unchanged": "{{module}} : rien n’a changé.",
+      "failed": "La décision n’a pas pu être enregistrée. Réessayez."
+    }
+  },
+  "menuChange": {
+    "placement": {
+      "bar": "barre de navigation",
+      "account": "menu du compte",
+      "create": "menu « Créer »"
+    },
+    "audience": {
+      "icom": "pour les membres qui écrivent dans iCom",
+      "engineNetwork": "pour les membres dont l’adhésion est active",
+      "pageTeam": "pour qui tient un rôle sur une page",
+      "associationMember": "pour qui adhère à une association",
+      "moderator": "pour les modérateurs",
+      "pilotReader": "pour les responsables qui lisent la mesure",
+      "publisher": "pour les membres qui publient",
+      "registrant": "pour les membres qui peuvent inscrire une page"
+    }
+  },
+  "preview": {
+    "title": "Aperçu du menu",
+    "lead": "Le menu exact des membres de diaspora.ga pour les modules cochés, calculé par la même règle que l’application des membres. Rien n’est enregistré : ouvrir un module se fait dans « Modules ».",
+    "modulesLink": "Aller aux modules",
+    "loading": "Lecture des modules du réseau…",
+    "modulesLegend": "Modules cochés",
+    "modulesHint": "Au départ, les modules ouverts aujourd’hui. Un module qui vit sur les pages exige les pages ; les pages se décochent une fois leurs modules décochés.",
+    "currentlyOpen": "Ouvert aujourd’hui",
+    "requiresParent": "Exige {{module}} coché.",
+    "hasChildren": "Décochez d’abord : {{modules}}.",
+    "reset": "Revenir à l’état actuel",
+    "personLegend": "Le membre",
+    "membership": {
+      "label": "Son adhésion",
+      "active": "Déclarée ou vérifiée",
+      "pending": "En attente",
+      "suspended": "Suspendue"
+    },
+    "holding": {
+      "holdsPageRole": "Tient un rôle sur une page",
+      "holdsAssociation": "Adhère à une association",
+      "moderator": "Modère le réseau ou un pays",
+      "pilotReader": "Lit la mesure du pilote"
+    },
+    "comparison": "Par rapport au menu d’aujourd’hui",
+    "noChange": "Aucun changement par rapport au menu d’aujourd’hui.",
+    "added": "Apparaît",
+    "removed": "Disparaît",
+    "menuTitle": "Le menu de ce membre",
+    "rail": "Rail du bureau",
+    "createMenu": "Créer",
+    "account": "Menu du compte",
+    "information": "Informations",
+    "phoneBar": "Barre du téléphone"
   },
   "notice": {
     "region": "Avis",

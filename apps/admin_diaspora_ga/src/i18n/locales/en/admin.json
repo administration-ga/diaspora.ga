@@ -57,13 +57,141 @@
       "trust": "Trust"
     },
     "section": {
-      "dashboard": "Dashboard"
+      "dashboard": "Dashboard",
+      "modules": "Modules",
+      "menuPreview": "Menu preview"
     }
   },
   "dashboard": {
     "greeting": "Hello {{name}}",
     "greetingWithoutName": "Hello",
     "lead": "You administer the {{network}} network."
+  },
+  "modules": {
+    "title": "Modules",
+    "lead": "The sections of the diaspora.ga members’ menu. The network serves the essentials from the start: the feed, members, countries, iCom and the account. Each module is opened or closed here, with a reason, and the decision is recorded in the log. Closing a module deletes no data: reopening it brings everything back.",
+    "previewLink": "See the menu preview",
+    "loading": "Reading the network modules…",
+    "empty": "This network has no module to open.",
+    "listTitle": "Network modules",
+    "state": {
+      "open": "Open",
+      "closed": "Closed",
+      "blocked": "Closed: its required module is closed"
+    },
+    "card": {
+      "requires": "Requires: {{module}}",
+      "adds": "What it adds to the members’ menu",
+      "lastDecision": "Last decision: {{date}}",
+      "lastDecisionBy": "Last decision: {{date}}, by {{name}}",
+      "viaConsole": "Decision taken from the platform console.",
+      "reason": "Reason: {{reason}}",
+      "reasonInJournal": "The reason can be read in the decision log.",
+      "neverDecided": "No decision: closed since the network opened.",
+      "decidedButBlocked": "Opening decided, with no effect while {{module}} stays closed.",
+      "prerequisites": "Before opening, review",
+      "open": "Open the module",
+      "close": "Close the module",
+      "blockedByParent": "Opens once {{module}} is open.",
+      "blockedByChildren": "Closes once the modules that live on it are closed: {{modules}}."
+    },
+    "prerequisite": {
+      "parentOpen": "The required module is open: {{module}}.",
+      "team": "A moderation team is in place for each open country.",
+      "texts": "The module’s texts have been reviewed, in French and in English.",
+      "rehearsal": "The module has been rehearsed in the demo."
+    },
+    "code": {
+      "title": "Closed in the code",
+      "lead": "These features of the members’ app are not network modules: they are opened in the diaspora.ga code, never from this app.",
+      "closedByCode": "Closed in the code",
+      "openByCode": "Open in the code",
+      "names": {
+        "calls": "Calls",
+        "live": "Live",
+        "icomPro": "iCom Pro"
+      },
+      "descriptions": {
+        "calls": "iCom audio and video calls, one-to-one and in groups.",
+        "live": "Live streams and conferences.",
+        "icomPro": "iCom’s professional space: shops and introductions."
+      }
+    },
+    "dialog": {
+      "openTitle": "Open “{{module}}”",
+      "closeTitle": "Close “{{module}}”",
+      "openDescription": "The module will appear for every member of the network, and the engine will serve its pages.",
+      "closeDescription": "The module will disappear for every member of the network, and the engine will refuse its pages. No data is deleted: reopening it brings everything back.",
+      "effectAdded": "Appears in the members’ menu",
+      "effectRemoved": "Disappears from the members’ menu",
+      "effectNone": "The members’ menu does not change: its entries are already offered by another open module.",
+      "requires": "Required module: {{module}}, open.",
+      "childrenClosed": "The modules that live on it are closed: {{modules}}.",
+      "reason": "Reason",
+      "reasonHint": "Between {{min}} and {{max}} characters. The reason is recorded in the decision log.",
+      "reasonLength": "The reason must be between {{min}} and {{max}} characters long.",
+      "confirmOpen": "Open the module",
+      "confirmClose": "Close the module",
+      "cancel": "Cancel",
+      "pending": "Saving…",
+      "close": "Close the window",
+      "opened": "{{module}}: module opened.",
+      "closed": "{{module}}: module closed.",
+      "unchanged": "{{module}}: nothing changed.",
+      "failed": "The decision could not be saved. Try again."
+    }
+  },
+  "menuChange": {
+    "placement": {
+      "bar": "navigation bar",
+      "account": "account menu",
+      "create": "“Create” menu"
+    },
+    "audience": {
+      "icom": "for members who write in iCom",
+      "engineNetwork": "for members whose membership is active",
+      "pageTeam": "for those who hold a role on a page",
+      "associationMember": "for those who belong to an association",
+      "moderator": "for moderators",
+      "pilotReader": "for leads who read the metrics",
+      "publisher": "for members who publish",
+      "registrant": "for members who can register a page"
+    }
+  },
+  "preview": {
+    "title": "Menu preview",
+    "lead": "The exact diaspora.ga members’ menu for the ticked modules, computed by the same rule as the members’ app. Nothing is saved: opening a module happens in “Modules”.",
+    "modulesLink": "Go to modules",
+    "loading": "Reading the network modules…",
+    "modulesLegend": "Ticked modules",
+    "modulesHint": "At first, the modules open today. A module that lives on pages requires pages; pages are unticked once their modules are unticked.",
+    "currentlyOpen": "Open today",
+    "requiresParent": "Requires {{module}} ticked.",
+    "hasChildren": "Untick first: {{modules}}.",
+    "reset": "Back to the current state",
+    "personLegend": "The member",
+    "membership": {
+      "label": "Their membership",
+      "active": "Declared or verified",
+      "pending": "Pending",
+      "suspended": "Suspended"
+    },
+    "holding": {
+      "holdsPageRole": "Holds a role on a page",
+      "holdsAssociation": "Belongs to an association",
+      "moderator": "Moderates the network or a country",
+      "pilotReader": "Reads the pilot metrics"
+    },
+    "comparison": "Compared with today’s menu",
+    "noChange": "No change compared with today’s menu.",
+    "added": "Appears",
+    "removed": "Disappears",
+    "menuTitle": "This member’s menu",
+    "rail": "Desktop rail",
+    "createMenu": "Create",
+    "account": "Account menu",
+    "information": "Information",
+    "phoneBar": "Phone bar"
   },
   "notice": {
     "region": "Notices",

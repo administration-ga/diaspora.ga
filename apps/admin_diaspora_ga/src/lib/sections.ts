@@ -1,4 +1,4 @@
-import { LayoutDashboard, type LucideIcon } from "lucide-react"
+import { Blocks, LayoutDashboard, MonitorSmartphone, type LucideIcon } from "lucide-react"
 
 import { RETURN_PARAM, routes } from "./routes"
 
@@ -33,6 +33,9 @@ export interface AdminSection {
 /** Les sections présentes dans le code, dans l'ordre du menu. */
 export const SECTIONS: readonly AdminSection[] = [
   { id: "dashboard", group: "pilotage", href: routes.dashboard(), labelKey: "nav.section.dashboard", icon: LayoutDashboard },
+  // Application des membres (lot A5) : les modules, puis l'aperçu du menu qu'ils composent.
+  { id: "modules", group: "membersApp", href: routes.modules(), labelKey: "nav.section.modules", icon: Blocks },
+  { id: "menuPreview", group: "membersApp", href: routes.menuPreview(), labelKey: "nav.section.menuPreview", icon: MonitorSmartphone },
 ]
 
 export interface SectionGroupEntries {
