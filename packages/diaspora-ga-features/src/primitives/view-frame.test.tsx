@@ -78,6 +78,13 @@ describe("ViewPane — le seul élément qui défile", () => {
     expect(ref.current).toHaveAttribute("id", "volet")
     expect(ref.current).toHaveClass("px-2", "overscroll-contain")
   })
+
+  it("ne joue aucune transition : sa bascule de taille à l'hydratation est d'un seul coup, même en mouvement réduit", () => {
+    // En mouvement réduit, la charte pose une transition de 0,01 ms sur toutes les propriétés de tout
+    // élément : sans `transition-none`, le volet passait par une image écrasée (constaté au navigateur).
+    render(<ViewPane label="Sommaire">corps</ViewPane>)
+    expect(screen.getByRole("region", { name: "Sommaire" })).toHaveClass("transition-none")
+  })
 })
 
 describe("la variante `tall` de la couche Tailwind", () => {

@@ -114,9 +114,11 @@ function InformationPanel(props: {
           </button>
         )
       }
-      // Un texte : hauteur fixe (les volets prennent ce qui reste), panneau élargi au bureau
-      // pour montrer sommaire et rubrique côte à côte.
-      className={cn(kind !== null && "h-[min(88dvh,780px)] md:h-[min(680px,88dvh)] md:w-[min(920px,calc(100vw-2rem))]")}
+      // Au téléphone, la même hauteur aux trois niveaux : la page flottante garde son cadre, « Retour »
+      // et la croix ne bougent pas d'un niveau à l'autre. Au bureau, l'index reste à sa taille ; un
+      // texte prend une hauteur fixe (les volets prennent ce qui reste) et un panneau élargi, pour
+      // montrer sommaire et rubrique côte à côte.
+      className={cn("h-[min(88dvh,780px)]", kind === null ? "md:h-auto" : "md:h-[min(680px,88dvh)] md:w-[min(920px,calc(100vw-2rem))]")}
       bodyClassName={cn("flex flex-col", kind !== null && "tall:overflow-hidden")}
       onOpenAutoFocus={(event) => {
         event.preventDefault()

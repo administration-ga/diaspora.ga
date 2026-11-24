@@ -52,6 +52,10 @@ export type ViewPaneProps = Omit<ComponentProps<"div">, "role" | "tabIndex" | "a
  * clavier (`tabIndex` 0 : les flèches le font défiler), marquée `data-view-pane` pour le relevé
  * du navigateur, défilement contenu (`overscroll-contain`), anneau de focus de la charte. Il ne
  * défile que cadre tenu (`tall:`) ; sous 600 px de haut, c'est un bloc ordinaire du document.
+ *
+ * Aucune transition (`transition-none`) : en mouvement réduit, la charte donne à tout élément une
+ * transition de 0,01 ms sur TOUTES ses propriétés ; un volet qui change de taille à l'hydratation
+ * (`flex`) passerait alors par une image écrasée, visible tant que le navigateur retient ses images.
  */
 export function ViewPane({ label, landmark = "region", className, children, ...rest }: ViewPaneProps) {
   return (
@@ -61,7 +65,7 @@ export function ViewPane({ label, landmark = "region", className, children, ...r
       aria-label={label}
       tabIndex={0}
       data-view-pane=""
-      className={cn("min-h-0 min-w-0 overscroll-contain rounded-xl focus-visible:shadow-focus tall:overflow-y-auto", className)}
+      className={cn("min-h-0 min-w-0 overscroll-contain rounded-xl transition-none focus-visible:shadow-focus tall:overflow-y-auto", className)}
     >
       {children}
     </div>
