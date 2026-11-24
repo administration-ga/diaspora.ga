@@ -1,7 +1,14 @@
 {
   "nav": {
     "account": {
-      "info": "Informations"
+      "info": "Informations",
+      "space": "Mon espace"
+    },
+    "information": {
+      "description": "Les textes du site, le contact et la charte graphique.",
+      "close": "Fermer les informations",
+      "back": "Retour",
+      "opensPage": "Ouvre sa page"
     }
   }
 }

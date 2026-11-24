@@ -51,7 +51,6 @@ import {
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
-  ChevronDownIcon,
   ChevronRightIcon,
   ChevronsUpDownIcon,
   LogOutIcon,
@@ -63,7 +62,7 @@ import {
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
-import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
+import { createContext, Suspense, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { createFormatOf, type CreateFormat } from "@/lib/create-menu"
@@ -73,6 +72,7 @@ import { featureOfPath } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
+import { InformationSheet } from "./information-sheet"
 import { MessagesUnreadReader } from "./messages-unread"
 import { NetworkStatusNotice } from "./network-status"
 import { useSignOutEverywhere } from "./sign-out-settings"
@@ -348,6 +348,16 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
   const openComposer = () => setComposerOpen(true)
 
+  // La page flottante « Informations » (une page = une vue) : ouverte depuis le menu ou la feuille du
+  // compte, sur l'adresse où elle l'a été. Suivre un lien qui mène ailleurs (un renvoi d'une rubrique)
+  // la referme d'elle-même : l'adresse a changé.
+  const [informationAt, setInformationAt] = useState<string | null>(null)
+  const informationReturn = useRef<HTMLElement | null>(null)
+  const openInformation = (returnFocus: HTMLElement | null) => {
+    informationReturn.current = returnFocus
+    setInformationAt(pathname)
+  }
+
   const startShare = (post: PostView) => {
     setShareTarget(post)
     setShareSession((session) => session + 1)
@@ -358,10 +368,27 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={rail} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
+          <DesktopRail
+            membership={membership}
+            primary={rail}
+            homeCountryCurrent={homeCountryCurrent}
+            account={account}
+            information={information}
+            create={create}
+            onPublish={openComposer}
+            onInformation={openInformation}
+          />
 
           <div className="min-w-0 flex-1">
-            <MobileHeader membership={membership} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
+            <MobileHeader
+              membership={membership}
+              homeCountryCurrent={homeCountryCurrent}
+              account={account}
+              information={information}
+              create={create}
+              onPublish={openComposer}
+              onInformation={openInformation}
+            />
             <main
               id="contenu"
               className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
@@ -421,6 +448,14 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
             share={shareTarget}
           />
         ) : null}
+        {information.length > 0 ? (
+          <InformationSheet
+            open={informationAt === pathname}
+            onOpenChange={(next) => setInformationAt(next ? pathname : null)}
+            entries={information}
+            returnFocus={() => informationReturn.current}
+          />
+        ) : null}
       </div>
     </PostShareProvider>
   )
@@ -470,6 +505,7 @@ function DesktopRail(props: {
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
   onPublish: () => void
+  onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   return (
@@ -489,7 +525,7 @@ function DesktopRail(props: {
       </nav>
       <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
       {props.create.length > 0 ? <CreateMenu formats={props.create} /> : null}
-      <AccountMenu membership={props.membership} entries={props.account} information={props.information} />
+      <AccountMenu membership={props.membership} entries={props.account} information={props.information} onInformation={props.onInformation} />
     </aside>
   )
 }
@@ -583,49 +619,27 @@ function MenuLink(props: { entry: NavEntry }) {
 }
 
 /**
- * « Informations » au bureau : UNE entrée du menu du compte, qui déplie en sous-menu les textes du
- * site, le contact et la charte (Flèche droite, Entrée ou survol l'ouvrent ; Flèche gauche ou Échap
- * le referment). Quand la page courante en relève, l'entrée le dit aussi, par la graisse.
+ * Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix).
+ * « Informations » y est UNE entrée, qui ouvre la page flottante (un dialogue) : le menu se ferme
+ * sans rendre le focus à l'avatar, la page flottante le prend sur son titre puis le lui rend.
  */
-function InformationSubmenu(props: { information: readonly NavEntry[] }) {
-  const { t } = useDiasporaGaT()
-  const Icon = MEMBER_INFORMATION_ICON
-  const current = props.information.some((entry) => entry.active)
-  return (
-    <DropdownMenu.Sub>
-      <DropdownMenu.SubTrigger
-        className={cn(
-          "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted data-[state=open]:bg-muted",
-          current ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
-        )}
-      >
-        <Icon className="size-4 shrink-0" aria-hidden />
-        <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
-        <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
-      </DropdownMenu.SubTrigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.SubContent
-          sideOffset={6}
-          collisionPadding={12}
-          className="z-60 max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(16rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
-        >
-          {props.information.map((entry) => (
-            <MenuLink key={entry.id} entry={entry} />
-          ))}
-        </DropdownMenu.SubContent>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Sub>
-  )
-}
-
-/** Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix). */
-function AccountMenu(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[] }) {
+function AccountMenu(props: {
+  membership: MembershipView
+  entries: readonly NavEntry[]
+  information: readonly NavEntry[]
+  onInformation: (returnFocus: HTMLElement | null) => void
+}) {
   const { t } = useDiasporaGaT()
   const exit = useAccountSignOut()
   const { membership } = props
+  const trigger = useRef<HTMLButtonElement>(null)
+  const handingOff = useRef(false)
+  const InformationIcon = MEMBER_INFORMATION_ICON
+  const informationCurrent = props.information.some((entry) => entry.active)
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
+        ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
         className="mt-auto flex w-full min-w-0 shrink-0 items-center gap-3 rounded-xl bg-card p-3 text-left text-card-foreground shadow-card transition-colors hover:bg-muted focus-visible:shadow-focus data-[state=open]:bg-muted"
       >
@@ -643,6 +657,12 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
           sideOffset={8}
           collisionPadding={12}
           aria-busy={exit.busy}
+          onCloseAutoFocus={(event) => {
+            // Passage de focus : « Informations » choisie, la page flottante qui s'ouvre le prend.
+            if (!handingOff.current) return
+            handingOff.current = false
+            event.preventDefault()
+          }}
           className="z-60 max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(16rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
         >
           <DropdownMenu.Label className="px-3 py-2">
@@ -654,8 +674,25 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
             <MenuLink key={entry.id} entry={entry} />
           ))}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
-          {/* Les textes du site, le contact et la charte : une seule entrée, qui se déplie. */}
-          {props.information.length > 0 ? <InformationSubmenu information={props.information} /> : null}
+          {/* Les textes du site, le contact et la charte : une seule entrée, qui ouvre la page flottante. */}
+          {props.information.length > 0 ? (
+            <DropdownMenu.Item
+              aria-haspopup="dialog"
+              onSelect={() => {
+                handingOff.current = true
+                props.onInformation(trigger.current)
+              }}
+              className={cn(
+                "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted",
+                // La page courante en relève : l'entrée le dit aussi, par la graisse.
+                informationCurrent ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
+              )}
+            >
+              <InformationIcon className="size-4 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
+              <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            </DropdownMenu.Item>
+          ) : null}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
           {/* L'action neutre de sortie : le menu reste ouvert pendant qu'elle se fait. */}
           <DropdownMenu.Item
@@ -686,6 +723,7 @@ function MobileHeader(props: {
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
   onPublish: () => void
+  onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   const demo = useDataSource().kind === "demo"
@@ -707,7 +745,7 @@ function MobileHeader(props: {
         <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
-        <AccountSheet membership={props.membership} entries={props.account} information={props.information} create={props.create} />
+        <AccountSheet membership={props.membership} entries={props.account} information={props.information} create={props.create} onInformation={props.onInformation} />
       </div>
     </header>
   )
@@ -734,49 +772,6 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
     </li>
   )
 }
-
-/**
- * « Informations » au téléphone : UNE entrée de la feuille du compte, un volet replié qui déplie les
- * textes du site, le contact et la charte. Il s'ouvre d'office quand la page courante en relève ;
- * il se replie à chaque réouverture de la feuille (le contenu de la feuille est remonté).
- */
-function InformationDisclosure(props: { information: readonly NavEntry[]; onFollow: () => void }) {
-  const { t } = useDiasporaGaT()
-  const triggerId = useId()
-  const listId = useId()
-  const current = props.information.some((entry) => entry.active)
-  const [expanded, setExpanded] = useState(current)
-  const Icon = MEMBER_INFORMATION_ICON
-  return (
-    <nav aria-labelledby={triggerId} className="mt-3 border-t border-border pt-3">
-      <button
-        id={triggerId}
-        type="button"
-        aria-expanded={expanded}
-        aria-controls={listId}
-        onClick={() => setExpanded((open) => !open)}
-        className={cn(
-          "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-muted focus-visible:shadow-focus",
-          current ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
-        )}
-      >
-        <Icon className="size-5 shrink-0" aria-hidden />
-        <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
-        <ChevronDownIcon
-          aria-hidden
-          className={cn("size-5 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", expanded ? "rotate-180" : null)}
-        />
-      </button>
-      {/* `hidden` ET la classe : `flex` ne doit jamais réafficher la liste repliée. */}
-      <ul id={listId} hidden={!expanded} className={cn("ml-5 flex-col gap-0.5 border-l border-border pl-2", expanded ? "flex" : "hidden")}>
-        {props.information.map((entry) => (
-          <SheetLink key={entry.id} entry={entry} onFollow={props.onFollow} />
-        ))}
-      </ul>
-    </nav>
-  )
-}
-
 
 /**
  * « Créer → Une conférence » (CH-817) : la même demande que « Créer → Conférence » du moteur
@@ -877,23 +872,49 @@ function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) 
   )
 }
 
-/** Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar). */
-function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[]; create: readonly CreateFormat[] }) {
+/**
+ * Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar).
+ * « Informations » y est une ligne qui ferme la feuille du compte et ouvre la page flottante : le
+ * focus passe de l'une à l'autre sans revenir à l'avatar, qui le retrouve à la fermeture.
+ */
+function AccountSheet(props: {
+  membership: MembershipView
+  entries: readonly NavEntry[]
+  information: readonly NavEntry[]
+  create: readonly CreateFormat[]
+  onInformation: (returnFocus: HTMLElement | null) => void
+}) {
   const { t } = useDiasporaGaT()
   const [open, setOpen] = useState(false)
   const createId = useId()
   const exit = useAccountSignOut()
   const { membership } = props
+  const trigger = useRef<HTMLButtonElement>(null)
+  const handingOff = useRef(false)
   const close = () => setOpen(false)
+  const InformationIcon = MEMBER_INFORMATION_ICON
+  const informationCurrent = props.information.some((entry) => entry.active)
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
+        ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:shadow-focus"
       >
         <Avatar id={membership.personId} name={membership.displayName} size="sm" />
       </SheetTrigger>
-      <SheetContent title={t("nav.account.title")} description={t("nav.account.description")} hideDescription closeLabel={t("nav.account.close")}>
+      <SheetContent
+        title={t("nav.account.title")}
+        description={t("nav.account.description")}
+        hideDescription
+        closeLabel={t("nav.account.close")}
+        onCloseAutoFocus={(event) => {
+          // Passage de focus : « Informations » choisie, la page flottante qui s'ouvre le prend.
+          if (!handingOff.current) return
+          handingOff.current = false
+          event.preventDefault()
+        }}
+      >
         <div className="flex min-w-0 items-center gap-3">
           <Avatar id={membership.personId} name={membership.displayName} />
           <div className="min-w-0 flex-1">
@@ -925,8 +946,28 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
             </ul>
           </nav>
         ) : null}
-        {/* Les textes du site, le contact et la charte : un seul volet, replié. */}
-        {props.information.length > 0 ? <InformationDisclosure information={props.information} onFollow={close} /> : null}
+        {/* Les textes du site, le contact et la charte : une ligne, qui ouvre la page flottante. */}
+        {props.information.length > 0 ? (
+          <div className="mt-3 border-t border-border pt-3">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => {
+                handingOff.current = true
+                close()
+                props.onInformation(trigger.current)
+              }}
+              className={cn(
+                "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-muted focus-visible:shadow-focus",
+                informationCurrent ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
+              )}
+            >
+              <InformationIcon className="size-5 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
+              <ChevronRightIcon aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+            </button>
+          </div>
+        ) : null}
         {/* La sortie, en bouton neutre ; la feuille reste ouverte pendant qu'elle se fait. */}
         <div aria-busy={exit.busy} className="mt-3 border-t border-border pt-4">
           <Button type="button" variant="outline" disabled={exit.busy} onClick={exit.run} className="w-full">

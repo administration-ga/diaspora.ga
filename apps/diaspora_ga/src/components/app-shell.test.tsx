@@ -229,7 +229,12 @@ function withHoldings(source: DiasporaGaDataSource, holdings: Holdings): Diaspor
   }
 }
 
-function renderShell(
+function renderShell(options: Parameters<typeof shellTree>[0] = {}) {
+  return render(shellTree(options))
+}
+
+/** L'arbre de la coque pour ces options : `renderShell` le rend ; un test le re-rend pour changer d'adresse. */
+function shellTree(
   options: {
     pathname?: string
     membership?: MembershipView
@@ -253,7 +258,7 @@ function renderShell(
   const responsible = options.responsible ? withResponsibleAccess(demo) : demo
   const held = { ...(options.holdings ? withHoldings(responsible, options.holdings) : responsible), ...options.overrides }
   const source = options.features === undefined ? held : gateSource(held, options.features === "loading" ? [] : options.features, options.features !== "loading")
-  return render(
+  return (
     <I18nProvider locale={options.locale ?? "fr"}>
       <DataSourceProvider source={{ ...source, actions: { ...source.actions, ...options.actions } }}>
         <RoutingProvider routes={featureRoutes} Link={Link}>
@@ -262,7 +267,7 @@ function renderShell(
           </AppShell>
         </RoutingProvider>
       </DataSourceProvider>
-    </I18nProvider>,
+    </I18nProvider>
   )
 }
 
@@ -755,7 +760,7 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ["Contact", "/contact"],
     ["Charte graphique", "/charte"],
   ]
-  /** Le groupe des textes du site, replié en UNE entrée : sous-menu au bureau, volet au téléphone. */
+  /** Le groupe des textes du site, en UNE entrée qui ouvre la page flottante (un dialogue), au bureau comme au téléphone. */
   const INFORMATION_LABEL = "Informations"
   const SIGN_OUT = "Se déconnecter partout"
 
@@ -768,9 +773,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
 
     const menu = await screen.findByRole("menu")
     const items = within(menu).getAllByRole("menuitem")
-    // Le compte, puis UNE entrée « Informations » (un sous-menu, sans adresse), puis la sortie (une action, pas un lien).
+    // Le compte, puis UNE entrée « Informations » (elle ouvre la page flottante, sans adresse), puis la sortie (une action, pas un lien).
     expect(items.map((item) => [item.textContent, item.getAttribute("href")])).toEqual([...ACCOUNT, [INFORMATION_LABEL, null], [SIGN_OUT, null]])
-    // Les textes du site n'encombrent plus le menu : ils attendent dans le sous-menu.
+    // Les textes du site n'encombrent plus le menu : ils attendent dans la page flottante.
     for (const [label] of INFORMATION) expect(screen.queryByRole("menuitem", { name: label })).toBeNull()
     expect(items.filter((item) => item.getAttribute("aria-current") === "page").map((item) => item.textContent)).toEqual(["Réglages"])
     expect(items[0]).toHaveFocus()
@@ -778,24 +783,42 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     expect(items[1]).toHaveFocus()
     await user.keyboard("{End}")
     expect(items[items.length - 1]).toHaveFocus()
-
-    // Flèche haut : « Informations » ; Flèche droite ouvre le sous-menu, le focus sur le premier texte.
-    await user.keyboard("{ArrowUp}")
-    const information = within(menu).getByRole("menuitem", { name: INFORMATION_LABEL })
-    expect(information).toHaveFocus()
-    expect(information).toHaveAttribute("aria-haspopup", "menu")
-    await user.keyboard("{ArrowRight}")
-    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
-    expect(menuItemsOf(submenu)).toEqual(INFORMATION)
-    await waitFor(() => expect(within(submenu).getAllByRole("menuitem")[0]).toHaveFocus())
-    // Flèche gauche le referme et rend le focus à l'entrée.
-    await user.keyboard("{ArrowLeft}")
-    await waitFor(() => expect(screen.queryByRole("menu", { name: INFORMATION_LABEL })).toBeNull())
-    expect(information).toHaveFocus()
-
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("menu")).toBeNull()
     expect(trigger).toHaveFocus()
+  })
+
+  it("au bureau, « Informations » au clavier : Entrée ouvre la page flottante, le focus passe du menu à son titre, puis revient à l'avatar", async () => {
+    const user = userEvent.setup()
+    renderShell({ pathname: "/parametres", network: true, holdings: HOLDS_ALL })
+    const trigger = accountTrigger("menu")
+    trigger.focus()
+    await user.keyboard("{Enter}")
+    const menu = await screen.findByRole("menu")
+    await user.keyboard("{End}{ArrowUp}")
+    const information = within(menu).getByRole("menuitem", { name: INFORMATION_LABEL })
+    expect(information).toHaveFocus()
+    expect(information).toHaveAttribute("aria-haspopup", "dialog")
+    // Le passage de focus ne fait pas étape sur l'avatar (un lecteur d'écran l'annoncerait).
+    const avatarFocused = vi.fn()
+    trigger.addEventListener("focus", avatarFocused)
+    await user.keyboard("{Enter}")
+
+    const sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    expect(screen.queryByRole("menu")).toBeNull()
+    const title = within(sheet).getByRole("heading", { level: 2, name: INFORMATION_LABEL })
+    await waitFor(() => expect(title).toHaveFocus())
+    // Le menu fermé ne reprend pas le focus au tour suivant (Radix le rendrait à l'avatar).
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    expect(title).toHaveFocus()
+    expect(avatarFocused).not.toHaveBeenCalled()
+    expect(linksOf(within(sheet).getByRole("navigation", { name: INFORMATION_LABEL }))).toEqual(INFORMATION)
+
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("dialog", { name: INFORMATION_LABEL })).toBeNull()
+    await waitFor(() => expect(trigger).toHaveFocus())
   })
 
   it("au téléphone : une feuille — Échap la ferme et rend le focus à l'avatar, suivre un lien la referme", async () => {
@@ -807,12 +830,12 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     await user.click(trigger)
     let sheet = await screen.findByRole("dialog", { name: "Mon compte" })
     expect(linksOf(within(sheet).getByRole("navigation", { name: "Mon compte" }))).toEqual(ACCOUNT)
-    // « Informations » : un seul volet, replié ; ses six liens n'apparaissent qu'une fois déplié.
-    const information = within(sheet).getByRole("navigation", { name: INFORMATION_LABEL })
-    const toggle = within(information).getByRole("button", { name: INFORMATION_LABEL })
-    expect(toggle).toHaveAttribute("aria-expanded", "false")
-    expect(within(information).queryAllByRole("link")).toEqual([])
-    // Hors de sa fermeture, la feuille n'a que deux boutons : le volet « Informations » et la sortie, neutre.
+    // « Informations » : une ligne, plus un volet replié ; elle ouvre une page flottante (un dialogue).
+    const information = within(sheet).getByRole("button", { name: INFORMATION_LABEL })
+    expect(information).not.toHaveAttribute("aria-expanded")
+    expect(information).toHaveAttribute("aria-haspopup", "dialog")
+    for (const [label] of INFORMATION) expect(within(sheet).queryByRole("link", { name: label })).toBeNull()
+    // Hors de sa fermeture, la feuille n'a que deux boutons : « Informations » et la sortie, neutre.
     expect(within(sheet).getAllByRole("button").map((button) => button.textContent || button.getAttribute("aria-label"))).toEqual([
       "Fermer le menu du compte",
       INFORMATION_LABEL,
@@ -820,22 +843,43 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     ])
     expect(currentLinks(sheet)).toEqual(["Profil"])
     expect(sheet).toHaveTextContent("@awa.demo")
-    await user.click(toggle)
-    expect(toggle).toHaveAttribute("aria-expanded", "true")
-    expect(linksOf(information)).toEqual(INFORMATION)
-    await user.click(toggle)
-    expect(within(information).queryAllByRole("link")).toEqual([])
-    await user.click(toggle)
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
     expect(trigger).toHaveFocus()
 
     await user.click(trigger)
     sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    // Déplié à la fermeture, le volet se replie à la réouverture de la feuille.
-    expect(within(sheet).getByRole("button", { name: INFORMATION_LABEL })).toHaveAttribute("aria-expanded", "false")
     await user.click(within(sheet).getByRole("link", { name: "Parrainer" }))
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+  })
+
+  it("au téléphone, « Informations » ferme la feuille du compte et ouvre la page flottante : le focus passe de l'une à l'autre, puis revient à l'avatar", async () => {
+    mocks.desktop = false
+    const user = userEvent.setup()
+    renderShell({ network: true })
+    const trigger = accountTrigger("dialog")
+    await user.click(trigger)
+    const account = await screen.findByRole("dialog", { name: "Mon compte" })
+    // Le passage de focus ne fait pas étape sur l'avatar (un lecteur d'écran l'annoncerait).
+    const avatarFocused = vi.fn()
+    trigger.addEventListener("focus", avatarFocused)
+    await user.click(within(account).getByRole("button", { name: INFORMATION_LABEL }))
+
+    expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+    const sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    const title = within(sheet).getByRole("heading", { level: 2, name: INFORMATION_LABEL })
+    await waitFor(() => expect(title).toHaveFocus())
+    // La feuille du compte, fermée, ne rend pas le focus à l'avatar au tour suivant.
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    expect(title).toHaveFocus()
+    expect(avatarFocused).not.toHaveBeenCalled()
+    expect(linksOf(within(sheet).getByRole("navigation", { name: INFORMATION_LABEL }))).toEqual(INFORMATION)
+
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("dialog")).toBeNull()
+    await waitFor(() => expect(trigger).toHaveFocus())
   })
 
   it("aucun lien d'avant n'est perdu : profil, réglages, relations et parrainage restent à deux gestes", async () => {
@@ -864,43 +908,54 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     renderShell({ pathname: "/services/offre-coiffure" })
 
     await user.click(accountTrigger("menu"))
-    const menu = await screen.findByRole("menu")
-    await user.click(within(menu).getByRole("menuitem", { name: INFORMATION_LABEL }))
-    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
-    expect(within(submenu).getByRole("menuitem", { name: label })).toHaveAttribute("href", href)
+    await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: INFORMATION_LABEL }))
+    let sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    expect(within(sheet).getByRole("link", { name: label })).toHaveAttribute("href", href)
     await user.keyboard("{Escape}")
-    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 
     mocks.desktop = false
     await user.click(accountTrigger("dialog"))
-    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    const information = within(sheet).getByRole("navigation", { name: INFORMATION_LABEL })
-    await user.click(within(information).getByRole("button", { name: INFORMATION_LABEL }))
-    const link = within(information).getByRole("link", { name: label })
+    await user.click(within(await screen.findByRole("dialog", { name: "Mon compte" })).getByRole("button", { name: INFORMATION_LABEL }))
+    sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    const link = within(sheet).getByRole("link", { name: label })
     expect(link).toHaveAttribute("href", href)
     await user.click(link)
-    expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
+    if (href === routes.charte()) {
+      // La charte : un lien ordinaire, qui quitte la feuille.
+      expect(screen.queryByRole("dialog")).toBeNull()
+    } else {
+      // Un texte : il s'ouvre dans la page flottante, sur son sommaire.
+      expect(within(screen.getByRole("dialog")).getByRole("navigation", { name: t("legal.summary") })).toBeInTheDocument()
+    }
   })
 
-  it("sur un texte du site, « Informations » le dit : la page courante dans le sous-menu, le volet du téléphone déjà déplié", async () => {
+  it("sur un texte du site, « Informations » le dit : la page courante marquée dans l'index de la page flottante, au bureau comme au téléphone", async () => {
     const user = userEvent.setup()
     renderShell({ pathname: "/confidentialite" })
 
     await user.click(accountTrigger("menu"))
-    const menu = await screen.findByRole("menu")
-    await user.click(within(menu).getByRole("menuitem", { name: INFORMATION_LABEL }))
-    const submenu = await screen.findByRole("menu", { name: INFORMATION_LABEL })
-    expect(within(submenu).getAllByRole("menuitem").filter((item) => item.getAttribute("aria-current") === "page").map((item) => item.textContent)).toEqual([
-      "Confidentialité",
-    ])
+    await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: INFORMATION_LABEL }))
+    let sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    expect(currentLinks(sheet)).toEqual(["Confidentialité"])
     await user.keyboard("{Escape}")
-    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 
     mocks.desktop = false
     await user.click(accountTrigger("dialog"))
-    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    expect(within(sheet).getByRole("button", { name: INFORMATION_LABEL })).toHaveAttribute("aria-expanded", "true")
+    await user.click(within(await screen.findByRole("dialog", { name: "Mon compte" })).getByRole("button", { name: INFORMATION_LABEL }))
+    sheet = await screen.findByRole("dialog", { name: INFORMATION_LABEL })
     expect(currentLinks(sheet)).toEqual(["Confidentialité"])
+  })
+
+  it("une adresse qui change (un renvoi suivi depuis une rubrique) referme la page flottante", async () => {
+    const user = userEvent.setup()
+    const view = renderShell({ pathname: "/fil" })
+    await user.click(accountTrigger("menu"))
+    await user.click(within(await screen.findByRole("menu")).getByRole("menuitem", { name: INFORMATION_LABEL }))
+    await screen.findByRole("dialog", { name: INFORMATION_LABEL })
+    view.rerender(shellTree({ pathname: routes.explore() }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
   })
 
   it("se déconnecter partout depuis le menu du bureau, au clavier : la porte unique est appelée une fois, le menu dit l'attente", async () => {
@@ -957,8 +1012,10 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     renderShell({ locale: "en" })
     await user.click(accountTrigger("menu", "Account menu (Awa Ogooué)"))
     const menu = await screen.findByRole("menu")
+    expect(within(menu).getByRole("menuitem", { name: "Sign out everywhere" })).not.toHaveAttribute("href")
     await user.click(within(menu).getByRole("menuitem", { name: "Information" }))
-    expect(menuItemsOf(await screen.findByRole("menu", { name: "Information" }))).toEqual([
+    const sheet = await screen.findByRole("dialog", { name: "Information" })
+    expect(linksOf(within(sheet).getByRole("navigation", { name: "Information" }))).toEqual([
       ["Legal notice", "/mentions-legales"],
       ["Privacy", "/confidentialite"],
       ["Terms of use", "/conditions-utilisation"],
@@ -966,7 +1023,7 @@ describe("coque — le menu du compte, sous l'avatar", () => {
       ["Contact", "/contact"],
       ["Design charter", "/charte"],
     ])
-    expect(within(menu).getByRole("menuitem", { name: "Sign out everywhere" })).not.toHaveAttribute("href")
+    expect(within(sheet).getByRole("button", { name: "Close information" })).toBeInTheDocument()
   })
 })
 
@@ -1305,23 +1362,24 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     await user.keyboard("{Escape}")
 
     // Le menu du compte, au bureau : profil, réglages, « Mon espace », mes données ; puis les
-    // informations, dans le sous-menu de leur entrée unique.
+    // informations, dans l'index de la page flottante qu'ouvre leur entrée unique.
     const accountMenu = await openAccountMenu()
     const account = menuItemsOf(accountMenu).filter(([, href]) => href !== null)
     expect(account).toEqual(expected.account.map(entryLink))
     await user.click(within(accountMenu).getByRole("menuitem", { name: "Informations" }))
-    expect(menuItemsOf(await screen.findByRole("menu", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
+    let information = await screen.findByRole("dialog", { name: "Informations" })
+    expect(linksOf(within(information).getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
     await user.keyboard("{Escape}")
-    await waitFor(() => expect(screen.queryByRole("menu")).toBeNull())
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
 
-    // La feuille du compte, au téléphone : les mêmes entrées, « Créer » et les informations.
+    // La feuille du compte, au téléphone : les mêmes entrées, « Créer », puis la même page flottante.
     await user.click(accountTrigger("dialog"))
     const sheet = within(await screen.findByRole("dialog", { name: "Mon compte" }))
     expect(linksOf(sheet.getByRole("navigation", { name: "Mon compte" }))).toEqual(expected.account.map(entryLink))
     expect(sheetCreateHrefs(sheet.getByRole("navigation", { name: "Créer" }))).toEqual(createHrefs(expected.create))
     expect(expected.create.some((entry) => entry.id === "live")).toBe(liveOpen)
-    const information = sheet.getByRole("navigation", { name: "Informations" })
-    await user.click(within(information).getByRole("button", { name: "Informations" }))
-    expect(linksOf(information)).toEqual(expected.information.map(entryLink))
+    await user.click(sheet.getByRole("button", { name: "Informations" }))
+    information = await screen.findByRole("dialog", { name: "Informations" })
+    expect(linksOf(within(information).getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
   })
 })
