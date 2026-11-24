@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { createAppI18n } from "@diaspora-ga/features/i18n"
-import { cleanup, render, screen, waitFor } from "@testing-library/react"
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { getFunctionName, type FunctionReference } from "convex/server"
 import { StrictMode } from "react"
@@ -183,5 +183,22 @@ describe("entrée d'admin.diaspora.ga — l'identité numérique seule", () => {
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(mocks.replace).not.toHaveBeenCalled()
     expect(window.sessionStorage.getItem(REQUESTED_SECTION_KEY)).toBe("/modules")
+  })
+})
+
+describe("entrée d'admin.diaspora.ga — la porte de diaspora.ga (24/11/2026)", () => {
+  it("la marque et l'accroche à gauche, la carte « Se connecter à l'administration » à droite, avec le seul bouton IDN", () => {
+    mount()
+    expect(screen.getByText("DIASPORA.GA")).toBeDefined()
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Administrer le réseau des Gabonais de l’étranger.")
+    const card = screen.getByRole("region", { name: "Se connecter à l’administration" })
+    expect(within(card).getAllByRole("button").map((button) => button.textContent)).toEqual(["Se connecter avec l’identité numérique"])
+    expect(screen.getByText("Chaque accès à l’administration est inscrit au journal.")).toBeDefined()
+  })
+
+  it("un refus d'IDN se dit DANS la carte, au-dessus du bouton", async () => {
+    mount("/entrer?error=access_denied")
+    const card = screen.getByRole("region", { name: "Se connecter à l’administration" })
+    expect(within(card).getByRole("alert")).toBeDefined()
   })
 })

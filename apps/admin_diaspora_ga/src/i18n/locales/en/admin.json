@@ -20,7 +20,11 @@
     "help": "Sign-in goes through your digital identity (IDN). No code by email or text message.",
     "unavailable": "Sign-in with the digital identity is not available at the moment.",
     "minimum": "Digital identity of level {{level}} or higher. Signing in alone grants no administration right.",
-    "configurationFailed": "The availability of sign-in cannot be checked."
+    "configurationFailed": "The availability of sign-in cannot be checked.",
+    "wordmark": "{{brand}}",
+    "tagline": "Administer the network of Gabonese abroad.",
+    "cardTitle": "Sign in to the administration",
+    "footnote": "Every access to the administration is recorded in the log."
   },
   "session": {
     "loading": "Checking the session…",

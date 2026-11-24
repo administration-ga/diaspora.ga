@@ -13,3 +13,6 @@
    classes. Chemins EXPLICITES par paquet (piège Tailwind 4 du moteur). */
 @source "../../../../packages/diaspora-ga-features/src";
 @source "../../../../../ANTSIA/packages/ui/src";
+/* La bascule clair/sombre du moteur, montée sur la page d'entrée (`components/sign-in-screen.tsx`) :
+   son dossier seul, pas tout le paquet des surfaces. */
+@source "../../../../../ANTSIA/packages/social-features/src/shell/appearance";

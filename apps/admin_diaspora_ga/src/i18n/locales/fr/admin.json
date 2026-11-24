@@ -20,7 +20,11 @@
     "help": "La connexion passe par votre identité numérique (IDN). Aucun code par courriel ni par SMS.",
     "unavailable": "La connexion par l’identité numérique n’est pas disponible pour le moment.",
     "minimum": "Identité numérique de niveau {{level}} au moins. Une connexion seule n’ouvre aucun droit d’administration.",
-    "configurationFailed": "La disponibilité de la connexion ne peut pas être vérifiée."
+    "configurationFailed": "La disponibilité de la connexion ne peut pas être vérifiée.",
+    "wordmark": "{{brand}}",
+    "tagline": "Administrer le réseau des Gabonais de l’étranger.",
+    "cardTitle": "Se connecter à l’administration",
+    "footnote": "Chaque accès à l’administration est inscrit au journal."
   },
   "session": {
     "loading": "Vérification de la session…",
