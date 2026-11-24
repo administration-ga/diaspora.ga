@@ -18,6 +18,7 @@ import {
   HandshakeIcon,
   HeartHandshakeIcon,
   HouseIcon,
+  InfoIcon,
   LockKeyholeIcon,
   MessageCircleIcon,
   PaletteIcon,
@@ -60,6 +61,12 @@ export const MEMBER_MENU_ICONS: Readonly<Record<MemberMenuEntryId, LucideIcon>> 
   contact: ContactRoundIcon,
   charte: PaletteIcon,
 }
+
+/**
+ * Le groupe « Informations » du menu du compte (les textes du site, le contact, la charte) tient
+ * en UNE entrée : un sous-menu au bureau, un volet replié dans la feuille du téléphone.
+ */
+export const MEMBER_INFORMATION_ICON: LucideIcon = InfoIcon
 
 export const MEMBER_CREATE_ICONS: Readonly<Record<MemberCreateFormatId, LucideIcon>> = {
   story: CameraIcon,

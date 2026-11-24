@@ -5,8 +5,9 @@
  * domaine (`LEGAL_TEXTS` de `@diaspora-ga/domain`).
  */
 import { isCommunityRule, type LegalTextKind } from "@diaspora-ga/domain"
+import type { MEMBER_INFORMATION_ENTRIES } from "@diaspora-ga/features/navigation"
 
-import { COMMUNITY_RULE_ANCHORS, routes } from "./routes"
+import { anchors, COMMUNITY_RULE_ANCHORS, routes } from "./routes"
 
 /** L'adresse de chaque texte, prise dans la table des routes. */
 export const LEGAL_TEXT_ROUTES: Readonly<Record<LegalTextKind, () => string>> = {
@@ -15,6 +16,45 @@ export const LEGAL_TEXT_ROUTES: Readonly<Record<LegalTextKind, () => string>> = 
   terms: routes.terms,
   community: routes.communityRules,
   contact: routes.contact,
+}
+
+/** Une entrée du groupe « Informations » du menu des membres. */
+export type InformationEntryId = (typeof MEMBER_INFORMATION_ENTRIES)[number]
+
+/**
+ * Le texte qu'ouvre chaque entrée « Informations » dans la page flottante de la coque ; `null` :
+ * l'entrée n'est pas un texte (la charte graphique, une page vivante), elle reste un lien
+ * ordinaire. Table exhaustive : une entrée ajoutée au menu doit y dire ce qu'elle ouvre.
+ */
+export const INFORMATION_ENTRY_TEXTS: Readonly<Record<InformationEntryId, LegalTextKind | null>> = {
+  legalNotice: "notice",
+  privacy: "privacy",
+  terms: "terms",
+  communityRules: "community",
+  contact: "contact",
+  charte: null,
+}
+
+/** L'identifiant du sommaire d'un texte (sans croisillon) : la cible de son ancre. */
+export function legalSummaryAnchor(): string {
+  return anchors.legalSummary.slice(1)
+}
+
+/**
+ * L'ancre d'une rubrique dans la page de son texte (`#…`), ou celle du sommaire (`null`) : les
+ * liens natifs du sommaire et du pagineur de la page publique ; le retour du navigateur remonte
+ * ainsi d'une rubrique.
+ */
+export function legalSectionFragment(kind: LegalTextKind, section: string | null): string {
+  return section === null ? anchors.legalSummary : `#${legalSectionAnchor(kind, section)}`
+}
+
+/**
+ * L'adresse complète d'une rubrique (la page du texte, à l'ancre de la rubrique), ou de son
+ * sommaire (`null`) : celle qu'ouvre un clic modifié (Cmd-clic) depuis la page flottante.
+ */
+export function legalSectionHref(kind: LegalTextKind, section: string | null): string {
+  return `${LEGAL_TEXT_ROUTES[kind]()}${legalSectionFragment(kind, section)}`
 }
 
 /** Le libellé court de chaque texte : le même partout où il est proposé. */

@@ -42,6 +42,6 @@ export {
   type MemberMenuRouteKey,
   type MemberMenuSituation,
 } from "./member-menu"
-export { MEMBER_CREATE_ICONS, MEMBER_MENU_ICONS } from "./icons"
+export { MEMBER_CREATE_ICONS, MEMBER_INFORMATION_ICON, MEMBER_MENU_ICONS } from "./icons"
 export { MEMBERS_APP_CODE_SWITCH_STATES, MEMBERS_APP_CODE_SWITCHES, type CodeSwitchState, type MembersAppCodeSwitch } from "./code-switches"
 export { MODERATION_DESK_TABS, moderationDeskPath, type ModerationDeskTab } from "./moderation-desk"

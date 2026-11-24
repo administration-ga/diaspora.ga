@@ -10,6 +10,12 @@
  * DIASPORA.GA.
  */
 
+/* « Une page = une vue » (décision du 24/11/2026) : le cadre d'une vue ne tient l'écran que dans
+   une fenêtre d'au moins 600 px de haut. Plus bas (téléphone couché, zoom à 200 %), il se relâche
+   et la page redevient un document qui défile. À l'écran seulement : l'impression suit le
+   document entier, aucun volet ne la coupe. */
+@custom-variant tall (@media screen and (min-height: 600px));
+
 @theme inline {
   --color-destructive-foreground: var(--destructive-foreground);
 

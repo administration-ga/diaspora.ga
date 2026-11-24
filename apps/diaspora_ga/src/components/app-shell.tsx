@@ -42,16 +42,27 @@ import {
   MEMBER_CREATE_ICONS,
   MEMBER_DATA_ENTRY,
   MEMBER_INFORMATION_ENTRIES,
+  MEMBER_INFORMATION_ICON,
   MEMBER_MENU_ICONS,
   memberMenu,
   type MemberMenuEntry,
   type MemberMenuEntryId,
 } from "@diaspora-ga/features/navigation"
-import { ArrowLeftIcon, ArrowRightIcon, ChevronsUpDownIcon, LogOutIcon, PenSquareIcon, PlusIcon, XIcon, type LucideIcon } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ChevronRightIcon,
+  ChevronsUpDownIcon,
+  LogOutIcon,
+  PenSquareIcon,
+  PlusIcon,
+  XIcon,
+  type LucideIcon,
+} from "lucide-react"
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
-import { createContext, Suspense, useContext, useEffect, useId, useState, type ReactNode } from "react"
+import { createContext, Suspense, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { createFormatOf, type CreateFormat } from "@/lib/create-menu"
@@ -61,6 +72,7 @@ import { featureOfPath } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
 
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
+import { InformationSheet } from "./information-sheet"
 import { MessagesUnreadReader } from "./messages-unread"
 import { NetworkStatusNotice } from "./network-status"
 import { useSignOutEverywhere } from "./sign-out-settings"
@@ -103,6 +115,17 @@ interface NavEntry {
 }
 
 type ShellT = ReturnType<typeof useDiasporaGaT>["t"]
+
+/**
+ * Les familles du menu du compte (une page = une vue, lot 1) : le compte (profil, réglages),
+ * « Mon espace » (`menu.personal` : entrées personnelles, puis celles des responsables), puis
+ * « Mes données ». Leur suite redonne `menu.account`, dans son ordre.
+ */
+interface AccountGroups {
+  readonly own: readonly NavEntry[]
+  readonly personal: readonly NavEntry[]
+  readonly data: readonly NavEntry[]
+}
 
 /**
  * Le nom accessible d'une entrée qui porte des non-lus : « Messages, 3 non lus », « … 99 non lus ou
@@ -328,13 +351,35 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // Sur le hub de son pays sans « Communautés » dans la barre, « Mon pays » est l'entrée courante (une entrée l'est toujours).
   const homeCountryCurrent = current === "communities" && !rail.some((entry) => entry.id === "communities")
   const account = menu.account.map((entry) => navEntryOf(entry, entryContext))
+  const personalIds = new Set<EntryId>(menu.personal.map((entry) => entry.id))
+  const accountGroups: AccountGroups = {
+    own: account.filter((entry) => !personalIds.has(entry.id) && entry.id !== MEMBER_DATA_ENTRY),
+    personal: account.filter((entry) => personalIds.has(entry.id)),
+    data: account.filter((entry) => entry.id === MEMBER_DATA_ENTRY),
+  }
   const information = menu.information.map((entry) => navEntryOf(entry, entryContext))
+  // La page personnelle courante (amendement 5 b) : la carte de l'avatar du rail la dit, puisque le
+  // rail n'a plus d'entrée pour elle.
+  const accountCurrent = [...account, ...information].find((entry) => entry.active) ?? null
   // Le menu « Créer » (modèle du réseau de l'administration) : les actus suivent iCom, l'inscription la règle partagée.
   const create = menu.create.map(createFormatOf)
   // La garde des adresses : un module fermé dit « introuvable », comme une page qui n'existe pas.
   const feature = featureOfPath(pathname)
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
   const openComposer = () => setComposerOpen(true)
+
+  // La page flottante « Informations » (une page = une vue) : ouverte depuis le menu ou la feuille du
+  // compte, sur l'adresse où elle l'a été. Suivre un lien qui mène ailleurs (un renvoi d'une rubrique)
+  // la referme d'elle-même : l'adresse a changé.
+  const [informationAt, setInformationAt] = useState<string | null>(null)
+  // Fermée par un changement d'adresse, elle l'est pour de bon : revenir à l'adresse d'avant (retour
+  // du navigateur) ne la rouvre pas. État ajusté pendant le rendu, sans effet.
+  if (informationAt !== null && informationAt !== pathname) setInformationAt(null)
+  const informationReturn = useRef<HTMLElement | null>(null)
+  const openInformation = (returnFocus: HTMLElement | null) => {
+    informationReturn.current = returnFocus
+    setInformationAt(pathname)
+  }
 
   const startShare = (post: PostView) => {
     setShareTarget(post)
@@ -346,10 +391,28 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
     <PostShareProvider value={canPublish ? startShare : null}>
       <div className="min-h-dvh">
         <div className="mx-auto flex w-full max-w-[1400px]">
-          <DesktopRail membership={membership} primary={rail} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
+          <DesktopRail
+            membership={membership}
+            primary={rail}
+            homeCountryCurrent={homeCountryCurrent}
+            account={accountGroups}
+            accountCurrent={accountCurrent}
+            information={information}
+            create={create}
+            onPublish={openComposer}
+            onInformation={openInformation}
+          />
 
           <div className="min-w-0 flex-1">
-            <MobileHeader membership={membership} homeCountryCurrent={homeCountryCurrent} account={account} information={information} create={create} onPublish={openComposer} />
+            <MobileHeader
+              membership={membership}
+              homeCountryCurrent={homeCountryCurrent}
+              account={accountGroups}
+              information={information}
+              create={create}
+              onPublish={openComposer}
+              onInformation={openInformation}
+            />
             <main
               id="contenu"
               className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
@@ -409,6 +472,14 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
             share={shareTarget}
           />
         ) : null}
+        {information.length > 0 ? (
+          <InformationSheet
+            open={informationAt === pathname}
+            onOpenChange={(next) => setInformationAt(next ? pathname : null)}
+            entries={information}
+            returnFocus={() => informationReturn.current}
+          />
+        ) : null}
       </div>
     </PostShareProvider>
   )
@@ -454,10 +525,12 @@ function DesktopRail(props: {
   membership: MembershipView
   primary: readonly NavEntry[]
   homeCountryCurrent: boolean
-  account: readonly NavEntry[]
+  account: AccountGroups
+  accountCurrent: NavEntry | null
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
   onPublish: () => void
+  onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   return (
@@ -477,7 +550,13 @@ function DesktopRail(props: {
       </nav>
       <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
       {props.create.length > 0 ? <CreateMenu formats={props.create} /> : null}
-      <AccountMenu membership={props.membership} entries={props.account} information={props.information} />
+      <AccountMenu
+        membership={props.membership}
+        groups={props.account}
+        current={props.accountCurrent}
+        information={props.information}
+        onInformation={props.onInformation}
+      />
     </aside>
   )
 }
@@ -548,6 +627,9 @@ function useAccountSignOut() {
   return { busy: exit.busy, run: () => void exit.signOutEverywhere(), label: t(exit.busy ? "settings.signingOut" : "settings.signOutEverywhere") }
 }
 
+/** Le titre d'une famille du menu ou de la feuille du compte (« Mon espace », « Créer ») : 13 px au moins. */
+const FAMILY_TITLE_CLASS = "px-3 pb-1 pt-2 text-[13px] font-semibold text-muted-foreground"
+
 function MenuLink(props: { entry: NavEntry }) {
   const { t } = useDiasporaGaT()
   const { entry } = props
@@ -570,24 +652,55 @@ function MenuLink(props: { entry: NavEntry }) {
   )
 }
 
-/** Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix). */
-function AccountMenu(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[] }) {
+/**
+ * Le menu du compte au bureau : la carte de l'avatar l'ouvre (flèches, Échap, focus rendu par Radix).
+ * « Informations » y est UNE entrée, qui ouvre la page flottante (un dialogue) : le menu se ferme
+ * sans rendre le focus à l'avatar, la page flottante le prend sur son titre puis le lui rend.
+ */
+function AccountMenu(props: {
+  membership: MembershipView
+  groups: AccountGroups
+  /** La page personnelle courante, que la carte de l'avatar dit (amendement 5 b). */
+  current: NavEntry | null
+  information: readonly NavEntry[]
+  onInformation: (returnFocus: HTMLElement | null) => void
+}) {
   const { t } = useDiasporaGaT()
-  const informationId = useId()
   const exit = useAccountSignOut()
-  const { membership } = props
+  const { membership, groups, current } = props
+  const trigger = useRef<HTMLButtonElement>(null)
+  const handingOff = useRef(false)
+  const spaceId = useId()
+  const InformationIcon = MEMBER_INFORMATION_ICON
+  const CurrentIcon = current?.icon
+  const informationCurrent = props.information.some((entry) => entry.active)
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
+        ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
-        className="mt-auto flex w-full min-w-0 shrink-0 items-center gap-3 rounded-xl bg-card p-3 text-left text-card-foreground shadow-card transition-colors hover:bg-muted focus-visible:shadow-focus data-[state=open]:bg-muted"
+        className="mt-auto flex w-full min-w-0 shrink-0 flex-col gap-2 rounded-xl bg-card p-3 text-left text-card-foreground shadow-card transition-colors hover:bg-muted focus-visible:shadow-focus data-[state=open]:bg-muted"
       >
-        <Avatar id={membership.personId} name={membership.displayName} />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-semibold">{membership.displayName}</span>
-          <TrustBadges badges={membership.badges} className="mt-1" />
+        <span className="flex w-full min-w-0 items-center gap-3">
+          <Avatar id={membership.personId} name={membership.displayName} />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-semibold">{membership.displayName}</span>
+            <TrustBadges badges={membership.badges} className="mt-1" />
+          </span>
+          <ChevronsUpDownIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
         </span>
-        <ChevronsUpDownIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        {/* La page personnelle courante : le rail n'a plus d'entrée pour elle, la carte la dit (libellé,
+            icône, paire de l'entrée courante du rail). Un repère visuel : le nom de la carte ne change pas,
+            et l'entrée courante reste celle du menu (une seule, UX-05). */}
+        {current !== null && CurrentIcon !== undefined ? (
+          <span
+            data-account-current=""
+            className="flex w-full min-w-0 items-center gap-2 rounded-[var(--esp-r-chrome)] bg-[var(--esp-accent-soft)] px-2.5 py-1.5 text-[13px] font-semibold text-[var(--esp-accent-deep)]"
+          >
+            <CurrentIcon aria-hidden className="size-4 shrink-0" />
+            <span className="min-w-0 truncate">{t(current.labelKey)}</span>
+          </span>
+        ) : null}
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
@@ -596,6 +709,12 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
           sideOffset={8}
           collisionPadding={12}
           aria-busy={exit.busy}
+          onCloseAutoFocus={(event) => {
+            // Passage de focus : « Informations » choisie, la page flottante qui s'ouvre le prend.
+            if (!handingOff.current) return
+            handingOff.current = false
+            event.preventDefault()
+          }}
           className="z-60 max-h-[var(--radix-dropdown-menu-content-available-height)] w-[min(16rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
         >
           <DropdownMenu.Label className="px-3 py-2">
@@ -603,18 +722,46 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
             <span className="block truncate text-[13px] text-muted-foreground">@{membership.handle}</span>
           </DropdownMenu.Label>
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
-          {props.entries.map((entry) => (
+          {/* Les familles : le compte, « Mon espace », puis « Mes données » et « Informations », puis la sortie. */}
+          {groups.own.map((entry) => (
             <MenuLink key={entry.id} entry={entry} />
           ))}
+          {groups.personal.length > 0 ? (
+            <>
+              <DropdownMenu.Separator className="my-1 h-px bg-border" />
+              <DropdownMenu.Group aria-labelledby={spaceId}>
+                <DropdownMenu.Label id={spaceId} className={FAMILY_TITLE_CLASS}>
+                  {t("nav.account.space")}
+                </DropdownMenu.Label>
+                {groups.personal.map((entry) => (
+                  <MenuLink key={entry.id} entry={entry} />
+                ))}
+              </DropdownMenu.Group>
+            </>
+          ) : null}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
-          <DropdownMenu.Group aria-labelledby={informationId}>
-            <DropdownMenu.Label id={informationId} className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">
-              {t("nav.account.info")}
-            </DropdownMenu.Label>
-            {props.information.map((entry) => (
-              <MenuLink key={entry.id} entry={entry} />
-            ))}
-          </DropdownMenu.Group>
+          {groups.data.map((entry) => (
+            <MenuLink key={entry.id} entry={entry} />
+          ))}
+          {/* Les textes du site, le contact et la charte : une seule entrée, qui ouvre la page flottante. */}
+          {props.information.length > 0 ? (
+            <DropdownMenu.Item
+              aria-haspopup="dialog"
+              onSelect={() => {
+                handingOff.current = true
+                props.onInformation(trigger.current)
+              }}
+              className={cn(
+                "flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted",
+                // La page courante en relève : l'entrée le dit aussi, par la graisse.
+                informationCurrent ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
+              )}
+            >
+              <InformationIcon className="size-4 shrink-0" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
+              <ChevronRightIcon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+            </DropdownMenu.Item>
+          ) : null}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
           {/* L'action neutre de sortie : le menu reste ouvert pendant qu'elle se fait. */}
           <DropdownMenu.Item
@@ -641,10 +788,11 @@ function AccountMenu(props: { membership: MembershipView; entries: readonly NavE
 function MobileHeader(props: {
   membership: MembershipView
   homeCountryCurrent: boolean
-  account: readonly NavEntry[]
+  account: AccountGroups
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
   onPublish: () => void
+  onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   const demo = useDataSource().kind === "demo"
@@ -666,7 +814,7 @@ function MobileHeader(props: {
         <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
-        <AccountSheet membership={props.membership} entries={props.account} information={props.information} create={props.create} />
+        <AccountSheet membership={props.membership} groups={props.account} information={props.information} create={props.create} onInformation={props.onInformation} />
       </div>
     </header>
   )
@@ -693,7 +841,6 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
     </li>
   )
 }
-
 
 /**
  * « Créer → Une conférence » (CH-817) : la même demande que « Créer → Conférence » du moteur
@@ -794,24 +941,50 @@ function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) 
   )
 }
 
-/** Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar). */
-function AccountSheet(props: { membership: MembershipView; entries: readonly NavEntry[]; information: readonly NavEntry[]; create: readonly CreateFormat[] }) {
+/**
+ * Le menu du compte au téléphone : une feuille (piège de focus, Échap, focus rendu à l'avatar).
+ * « Informations » y est une ligne qui ferme la feuille du compte et ouvre la page flottante : le
+ * focus passe de l'une à l'autre sans revenir à l'avatar, qui le retrouve à la fermeture.
+ */
+function AccountSheet(props: {
+  membership: MembershipView
+  groups: AccountGroups
+  information: readonly NavEntry[]
+  create: readonly CreateFormat[]
+  onInformation: (returnFocus: HTMLElement | null) => void
+}) {
   const { t } = useDiasporaGaT()
   const [open, setOpen] = useState(false)
-  const informationId = useId()
   const createId = useId()
+  const spaceId = useId()
   const exit = useAccountSignOut()
-  const { membership } = props
+  const { membership, groups } = props
+  const trigger = useRef<HTMLButtonElement>(null)
+  const handingOff = useRef(false)
   const close = () => setOpen(false)
+  const InformationIcon = MEMBER_INFORMATION_ICON
+  const informationCurrent = props.information.some((entry) => entry.active)
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger
+        ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
         className="inline-flex size-11 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted focus-visible:shadow-focus"
       >
         <Avatar id={membership.personId} name={membership.displayName} size="sm" />
       </SheetTrigger>
-      <SheetContent title={t("nav.account.title")} description={t("nav.account.description")} hideDescription closeLabel={t("nav.account.close")}>
+      <SheetContent
+        title={t("nav.account.title")}
+        description={t("nav.account.description")}
+        hideDescription
+        closeLabel={t("nav.account.close")}
+        onCloseAutoFocus={(event) => {
+          // Passage de focus : « Informations » choisie, la page flottante qui s'ouvre le prend.
+          if (!handingOff.current) return
+          handingOff.current = false
+          event.preventDefault()
+        }}
+      >
         <div className="flex min-w-0 items-center gap-3">
           <Avatar id={membership.personId} name={membership.displayName} />
           <div className="min-w-0 flex-1">
@@ -823,17 +996,59 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
           <TrustBadges badges={membership.badges} />
           <CountryTag country={membership.facet.countryOfResidence} city={membership.facet.city} />
         </div>
+        {/* Les familles : le compte, « Mon espace », puis « Mes données » et « Informations » ; puis « Créer »
+            (au téléphone seulement) et la sortie. Tous les liens du compte restent dans sa navigation, dans
+            l'ordre du menu partagé. */}
         <nav aria-label={t("nav.account.title")} className="mt-4">
           <ul className="flex flex-col gap-0.5">
-            {props.entries.map((entry) => (
+            {groups.own.map((entry) => (
               <SheetLink key={entry.id} entry={entry} onFollow={close} />
             ))}
           </ul>
+          {groups.personal.length > 0 ? (
+            <div role="group" aria-labelledby={spaceId} className="mt-3 border-t border-border pt-1">
+              <p id={spaceId} className={FAMILY_TITLE_CLASS}>
+                {t("nav.account.space")}
+              </p>
+              <ul className="flex flex-col gap-0.5">
+                {groups.personal.map((entry) => (
+                  <SheetLink key={entry.id} entry={entry} onFollow={close} />
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          <div data-account-family="" className="mt-3 flex flex-col gap-0.5 border-t border-border pt-3">
+            <ul className="flex flex-col gap-0.5">
+              {groups.data.map((entry) => (
+                <SheetLink key={entry.id} entry={entry} onFollow={close} />
+              ))}
+            </ul>
+            {/* Les textes du site, le contact et la charte : une ligne, qui ouvre la page flottante. */}
+            {props.information.length > 0 ? (
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => {
+                  handingOff.current = true
+                  close()
+                  props.onInformation(trigger.current)
+                }}
+                className={cn(
+                  "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] transition-colors hover:bg-muted focus-visible:shadow-focus",
+                  informationCurrent ? "font-semibold text-[var(--esp-accent-deep)]" : "font-medium",
+                )}
+              >
+                <InformationIcon className="size-5 shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{t("nav.account.info")}</span>
+                <ChevronRightIcon aria-hidden className="size-5 shrink-0 text-muted-foreground" />
+              </button>
+            ) : null}
+          </div>
         </nav>
         {/* Au téléphone, l'en-tête n'a plus de place : les formats de « Créer » vivent dans la feuille du compte. */}
         {props.create.length > 0 ? (
-          <nav aria-labelledby={createId} className="mt-3 border-t border-border pt-3">
-            <p id={createId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
+          <nav aria-labelledby={createId} className="mt-3 border-t border-border pt-1">
+            <p id={createId} className={FAMILY_TITLE_CLASS}>
               {t("nav.create.title")}
             </p>
             <ul className="flex flex-col gap-0.5">
@@ -843,16 +1058,6 @@ function AccountSheet(props: { membership: MembershipView; entries: readonly Nav
             </ul>
           </nav>
         ) : null}
-        <nav aria-labelledby={informationId} className="mt-3 border-t border-border pt-3">
-          <p id={informationId} className="px-3 pb-1 text-xs font-semibold text-muted-foreground">
-            {t("nav.account.info")}
-          </p>
-          <ul className="flex flex-col gap-0.5">
-            {props.information.map((entry) => (
-              <SheetLink key={entry.id} entry={entry} onFollow={close} />
-            ))}
-          </ul>
-        </nav>
         {/* La sortie, en bouton neutre ; la feuille reste ouverte pendant qu'elle se fait. */}
         <div aria-busy={exit.busy} className="mt-3 border-t border-border pt-4">
           <Button type="button" variant="outline" disabled={exit.busy} onClick={exit.run} className="w-full">

@@ -65,11 +65,24 @@ export function SheetContent(props: {
   /** Masquer visuellement la description (elle reste annoncée). */
   hideDescription?: boolean
   closeLabel: string
+  /**
+   * Un geste posé AVANT le titre, hors de lui (le « Retour » d'une feuille à niveaux) : le nom de
+   * la feuille reste son titre.
+   */
+  leading?: ReactNode
   /** Identifiant du panneau, pour un déclencheur qui le référence (aria-controls). */
   id?: string
   className?: string
+  /** Les classes du corps, ajoutées aux siennes (une feuille dont les volets défilent seuls). */
+  bodyClassName?: string
   children: ReactNode
   onOpenAutoFocus?: ComponentProps<typeof DialogPrimitive.Content>["onOpenAutoFocus"]
+  /**
+   * Le focus à la fermeture. Sans elle, Radix le rend au déclencheur ; une feuille ouverte sans
+   * déclencheur (depuis un menu) le rend elle-même, et une feuille qui en ouvre une autre l'en
+   * empêche (`preventDefault`).
+   */
+  onCloseAutoFocus?: ComponentProps<typeof DialogPrimitive.Content>["onCloseAutoFocus"]
 }) {
   return (
     <DialogPrimitive.Portal>
@@ -81,6 +94,7 @@ export function SheetContent(props: {
         id={props.id}
         data-slot="sheet-content"
         onOpenAutoFocus={props.onOpenAutoFocus}
+        onCloseAutoFocus={props.onCloseAutoFocus}
         onInteractOutside={keepOpenOnNotice}
         className={cn(
           "fixed z-50 flex max-h-[min(88dvh,780px)] flex-col overflow-hidden bg-card text-card-foreground shadow-sheet focus:outline-none data-[state=open]:animate-rise",
@@ -93,8 +107,15 @@ export function SheetContent(props: {
       >
         <SheetPresence />
         <div className="flex items-start gap-3 border-b border-border px-5 pb-3 pt-4">
+          {props.leading}
           <div className="min-w-0 flex-1">
-            <DialogPrimitive.Title className="font-display text-xl font-bold leading-tight">
+            {/* Focalisable par le code seulement (`tabIndex` -1) : une feuille à niveaux y pose le
+                focus à chaque niveau. Un titre n'est pas un contrôle : pas d'anneau. */}
+            <DialogPrimitive.Title
+              tabIndex={-1}
+              data-slot="sheet-title"
+              className="font-display text-xl font-bold leading-tight outline-none focus-visible:shadow-none"
+            >
               {props.title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Description
@@ -110,7 +131,9 @@ export function SheetContent(props: {
             <XIcon className="size-5" aria-hidden />
           </DialogPrimitive.Close>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">{props.children}</div>
+        <div data-slot="sheet-body" className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4", props.bodyClassName)}>
+          {props.children}
+        </div>
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>
   )

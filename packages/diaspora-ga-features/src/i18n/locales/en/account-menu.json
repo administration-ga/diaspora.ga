@@ -1,7 +1,14 @@
 {
   "nav": {
     "account": {
-      "info": "Information"
+      "info": "Information",
+      "space": "My space"
+    },
+    "information": {
+      "description": "The site's texts, contact and design charter.",
+      "close": "Close information",
+      "back": "Back",
+      "opensPage": "Opens its page"
     }
   }
 }
