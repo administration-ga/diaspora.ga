@@ -30,6 +30,7 @@ export {
 } from "./primitives/folder-tabs"
 export { Avatar, Card, Separator, Skeleton } from "./primitives/surface"
 export { ViewFrame, ViewPane, type ViewPaneProps } from "./primitives/view-frame"
+export { SubViews, type SubViewItem, type SubViewsProps } from "./primitives/sub-views"
 export { FloatingNotice, type NoticeTone } from "./primitives/floating-notice"
 
 export { ContentScopeTag, CountryMonument, CountryTag, ScopeTag } from "./components/country-tag"

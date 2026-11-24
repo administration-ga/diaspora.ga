@@ -252,11 +252,5 @@
     "terms": "Conditions d'utilisation",
     "community": "Règles de la communauté",
     "contact": "Contact"
-  },
-  "settings": {
-    "texts": {
-      "lead": "Les textes du site, avec leur version et leur date. Ceux qui ne sont pas encore fournis, ou pas encore relus, le disent.",
-      "pending": "Texte à fournir"
-    }
   }
 }

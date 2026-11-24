@@ -5,10 +5,7 @@ import {
   FACET_FIELDS,
   FIELD_VISIBILITY_LEVELS,
   isResidenceCountry,
-  LEGAL_TEXT_KINDS,
-  LEGAL_TEXTS,
   type ConsentPurpose,
-  type LegalTextStatus,
   type DirectoryVisibility,
   type FacetField,
   type FieldVisibility,
@@ -25,21 +22,37 @@ import {
   RadioGroup,
   Sheet,
   SheetContent,
+  SubViews,
   Switch,
   TrustBadges,
+  ViewFrame,
   formatDate,
+  type SubViewItem,
 } from "@diaspora-ga/features"
 import { useActions, useFeatureGate, useMyConsents, useOpenCountries, type MembershipView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { CopyIcon } from "lucide-react"
+import { MEMBER_INFORMATION_ICON } from "@diaspora-ga/features/navigation"
+import {
+  ContactRoundIcon,
+  CopyIcon,
+  DatabaseIcon,
+  EarthIcon,
+  HandshakeIcon,
+  HouseIcon,
+  MessageCircleIcon,
+  PaletteIcon,
+  ShieldCheckIcon,
+  UserRoundIcon,
+  type LucideIcon,
+} from "lucide-react"
 import NextLink from "next/link"
 import { useRouter } from "next/navigation"
-import { useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { AppShell } from "@/components/app-shell"
+import { AppShell, useInformationReader } from "@/components/app-shell"
 import { CallSettings } from "@/components/call-settings"
 import { DataRightsSettings } from "@/components/data-rights-settings"
 import { DeviceNotificationsSettings } from "@/components/device-notifications-settings"
@@ -51,16 +64,34 @@ import { ContentPreferencesSettings } from "@/components/content-preferences-set
 import { SignOutSettings } from "@/components/sign-out-settings"
 import { LanguageSwitch, ThemeSwitch } from "@/components/preferences"
 import { ThemePicker } from "@/components/theme-picker"
-import { formatLegalTextDate, LEGAL_TEXT_LABELS, LEGAL_TEXT_ROUTES } from "@/lib/legal-texts"
-import { routes } from "@/lib/routes"
+import { isPlainClick } from "@/lib/plain-click"
+import { anchors, routes } from "@/lib/routes"
+import {
+  SETTINGS_ANCHORS,
+  SETTINGS_VIEW_LABELS,
+  SETTINGS_VIEWS,
+  settingsListAnchor,
+  settingsViewFragment,
+  settingsViewOfAnchor,
+  type SettingsViewId,
+} from "@/lib/settings-views"
+import { useHashView } from "@/lib/use-hash-view"
 
-/** `/parametres` — profil, facette, confidentialité, consentements, « Mes données » (EXF-DG-44 à 46). */
+/**
+ * `/parametres` — profil, facette, confidentialité, consentements, « Mes données » (EXF-DG-44 à 46).
+ *
+ * « Une page = une vue » (lot 2a, plan du 24/11/2026) : la page tient l'écran (`layout="view"`).
+ * Les quatorze sections ne s'empilent plus : neuf sous-vues (`lib/settings-views.ts`), choisies par
+ * l'ancre de l'adresse — la liste et une sous-vue côte à côte au bureau, la liste puis une
+ * sous-vue au téléphone. Toutes restent montées : une saisie non enregistrée survit au changement.
+ * Les ancres des sections ne changent pas : chaque lien d'avant tombe sur sa sous-vue.
+ */
 export function SettingsScreen() {
   return (
     <Gate require="member">
       {(session) =>
         session.membership ? (
-          <AppShell membership={session.membership}>
+          <AppShell membership={session.membership} layout="view">
             <Settings key={session.membership.personId} membership={session.membership} />
           </AppShell>
         ) : null
@@ -85,75 +116,129 @@ function Section(props: { id: string; title: string; lead?: string; children: Re
   )
 }
 
-function Settings(props: { membership: MembershipView }) {
-  const { t } = useDiasporaGaT()
-  return (
+/** L'icône de chaque sous-vue, dans la liste. */
+const SETTINGS_VIEW_ICONS: Readonly<Record<SettingsViewId, LucideIcon>> = {
+  compte: UserRoundIcon,
+  profil: ContactRoundIcon,
+  pays: EarthIcon,
+  fil: HouseIcon,
+  appels: MessageCircleIcon,
+  affichage: PaletteIcon,
+  consentements: ShieldCheckIcon,
+  parrainage: HandshakeIcon,
+  donnees: DatabaseIcon,
+}
+
+/** Ce que porte chaque sous-vue : une ou deux cartes sœurs, jamais un formulaire coupé. */
+const SETTINGS_VIEW_CONTENT: Readonly<Record<SettingsViewId, (membership: MembershipView) => ReactNode>> = {
+  compte: (membership) => (
     <>
-      <h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>
-      <MembershipSection membership={props.membership} />
-      <ContentPreferencesSettings membership={props.membership} />
-      <ProfilePublicationSettings key={props.membership.personId} membership={props.membership} />
-      <ProfileImagesSettings membership={props.membership} />
-      <FacetSection membership={props.membership} />
-      <DirectorySection membership={props.membership} />
-      {/* « Messages et appels » (IM-02) : réglages d'appel et de présence du compte, valables aussi dans ANTSIA. */}
-      <CallSettings membership={props.membership} />
-      {/* « Notifications de cet appareil » (DS-14, volet push) : abonner ce navigateur, d'un geste ; l'accord se retire ci-dessous. */}
-      <DeviceNotificationsSettings membership={props.membership} />
-      <ConsentsSection />
-      <SponsorHelpSection membership={props.membership} />
-      {/* « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;
-          hors adhésion, la même section vit à `/mes-donnees` (NP-02). */}
-      <DataRightsSettings person={{ personId: props.membership.personId, handle: props.membership.handle, canLeave: true }} />
-      <Section id="apparence" title={t("settings.appearance")}>
-        <div className="flex flex-col gap-3">
-          <LanguageSwitch className="self-start" />
-          <ThemeSwitch className="self-start" />
-          {/* Le thème au choix du membre : Sable (par défaut) ou Gaboma. */}
-          <ThemePicker className="mt-1" />
-        </div>
-      </Section>
-      <LegalTextsSection />
+      <MembershipSection membership={membership} />
       <SignOutSettings />
     </>
+  ),
+  profil: (membership) => (
+    <>
+      <ProfilePublicationSettings key={membership.personId} membership={membership} />
+      <ProfileImagesSettings membership={membership} />
+    </>
+  ),
+  pays: (membership) => <FacetSection membership={membership} />,
+  fil: (membership) => (
+    <>
+      <ContentPreferencesSettings membership={membership} />
+      <DirectorySection membership={membership} />
+    </>
+  ),
+  // « Messages et appels » (IM-02) : réglages d'appel et de présence du compte, valables aussi dans ANTSIA.
+  appels: (membership) => <CallSettings membership={membership} />,
+  // « Notifications de cet appareil » (DS-14, volet push) : abonner ce navigateur, d'un geste ; l'accord se retire aux consentements.
+  affichage: (membership) => (
+    <>
+      <AppearanceSection />
+      <DeviceNotificationsSettings membership={membership} />
+    </>
+  ),
+  consentements: () => <ConsentsSection />,
+  parrainage: (membership) => <SponsorHelpSection membership={membership} />,
+  // « Mes données » (DG-026) : export, effacement, décisions et recours — ouverte au membre suspendu ;
+  // hors adhésion, la même section vit à `/mes-donnees` (NP-02).
+  donnees: (membership) => <DataRightsSettings person={{ personId: membership.personId, handle: membership.handle, canLeave: true }} />,
+}
+
+function Settings(props: { membership: MembershipView }) {
+  const { t } = useDiasporaGaT()
+  const anchor = useHashView(SETTINGS_ANCHORS)
+  const active = anchor === null ? null : settingsViewOfAnchor(anchor)
+  // La section de l'ancre est amenée en tête du volet : une ancre secondaire (`#annuaire`,
+  // `#mes-signalements`) n'est pas la première de sa sous-vue. Après le retour du volet en haut,
+  // que fait `SubViews` dans le même passage (les effets d'un enfant passent avant ceux du parent).
+  useEffect(() => {
+    if (anchor === null) return
+    const section = document.getElementById(anchor)
+    if (section && typeof section.scrollIntoView === "function") section.scrollIntoView({ block: "start" })
+  }, [anchor])
+  const items: readonly SubViewItem<SettingsViewId>[] = SETTINGS_VIEWS.map((view) => ({
+    id: view,
+    label: t(SETTINGS_VIEW_LABELS[view]),
+    href: settingsViewFragment(view),
+    icon: SETTINGS_VIEW_ICONS[view],
+  }))
+  return (
+    <ViewFrame className="gap-4" header={<h1 className="font-display text-3xl font-bold">{t("settings.title")}</h1>}>
+      <SubViews
+        label={t("settings.title")}
+        detailLabel={t("settings.views.detail")}
+        items={items}
+        active={active}
+        back={{ href: anchors.settingsList, label: t("settings.views.all") }}
+        listId={settingsListAnchor()}
+        listFooter={<InformationRow />}
+      >
+        {(view) => SETTINGS_VIEW_CONTENT[view](props.membership)}
+      </SubViews>
+    </ViewFrame>
   )
 }
 
-/** Le repère d'un texte qui n'est pas définitif : à fournir, ou provisoire (MD-05) ; aucun pour un texte définitif. */
-const LEGAL_TEXT_STATUS_LABELS: Readonly<Record<LegalTextStatus, string | null>> = {
-  missing: "settings.texts.pending",
-  provisional: "settings.texts.provisional",
-  final: null,
+/**
+ * La ligne « Informations » de la liste (§ 4) : un vrai lien vers les mentions légales. Le clic
+ * simple ouvre la page flottante de la coque (les cinq textes, rubrique par rubrique) et lui rend
+ * le focus à la fermeture ; le clic modifié ouvre la page des mentions, qui porte les onglets des
+ * cinq textes.
+ */
+function InformationRow() {
+  const { t } = useDiasporaGaT()
+  const reader = useInformationReader()
+  const Icon = MEMBER_INFORMATION_ICON
+  return (
+    <a
+      href={routes.legalNotice()}
+      aria-haspopup={reader.available ? "dialog" : undefined}
+      onClick={(event) => {
+        if (!reader.available || !isPlainClick(event)) return
+        event.preventDefault()
+        reader.open(event.currentTarget)
+      }}
+      className="flex min-h-11 items-center gap-3 rounded-lg px-2 py-1.5 text-sm leading-snug transition-colors hover:bg-neutral-hover focus-visible:shadow-focus"
+    >
+      <Icon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1">{t("nav.account.info")}</span>
+    </a>
+  )
 }
 
-/**
- * Les textes du site depuis l'espace membre (LX-05) : chacun avec sa version et sa date, lues
- * dans le domaine ; un texte non fourni ou provisoire le dit, sans rien affirmer de son contenu.
- */
-function LegalTextsSection() {
-  const { t, locale } = useDiasporaGaT()
+/** Langue, mode et thème : les réglages de cet affichage. */
+function AppearanceSection() {
+  const { t } = useDiasporaGaT()
   return (
-    <Section id="informations" title={t("nav.account.info")} lead={t("settings.texts.lead")}>
-      <ul className="flex flex-col divide-y divide-border">
-        {LEGAL_TEXT_KINDS.map((kind) => {
-          const edition = LEGAL_TEXTS[kind]
-          const statusLabel = LEGAL_TEXT_STATUS_LABELS[edition.status]
-          return (
-            <li key={kind} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2">
-              <NextLink
-                href={LEGAL_TEXT_ROUTES[kind]()}
-                className="inline-flex min-h-11 items-center rounded-sm text-[15px] font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"
-              >
-                {t(LEGAL_TEXT_LABELS[kind])}
-              </NextLink>
-              <span className="font-mono text-[11px] text-muted-foreground">
-                {t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, locale) })}
-                {statusLabel === null ? null : <span className="ml-2 rounded-sm bg-muted px-1.5 py-0.5">{t(statusLabel)}</span>}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
+    <Section id="apparence" title={t("settings.appearance")}>
+      <div className="flex flex-col gap-3">
+        <LanguageSwitch className="self-start" />
+        <ThemeSwitch className="self-start" />
+        {/* Le thème au choix du membre : Sable (par défaut) ou Gaboma. */}
+        <ThemePicker className="mt-1" />
+      </div>
     </Section>
   )
 }

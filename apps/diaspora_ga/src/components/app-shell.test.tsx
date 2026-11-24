@@ -32,7 +32,7 @@ import { memberCreateHref, memberMenuHref } from "@/lib/member-menu"
 import { PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
-import { AppShell, useComposer } from "./app-shell"
+import { AppShell, useComposer, useInformationReader } from "./app-shell"
 
 const mocks = vi.hoisted(() => ({
   pathname: "/fil",
@@ -1448,5 +1448,122 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     await user.click(sheet.getByRole("button", { name: "Informations" }))
     information = await screen.findByRole("dialog", { name: "Informations" })
     expect(linksOf(within(information).getByRole("navigation", { name: "Informations" }))).toEqual(expected.information.map(entryLink))
+  })
+})
+
+describe("coque — une vue (« une page = une vue », lot 2a) : `layout=\"view\"`", () => {
+  /** Un écran qui ouvre la page flottante « Informations » par la coque, comme la ligne des réglages. */
+  function InformationProbe() {
+    const reader = useInformationReader()
+    return (
+      <button type="button" aria-haspopup={reader.available ? "dialog" : undefined} onClick={(event) => reader.open(event.currentTarget)}>
+        Lire les informations
+      </button>
+    )
+  }
+
+  /** La coque sur `/parametres`, en vue ou en flux, autour d'un écran donné. */
+  function viewTree(options: { readonly view: boolean; readonly icom?: boolean; readonly children?: ReactNode }) {
+    mocks.pathname = "/parametres"
+    mocks.icom = options.icom ? NETWORK : null
+    mocks.network = options.icom ? NETWORK : null
+    const source = createDemoDataSource(new DemoStore(null, () => NOW, 0))
+    const child = options.children ?? <ComposerProbe />
+    return (
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={source}>
+          <RoutingProvider routes={featureRoutes} Link={Link}>
+            {options.view ? (
+              <AppShell membership={MEMBER} layout="view">
+                {child}
+              </AppShell>
+            ) : (
+              <AppShell membership={MEMBER}>{child}</AppShell>
+            )}
+          </RoutingProvider>
+        </DataSourceProvider>
+      </I18nProvider>
+    )
+  }
+
+  const shellRoot = () => document.querySelector<HTMLElement>("[data-layout]")!
+  const main = () => document.getElementById("contenu")!
+  const contentColumn = () => main().firstElementChild as HTMLElement
+
+  // Le type refuse un rail droit à une vue : sa colonne revient au contenu. (Vérifié par le typage, jamais exécuté.)
+  function refusesRail() {
+    // @ts-expect-error — une vue ne porte pas de rail droit.
+    return <AppShell membership={MEMBER} layout="view" rail={<p />}>{null}</AppShell>
+  }
+  void refusesRail
+
+  it("la racine dit sa nature : `data-layout=\"view\"` en vue, `stream` sans rien demander", () => {
+    render(viewTree({ view: true }))
+    expect(shellRoot()).toHaveAttribute("data-layout", "view")
+    cleanup()
+    render(viewTree({ view: false }))
+    expect(shellRoot()).toHaveAttribute("data-layout", "stream")
+  })
+
+  it("en vue, le cadre tient l'écran sous `tall:` seulement, sans jamais masquer un débordement", () => {
+    render(viewTree({ view: true }))
+    expect(shellRoot()).toHaveClass("min-h-dvh", "tall:flex", "tall:h-dvh", "tall:min-h-0", "tall:flex-col")
+    expect(main()).toHaveClass("tall:min-h-0", "tall:flex-1", "tall:grid-rows-[minmax(0,1fr)]", "min-[960px]:pb-6")
+    expect(main()).not.toHaveClass("min-[960px]:pb-10")
+    // Le contenu prend la colonne du rail droit, au même bord gauche que le fil.
+    expect(contentColumn()).toHaveClass("tall:min-h-0", "xl:col-span-2")
+    expect(contentColumn()).not.toHaveClass("max-w-[792px]")
+    // Le cadre, de la racine à la colonne du contenu : aucun débordement masqué (il doit rester visible au relevé).
+    const container = shellRoot().firstElementChild as HTMLElement
+    const column = main().parentElement as HTMLElement
+    for (const node of [shellRoot(), container, column, main(), contentColumn()]) expect(node).not.toHaveClass("overflow-hidden")
+    expect(container).toHaveClass("tall:min-h-0", "tall:flex-1")
+    expect(column).toHaveClass("flex", "flex-col", "tall:min-h-0")
+  })
+
+  it("une page de flux garde son cadre : le document défile, la colonne du fil est bornée", () => {
+    render(viewTree({ view: false }))
+    expect(shellRoot()).not.toHaveClass("tall:h-dvh")
+    expect(main()).toHaveClass("min-[960px]:pb-10")
+    expect(main()).not.toHaveClass("tall:flex-1")
+    expect(contentColumn()).toHaveClass("max-w-[792px]")
+    expect(contentColumn()).not.toHaveClass("xl:col-span-2")
+  })
+
+  it("en vue, le rail droit reste monté sans `xl:flex` : la carte iCom s'y ouvre détachée, comme entre 960 et 1 279 px", () => {
+    render(viewTree({ view: true, icom: true }))
+    const aside = main().querySelector("aside")!
+    expect(within(aside).getByRole("region", { name: "Carte iCom" })).toBeInTheDocument()
+    expect(aside).toHaveClass("hidden")
+    expect(aside).not.toHaveClass("xl:flex")
+    cleanup()
+    render(viewTree({ view: false, icom: true }))
+    expect(main().querySelector("aside")).toHaveClass("hidden", "xl:flex")
+  })
+
+  it("un écran ouvre la page flottante « Informations » par la coque ; à la fermeture, le focus lui revient", async () => {
+    const user = userEvent.setup()
+    render(viewTree({ view: true, children: <InformationProbe /> }))
+    const trigger = screen.getByRole("button", { name: "Lire les informations" })
+    expect(trigger).toHaveAttribute("aria-haspopup", "dialog")
+    await user.click(trigger)
+    const sheet = await screen.findByRole("dialog", { name: "Informations" })
+    await waitFor(() => expect(within(sheet).getByRole("heading", { level: 2, name: "Informations" })).toHaveFocus())
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("dialog", { name: "Informations" })).toBeNull()
+    await waitFor(() => expect(trigger).toHaveFocus())
+  })
+
+  it("hors de la coque, la page flottante n'est pas offerte", async () => {
+    const user = userEvent.setup()
+    render(
+      <I18nProvider locale="fr">
+        <InformationProbe />
+      </I18nProvider>,
+    )
+    const trigger = screen.getByRole("button", { name: "Lire les informations" })
+    expect(trigger).not.toHaveAttribute("aria-haspopup")
+    await user.click(trigger)
+    expect(screen.queryByRole("dialog")).toBeNull()
   })
 })

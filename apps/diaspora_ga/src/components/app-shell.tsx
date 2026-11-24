@@ -91,6 +91,23 @@ export function useComposer(): ComposerControl {
   return useContext(ComposerContext)
 }
 
+interface InformationReader {
+  /** La coque offre la page flottante « Informations » ; hors de la coque, non : un lien reste un lien. */
+  readonly available: boolean
+  /** Ouvre la page flottante ; à sa fermeture, le focus revient à `returnFocus` (le lien qui l'a ouverte). */
+  readonly open: (returnFocus: HTMLElement | null) => void
+}
+
+const InformationReaderContext = createContext<InformationReader>({ available: false, open: () => {} })
+
+/**
+ * Ouvre la page flottante « Informations » de la coque depuis un écran (la ligne « Informations »
+ * des réglages, une page = une vue, lot 2a) : la même feuille que le menu du compte.
+ */
+export function useInformationReader(): InformationReader {
+  return useContext(InformationReaderContext)
+}
+
 // ═══════════════════════════════════════════════════════════════
 // Arborescence (DG-005, menu léger CH-816) — une barre de cinq entrées au plus, le menu du compte
 // ═══════════════════════════════════════════════════════════════
@@ -282,6 +299,15 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
 // ═══════════════════════════════════════════════════════════════
 
 /**
+ * Une page de flux (`stream`, par défaut : le document défile, rail droit dès 1 280 px) ou une vue
+ * (`view`) : une vue ne porte pas de rail droit, sa colonne revient au contenu.
+ */
+type AppShellProps = { readonly membership: MembershipView; readonly children: ReactNode } & (
+  | { readonly layout?: "stream"; readonly rail?: ReactNode }
+  | { readonly layout: "view"; readonly rail?: never }
+)
+
+/**
  * Coque des pages membres — squelette de l'espace agent (charte §8), arborescence DG-005,
  * menu léger (CH-816, lot P1) :
  *   · bureau (≥ 960 px) : rail gauche (pays, la barre de trois à cinq entrées, Publier,
@@ -304,8 +330,16 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
  * Profil, Réglages, Relations, Parrainer par le menu du compte). Le menu du compte porte
  * aussi les textes du site (« Informations ») et « Se déconnecter partout » (UX-03).
  * Jamais d'AppShell de l'administration, jamais de chrome du Poste.
+ *
+ * `layout="view"` (« une page = une vue », lot 2a), demandé par l'écran (la table
+ * `lib/route-views.ts` le déclare, un cliquet vérifie qu'ils concordent) : dans une fenêtre d'au
+ * moins 600 px de haut (variante `tall`), la coque tient l'écran et le `ViewFrame` de l'écran
+ * prend la hauteur qui reste sous les avis ; le document ne défile plus. Le contenu prend la
+ * colonne du rail droit, au même bord gauche que le fil ; le rail droit reste monté mais caché,
+ * comme entre 960 et 1 279 px (la carte iCom s'ouvre alors détachée). Sous 600 px de haut, la page
+ * redevient un document. Jamais d'`overflow-hidden` : un débordement doit rester visible.
  */
-export function AppShell(props: { membership: MembershipView; rail?: ReactNode; children: ReactNode }) {
+export function AppShell(props: AppShellProps) {
   const pathname = usePathname() ?? ""
   const [composerOpen, setComposerOpen] = useState(false)
   // Partage cité : la publication citée reste posée pendant la fermeture de la feuille (pas de bascule de titre).
@@ -322,6 +356,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // Les non-lus de Messages, remontés par le lecteur monté sous l'îlot iCom (UX-06) ; rien quand iCom est fermé.
   const [messagesUnread, setMessagesUnread] = useState(0)
   const { membership } = props
+  const view = props.layout === "view"
   const canPublish = membership.canPublish
   // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
@@ -389,8 +424,8 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
 
   return (
     <PostShareProvider value={canPublish ? startShare : null}>
-      <div className="min-h-dvh">
-        <div className="mx-auto flex w-full max-w-[1400px]">
+      <div data-layout={view ? "view" : "stream"} className={cn("min-h-dvh", view && "tall:flex tall:h-dvh tall:min-h-0 tall:flex-col")}>
+        <div className={cn("mx-auto flex w-full max-w-[1400px]", view && "tall:min-h-0 tall:flex-1")}>
           <DesktopRail
             membership={membership}
             primary={rail}
@@ -403,7 +438,7 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
             onInformation={openInformation}
           />
 
-          <div className="min-w-0 flex-1">
+          <div className={cn("min-w-0 flex-1", view && "flex flex-col tall:min-h-0")}>
             <MobileHeader
               membership={membership}
               homeCountryCurrent={homeCountryCurrent}
@@ -415,21 +450,29 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
             />
             <main
               id="contenu"
-              className="mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pb-10 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center"
+              className={cn(
+                // Au téléphone, la réserve basse reste : la vue finit au-dessus de la barre flottante.
+                "mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center",
+                view ? "min-[960px]:pb-6 tall:min-h-0 tall:flex-1 tall:grid-rows-[minmax(0,1fr)]" : "min-[960px]:pb-10",
+              )}
             >
               <ComposerContext.Provider value={{ open: openComposer, canPublish }}>
-                <div className="flex min-w-0 max-w-[792px] flex-col gap-4">
-                  {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
-                  <NetworkStatusNotice />
-                  <ZoneNotice pathname={pathname} membership={membership} />
-                  {content}
-                </div>
+                <InformationReaderContext.Provider value={{ available: information.length > 0, open: openInformation }}>
+                  {/* En vue, les avis prennent leur hauteur et le `ViewFrame` de l'écran le reste. */}
+                  <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : "max-w-[792px]")}>
+                    {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
+                    <NetworkStatusNotice />
+                    <ZoneNotice pathname={pathname} membership={membership} />
+                    {content}
+                  </div>
+                </InformationReaderContext.Provider>
               </ComposerContext.Provider>
               {/* Le rail droit (dès 1 280 px). Sa première place revient à la carte iCom ; montée dès 960 px,
                   elle reste disponible entre 960 et 1 280 px, rail retiré : une adresse de messagerie l'ouvre
-                  détachée, en carte flottante (même doctrine que la page réseau du moteur). */}
+                  détachée, en carte flottante (même doctrine que la page réseau du moteur). En vue, il
+                  reste monté mais caché à toute largeur : sa colonne revient au contenu. */}
               {props.rail || (icom && desktop) ? (
-                <aside className="hidden flex-col gap-4 xl:flex">
+                <aside className={cn("hidden flex-col gap-4", !view && "xl:flex")}>
                   {icom && desktop ? (
                     <IcomIsland network={icom}>
                       <Suspense fallback={null}>
@@ -797,7 +840,7 @@ function MobileHeader(props: {
   const { t } = useDiasporaGaT()
   const demo = useDataSource().kind === "demo"
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 backdrop-blur min-[360px]:px-4 min-[960px]:hidden">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 backdrop-blur min-[360px]:px-4 min-[960px]:hidden">
       {/* Largeurs mesurées sur les polices de la charte : mot-symbole 140 px, repère « Démo » 72 px
           (34 px sans libellé), Publier, cloche et compte 136 px. Le mot-symbole et les trois actions
           tiennent dès 320 px ; avec le repère de démonstration, celui-ci ne garde que son icône sous

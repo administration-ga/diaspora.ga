@@ -252,11 +252,5 @@
     "terms": "Terms of use",
     "community": "Community rules",
     "contact": "Contact"
-  },
-  "settings": {
-    "texts": {
-      "lead": "The site’s texts, with their version and date. Those not yet provided, or not yet reviewed, say so.",
-      "pending": "Text to be provided"
-    }
   }
 }

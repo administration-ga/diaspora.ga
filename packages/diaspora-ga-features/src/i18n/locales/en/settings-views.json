@@ -1,0 +1,14 @@
+{
+  "settings": {
+    "views": {
+      "account": "Account",
+      "profile": "Profile",
+      "country": "Country and visibility",
+      "feed": "Feed and directory",
+      "display": "Display and notifications",
+      "sponsor": "Sponsorship",
+      "detail": "Settings detail",
+      "all": "All sections"
+    }
+  }
+}
