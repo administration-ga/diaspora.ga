@@ -1,9 +1,9 @@
 {
   "description": "Dernier couple de versions DIASPORA.GA et moteur ANTSIA vérifiés ensemble (vérification commune verte, depuis ANTSIA). La session qui joue la vérification complète sur un assemblage met ce fichier à jour dans la PR qui la consigne. Un couple non vérifié ne s'écrit pas ici.",
   "verifiedOn": "2026-11-24",
-  "diasporaGaCommit": "92ccedc",
+  "diasporaGaCommit": "a2f1a2f",
   "antsiaCommit": "f152b07e",
   "command": "bun run --cwd ../ANTSIA verify",
   "result": "green",
-  "evidence": "docs/recette/presence-battement-silencieux-2026-11-24/RAPPORT.md"
+  "evidence": "docs/recette/une-page-une-vue-2026-11-24/RAPPORT.md"
 }
