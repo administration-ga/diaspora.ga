@@ -1,0 +1,14 @@
+{
+  "settings": {
+    "views": {
+      "account": "Compte",
+      "profile": "Profil",
+      "country": "Pays et visibilité",
+      "feed": "Fil et annuaire",
+      "display": "Affichage et notifications",
+      "sponsor": "Parrainage",
+      "detail": "Détail des réglages",
+      "all": "Toutes les rubriques"
+    }
+  }
+}

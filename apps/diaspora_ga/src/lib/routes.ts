@@ -442,10 +442,12 @@ export const ROUTE_FILTER_KEYS = [
   NOTIFICATION_REFERENCE_PARAM,
 ] as const
 
-/** Ancres internes de la vitrine et des textes du site. */
+/** Ancres internes de la vitrine, des textes du site et des réglages. */
 export const anchors = {
   howToEnter: "#comment-entrer",
   content: "#contenu",
   /** Le sommaire d'un texte du site : au téléphone, la vue qui précède les rubriques (une page = une vue). */
   legalSummary: "#sommaire",
+  /** La liste des rubriques des réglages : au téléphone, la vue d'arrivée, que rouvre la ligne « Toutes les rubriques » (lot 2a). */
+  settingsList: "#rubriques",
 } as const

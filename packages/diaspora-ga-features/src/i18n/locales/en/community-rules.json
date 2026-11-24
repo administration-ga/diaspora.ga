@@ -60,10 +60,5 @@
     "reasonsLabel": "Report reasons that relate to it",
     "read": "Read the community rules",
     "readRule": "Related rule: {{rule}}"
-  },
-  "settings": {
-    "texts": {
-      "provisional": "Provisional text"
-    }
   }
 }

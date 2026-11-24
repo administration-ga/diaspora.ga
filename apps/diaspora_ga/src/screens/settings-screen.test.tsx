@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { DEFAULT_FACET_VISIBILITY, LEGAL_TEXT_KINDS, LEGAL_TEXTS, pendingLegalTexts } from "@diaspora-ga/domain"
+import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import type { ActionResult, ConsentView, MembershipView } from "@diaspora-ga/features/data"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
@@ -7,7 +7,6 @@ import { act, cleanup, fireEvent, render, screen, within } from "@testing-librar
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { formatLegalTextDate } from "@/lib/legal-texts"
 import { routes } from "@/lib/routes"
 
 import { SettingsScreen } from "./settings-screen"
@@ -26,6 +25,10 @@ const mocks = vi.hoisted(() => ({
   session: { status: "loading" } as unknown,
   success: vi.fn(),
   error: vi.fn(),
+  /** La nature demandée à la coque (« une page = une vue »). */
+  shellLayout: vi.fn(),
+  /** La page flottante « Informations » de la coque. */
+  openInformation: vi.fn(),
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push, replace: mocks.replace }) }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
@@ -39,7 +42,13 @@ vi.mock("@diaspora-ga/features/data", async (original) => ({
 vi.mock("@/components/gate", () => ({
   Gate: (props: { children: (session: { membership: MembershipView | null }) => ReactNode }) => props.children({ membership: mocks.membership }),
 }))
-vi.mock("@/components/app-shell", () => ({ AppShell: (props: { children: ReactNode }) => props.children }))
+vi.mock("@/components/app-shell", () => ({
+  AppShell: (props: { layout?: string; children: ReactNode }) => {
+    mocks.shellLayout(props.layout)
+    return props.children
+  },
+  useInformationReader: () => ({ available: true, open: mocks.openInformation }),
+}))
 vi.mock("@/components/profile-images-settings", () => ({ ProfileImagesSettings: () => null }))
 vi.mock("@/components/profile-publication-settings", () => ({
   ProfilePublicationSettings: (props: { membership: MembershipView }) => {
@@ -225,25 +234,71 @@ describe("Réglages — « Mes données » (DG-026)", () => {
   })
 })
 
-describe("Réglages — les textes du site depuis l'espace membre (LX-05)", () => {
-  it("liste les cinq textes avec leur version et leur date, sans repère : ils sont définitifs", () => {
+describe("Réglages — une vue, des sous-vues (« une page = une vue », lot 2a)", () => {
+  afterEach(() => {
+    window.history.replaceState(null, "", "/")
+  })
+  const list = () => screen.getByRole("navigation", { name: t("settings.title") })
+  const shown = () => Array.from(document.querySelectorAll<HTMLElement>("[data-sub-view]:not([data-inactive])")).map((node) => node.dataset.subView)
+  const view = () => document.querySelector("[data-sub-views]")?.getAttribute("data-view")
+  const current = () => within(list()).getAllByRole("link").filter((link) => link.getAttribute("aria-current") === "true").map((link) => link.textContent)
+
+  it("demande la vue à sa coque", () => {
     render(tree())
-    const region = within(screen.getByRole("region", { name: t("nav.account.info") }))
-    expect(region.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
-      ["Mentions légales", "/mentions-legales"],
-      ["Confidentialité", "/confidentialite"],
-      ["Conditions d'utilisation", "/conditions-utilisation"],
-      ["Règles de la communauté", "/regles-communaute"],
-      ["Contact", "/contact"],
+    expect(mocks.shellLayout).toHaveBeenLastCalledWith("view")
+  })
+
+  it("la liste porte les neuf rubriques, chacune vers l'ancre de sa première section, puis la ligne « Informations »", () => {
+    render(tree())
+    expect(within(list()).getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Compte", "#adhesions"],
+      ["Profil", "#profil"],
+      ["Pays et visibilité", "#facette"],
+      ["Fil et annuaire", "#mon-fil"],
+      ["Messages et appels", "#messages-et-appels"],
+      ["Affichage et notifications", "#apparence"],
+      ["Consentements", "#consentements"],
+      ["Parrainage", "#parrainage"],
+      ["Mes données", "#mes-donnees"],
+      ["Informations", "/mentions-legales"],
     ])
-    for (const kind of LEGAL_TEXT_KINDS) {
-      const edition = LEGAL_TEXTS[kind]
-      expect(region.getAllByText(t("legal.edition", { version: edition.version, date: formatLegalTextDate(edition.date, "fr") }), { exact: false }).length).toBeGreaterThan(0)
-    }
-    // Les cinq textes sont définitifs : aucun repère « à fournir » ni « provisoire ».
-    expect(pendingLegalTexts()).toEqual([])
-    expect(region.queryAllByText(t("settings.texts.pending"))).toHaveLength(0)
-    expect(region.queryAllByText(t("settings.texts.provisional"))).toHaveLength(0)
+    // Le détail : un seul volet, nommé, qui porte les neuf sous-vues, toutes montées.
+    expect(screen.getByRole("region", { name: t("settings.views.detail") })).toHaveAttribute("data-view-pane")
+    expect(document.querySelectorAll("[data-sub-view]")).toHaveLength(9)
+  })
+
+  it.each([
+    ["#parrainage", "parrainage", "Parrainage"],
+    ["#annuaire", "fil", "Fil et annuaire"],
+    ["#mes-signalements", "donnees", "Mes données"],
+  ])("l'ancre %s montre sa sous-vue, et elle seule", (hash, subView, label) => {
+    window.history.replaceState(null, "", `${routes.settings()}${hash}`)
+    render(tree())
+    expect(shown()).toEqual([subView])
+    expect(view()).toBe("detail")
+    expect(current()).toEqual([label])
+    // La ligne de retour à la liste, au téléphone.
+    expect(screen.getByRole("link", { name: t("settings.views.all") })).toHaveAttribute("href", "#rubriques")
+  })
+
+  it("une ancre inconnue (l'ancienne rubrique des textes) donne la liste, et la première sous-vue au large", () => {
+    window.history.replaceState(null, "", `${routes.settings()}#informations`)
+    render(tree())
+    expect(view()).toBe("list")
+    expect(shown()).toEqual(["compte"])
+    expect(current()).toEqual(["Compte"])
+  })
+
+  it("la ligne « Informations » est un lien vers les mentions légales : le clic simple ouvre la page flottante, le clic modifié suit le lien", () => {
+    render(tree())
+    const link = within(list()).getByRole("link", { name: t("nav.account.info") })
+    expect(link).toHaveAttribute("href", "/mentions-legales")
+    expect(link).toHaveAttribute("aria-haspopup", "dialog")
+    expect(fireEvent.click(link)).toBe(false)
+    expect(mocks.openInformation).toHaveBeenCalledExactlyOnceWith(link)
+    expect(fireEvent.click(link, { metaKey: true })).toBe(true)
+    expect(fireEvent.click(link, { button: 1 })).toBe(true)
+    expect(mocks.openInformation).toHaveBeenCalledOnce()
   })
 })
 

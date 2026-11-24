@@ -60,10 +60,5 @@
     "reasonsLabel": "Motifs de signalement qui s'y rapportent",
     "read": "Lire les règles de la communauté",
     "readRule": "Règle concernée : {{rule}}"
-  },
-  "settings": {
-    "texts": {
-      "provisional": "Texte provisoire"
-    }
   }
 }

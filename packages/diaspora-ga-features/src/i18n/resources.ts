@@ -68,6 +68,7 @@ import enProfileImages from "./locales/en/profile-images.json"
 import enLegalTexts from "./locales/en/legal-texts.json"
 import enCallSettings from "./locales/en/call-settings.json"
 import enDeviceNotifications from "./locales/en/device-notifications.json"
+import enSettingsViews from "./locales/en/settings-views.json"
 import enWelcomeProfile from "./locales/en/welcome-profile.json"
 import enPostPublicationState from "./locales/en/post-publication-state.json"
 import enCommentPages from "./locales/en/comment-pages.json"
@@ -154,6 +155,7 @@ import frProfileImages from "./locales/fr/profile-images.json"
 import frLegalTexts from "./locales/fr/legal-texts.json"
 import frCallSettings from "./locales/fr/call-settings.json"
 import frDeviceNotifications from "./locales/fr/device-notifications.json"
+import frSettingsViews from "./locales/fr/settings-views.json"
 import frWelcomeProfile from "./locales/fr/welcome-profile.json"
 import frPostPublicationState from "./locales/fr/post-publication-state.json"
 import frCommentPages from "./locales/fr/comment-pages.json"
@@ -251,6 +253,8 @@ export const LOCALE_PARTS = {
     "call-settings": frCallSettings,
     // DS-14 (volet push) : les notifications de cet appareil.
     "device-notifications": frDeviceNotifications,
+    // Une page = une vue, lot 2a : les sous-vues des réglages.
+    "settings-views": frSettingsViews,
     "welcome-profile": frWelcomeProfile,
     "object-reports": frObjectReports,
     "hub-shortcuts": frHubShortcuts,
@@ -347,6 +351,8 @@ export const LOCALE_PARTS = {
     "call-settings": enCallSettings,
     // DS-14 (volet push) : les notifications de cet appareil.
     "device-notifications": enDeviceNotifications,
+    // Une page = une vue, lot 2a : les sous-vues des réglages.
+    "settings-views": enSettingsViews,
     "welcome-profile": enWelcomeProfile,
     "object-reports": enObjectReports,
     "hub-shortcuts": enHubShortcuts,
