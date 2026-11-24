@@ -59,6 +59,42 @@ describe("useHashView — la vue que dit l'ancre", () => {
     })
     expect(screen.getByTestId("vue")).toHaveTextContent("esprit")
   })
+
+  it("une ancre poussée par l'historique (le routeur de Next) prévient les abonnés, en différé", async () => {
+    window.history.replaceState(null, "", "/parametres")
+    render(<Probe />)
+    // Next pousse l'adresse sans `hashchange` (« Obtenir un parrainage » suivi depuis la page même).
+    act(() => {
+      window.history.pushState(null, "", "/parametres#respect")
+    })
+    // Pas dans le même tour : Next pousse l'adresse dans un `useInsertionEffect`, où un avis
+    // synchrone ferait lever une alerte à React.
+    expect(screen.getByTestId("vue")).toHaveTextContent("aucune")
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(screen.getByTestId("vue")).toHaveTextContent("respect")
+    // `replaceState` aussi, et chaque abonné est prévenu.
+    render(<Probe />)
+    act(() => {
+      window.history.replaceState(null, "", "/parametres#esprit")
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    })
+    expect(screen.getAllByTestId("vue").map((node) => node.textContent)).toEqual(["esprit", "esprit"])
+  })
+
+  it("l'enveloppe de l'historique laisse l'adresse et l'état poussés intacts, et ne se pose qu'une fois", () => {
+    render(<Probe />)
+    const wrapped = window.history.pushState
+    render(<Probe />)
+    expect(window.history.pushState).toBe(wrapped)
+    window.history.pushState({ marque: 1 }, "", "/parametres#droits-d-auteur")
+    expect(window.location.pathname).toBe("/parametres")
+    expect(window.location.hash).toBe("#droits-d-auteur")
+    expect(window.history.state).toEqual({ marque: 1 })
+  })
 })
 
 describe("viewOfHash — règle pure", () => {
