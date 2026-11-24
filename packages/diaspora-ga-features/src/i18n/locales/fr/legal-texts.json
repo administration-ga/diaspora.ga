@@ -3,6 +3,10 @@
     "edition": "Version {{version}} du {{date}}",
     "sectionNumber": "{{number}}.",
     "summary": "Sommaire",
+    "pager": "Rubriques précédente et suivante",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "texts": "Textes du site",
     "notice": {
       "title": "Mentions légales",
       "publisher": {

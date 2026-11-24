@@ -81,9 +81,9 @@ describe("ViewPane — le seul élément qui défile", () => {
 })
 
 describe("la variante `tall` de la couche Tailwind", () => {
-  it("est déclarée : une fenêtre d'au moins 600 px de haut", () => {
+  it("est déclarée : une fenêtre d'au moins 600 px de haut, à l'écran (l'impression suit le document)", () => {
     // Chemin de fichier, pas d'URL : sous jsdom, `URL` n'est pas celle de Node.
     const layer = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../styles/tailwind-theme.css"), "utf8")
-    expect(layer).toContain("@custom-variant tall (@media (min-height: 600px));")
+    expect(layer).toContain("@custom-variant tall (@media screen and (min-height: 600px));")
   })
 })

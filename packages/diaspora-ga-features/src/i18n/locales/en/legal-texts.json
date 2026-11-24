@@ -3,6 +3,10 @@
     "edition": "Version {{version}}, {{date}}",
     "sectionNumber": "{{number}}.",
     "summary": "Contents",
+    "pager": "Previous and next sections",
+    "previous": "Previous",
+    "next": "Next",
+    "texts": "Site texts",
     "notice": {
       "title": "Legal notice",
       "publisher": {
