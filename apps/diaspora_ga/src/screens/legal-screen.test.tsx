@@ -15,8 +15,8 @@ import PrivacyPage from "@/app/confidentialite/page"
 import LegalNoticePage from "@/app/mentions-legales/page"
 import TermsPage from "@/app/conditions-utilisation/page"
 import { legalBodyLines, parseLegalBody } from "@/lib/legal-body"
-import { formatLegalTextDate, LEGAL_SECTION_LINKS, legalSectionAnchor } from "@/lib/legal-texts"
-import { routes } from "@/lib/routes"
+import { formatLegalTextDate, LEGAL_SECTION_LINKS, LEGAL_TEXT_LABELS, LEGAL_TEXT_ROUTES, legalSectionAnchor } from "@/lib/legal-texts"
+import { anchors, routes } from "@/lib/routes"
 
 import { LegalScreen } from "./legal-screen"
 
@@ -236,5 +236,74 @@ describe("Textes du site — une page par texte, branchée sur sa route", () => 
 
   it("chaque nouveau texte a sa propre adresse dans la table des routes", () => {
     expect([routes.terms(), routes.communityRules(), routes.contact()]).toEqual(["/conditions-utilisation", "/regles-communaute", "/contact"])
+  })
+})
+
+describe("Textes du site — une page, une vue : l'ancre choisit la rubrique (24/11/2026)", () => {
+  afterEach(() => window.history.replaceState(null, "", "/"))
+
+  /** Les rubriques montrées après l'hydratation (les autres portent `data-inactive`). */
+  const shownSections = (kind: LegalTextKind) =>
+    LEGAL_TEXTS[kind].sections.filter((section) => !document.getElementById(legalSectionAnchor(kind, section))!.hasAttribute("data-inactive"))
+
+  it("l'adresse d'une règle montre cette règle seule : les liens des signalements ne changent pas", () => {
+    window.history.replaceState(null, "", routes.communityRule("reporting"))
+    renderText("community")
+    expect(shownSections("community")).toEqual(["reporting"])
+    expect(document.querySelector("[data-legal-reader]")).toHaveAttribute("data-view", "section")
+    const t = getFixedT("fr")
+    expect(within(screen.getByRole("navigation", { name: t("legal.summary") })).getByRole("link", { current: true })).toHaveAttribute(
+      "href",
+      `#${legalSectionAnchor("community", "reporting")}`,
+    )
+  })
+
+  it("sans ancre : la vue du sommaire, la première rubrique montrée (au bureau), aucun retour au sommaire", () => {
+    const t = getFixedT("fr")
+    renderText("privacy")
+    expect(shownSections("privacy")).toEqual([LEGAL_TEXTS.privacy.sections[0]])
+    expect(document.querySelector("[data-legal-reader]")).toHaveAttribute("data-view", "summary")
+    expect(screen.queryByRole("link", { name: t("legal.summary") })).toBeNull()
+  })
+
+  it("une rubrique ouverte offre le retour au sommaire, par son ancre (le téléphone n'en montre qu'un niveau)", () => {
+    const t = getFixedT("fr")
+    window.history.replaceState(null, "", `${routes.privacy()}#${legalSectionAnchor("privacy", "controller")}`)
+    renderText("privacy")
+    expect(screen.getByRole("link", { name: t("legal.summary") })).toHaveAttribute("href", anchors.legalSummary)
+  })
+
+  it.each(LEGAL_TEXT_KINDS)("« %s » : les cinq textes en onglets, dans l'ordre du pied de page, celui de la page courant", (kind) => {
+    const t = getFixedT("fr")
+    renderText(kind)
+    const tabs = within(screen.getByRole("navigation", { name: t("legal.texts") }))
+    expect(tabs.getAllByRole("link").map((link) => [link.textContent, link.getAttribute("href")])).toEqual(
+      LEGAL_TEXT_KINDS.map((other) => [t(LEGAL_TEXT_LABELS[other]), LEGAL_TEXT_ROUTES[other]()]),
+    )
+    expect(tabs.getAllByRole("link").filter((link) => link.getAttribute("aria-current") === "page").map((link) => link.textContent)).toEqual([t(LEGAL_TEXT_LABELS[kind])])
+  })
+
+  it("parle anglais : onglets et retour au sommaire", () => {
+    window.history.replaceState(null, "", routes.communityRule("respect"))
+    renderText("community", "en")
+    const en = getFixedT("en")
+    expect(within(screen.getByRole("navigation", { name: en("legal.texts") })).getByRole("link", { current: "page" })).toHaveTextContent("Community rules")
+    expect(screen.getByRole("link", { name: "Contents" })).toHaveAttribute("href", anchors.legalSummary)
+  })
+})
+
+describe("Textes du site — au téléphone, l'onglet du texte ouvert est ramené dans sa piste", () => {
+  afterEach(() => {
+    delete (Element.prototype as { scrollIntoView?: unknown }).scrollIntoView
+  })
+
+  it("l'onglet courant, et lui seul, est ramené en vue, sans défilement vertical", () => {
+    const t = getFixedT("fr")
+    const reveal = vi.fn()
+    Element.prototype.scrollIntoView = reveal
+    renderText("contact")
+    const current = within(screen.getByRole("navigation", { name: t("legal.texts") })).getByRole("link", { current: "page" })
+    expect(reveal.mock.contexts).toEqual([current])
+    expect(reveal).toHaveBeenCalledWith({ block: "nearest", inline: "center" })
   })
 })

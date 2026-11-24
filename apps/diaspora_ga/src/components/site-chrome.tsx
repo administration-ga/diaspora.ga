@@ -61,12 +61,21 @@ export function AppDemoChip() {
   return <DemoChip onClick={restore} />
 }
 
-/** Chrome des pages publiques (vitrine, entrée, textes) : mot-symbole, langue, entrée. */
-export function PublicShell(props: { children: ReactNode; hideEnter?: boolean }) {
+/**
+ * Chrome des pages publiques (vitrine, entrée, textes) : mot-symbole, langue, entrée.
+ *
+ * `layout="view"` (« une page = une vue », décision du 24/11/2026) : dans une fenêtre d'au moins
+ * 600 px de haut, la coque tient l'écran et son contenu (un `ViewFrame`) prend la hauteur qui
+ * reste ; le document ne défile plus. Pas de grand pied de page : la vue porte sa propre
+ * navigation (les onglets des textes) ; la langue, que seul le pied offrait au téléphone, passe
+ * sous l'en-tête.
+ */
+export function PublicShell(props: { children: ReactNode; hideEnter?: boolean; layout?: "document" | "view" }) {
   const { t } = useDiasporaGaT()
+  const view = props.layout === "view"
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="mx-auto flex w-full max-w-[1120px] items-center justify-between gap-3 px-4 py-4">
+    <div className={cn("flex min-h-dvh flex-col", view && "tall:h-dvh tall:min-h-0")}>
+      <header className="mx-auto flex w-full max-w-[1120px] shrink-0 items-center justify-between gap-3 px-4 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <NextLink href={routes.home()} aria-label={t("nav.home")} className="rounded-md focus-visible:shadow-focus">
             <Wordmark />
@@ -82,10 +91,15 @@ export function PublicShell(props: { children: ReactNode; hideEnter?: boolean })
           )}
         </div>
       </header>
-      <main id="contenu" className="flex-1">
+      {view ? (
+        <div className="mx-auto w-full max-w-[1120px] shrink-0 px-4 pb-2 sm:hidden">
+          <LanguageSwitch />
+        </div>
+      ) : null}
+      <main id="contenu" className={cn("flex-1", view && "flex min-w-0 flex-col tall:min-h-0")}>
         {props.children}
       </main>
-      <SiteFooter />
+      {view ? null : <SiteFooter />}
     </div>
   )
 }

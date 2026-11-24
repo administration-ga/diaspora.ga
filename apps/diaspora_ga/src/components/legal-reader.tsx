@@ -146,7 +146,8 @@ export function LegalReader(props: LegalReaderProps) {
         <ViewPane
           ref={textRef}
           label={t(`${base}.title`)}
-          className={cn("flex flex-col gap-6 px-1 pb-2 tall:flex-1", hydrated && view === "summary" && "@max-2xl/reader:hidden")}
+          // Une adresse ou un courriel du texte se coupe plutôt que d'élargir la page (320 px).
+          className={cn("flex flex-col gap-6 px-1 pb-2 wrap-break-word tall:flex-1", hydrated && view === "summary" && "@max-2xl/reader:hidden")}
         >
           {sections.map((section, index) => {
             const link = LEGAL_SECTION_LINKS[props.kind][section]
