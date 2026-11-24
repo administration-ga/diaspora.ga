@@ -1,7 +1,7 @@
 "use client"
 
 import { LEGAL_TEXT_KINDS, LEGAL_TEXTS, type LegalTextKind } from "@diaspora-ga/domain"
-import { FolderTabsNav, ViewFrame } from "@diaspora-ga/features"
+import { cn, FolderTabsNav, ViewFrame } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ListIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -60,9 +60,10 @@ export function LegalScreen(props: { kind: LegalTextKind }) {
           <header className="flex flex-col gap-3">
             <FolderTabsNav
               label={t("legal.texts")}
+              // Cibles de 44 px (la piste partagée en pose 40) : ici, on les touche du doigt.
               items={LEGAL_TEXT_KINDS.map((kind) => ({ id: kind, label: t(LEGAL_TEXT_LABELS[kind]), href: LEGAL_TEXT_ROUTES[kind](), active: kind === props.kind }))}
               renderLink={(item, className, children) => (
-                <NextLink key={item.id} ref={item.active ? revealTab : undefined} href={item.href} className={className} aria-current={item.active ? "page" : undefined}>
+                <NextLink key={item.id} ref={item.active ? revealTab : undefined} href={item.href} className={cn(className, "min-h-11")} aria-current={item.active ? "page" : undefined}>
                   {children}
                 </NextLink>
               )}

@@ -281,6 +281,8 @@ describe("Textes du site — une page, une vue : l'ancre choisit la rubrique (24
       LEGAL_TEXT_KINDS.map((other) => [t(LEGAL_TEXT_LABELS[other]), LEGAL_TEXT_ROUTES[other]()]),
     )
     expect(tabs.getAllByRole("link").filter((link) => link.getAttribute("aria-current") === "page").map((link) => link.textContent)).toEqual([t(LEGAL_TEXT_LABELS[kind])])
+    // Des cibles de 44 px au doigt.
+    for (const link of tabs.getAllByRole("link")) expect(link).toHaveClass("min-h-11")
   })
 
   it("parle anglais : onglets et retour au sommaire", () => {

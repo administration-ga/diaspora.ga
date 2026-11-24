@@ -372,6 +372,9 @@ export function AppShell(props: { membership: MembershipView; rail?: ReactNode; 
   // compte, sur l'adresse où elle l'a été. Suivre un lien qui mène ailleurs (un renvoi d'une rubrique)
   // la referme d'elle-même : l'adresse a changé.
   const [informationAt, setInformationAt] = useState<string | null>(null)
+  // Fermée par un changement d'adresse, elle l'est pour de bon : revenir à l'adresse d'avant (retour
+  // du navigateur) ne la rouvre pas. État ajusté pendant le rendu, sans effet.
+  if (informationAt !== null && informationAt !== pathname) setInformationAt(null)
   const informationReturn = useRef<HTMLElement | null>(null)
   const openInformation = (returnFocus: HTMLElement | null) => {
     informationReturn.current = returnFocus

@@ -956,6 +956,9 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     await screen.findByRole("dialog", { name: INFORMATION_LABEL })
     view.rerender(shellTree({ pathname: routes.explore() }))
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    // Revenir à l'adresse d'avant (retour du navigateur) ne la rouvre pas.
+    view.rerender(shellTree({ pathname: "/fil" }))
+    expect(screen.queryByRole("dialog")).toBeNull()
   })
 
   it("au bureau, le menu se lit par familles : le compte, « Mon espace », puis « Mes données » et « Informations », puis la sortie", async () => {
