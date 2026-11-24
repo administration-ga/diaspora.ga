@@ -20,10 +20,10 @@ import {
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
-import { memberMenu, type MemberCreateEntry, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
+import { MEMBER_MENU_ICONS, memberMenu, type MemberCreateEntry, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
 import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
-import type { ComponentProps, ReactNode } from "react"
+import { createElement, type ComponentProps, type ReactNode } from "react"
 import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -956,6 +956,70 @@ describe("coque — le menu du compte, sous l'avatar", () => {
     await screen.findByRole("dialog", { name: INFORMATION_LABEL })
     view.rerender(shellTree({ pathname: routes.explore() }))
     await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("au bureau, le menu se lit par familles : le compte, « Mon espace », puis « Mes données » et « Informations », puis la sortie", async () => {
+    renderShell({ network: true, holdings: HOLDS_ALL })
+    const menu = await openAccountMenu()
+    // « Mon espace » : un groupe titré, les entrées personnelles dans l'ordre du menu partagé.
+    const space = within(menu).getByRole("group", { name: "Mon espace" })
+    expect(menuItemsOf(space)).toEqual(ACCOUNT.slice(2, -1))
+    // Les autres familles : séparées par un filet, l'ordre des entrées inchangé.
+    const order = Array.from(menu.querySelectorAll('[role="menuitem"], [role="separator"], [role="group"]')).map((node) =>
+      node.getAttribute("role") === "separator" ? "—" : node.getAttribute("role") === "group" ? "Mon espace" : node.textContent,
+    )
+    expect(order.filter((item) => item === "—" || item === "Mon espace" || item === "Profil" || item === "Mes données" || item === INFORMATION_LABEL || item === SIGN_OUT)).toEqual([
+      "—",
+      "Profil",
+      "—",
+      "Mon espace",
+      "—",
+      "Mes données",
+      INFORMATION_LABEL,
+      "—",
+      SIGN_OUT,
+    ])
+  })
+
+  it("au téléphone, la feuille se lit par les mêmes familles ; « Informations » suit « Mes données »", async () => {
+    mocks.desktop = false
+    renderShell({ network: true, holdings: HOLDS_ALL })
+    const account = await openAccountSheet()
+    const space = within(account).getByRole("group", { name: "Mon espace" })
+    expect(linksOf(space)).toEqual(ACCOUNT.slice(2, -1))
+    // Toujours les mêmes liens, dans le même ordre, dans la navigation du compte.
+    expect(linksOf(account)).toEqual(ACCOUNT)
+    const data = within(account).getByRole("link", { name: "Mes données" })
+    const information = within(account).getByRole("button", { name: INFORMATION_LABEL })
+    expect(data.closest("[data-account-family]")).toBe(information.closest("[data-account-family]"))
+    expect(data.compareDocumentPosition(information) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it("parle anglais : « My space »", async () => {
+    renderShell({ network: true, holdings: HOLDS_ALL, locale: "en" })
+    await userEvent.setup().click(accountTrigger("menu", "Account menu (Awa Ogooué)"))
+    expect(within(await screen.findByRole("menu")).getByRole("group", { name: "My space" })).toBeInTheDocument()
+  })
+
+  it.each([
+    ["/parametres", "Réglages", "settings"],
+    ["/relations", "Mes relations", "relations"],
+    ["/enregistrements", "Mes enregistrements", "bookmarks"],
+  ] as const)("sur %s, la carte de l'avatar du rail dit la page personnelle courante (« %s »), sans changer son nom", (pathname, label, id) => {
+    renderShell({ pathname, network: true, holdings: HOLDS_ALL })
+    const card = accountTrigger("menu")
+    expect(card).toHaveAccessibleName("Menu du compte (Awa Ogooué)")
+    const current = card.querySelector("[data-account-current]")
+    expect(current).toHaveTextContent(label)
+    const icon = render(createElement(MEMBER_MENU_ICONS[id])).container.querySelector("svg")
+    expect(current?.querySelector("svg")?.innerHTML).toBe(icon?.innerHTML)
+    // Un repère visuel : aucune entrée courante en plus (UX-05), le menu garde la sienne.
+    expect(card).not.toHaveAttribute("aria-current")
+  })
+
+  it("ailleurs (une page de la barre), la carte de l'avatar ne dit rien de plus", () => {
+    renderShell({ pathname: "/fil", network: true })
+    expect(accountTrigger("menu").querySelector("[data-account-current]")).toBeNull()
   })
 
   it("se déconnecter partout depuis le menu du bureau, au clavier : la porte unique est appelée une fois, le menu dit l'attente", async () => {
