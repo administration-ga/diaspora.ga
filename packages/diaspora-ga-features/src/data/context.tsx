@@ -115,6 +115,8 @@ export const useMemberBrowse = () => useDataSource().memberBrowse ?? null
 export const useNotificationOpening = () => useDataSource().notificationOpening ?? null
 /** Chercher dans les publications lisibles du réseau (DS-11) ; `null` : le fournisseur ne la sert pas. */
 export const usePostSearchCapability = () => useDataSource().postSearch ?? null
+/** Lot A4 (accueil en un écran) : ce que le moteur propose d'après IDN ; `null` : la saisie ordinaire. */
+export const useEntryPrefillCapability = () => useDataSource().entryPrefill ?? null
 
 /**
  * Les modules ouverts, pour la navigation et les adresses. Hors fournisseur, ou sur une

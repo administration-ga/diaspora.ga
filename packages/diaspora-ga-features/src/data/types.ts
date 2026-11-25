@@ -395,6 +395,32 @@ export interface OwnProfileView {
   readonly private: boolean
 }
 
+/** Un identifiant proposé à l'entrée d'après IDN, et s'il est libre pour la personne de la session. */
+export interface EntryPrefillHandle {
+  readonly handle: string
+  readonly available: boolean
+}
+
+/**
+ * Le pré-remplissage de l'accueil en un écran (décision du 25/11/2026, lot A4) : ce que le moteur
+ * propose d'après le retour d'IDN, pour la seule personne de la session, gardé 24 heures au plus
+ * et effacé dès que son profil naît (lot M1 du moteur). Rien n'y est écrit d'office : l'écran le
+ * MONTRE, modifiable, et le profil ne naît qu'au geste « Créer mon profil et entrer ».
+ *
+ *  · `displayName` : le nom civil déjà composé côté serveur (« NOM Prénoms »), ou `null` ;
+ *  · `handles` : six propositions au plus, dans l'ordre de préférence ; l'écran présélectionne la
+ *    première libre ;
+ *  · `residence` : le pays (ISO 3166-1 alpha-2) et la ville de résidence, ou `null` — toujours
+ *    `null` avant le lot M2 du moteur. Ni rue, ni code postal, ni position.
+ *
+ * Aucune donnée consulaire, aucune date de naissance, aucun NIP n'y figure.
+ */
+export interface EntryPrefillView {
+  readonly displayName: string | null
+  readonly handles: readonly EntryPrefillHandle[]
+  readonly residence: { readonly country: string; readonly city: string | null } | null
+}
+
 /** Une image de profil déjà jugée par la garde des fichiers du moteur. */
 export interface ProfileImageView {
   readonly url: string | null
