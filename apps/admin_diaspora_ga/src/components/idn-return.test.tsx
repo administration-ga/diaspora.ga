@@ -47,7 +47,7 @@ vi.mock("next/navigation", () => ({
   }),
 }))
 // L'apparence n'est pas l'objet du test.
-vi.mock("@antsia/social-features/shell/appearance", () => ({ AppearanceProvider: (props: { children: ReactNode }) => props.children }))
+vi.mock("@antsia/social-features/shell/appearance", () => ({ AppearanceProvider: (props: { children: ReactNode }) => props.children, AppearanceToggle: () => null }))
 /*
  * Les deux paquets Convex que lit le fournisseur DU MOTEUR, simulés à l'adresse où le moteur
  * les résout (`ANTSIA/packages/api`, installation isolée de bun) : l'application ne les

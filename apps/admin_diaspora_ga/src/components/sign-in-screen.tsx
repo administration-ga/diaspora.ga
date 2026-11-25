@@ -1,4 +1,4 @@
-// Dupliqué de ANTSIA/apps/admin_antsia_ga/src/components/sign-in-screen.tsx @ c9006352 — adaptations : textes de l'espace `admin` d'admin.diaspora.ga et bouton de la charte DIASPORA.GA ; les trois adresses de retour d'IDN sont `/entrer` nu de CETTE origine (revue A1, F2) ; une session ouverte reprend la section retenue dans l'onglet, relue contre le registre ; aucun lien vers l'accueil (gardé).
+// Dupliqué de ANTSIA/apps/admin_antsia_ga/src/components/sign-in-screen.tsx @ c9006352 — adaptations : textes de l'espace `admin` d'admin.diaspora.ga et bouton de la charte DIASPORA.GA ; les trois adresses de retour d'IDN sont `/entrer` nu de CETTE origine (revue A1, F2) ; une session ouverte reprend la section retenue dans l'onglet, relue contre le registre ; aucun lien vers l'accueil (gardé) ; mise en page de la porte de diaspora.ga (24/11/2026, demande du propriétaire) : marque et accroche à gauche dès 960 px, carte d'accès à droite, bascule clair/sombre en haut.
 "use client"
 
 import { isSigningOutEverywhere } from "@antsia/api/sign-out-everywhere"
@@ -11,10 +11,11 @@ import {
   type IdnReturnRefusal,
   withoutIdnReturnParams,
 } from "@antsia/social-features/identity"
+import { AppearanceToggle } from "@antsia/social-features/shell/appearance"
 import { api } from "@convex/_generated/api"
 import { Button } from "@diaspora-ga/features"
 import { useConvexAuth, useQuery } from "convex/react"
-import { ShieldCheck } from "lucide-react"
+import { IdCard, LockKeyhole, ShieldCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Component, Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -73,8 +74,8 @@ export function IdnEntry(props: { configuration: IdentityConfiguration | null | 
   const available = props.configuration?.idn === true
   const help = props.configuration === undefined ? t("signIn.loading") : available ? t("signIn.help") : t("signIn.unavailable")
   return (
-    <section className="flex flex-col gap-4 rounded-xl bg-card p-5 text-card-foreground">
-      <p id={helpId} role={props.configuration === undefined ? "status" : undefined} className="text-sm text-muted-foreground">
+    <div className="flex flex-col gap-4">
+      <p id={helpId} role={props.configuration === undefined ? "status" : undefined} className="text-center text-sm leading-relaxed text-muted-foreground">
         {help}
       </p>
       {error ? (
@@ -85,7 +86,7 @@ export function IdnEntry(props: { configuration: IdentityConfiguration | null | 
       <Button
         type="button"
         size="lg"
-        className="h-auto min-h-12 whitespace-normal py-3"
+        className="h-auto min-h-12 w-full whitespace-normal py-3"
         disabled={pending || !available}
         aria-busy={pending || undefined}
         aria-describedby={helpId}
@@ -123,11 +124,14 @@ export function IdnEntry(props: { configuration: IdentityConfiguration | null | 
           }
         }}
       >
-        <ShieldCheck className="size-5 shrink-0" aria-hidden="true" />
+        <IdCard className="size-5 shrink-0" aria-hidden="true" />
         {pending ? t("signIn.connecting") : t("signIn.idn")}
       </Button>
-      <p className="text-xs text-muted-foreground">{t("signIn.minimum", { level: CONSOLE_MIN_LOA })}</p>
-    </section>
+      <p className="flex items-start justify-center gap-1.5 text-[13px] leading-snug text-muted-foreground">
+        <LockKeyhole className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
+        <span>{t("signIn.minimum", { level: CONSOLE_MIN_LOA })}</span>
+      </p>
+    </div>
   )
 }
 
@@ -197,42 +201,66 @@ export function SignInScreen() {
     if (cleaned !== null) window.history.replaceState(window.history.state, "", cleaned)
     setAddressRead(true)
   }, [])
+  const showcaseTitleId = useId()
+  const accessTitleId = useId()
+  // La porte de diaspora.ga, en plus sobre : la marque et l'accroche à gauche dès 960 px, la carte
+  // d'accès à droite ; au téléphone, une seule colonne. Le mode sombre se bascule avant la connexion.
   return (
-    <main id={anchors.contentId} className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-10">
-      <header className="space-y-3">
-        <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-          <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
-          {t("brand.eyebrow")}
-        </p>
-        <h1 className="font-display text-3xl font-bold">{t("signIn.title")}</h1>
-        <p className="text-muted-foreground">{t("signIn.lead")}</p>
+    <div className="flex min-h-dvh flex-col overflow-x-clip">
+      <header className="mx-auto flex w-full max-w-[1060px] items-center justify-end gap-3 px-5 py-4">
+        <AppearanceToggle />
       </header>
-      {signOutIncomplete ? (
-        <p role="alert" className="rounded-xl bg-muted p-4 text-sm">
-          {identityT("signOutIncomplete")}
-        </p>
-      ) : null}
-      {idnReturn ? (
-        <p role="alert" className="rounded-xl bg-muted p-4 text-sm">
-          {identityT(idnReturnMessageKey(idnReturn))}
-        </p>
-      ) : null}
-      {publicEnv.convexUrl ? (
-        <EntryBoundary
-          fallback={(retry) => (
-            <section className="flex flex-col gap-3">
-              <p role="alert">{t("signIn.configurationFailed")}</p>
-              <Button type="button" className="self-start" onClick={retry}>
-                {t("session.retry")}
-              </Button>
+      <main id={anchors.contentId} className="flex flex-1 items-center">
+        <div className="mx-auto grid w-full max-w-[1060px] items-center gap-6 px-5 pb-10 pt-2 min-[960px]:grid-cols-[minmax(0,1fr)_420px] min-[960px]:gap-16 min-[960px]:pb-20 min-[960px]:pt-12">
+          <section aria-labelledby={showcaseTitleId} className="mx-auto w-full max-w-[480px] text-center min-[960px]:-mt-12 min-[960px]:text-left">
+            <p translate="no" className="font-display text-[38px] font-bold leading-none tracking-[-0.025em] text-primary min-[960px]:text-[76px]">
+              {t("signIn.wordmark")}
+            </p>
+            <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-semibold text-muted-foreground min-[960px]:mt-6">
+              <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
+              {t("brand.eyebrow")}
+            </p>
+            <h1 id={showcaseTitleId} className="mt-3 font-display text-[25px] font-semibold leading-[1.15] tracking-tight min-[960px]:mt-4 min-[960px]:text-[38px]">
+              {t("signIn.tagline")}
+            </h1>
+            <p className="mt-4 hidden max-w-[420px] text-lg leading-relaxed text-muted-foreground min-[960px]:block">{t("signIn.lead")}</p>
+          </section>
+          <div className="mx-auto w-full min-w-0 max-w-[420px]">
+            <section aria-labelledby={accessTitleId} className="flex flex-col gap-4 rounded-xl bg-card p-4 text-card-foreground shadow-float sm:p-6">
+              <h2 id={accessTitleId} className="text-center text-xl font-semibold">
+                {t("signIn.cardTitle")}
+              </h2>
+              {signOutIncomplete ? (
+                <p role="alert" className="rounded-lg bg-muted p-4 text-sm">
+                  {identityT("signOutIncomplete")}
+                </p>
+              ) : null}
+              {idnReturn ? (
+                <p role="alert" className="rounded-lg bg-muted p-4 text-sm">
+                  {identityT(idnReturnMessageKey(idnReturn))}
+                </p>
+              ) : null}
+              {publicEnv.convexUrl ? (
+                <EntryBoundary
+                  fallback={(retry) => (
+                    <div className="flex flex-col gap-3">
+                      <p role="alert">{t("signIn.configurationFailed")}</p>
+                      <Button type="button" className="self-start" onClick={retry}>
+                        {t("session.retry")}
+                      </Button>
+                    </div>
+                  )}
+                >
+                  {addressRead ? <ConnectedEntry signOutIncomplete={signOutIncomplete} /> : <p role="status">{t("session.loading")}</p>}
+                </EntryBoundary>
+              ) : (
+                <p role="alert">{t("session.backendMissing")}</p>
+              )}
             </section>
-          )}
-        >
-          {addressRead ? <ConnectedEntry signOutIncomplete={signOutIncomplete} /> : <p role="status">{t("session.loading")}</p>}
-        </EntryBoundary>
-      ) : (
-        <p role="alert">{t("session.backendMissing")}</p>
-      )}
-    </main>
+            <p className="mt-4 text-center text-[13px] text-muted-foreground">{t("signIn.footnote")}</p>
+          </div>
+        </div>
+      </main>
+    </div>
   )
 }
