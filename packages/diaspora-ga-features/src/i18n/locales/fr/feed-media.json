@@ -3,7 +3,16 @@
     "media": {
       "scanUnavailable": "Indisponible pour le moment",
       "photoFailed": "Photo indisponible",
-      "videoFailed": "Cette vidéo ne peut pas être lue ici."
+      "videoFailed": "Cette vidéo ne peut pas être lue ici.",
+      "moreCount": "+{{count}}",
+      "openMore_one": "Voir {{count}} photo de plus, à partir de la photo {{position}} sur {{total}}",
+      "openMore_other": "Voir {{count}} photos de plus, à partir de la photo {{position}} sur {{total}}",
+      "viewer": {
+        "positionShort": "{{position}} / {{total}}",
+        "carousel": "carrousel",
+        "slideRole": "diapositive",
+        "slide": "{{position}} sur {{total}}"
+      }
     }
   },
   "composer": {

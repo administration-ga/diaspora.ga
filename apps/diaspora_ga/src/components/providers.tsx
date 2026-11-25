@@ -14,7 +14,7 @@ import { EngineDataProviders } from "@/data/engine-providers"
 import { APPEARANCE } from "@/lib/appearance"
 import { callJournalRoute } from "@/lib/calls"
 import { publicEnv } from "@/lib/env"
-import { routes } from "@/lib/routes"
+import { DEMO_MEDIA_ASSETS, routes } from "@/lib/routes"
 import { isStaticPublicPath } from "@/lib/static-public-routes"
 
 import { AccountLocale } from "./account-locale"
@@ -78,7 +78,8 @@ const AppLink: LinkComponent = ({ href, children, ...rest }) => (
  * moteur (ADR-0041), il ne monte que les modules ouverts par l'administration du réseau fictif.
  */
 function DemoDataProvider(props: { children: ReactNode }) {
-  const [source] = useState(() => createDemoDataSource(new DemoStore(typeof window === "undefined" ? null : window.localStorage)))
+  // A6 et A2 : la vitrine des médias du fil (six photos fictives, une vidéo fictive) pour la recette en démonstration.
+  const [source] = useState(() => createDemoDataSource(new DemoStore(typeof window === "undefined" ? null : window.localStorage, undefined, undefined, { mediaShowcase: { clipUrl: DEMO_MEDIA_ASSETS.clip } })))
   return <GatedDataSourceProvider source={source}>{props.children}</GatedDataSourceProvider>
 }
 

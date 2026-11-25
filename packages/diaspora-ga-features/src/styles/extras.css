@@ -94,6 +94,13 @@
   --dg-scrim: color-mix(in srgb, var(--esp-neutral-900) 42%, transparent);
   --dg-shadow-sheet: var(--esp-shadow-float);
 
+  /* Médias du fil (A6 et A2, 25/11/2026) : le voile posé SUR une photo ou une vidéo
+     (tuile « +N », commandes de la vidéo) et l'encre claire qui s'y lit. Les mêmes dans
+     les deux modes : une photo ne change pas avec le thème. Au pire, une photo blanche
+     sous le voile : l'encre y tient 4,9:1 (Sable), davantage dans Gaboma. */
+  --dg-media-scrim: color-mix(in srgb, var(--esp-neutral-900) 65%, transparent);
+  --dg-media-ink: var(--esp-neutral-0);
+
   /* Mouvement. */
   --dg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --dg-duration-fast: 160ms;

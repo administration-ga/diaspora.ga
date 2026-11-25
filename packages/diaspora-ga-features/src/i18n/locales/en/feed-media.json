@@ -3,7 +3,16 @@
     "media": {
       "scanUnavailable": "Unavailable for now",
       "photoFailed": "Photo unavailable",
-      "videoFailed": "This video can’t be played here."
+      "videoFailed": "This video can’t be played here.",
+      "moreCount": "+{{count}}",
+      "openMore_one": "See {{count}} more photo, from photo {{position}} of {{total}}",
+      "openMore_other": "See {{count}} more photos, from photo {{position}} of {{total}}",
+      "viewer": {
+        "positionShort": "{{position}} / {{total}}",
+        "carousel": "carousel",
+        "slideRole": "slide",
+        "slide": "{{position}} of {{total}}"
+      }
     }
   },
   "composer": {

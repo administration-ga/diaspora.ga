@@ -27,8 +27,9 @@ function isLongBody(body: string): boolean {
  * grille à deux colonnes : la carte elle-même n'est pas modifiée.
  */
 const MEDIA_FIT = cn(
-  "[&_img]:max-h-[max(8rem,calc(100cqh_-_14rem))] [&_video]:max-h-[max(8rem,calc(100cqh_-_14rem))]",
-  "[&_.grid-cols-2]:mx-auto [&_.grid-cols-2]:w-full [&_.grid-cols-2]:max-w-[max(12rem,calc(100cqh_-_12rem))]",
+  // A6 : les cadres déclarent leurs proportions ; la découverte borne le cadre (la photo s'y recadre), jamais l'image seule.
+  "[&_[data-media-grid=single]_[data-media-tile]]:max-h-[max(8rem,calc(100cqh_-_14rem))]",
+  "[&_[data-media-grid]:not([data-media-grid=single])]:mx-auto [&_[data-media-grid]:not([data-media-grid=single])]:w-full [&_[data-media-grid]:not([data-media-grid=single])]:max-w-[max(12rem,calc(100cqh_-_12rem))]",
 )
 
 export interface DiscoveryItemProps {
