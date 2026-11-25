@@ -43,7 +43,7 @@ export function minutes(durationMs: number): string {
 
 /** Les variables par défaut des textes de DIASPORA.GA qui disent une borne ou des formats. */
 export const MEDIA_LIMIT_VARIABLES = {
-  // A3 : le nombre de photos d'une publication, borne du moteur (aujourd'hui quatre ; un lot du moteur pourra l'élever).
+  // A3 et M3 : le nombre de photos d'une publication, borne du moteur (dix depuis son lot M3).
   postMediaMaxCount: String(POST_MEDIA_MAX_COUNT),
   postImageMaxMegabytes: megabytes(POST_IMAGE_MAX_BYTES),
   postVideoMaxMegabytes: megabytes(POST_VIDEO_MAX_BYTES),

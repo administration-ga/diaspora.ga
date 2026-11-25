@@ -1,4 +1,4 @@
-import { POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
+import { POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import {
   prepareVideoForUpload,
@@ -147,12 +147,14 @@ describe("médias d'une publication — les règles du moteur, dites par DIASPOR
     expect(postMediaRefusal([photoInput, movInput])).toBe("media_video_alone")
   })
 
-  it("quatre photos au plus, une vidéo seule, un texte alternatif borné : chaque refus a son code", () => {
+  it("autant de photos que la borne du moteur, une vidéo seule, un texte alternatif borné : chaque refus a son code", () => {
     const photo = { kind: "image" as const, mimeType: "image/jpeg", sizeBytes: 1000 }
     const video = { kind: "video" as const, mimeType: "video/mp4", sizeBytes: 1000 }
-    expect(postMediaRefusal([photo, photo, photo, photo])).toBeNull()
+    // M3 du moteur : la borne vient du domaine (dix photos), jamais d'un chiffre écrit ici.
+    expect(POST_MEDIA_MAX_COUNT).toBe(10)
+    expect(postMediaRefusal(Array.from({ length: POST_MEDIA_MAX_COUNT }, () => photo))).toBeNull()
     expect(postMediaRefusal([video])).toBeNull()
-    expect(postMediaRefusal([photo, photo, photo, photo, photo])).toBe("media_too_many")
+    expect(postMediaRefusal(Array.from({ length: POST_MEDIA_MAX_COUNT + 1 }, () => photo))).toBe("media_too_many")
     expect(postMediaRefusal([video, photo])).toBe("media_video_alone")
     expect(postMediaRefusal([{ ...photo, mimeType: "image/bmp" }])).toBe("media_type_invalid")
     expect(postMediaRefusal([{ ...photo, sizeBytes: 21 * 1024 * 1024 }])).toBe("media_too_large")

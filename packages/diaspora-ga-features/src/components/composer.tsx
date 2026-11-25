@@ -173,8 +173,8 @@ function keepEnterInField(event: KeyboardEvent<HTMLInputElement>): void {
  * (aucune relecture par pays n'existe encore, HB-11). L'option locale reste
  * visible, inactive et expliquée, et la portée part pour toute la diaspora.
  *
- * Médias : quatre photos, ou une vidéo seule (règles du moteur, jugées AVANT
- * tout envoi). Chaque fichier part dès qu'il est choisi ; la publication attend
+ * Médias : jusqu'à `POST_MEDIA_MAX_COUNT` photos (dix depuis le lot M3 du moteur), ou
+ * une vidéo seule (règles du moteur, jugées AVANT tout envoi). Chaque fichier part dès qu'il est choisi ; la publication attend
  * la fin des envois. Le texte alternatif se donne photo par photo.
  *
  * Vidéo (FD-02) : toute vidéo choisie est d'abord préparée — le .mov de l'iPhone

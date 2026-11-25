@@ -704,18 +704,29 @@ const SHOWCASE_PHOTOS: readonly { readonly illustration: DemoIllustration; reado
   { illustration: "tambours", altText: "Illustration fictive : trois tambours sur une estrade.", width: 1200, height: 900 },
   { illustration: "plat", altText: "Illustration fictive : un plat partagé et ses garnitures.", width: 1000, height: 1000 },
   { illustration: "coucher", altText: "Illustration fictive : le coucher du soleil sur l'estuaire.", width: 1600, height: 900 },
+  { illustration: "pirogue", altText: "Illustration fictive : une pirogue sur le fleuve.", width: 1200, height: 900 },
+  { illustration: "foret", altText: "Illustration fictive : trois rangs de cimes dans la forêt.", width: 900, height: 1200 },
+  { illustration: "quartier", altText: "Illustration fictive : les façades colorées d'un quartier.", width: 1200, height: 800 },
+  { illustration: "etoiles", altText: "Illustration fictive : une nuit étoilée sur la plage.", width: 1000, height: 1000 },
 ]
+
+const SHOWCASE_PHOTOS_BODY = "Retour en images sur la soirée culturelle du collectif à Lyon : dix illustrations fictives pour la démonstration. Touchez une photo pour les parcourir."
 
 /**
  * Ajoute la vitrine des médias à un état de démonstration, une fois : une publication à
- * six photos (au-delà des quatre du moteur, pour montrer la tuile « +N » et la
- * visionneuse) et une publication à vidéo. Un état qui les porte déjà, ou dont les
- * auteurs fictifs manquent, est rendu tel quel. Les dates sont celles du chargement :
- * la vitrine paraît en tête du fil.
+ * dix photos (la borne du moteur depuis son lot M3, pour montrer la tuile « +N » et la
+ * visionneuse) et une publication à vidéo. Une vitrine enregistrée avec moins de photos
+ * (six, avant M3) reçoit les dix, sans doublon. Un état déjà à jour, ou dont les auteurs
+ * fictifs manquent, est rendu tel quel. Les dates sont celles du premier ajout : la
+ * vitrine paraît en tête du fil.
  */
 export function withMediaShowcase(state: DemoState, showcase: DemoMediaShowcase | null | undefined, now: number): DemoState {
   if (!showcase || showcase.clipUrl.trim().length === 0) return state
   const present = new Set(state.posts.map((post) => post.id))
+  const photosMedia = SHOWCASE_PHOTOS.map((photo) => ({ kind: "image" as const, url: "", ...photo }))
+  // Une vitrine d'avant M3 (six photos) passe aux dix photos, à sa place et à sa date.
+  const stale = state.posts.find((post) => post.id === DEMO_SHOWCASE_POST_IDS.photos && (post.media?.length ?? 0) !== photosMedia.length)
+  const refreshed = stale ? { ...state, posts: state.posts.map((post) => post === stale ? { ...post, body: SHOWCASE_PHOTOS_BODY, media: photosMedia } : post) } : state
   const added: DemoPost[] = []
   const base = { scope: { reach: "diaspora", country: "FR" } as const, audience: "public" as const, visibility: "network" as const, moderation: "published" as const, reactions: {}, editedAt: null }
   if (!present.has(DEMO_SHOWCASE_POST_IDS.photos) && state.persons["p-mireille"]) {
@@ -723,8 +734,8 @@ export function withMediaShowcase(state: DemoState, showcase: DemoMediaShowcase 
       ...base,
       id: DEMO_SHOWCASE_POST_IDS.photos,
       author: { kind: "person", id: "p-mireille" },
-      body: "Retour en images sur la soirée culturelle du collectif à Lyon : six illustrations fictives pour la démonstration. Touchez une photo pour les parcourir.",
-      media: SHOWCASE_PHOTOS.map((photo) => ({ kind: "image" as const, url: "", ...photo })),
+      body: SHOWCASE_PHOTOS_BODY,
+      media: photosMedia,
       createdAt: now - 20 * MINUTE,
       baseReactions: 14,
     })
@@ -740,5 +751,5 @@ export function withMediaShowcase(state: DemoState, showcase: DemoMediaShowcase 
       baseReactions: 6,
     })
   }
-  return added.length === 0 ? state : { ...state, posts: [...added, ...state.posts] }
+  return added.length === 0 ? refreshed : { ...refreshed, posts: [...added, ...refreshed.posts] }
 }

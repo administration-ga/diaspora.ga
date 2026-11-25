@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { POST_MEDIA_MAX_COUNT } from "@antsia/social-domain/content"
 import { DAY_MS, HOUR_MS, type OnboardingConsentChoices } from "@diaspora-ga/domain"
 import { describe, expect, it } from "vitest"
 
@@ -845,10 +846,13 @@ describe("médias d'une publication (EXF-DG-10)", () => {
     const post = { reach: "local" as const, audience: "public" as const, alsoOnRoot: false }
     expect(await store.publish({ ...post, body: " " })).toEqual({ ok: false, code: "post_empty" })
     const photo = () => ({ upload: store.stageMedia({ kind: "image", url: PHOTO, width: 10, height: 10 }), altText: "" })
-    expect(await store.publish({ ...post, body: "Cinq photos", media: [photo(), photo(), photo(), photo(), photo()] })).toEqual({
+    // M3 : la démonstration juge par la même borne que le moteur (`POST_MEDIA_MAX_COUNT`) ; une de plus est refusée.
+    expect(await store.publish({ ...post, body: "Une photo de trop", media: Array.from({ length: POST_MEDIA_MAX_COUNT + 1 }, photo) })).toEqual({
       ok: false,
       code: "media_too_many",
     })
+    expect(await store.publish({ ...post, body: "Autant de photos que la borne", media: Array.from({ length: POST_MEDIA_MAX_COUNT }, photo) })).toEqual({ ok: true, value: { moderation: "published" } })
+    expect(store.getState().posts[0]?.media).toHaveLength(POST_MEDIA_MAX_COUNT)
     expect(await store.publish({ ...post, body: "", media: [{ ...photo(), altText: "x".repeat(301) }] })).toEqual({ ok: false, code: "media_alt_too_long" })
   })
 })

@@ -33,6 +33,9 @@ const LIMIT_PHRASES = [
   "errors.media_video_converted_too_large",
   // A3 : les bornes dites sous les sélecteurs Photos et Vidéo du composeur.
   "composer.mediaLimits",
+  // M3 : le nombre de photos d'une publication (dix au lot M3 du moteur), jamais écrit en toutes lettres.
+  "errors.media_too_many",
+  "eventGallery.composeDescription",
   "profile.images.requirements",
   "profile.images.format",
   "profile.images.inputTooLarge",
@@ -88,7 +91,10 @@ describe("FD-02 — les bornes des médias suivent le moteur", () => {
     expect(format).not.toContain("MOV")
     // La durée dite est celle de la constante du moteur, jamais une valeur écrite.
     expect(t("errors.media_video_too_long")).toContain(minutes(POST_VIDEO_MAX_DURATION_MS))
-    for (const path of LIMIT_PHRASES) expect(t(path), path).not.toMatch(/\{\{|\}\}/)
+    // M3 : le refus du nombre et l'invite de la galerie disent la borne du moteur.
+    expect(t("errors.media_too_many")).toContain(String(POST_MEDIA_MAX_COUNT))
+    expect(t("eventGallery.composeDescription", { title: "Rencontre" })).toContain(String(POST_MEDIA_MAX_COUNT))
+    for (const path of LIMIT_PHRASES) expect(t(path, { title: "Rencontre" }), path).not.toMatch(/\{\{|\}\}/)
   })
 
   it("la phrase française garde l'espace insécable entre le nombre et l'unité", () => {

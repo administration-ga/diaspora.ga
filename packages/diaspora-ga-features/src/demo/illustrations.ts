@@ -1,15 +1,16 @@
 /**
- * Les illustrations FICTIVES de la démonstration (A6, 25/11/2026) : six scènes à plat,
+ * Les illustrations FICTIVES de la démonstration (A6, 25/11/2026) : dix scènes à plat,
  * dessinées en SVG au moment de la lecture, aux couleurs du thème AFFICHÉ — aucune
  * couleur n'est écrite ici (cliquet de la charte) : chaque teinte est lue dans un jeton
  * du contrat par une sonde, et l'image se recompose quand le thème change. Aucune photo
  * réelle, aucun fichier, aucune adresse : une donnée de démonstration se reconnaît.
  *
- * Elles servent la publication de démonstration à six photos, qui montre la grille
- * intelligente et la visionneuse (au-delà de quatre photos, une quatrième tuile « +N »).
+ * Elles servent la publication de démonstration à dix photos (la borne du moteur depuis son
+ * lot M3), qui montre la grille intelligente et la visionneuse (au-delà de quatre photos,
+ * trois vignettes et une quatrième tuile « +N »).
  */
 
-export const DEMO_ILLUSTRATIONS = ["lagune", "marche", "danse", "tambours", "plat", "coucher"] as const
+export const DEMO_ILLUSTRATIONS = ["lagune", "marche", "danse", "tambours", "plat", "coucher", "pirogue", "foret", "quartier", "etoiles"] as const
 export type DemoIllustration = (typeof DEMO_ILLUSTRATIONS)[number]
 
 /** Les rôles de couleur d'une scène, et le jeton du contrat qui porte chacun. */
@@ -111,6 +112,41 @@ const PAINTERS: Record<DemoIllustration, Painter> = {
     + `<circle cx="${w * 0.5}" cy="${h * 0.66}" r="${h * 0.18}" fill="${p.warm}"/>`
     + `<rect y="${h * 0.66}" width="${w}" height="${h * 0.34}" fill="${p.sea}"/>`
     + `<rect x="${w * 0.3}" y="${h * 0.72}" width="${w * 0.4}" height="${h * 0.02}" fill="${p.paper}" fill-opacity="0.6"/>`,
+  // La pirogue sur le fleuve : une coque, un pagayeur, des reflets.
+  pirogue: (p, w, h) => `<rect width="${w}" height="${h}" fill="${p.sky}"/>`
+    + `<rect y="${h * 0.55}" width="${w}" height="${h * 0.45}" fill="${p.sea}"/>`
+    + `<path d="M${w * 0.2} ${h * 0.6} Q ${w * 0.5} ${h * 0.72} ${w * 0.8} ${h * 0.6} Z" fill="${p.warm}"/>`
+    + `<circle cx="${w * 0.5}" cy="${h * 0.42}" r="${h * 0.05}" fill="${p.ink}"/>`
+    + `<rect x="${w * 0.48}" y="${h * 0.46}" width="${w * 0.04}" height="${h * 0.12}" fill="${p.ink}"/>`
+    + `<rect x="${w * 0.3}" y="${h * 0.76}" width="${w * 0.4}" height="${h * 0.015}" fill="${p.paper}" fill-opacity="0.5"/>`,
+  // La forêt : trois rangs de cimes.
+  foret: (p, w, h) => {
+    const rows = [0, 1, 2].map((row) => Array.from({ length: 6 }, (_, index) => {
+      const x = w * (index / 5) + (row % 2) * w * 0.08
+      const base = h * (0.62 + row * 0.14)
+      const top = base - h * 0.3
+      return `<path d="M${x - w * 0.09} ${base} L ${x} ${top} L ${x + w * 0.09} ${base} Z" fill="${[p.land, p.sea, p.deep][row]}" fill-opacity="${1 - row * 0.15}"/>`
+    }).join("")).join("")
+    return `<rect width="${w}" height="${h}" fill="${p.sky}"/><circle cx="${w * 0.8}" cy="${h * 0.2}" r="${h * 0.08}" fill="${p.sun}"/>${rows}`
+  },
+  // Le quartier : des façades et leurs fenêtres.
+  quartier: (p, w, h) => {
+    const houses = Array.from({ length: 5 }, (_, index) => {
+      const x = w * (0.04 + index * 0.19)
+      const height = h * (0.35 + ((index * 37) % 5) * 0.06)
+      const top = h * 0.88 - height
+      const windows = [0, 1].map((column) => `<rect x="${x + w * (0.03 + column * 0.08)}" y="${top + h * 0.06}" width="${w * 0.05}" height="${h * 0.07}" fill="${p.paper}"/>`).join("")
+      return `<rect x="${x}" y="${top}" width="${w * 0.17}" height="${height}" fill="${[p.warm, p.sea, p.sun, p.land, p.deep][index]}"/>${windows}`
+    }).join("")
+    return `<rect width="${w}" height="${h}" fill="${p.sky}"/><rect y="${h * 0.88}" width="${w}" height="${h * 0.12}" fill="${p.ink}" fill-opacity="0.5"/>${houses}`
+  },
+  // La nuit étoilée sur la plage : un croissant et des points de lumière.
+  etoiles: (p, w, h) => {
+    const stars = Array.from({ length: 24 }, (_, index) => `<circle cx="${w * (((index * 53) % 97) / 97)}" cy="${h * (((index * 29) % 61) / 100)}" r="${Math.min(w, h) * (0.004 + (index % 3) * 0.003)}" fill="${p.paper}"/>`).join("")
+    return `<rect width="${w}" height="${h}" fill="${p.deep}"/>${stars}`
+      + `<circle cx="${w * 0.75}" cy="${h * 0.25}" r="${h * 0.09}" fill="${p.sun}"/><circle cx="${w * 0.78}" cy="${h * 0.23}" r="${h * 0.08}" fill="${p.deep}"/>`
+      + `<rect y="${h * 0.78}" width="${w}" height="${h * 0.22}" fill="${p.warm}" fill-opacity="0.6"/>`
+  },
 }
 
 const cache = new Map<string, string>()

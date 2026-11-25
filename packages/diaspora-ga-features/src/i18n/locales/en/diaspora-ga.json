@@ -1383,7 +1383,7 @@
     "publish_not_allowed": "You can post after a sponsorship or the verification of your consular registration.",
     "post_empty": "Write a message before posting.",
     "post_too_long": "A post has 2,000 characters at most.",
-    "media_too_many": "Four media at most per post.",
+    "media_too_many": "At most {{postMediaMaxCount}} photos per post, or a single video.",
     "media_video_alone": "A video is posted on its own, without photos or another video.",
     "media_type_invalid": "This file type isn't accepted: {{postImageFormats}} photos; {{postVideoFormats}} videos.",
     "media_too_large": "File too large: {{postImageMaxMegabytes}} MB at most for a photo, {{postVideoMaxMegabytes}} MB for a video.",

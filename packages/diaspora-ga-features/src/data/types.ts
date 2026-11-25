@@ -94,7 +94,7 @@ export interface PostView {
   readonly eventGalleryId?: string
   readonly author: AuthorView
   readonly body: string
-  /** Quatre photos au plus, ou une vidéo seule (règle du moteur). */
+  /** `POST_MEDIA_MAX_COUNT` photos au plus (dix, lot M3 du moteur), ou une vidéo seule (règle du moteur). */
   readonly media: readonly PostMediaView[]
   /** L'original cité, si cette publication en partage une ; `null` sinon. */
   readonly share: SharedPostView | null

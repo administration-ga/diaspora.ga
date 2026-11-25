@@ -244,7 +244,7 @@ export interface PublishInput {
   readonly audience: "public" | "connections"
   /** « Publier aussi sur ANTSIA » — geste explicite, ignoré hors audience publique. */
   readonly alsoOnRoot: boolean
-  /** Quatre photos au plus, ou une vidéo seule, dans l'ordre choisi. */
+  /** `POST_MEDIA_MAX_COUNT` photos au plus (dix, lot M3 du moteur), ou une vidéo seule, dans l'ordre choisi. */
   readonly media?: readonly PublishMediaInput[]
   /**
    * Partage cité : la publication citée (publique et publiée). Un partage ne

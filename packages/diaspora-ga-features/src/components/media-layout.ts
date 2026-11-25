@@ -11,8 +11,8 @@
  *     reste à voir à partir d'elle (elle comprise) — « 3 photos et plus, le reste qui
  *     continue », dit le propriétaire. La toucher ouvre la visionneuse à la quatrième.
  *
- * Aucun plafond n'est supposé : le moteur borne aujourd'hui une publication à quatre
- * photos (`POST_MEDIA_MAX_COUNT`), un lot du moteur pourra l'élever, la grille sert déjà.
+ * Aucun plafond n'est supposé : le moteur borne une publication à `POST_MEDIA_MAX_COUNT`
+ * photos (dix depuis son lot M3) ; s'il l'élève encore, la grille sert déjà.
  */
 
 /** Le nombre de tuiles qu'une grille montre au plus ; au-delà, la dernière porte « +N ». */
