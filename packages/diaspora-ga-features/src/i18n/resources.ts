@@ -81,6 +81,7 @@ import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enPostVideos from "./locales/en/post-videos.json"
 import enEntryReliability from "./locales/en/entry-reliability.json"
+import enWelcomeOneScreen from "./locales/en/welcome-one-screen.json"
 import enSponsorshipRequest from "./locales/en/sponsorship-request.json"
 import enMissionVolunteerNotices from "./locales/en/mission-volunteer-notices.json"
 import enEventOutcomeNotices from "./locales/en/event-outcome-notices.json"
@@ -168,6 +169,7 @@ import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frPostVideos from "./locales/fr/post-videos.json"
 import frEntryReliability from "./locales/fr/entry-reliability.json"
+import frWelcomeOneScreen from "./locales/fr/welcome-one-screen.json"
 import frSponsorshipRequest from "./locales/fr/sponsorship-request.json"
 import frMissionVolunteerNotices from "./locales/fr/mission-volunteer-notices.json"
 import frEventOutcomeNotices from "./locales/fr/event-outcome-notices.json"
@@ -265,6 +267,7 @@ export const LOCALE_PARTS = {
     "idn-entry": frIdnEntry,
     "post-videos": frPostVideos,
     "entry-reliability": frEntryReliability,
+    "welcome-one-screen": frWelcomeOneScreen,
     "sponsorship-request": frSponsorshipRequest,
     "mission-volunteer-notices": frMissionVolunteerNotices,
     "event-outcome-notices": frEventOutcomeNotices,
@@ -363,6 +366,7 @@ export const LOCALE_PARTS = {
     "idn-entry": enIdnEntry,
     "post-videos": enPostVideos,
     "entry-reliability": enEntryReliability,
+    "welcome-one-screen": enWelcomeOneScreen,
     "sponsorship-request": enSponsorshipRequest,
     "mission-volunteer-notices": enMissionVolunteerNotices,
     "event-outcome-notices": enEventOutcomeNotices,

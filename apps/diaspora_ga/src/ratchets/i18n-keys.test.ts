@@ -72,7 +72,6 @@ const FAMILIES: string[] = [
   ...each(["light", "dark", "system"] as const, (theme) => [`preferences.themeOption.${theme}`]),
   ...each(DEMO_IDN_IDENTITIES.map((identity) => identity.key), (preset) => [`idn.preset.${preset}`]),
   ...each(["email", "phone"] as const, (kind) => [`code.kind.${kind}`]),
-  ...range(3).flatMap((step) => [`welcome.step${step}Title`, `welcome.step${step}Lead`]),
   ...each(CONSENT_PURPOSES, (purpose) => [`consentPurpose.${purpose}.title`, `consentPurpose.${purpose}.body`]),
   ...each(MEMBERSHIP_STATUSES, (status) => [`membership.status.${status}`]),
   ...each(["r1", "r2", "r3"] as const, (scenario) => [`demo.scenario.${scenario}.title`, ...range(4).map((step) => `demo.scenario.${scenario}.step${step}`)]),

@@ -1,0 +1,25 @@
+{
+  "welcomeEntry": {
+    "title": "Welcome to DIASPORA.GA",
+    "lead": "Check what members will see about you, then enter: one step is enough.",
+    "identityHeading": "Your profile",
+    "residenceHeading": "Where you live",
+    "edit": "Edit",
+    "editIdentity": "Edit display name and handle",
+    "editResidence": "Edit country and city",
+    "fromIdn": "Suggested from your IDN identity.",
+    "consent": "When you create your profile, your display name, your handle and your country become visible to DIASPORA.GA members; the directory and notifications stay off until you turn them on.",
+    "submit": "Create my profile and enter",
+    "submitKept": "Enter DIASPORA.GA"
+  },
+  "firstChoices": {
+    "title": "Your choice, now or later",
+    "lead": "Nothing was turned on for you. Each choice is a separate step, which you also find in your settings.",
+    "dismiss": "Close, I'll choose later",
+    "settingsLead": "In your settings:",
+    "settingsDirectory": "Directory",
+    "settingsConsents": "Consents",
+    "settingsDevice": "Device notifications",
+    "directorySaved": "Your directory visibility is saved."
+  }
+}

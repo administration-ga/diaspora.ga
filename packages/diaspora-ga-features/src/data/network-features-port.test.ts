@@ -15,7 +15,7 @@ describe("fonctionnalités activables du réseau — port (ADR-0041 du moteur)",
     expect(Object.keys(FEATURE_CAPABILITIES)).toEqual([...NETWORK_FEATURES])
     const all = Object.values(FEATURE_CAPABILITIES).flat()
     expect(new Set(all).size).toBe(all.length)
-    for (const core of ["dataRights", "contentReports", "moderationDesk", "conversations", "callSettings", "deviceNotifications", "networkFeatures", "profileImages", "profilePublication", "contentPreferences"]) {
+    for (const core of ["dataRights", "contentReports", "moderationDesk", "conversations", "callSettings", "deviceNotifications", "networkFeatures", "profileImages", "profilePublication", "entryPrefill", "contentPreferences"]) {
       expect(all).not.toContain(core)
     }
   })

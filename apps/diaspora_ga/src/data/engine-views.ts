@@ -93,7 +93,7 @@ export function toAccountView(person: MyPerson, identity: MyIdentity, email: str
     id: person._id,
     idn: identity.idn ? { loa: identity.idn.loa } : null,
     local: identity.idn === null && email ? { kind: "email", masked: maskDestination("email", email) } : null,
-    // Les prénom et nom d'IDN arrivent avec l'identité du moteur (PA4) ; jamais recopiés d'office.
+    // Les prénom et nom d'IDN arrivent avec l'identité du moteur (PA4) ; proposés à l'accueil, jamais publiés d'office.
     nameHints: {},
     // Le thème du compte, s'il en a un (le moteur ne rend qu'un thème courant du contrat commun).
     ...(person.theme !== undefined ? { theme: person.theme } : {}),

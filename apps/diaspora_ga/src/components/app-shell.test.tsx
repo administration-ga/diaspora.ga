@@ -1506,6 +1506,16 @@ describe("coque — une vue (« une page = une vue », lot 2a) : `layout=\"view\
     expect(shellRoot()).toHaveAttribute("data-layout", "stream")
   })
 
+  it("l'invite de première visite (accueil en un écran) : dans une page de flux, jamais dans une vue, qui garde sa hauteur", () => {
+    render(viewTree({ view: false }))
+    const prompt = screen.getByRole("region", { name: t("firstChoices.title") })
+    // En tête du contenu, avant l'écran.
+    expect(contentColumn()).toContainElement(prompt)
+    cleanup()
+    render(viewTree({ view: true }))
+    expect(screen.queryByRole("region", { name: t("firstChoices.title") })).not.toBeInTheDocument()
+  })
+
   it("en vue, le cadre tient l'écran sous `tall:` seulement, sans jamais masquer un débordement", () => {
     render(viewTree({ view: true }))
     expect(shellRoot()).toHaveClass("min-h-dvh", "tall:flex", "tall:h-dvh", "tall:min-h-0", "tall:flex-col")
