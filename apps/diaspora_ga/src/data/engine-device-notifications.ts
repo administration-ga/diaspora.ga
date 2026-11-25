@@ -134,7 +134,7 @@ export function createEngineDeviceNotifications(deps: EngineSourceDeps, browser:
       })
     },
 
-    enable: (personId) => run(async () => {
+    enable: (personId, options) => run(async () => {
       await expectPerson(personId)
       if (!(await browser.snapshot()).supported) throw new Refusal("push_unsupported")
       const networkId = await resolveDiasporaGaNetworkId(deps.convex)
@@ -146,7 +146,8 @@ export function createEngineDeviceNotifications(deps: EngineSourceDeps, browser:
         requestPermission: browser.requestPermission,
         deviceId: browser.ensureDeviceId,
         current: () => true,
-        recordConsent: () => deps.convex.mutation(api.modules.people.consents.recordConsent, { networkId, purpose: "notifications", origin: "settings" }),
+        // L'origine du geste : les réglages, ou l'invite de première visite (`prompt`).
+        recordConsent: () => deps.convex.mutation(api.modules.people.consents.recordConsent, { networkId, purpose: "notifications", origin: options?.origin ?? "settings" }),
         subscribe: (input) => deps.convex.mutation(api.modules.notifications.pushSubscriptions.subscribe, { networkId, ...input }),
         unsubscribe: (subscriptionId) => deps.convex.mutation(api.modules.notifications.pushSubscriptions.unsubscribe, { networkId, subscriptionId: subscriptionId as Id<"pushSubscriptions"> }),
       }, publicKey)

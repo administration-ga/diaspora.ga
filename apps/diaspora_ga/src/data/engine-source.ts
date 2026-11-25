@@ -127,6 +127,7 @@ import { startIdnSignIn, useEngineEntryDoors } from "./engine-idn"
 import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
 import { createEngineDeviceNotifications } from "./engine-device-notifications"
+import { createEngineEntryPrefill } from "./engine-entry-prefill"
 import { createEnginePostSearch } from "./engine-post-search"
 import {
   toAccountView,
@@ -245,6 +246,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
   return {
     kind: "engine",
     profileImages: createEngineProfileImagesActions({ convex: deps.convex, prepareImage: deps.prepareImage }),
+    // Lot A4 (accueil en un écran) : le pré-remplissage d'après IDN ; sans la fonction du moteur, la saisie.
+    entryPrefill: createEngineEntryPrefill(deps),
     // Capacités des chantiers du plan global (docs/14), chacune dans son fichier.
     // Les publications lues dans une fiche de page alimentent aussi « retirer ma réaction ».
     pages: createEnginePages(deps, { onPosts: (posts) => { for (const post of posts) myReactions.set(post.id, post.myReaction) } }),
@@ -893,17 +896,15 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         // absent, il naît de l'accueil. Une entrée interrompue reprend ainsi sans double écriture.
         const person = await deps.convex.query(api.modules.people.persons.getMyPerson, {})
         if (!person) throw new Refusal("not_signed_in")
-        if (!person.handle || !person.displayName) {
-          const handle = input.handle ?? ""
-          const displayName = input.displayName ?? ""
-          if (!handle.trim()) throw new Refusal("handle_required")
-          if (!displayName.trim()) throw new Refusal("display_name_invalid")
-          await deps.convex.mutation(api.modules.people.profile.publishMyProfile, { handle, displayName })
-        } else if (!person.published) {
-          throw new Refusal("profile_republish_required")
-        }
-        // Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
+        const newProfile = !person.handle || !person.displayName ? { handle: input.handle ?? "", displayName: input.displayName ?? "" } : null
+        if (newProfile === null && !person.published) throw new Refusal("profile_republish_required")
+        if (newProfile !== null && !newProfile.handle.trim()) throw new Refusal("handle_required")
+        if (newProfile !== null && !newProfile.displayName.trim()) throw new Refusal("display_name_invalid")
+        // Le clic « Créer mon profil et entrer » EST le consentement au profil social (décision du
+        // 25/11/2026) : il s'enregistre AVANT que le profil ne naisse, pour qu'aucun profil n'existe
+        // jamais sans son accord. Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
         await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "social_profile", origin: "onboarding", ...consentScopeArgs("social_profile", id) })
+        if (newProfile !== null) await deps.convex.mutation(api.modules.people.profile.publishMyProfile, newProfile)
         // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
         // du réseau exact avant tout envoi (`notificationConsent`).
         if (input.consents.directory) {
@@ -1219,13 +1220,14 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         throw new Refusal("attestation_unavailable")
       }),
 
-    setConsent: (purpose, granted) =>
+    setConsent: (purpose, granted, origin = "settings") =>
       attempt(async () => {
         const id = await diasporaGa()
         // Même portée à l'accord et au retrait : celle que le moteur relit (NP-01).
         const scope = consentScopeArgs(purpose, id)
         if (granted) {
-          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose, origin: "settings", ...scope })
+          // L'origine du geste : les réglages, ou l'invite de première visite (`prompt`).
+          await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose, origin, ...scope })
           return null
         }
         await deps.convex.mutation(api.modules.people.consents.revokeConsent, { purpose, ...scope })
