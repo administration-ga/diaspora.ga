@@ -98,14 +98,15 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     expect(within(dialog).getByRole("img", { name: "Photo 2" })).toBeInTheDocument()
   })
 
-  it("agrandit la vidéo par un bouton séparé, met la grille en pause et conserve les commandes natives sans autoplay", async () => {
+  it("agrandit la vidéo par un bouton séparé, met la grille en pause ; les commandes natives sont dans la visionneuse", async () => {
     const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {})
     const clip: PostMediaView = { ...photo, kind: "video", url: "/recette-video.mp4", altText: "La vidéo de recette" }
     const { container } = render(tree([clip]))
     const gridVideo = container.querySelector("video")
     const trigger = screen.getByRole("button", { name: t("post.media.expandVideo") })
     expect(trigger.closest("video")).toBeNull()
-    expect(gridVideo).toHaveAttribute("controls")
+    // A2 : dans le fil, la vidéo a ses propres boutons (lecture, son, agrandir) ; aucune lecture déclarée d'office.
+    expect(gridVideo).not.toHaveAttribute("controls")
     expect(gridVideo).not.toHaveAttribute("autoplay")
     trigger.focus()
     fireEvent.click(trigger)

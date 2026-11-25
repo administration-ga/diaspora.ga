@@ -11,7 +11,8 @@ import { useDiasporaGaT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { claimMediaViewer, ownsMediaViewer, releaseMediaViewer, stopAllMediaPlayback } from "../lib/media-viewer-lease"
 import { mediaGridLayout, singleMediaRatio, type MediaGridLayout, type MediaGridTile } from "./media-layout"
-import { ExclusiveVideo, isDelivered, MediaUnavailable, useLoadFailure } from "./media-parts"
+import { FeedVideo } from "./feed-video"
+import { isDelivered, MediaUnavailable, useLoadFailure } from "./media-parts"
 import { MediaViewerCarousel } from "./media-viewer"
 
 /**
@@ -155,7 +156,6 @@ function MediaGrid(props: GridProps & { source: DiasporaGaDataSource | null; con
 
 function MediaTile(props: { item: PostMediaView; tile: MediaGridTile; total: number; bleed: boolean; canDisplay: boolean; onOpen?: () => void }) {
   const { t } = useDiasporaGaT()
-  const video = useRef<HTMLVideoElement>(null)
   const { item, tile } = props
   const [failed, fail] = useLoadFailure(item.url)
   const single = tile.area === "full"
@@ -178,29 +178,9 @@ function MediaTile(props: { item: PostMediaView; tile: MediaGridTile; total: num
     )
   }
 
+  // A2 : une vidéo seule est la vidéo du fil — première image, muette quand elle est la plus visible, son et pause aux boutons.
   if (item.kind === "video" && single) {
-    return (
-      <div className="min-w-0">
-        <div data-media-tile="" className={frame} style={frameStyle}>
-          <ExclusiveVideo
-            mediaRef={video}
-            src={item.url ?? undefined}
-            controls
-            preload="metadata"
-            playsInline
-            aria-label={item.altText ?? t("post.media.video")}
-            onError={fail}
-            className="absolute inset-0 size-full object-cover"
-            {...(size ?? {})}
-          />
-        </div>
-        {props.onOpen ? (
-          <button type="button" onClick={() => { video.current?.pause(); props.onOpen?.() }} className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-md px-3 text-sm hover:bg-muted focus-visible:shadow-focus">
-            <Maximize2Icon className="size-4" aria-hidden />{t("post.media.expandVideo")}
-          </button>
-        ) : null}
-      </div>
-    )
+    return <FeedVideo item={item} className={frame} style={frameStyle} onError={fail} {...(props.onOpen ? { onOpen: props.onOpen } : {})} />
   }
 
   const content: ReactNode = item.kind === "video" ? (

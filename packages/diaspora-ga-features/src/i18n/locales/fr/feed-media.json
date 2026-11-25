@@ -12,6 +12,12 @@
         "carousel": "carrousel",
         "slideRole": "diapositive",
         "slide": "{{position}} sur {{total}}"
+      },
+      "playback": {
+        "play": "Lire la vidéo",
+        "pause": "Mettre la vidéo en pause",
+        "unmute": "Activer le son",
+        "mute": "Couper le son"
       }
     }
   },

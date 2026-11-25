@@ -9,6 +9,7 @@ import { useDiasporaGaT } from "../../i18n/client"
 import { cn } from "../../lib/cn"
 import { Skeleton } from "../../primitives/surface"
 import { PostCard } from "../cards/post-card"
+import { ManagedMediaPlayback } from "../feed-video"
 import type { SlideRendering } from "./discovery-window"
 
 /** Au-delà, un texte sans mise en page mesurable (rendu serveur, tests) est présumé tronqué. */
@@ -112,13 +113,16 @@ function FullItem(props: DiscoveryItemProps) {
           MEDIA_FIT,
         )}
       >
-        <PostCard
-          post={props.post}
-          now={props.now}
-          {...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry })}
-          canReact={props.canReact}
-          onReact={props.onReact}
-        />
+        {/* A2 : la découverte tient sa propre lecture ; la vidéo du fil n'y décide rien. */}
+        <ManagedMediaPlayback>
+          <PostCard
+            post={props.post}
+            now={props.now}
+            {...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry })}
+            canReact={props.canReact}
+            onReact={props.onReact}
+          />
+        </ManagedMediaPlayback>
       </div>
       {truncated ? (
         <button

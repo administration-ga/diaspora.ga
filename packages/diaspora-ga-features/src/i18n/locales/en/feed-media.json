@@ -12,6 +12,12 @@
         "carousel": "carousel",
         "slideRole": "slide",
         "slide": "{{position}} of {{total}}"
+      },
+      "playback": {
+        "play": "Play the video",
+        "pause": "Pause the video",
+        "unmute": "Turn the sound on",
+        "mute": "Mute"
       }
     }
   },
