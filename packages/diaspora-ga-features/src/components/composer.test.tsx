@@ -88,6 +88,24 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     expect(onClose).toHaveBeenCalledOnce()
   })
 
+  it.each([
+    { pendingCheck: true, notice: "composer.mediaAfterCheck" },
+    { pendingCheck: undefined, notice: "composer.published" },
+  ])("A1 : un média encore à vérifier ne s'annonce jamais « Publié. » (pendingCheck $pendingCheck)", async ({ pendingCheck, notice }) => {
+    toasts.success.mockClear()
+    uploadMedia.mockImplementationOnce(async (file) => {
+      const done = uploaded(file) as { ok: true; value: UploadedMedia }
+      return { ok: true, value: { ...done.value, ...(pendingCheck ? { pendingCheck } : {}) } }
+    })
+    const user = userEvent.setup()
+    render(<Composer />)
+    choose([new File(["photo"], "a-verifier.png", { type: "image/png" })])
+    await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(toasts.success).toHaveBeenCalledOnce())
+    expect(toasts.success).toHaveBeenCalledWith(t(notice))
+  })
+
   it("conserve les photos en fermant puis rouvrant la feuille sans recharger la page", async () => {
     const user = userEvent.setup()
     render(<Composer />)

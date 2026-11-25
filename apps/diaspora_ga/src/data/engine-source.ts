@@ -953,7 +953,8 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           if (signal?.aborted) throw new Refusal("media_cancelled")
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
-        return { ref: storageId, ...facts }
+        // A1 : la garde des fichiers analyse le fichier à la publication ; il ne se montre qu'après.
+        return { ref: storageId, ...facts, pendingCheck: true }
       }),
 
     publish: (input) =>

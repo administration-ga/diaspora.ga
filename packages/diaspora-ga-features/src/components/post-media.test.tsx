@@ -134,6 +134,33 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 
+  it.each(["image", "video"] as const)("A1 : une analyse impossible ($0) dit sa vraie cause, jamais « Média indisponible »", (kind) => {
+    const { container } = render(tree([{ ...photo, kind, withheld: "scan_unavailable", url: "/ne-jamais-delivrer" }]))
+    const tile = screen.getByRole("img", { name: t("post.media.scanUnavailable") })
+    expect(tile).toHaveAttribute("aria-description", t("errors:fileScanUnavailable"))
+    expect(tile).toHaveTextContent(t("post.media.scanUnavailable"))
+    expect(screen.queryByText(t("post.media.unavailable"))).not.toBeInTheDocument()
+    expect(container.querySelector("img,video")).toBeNull()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  it("A1 : une photo qui ne se charge pas se replie sur « Photo indisponible », sans lien mort ni bouton", () => {
+    const { container } = render(tree([photo]))
+    const image = container.querySelector("img")!
+    fireEvent.error(image)
+    expect(screen.getByRole("img", { name: t("post.media.photoFailed") })).toBeInTheDocument()
+    expect(container.querySelector("img")).toBeNull()
+    expect(screen.queryByRole("button", { name: t("post.media.openImage", { position: 1, total: 1 }) })).not.toBeInTheDocument()
+  })
+
+  it("A1 : une vidéo illisible le dit à sa place, sans commande", () => {
+    const clip: PostMediaView = { ...photo, kind: "video", url: "/recette-illisible.mp4", altText: "Vidéo illisible" }
+    const { container } = render(tree([clip]))
+    fireEvent.error(container.querySelector("video")!)
+    expect(screen.getByText(t("post.media.videoFailed"))).toBeInTheDocument()
+    expect(container.querySelector("video")).toBeNull()
+  })
+
   it("referme immédiatement le lecteur si une image ouverte est retenue et ne conserve aucune ancienne URL", async () => {
     const view = render(tree())
     openImage()

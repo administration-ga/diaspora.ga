@@ -1,0 +1,13 @@
+{
+  "post": {
+    "media": {
+      "scanUnavailable": "Indisponible pour le moment",
+      "photoFailed": "Photo indisponible",
+      "videoFailed": "Cette vidéo ne peut pas être lue ici."
+    }
+  },
+  "composer": {
+    "mediaAfterCheck": "Publication envoyée : vos photos ou votre vidéo apparaîtront après leur vérification de sécurité.",
+    "mediaAfterCheckDetail": "Les photos et la vidéo apparaîtront après leur vérification de sécurité."
+  }
+}

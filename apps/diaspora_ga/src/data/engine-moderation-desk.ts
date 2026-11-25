@@ -67,6 +67,7 @@ import type { FunctionArgs, FunctionReturnType } from "convex/server"
 import { useMemo } from "react"
 
 import { engineActionErrorCode } from "./engine-errors"
+import { toMediaWithheld } from "./engine-views"
 import {
   failed,
   LOADING,
@@ -260,7 +261,8 @@ export function toClaimDetailView(row: ClaimDetailRow): DeskClaimDetailView {
 
 /** Un média retenu par la garde des fichiers garde sa place, sans adresse. */
 function toMediaView(media: PreviewRow["media"][number]): PostMediaView {
-  const withheld = media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null
+  // A1 (25/11) : la même lecture que le fil — l'analyse impossible garde sa raison.
+  const withheld = toMediaWithheld(media.withheld)
   return {
     kind: media.kind,
     url: withheld === null ? media.url : null,

@@ -137,11 +137,14 @@ function newPublishKey(): string {
 /**
  * L'avis d'envoi dit l'état que le fournisseur rend (FD-04) : « Publié. » seulement pour une
  * publication publiée, « en relecture » pour une publication retenue ; un état non rendu
- * (`null`) ne s'affirme pas, la publication est seulement « envoyée ».
+ * (`null`) ne s'affirme pas, la publication est seulement « envoyée ». A1 (25/11/2026) : des
+ * médias encore à vérifier par la garde des fichiers (`pendingCheck`) n'apparaissent pas
+ * aussitôt ; l'avis le dit au lieu de « Publié. ».
  */
-function publishNoticeKey(moderation: ContentModerationState | null, share: boolean): string {
-  if (moderation === "published") return share ? "composer.shared" : "composer.published"
+function publishNoticeKey(moderation: ContentModerationState | null, share: boolean, mediaPendingCheck: boolean): string {
   if (moderation === "pending_review") return "composer.sentForReview"
+  if (mediaPendingCheck) return "composer.mediaAfterCheck"
+  if (moderation === "published") return share ? "composer.shared" : "composer.published"
   return share ? "composer.shareSent" : "composer.sent"
 }
 
@@ -458,9 +461,14 @@ export function PostComposerSheet(props: {
       return
     }
     setPublishKey(newPublishKey())
+    const mediaPendingCheck = media.some((item) => item.upload.pendingCheck === true)
     // Une publication retenue en relecture le dit, même dans une page ou un groupe : l'auteur sait pourquoi elle n'apparaît pas encore.
-    if (page) toast.success("moderation" in result.value && result.value.moderation === "pending_review" ? t("composer.sentForReview") : (fixedScope?.sentNotice ?? t("pagePublications.sent", { name: page.name })))
-    else toast.success(t(publishNoticeKey("moderation" in result.value ? (result.value.moderation ?? null) : null, share !== null)))
+    if (page) {
+      const inReview = "moderation" in result.value && result.value.moderation === "pending_review"
+      const notice = inReview ? t("composer.sentForReview") : (fixedScope?.sentNotice ?? t("pagePublications.sent", { name: page.name }))
+      if (mediaPendingCheck && !inReview) toast.success(notice, { description: t("composer.mediaAfterCheckDetail") })
+      else toast.success(notice)
+    } else toast.success(t(publishNoticeKey("moderation" in result.value ? (result.value.moderation ?? null) : null, share !== null, mediaPendingCheck)))
     if (draftKey) writeDraft(draftKey, { body: "", reach: hasFixedScope ? "diaspora" : DEFAULTS.reach, audience: DEFAULTS.audience, alsoOnRoot: DEFAULTS.alsoOnRoot })
     clearAttachments()
     form.reset(defaults)

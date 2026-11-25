@@ -1,0 +1,13 @@
+{
+  "post": {
+    "media": {
+      "scanUnavailable": "Unavailable for now",
+      "photoFailed": "Photo unavailable",
+      "videoFailed": "This video can’t be played here."
+    }
+  },
+  "composer": {
+    "mediaAfterCheck": "Post sent: your photos or video will appear once their security check is done.",
+    "mediaAfterCheckDetail": "Photos and videos will appear once their security check is done."
+  }
+}

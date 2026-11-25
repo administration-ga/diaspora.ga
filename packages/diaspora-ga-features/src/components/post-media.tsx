@@ -1,7 +1,7 @@
 "use client"
 
 import { ImmersiveOverlay } from "@antsia/ui/overlay"
-import { ChevronLeftIcon, ChevronRightIcon, ImageOffIcon, LoaderCircleIcon, Maximize2Icon, ShieldAlertIcon, XIcon } from "lucide-react"
+import { ChevronLeftIcon, ChevronRightIcon, ImageOffIcon, LoaderCircleIcon, Maximize2Icon, ShieldAlertIcon, ShieldQuestionIcon, VideoOffIcon, XIcon, type LucideIcon } from "lucide-react"
 import { useCallback, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type KeyboardEvent, type RefObject } from "react"
 
 import { useOptionalDataSource } from "../data/context"
@@ -154,28 +154,59 @@ function MediaGrid(props: GridProps & { source: DiasporaGaDataSource | null; con
   )
 }
 
-function MediaUnavailable(props: { item: PostMediaView; className?: string }) {
+/** Un média qui ne se charge pas (lien expiré, fichier illisible) : la cause se dit à sa place, sans lien mort. */
+type MediaFailure = PostMediaView["kind"] | null
+
+/**
+ * Ce que dit une tuile non délivrée (A1, 25/11/2026) : la vraie cause, jamais un
+ * « Média indisponible » générique quand on la connaît — analyse en cours, analyse
+ * impossible pour le moment (le texte long du moteur, `errors:fileScanUnavailable`,
+ * en description), bloqué, ou un fichier qui ne se charge pas.
+ */
+function unavailableCopy(item: PostMediaView, failure: MediaFailure, t: (key: string) => string): { label: string; detail: string | null; Icon: LucideIcon; spinning: boolean } {
+  if (failure === "image") return { label: t("post.media.photoFailed"), detail: null, Icon: ImageOffIcon, spinning: false }
+  if (failure === "video") return { label: t("post.media.videoFailed"), detail: null, Icon: VideoOffIcon, spinning: false }
+  if (item.withheld === "scan_pending") return { label: t("post.media.scanPending"), detail: null, Icon: LoaderCircleIcon, spinning: true }
+  if (item.withheld === "scan_unavailable") return { label: t("post.media.scanUnavailable"), detail: t("errors:fileScanUnavailable"), Icon: ShieldQuestionIcon, spinning: false }
+  if (item.withheld === "quarantined") return { label: t("post.media.quarantined"), detail: null, Icon: ShieldAlertIcon, spinning: false }
+  return { label: t("post.media.unavailable"), detail: null, Icon: ImageOffIcon, spinning: false }
+}
+
+function MediaUnavailable(props: { item: PostMediaView; failure?: MediaFailure; detailed?: boolean; className?: string }) {
   const { t } = useDiasporaGaT()
-  const label = props.item.withheld === "scan_pending" ? t("post.media.scanPending") : props.item.withheld === "quarantined" ? t("post.media.quarantined") : t("post.media.unavailable")
-  const Icon = props.item.withheld === "scan_pending" ? LoaderCircleIcon : props.item.withheld === "quarantined" ? ShieldAlertIcon : ImageOffIcon
+  const copy = unavailableCopy(props.item, props.failure ?? null, t)
+  const Icon = copy.Icon
   return (
-    <div role="img" aria-label={label} className={cn("flex min-h-32 flex-col items-center justify-center gap-2 rounded-md bg-muted p-4 text-center text-[13px] text-muted-foreground", props.className)}>
-      <Icon className={cn("size-5", props.item.withheld === "scan_pending" && "animate-spin motion-reduce:animate-none")} aria-hidden />
-      <span aria-hidden>{label}</span>
+    <div
+      role="img"
+      aria-label={copy.label}
+      aria-description={copy.detail ?? undefined}
+      className={cn("flex min-h-32 flex-col items-center justify-center gap-2 rounded-md bg-muted p-4 text-center text-[13px] text-muted-foreground", props.className)}
+    >
+      <Icon className={cn("size-5", copy.spinning && "animate-spin motion-reduce:animate-none")} aria-hidden />
+      <span aria-hidden>{copy.label}</span>
+      {copy.detail && props.detailed ? <span aria-hidden className="max-w-sm text-[13px]">{copy.detail}</span> : null}
     </div>
   )
+}
+
+/** L'adresse qui a échoué au chargement ; une autre adresse (garde relue) repart sans repli. */
+function useLoadFailure(url: string | null): readonly [boolean, () => void] {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
+  return [failedUrl !== null && failedUrl === url, () => setFailedUrl(url)] as const
 }
 
 function ViewerMedia(props: { item: PostMediaView; canDisplay: boolean }) {
   const { t } = useDiasporaGaT()
   const { item } = props
-  if (!props.canDisplay || !isDelivered(item)) return <MediaUnavailable item={item} className="w-full max-w-xl" />
+  const [failed, fail] = useLoadFailure(item.url)
+  if (!props.canDisplay || !isDelivered(item) || failed) return <MediaUnavailable item={item} failure={failed ? item.kind : null} detailed className="w-full max-w-xl" />
   const size = item.width && item.height ? { width: item.width, height: item.height } : {}
   return item.kind === "video" ? (
-    <ExclusiveVideo src={item.url ?? undefined} controls tabIndex={0} preload="metadata" playsInline aria-label={item.altText ?? t("post.media.video")} className="max-h-full max-w-full object-contain" {...size} />
+    <ExclusiveVideo src={item.url ?? undefined} controls tabIndex={0} preload="metadata" playsInline aria-label={item.altText ?? t("post.media.video")} onError={fail} className="max-h-full max-w-full object-contain" {...size} />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- URL délivrée par la garde, sans copie ni optimiseur
-    <img src={item.url ?? undefined} alt={item.altText ?? t("post.media.photo")} decoding="async" className="max-h-full max-w-full object-contain" {...size} />
+    <img src={item.url ?? undefined} alt={item.altText ?? t("post.media.photo")} decoding="async" onError={fail} className="max-h-full max-w-full object-contain" {...size} />
   )
 }
 
@@ -183,6 +214,7 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
   const { t } = useDiasporaGaT()
   const video = useRef<HTMLVideoElement>(null)
   const { item } = props
+  const [failed, fail] = useLoadFailure(item.url)
   const size = item.width && item.height ? { width: item.width, height: item.height } : null
   // Une photo seule déclare sa taille ; sans dimensions connues, elle réserve un cadre 16:9 (pas de saut au chargement).
   const reserved = props.single && size === null
@@ -192,7 +224,7 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
     props.single ? (reserved ? "aspect-video" : "") : props.wide ? "aspect-[2/1]" : "aspect-square",
   )
 
-  if (!props.canDisplay || !isDelivered(item)) return <MediaUnavailable item={item} className={cn(frame, props.single && "aspect-video")} />
+  if (!props.canDisplay || !isDelivered(item) || failed) return <MediaUnavailable item={item} failure={failed ? item.kind : null} detailed={props.single} className={cn(frame, props.single && "aspect-video")} />
 
   if (item.kind === "video") {
     return (
@@ -205,6 +237,7 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
             preload="metadata"
             playsInline
             aria-label={item.altText ?? t("post.media.video")}
+            onError={fail}
             className={props.single && !reserved ? "max-h-[32rem] w-full" : "size-full object-cover"}
             {...(size ?? {})}
           />
@@ -227,6 +260,7 @@ function MediaTile(props: { item: PostMediaView; single: boolean; wide: boolean;
         alt={item.altText ?? t("post.media.photo")}
         loading="lazy"
         decoding="async"
+        onError={fail}
         className={props.single && !reserved ? "h-auto max-h-[32rem] w-full object-contain" : reserved ? "size-full object-contain" : "size-full object-cover"}
         {...(size ?? {})}
       />

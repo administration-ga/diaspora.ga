@@ -219,6 +219,12 @@ export interface UploadedMedia {
   readonly width?: number
   readonly height?: number
   readonly durationMs?: number
+  /**
+   * A1 (25/11/2026) : le fichier ne sera montré qu'après l'analyse de la garde des fichiers,
+   * lancée à la publication (moteur). Le composeur ne dit alors jamais « Publié. » : il dit que
+   * les médias apparaîtront après leur vérification. Absent : rien à attendre (démonstration).
+   */
+  readonly pendingCheck?: boolean
 }
 
 export interface PublishMediaInput {

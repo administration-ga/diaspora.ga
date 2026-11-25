@@ -51,14 +51,22 @@ export interface AuthorView {
 }
 
 /**
+ * Pourquoi la garde des fichiers retient un média (A1, 25/11/2026) : analyse en cours,
+ * analyse impossible pour le moment (antivirus injoignable : ni verdict, ni délivrance),
+ * ou bloqué par un verdict. Chaque cause se dit telle quelle, jamais aplatie.
+ */
+export type PostMediaWithheld = "scan_pending" | "scan_unavailable" | "quarantined"
+
+/**
  * Un média d'une publication (EXF-DG-10). Le moteur ne délivre un fichier qu'une
  * fois analysé : tant que la garde le retient, l'URL manque et la raison se dit
- * (analyse en cours, bloqué), le média garde sa place dans la publication.
+ * (analyse en cours, analyse impossible, bloqué), le média garde sa place dans
+ * la publication.
  */
 export interface PostMediaView {
   readonly kind: "image" | "video"
   readonly url: string | null
-  readonly withheld: "scan_pending" | "quarantined" | null
+  readonly withheld: PostMediaWithheld | null
   readonly altText: string | null
   readonly width: number | null
   readonly height: number | null

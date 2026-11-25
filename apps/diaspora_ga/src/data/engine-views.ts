@@ -4,6 +4,7 @@
  * rend ; ici, on ne fait que changer de forme, et une valeur hors forme (un pays
  * inconnu, une facette absente) fait retomber la vue au plus prudent.
  */
+import type { MediaWithheld } from "@antsia/social-contracts/media"
 import { isServableStatus } from "@antsia/social-domain/filePolicy"
 import type { api } from "@convex/_generated/api"
 import {
@@ -36,6 +37,7 @@ import {
   type OpenCountryView,
   type OwnProfileView,
   type PostMediaView,
+  type PostMediaWithheld,
   type PostView,
   type PublishMediaInput,
   type PublishOutcome,
@@ -231,12 +233,24 @@ function authorOf(item: FeedItem): PostView["author"] {
   }
 }
 
-/** Un média tel que la garde des fichiers le délivre : son URL, ou la raison de sa retenue. */
+/**
+ * La raison d'une retenue, dans les mots de l'écran (A1, 25/11/2026) : l'analyse impossible
+ * (`fileScanUnavailable`) reste une cause à part, jamais confondue avec un média délivré.
+ */
+export function toMediaWithheld(withheld: MediaWithheld | null | undefined): PostMediaWithheld | null {
+  if (withheld === "fileScanPending") return "scan_pending"
+  if (withheld === "fileScanUnavailable") return "scan_unavailable"
+  if (withheld === "fileQuarantined") return "quarantined"
+  return null
+}
+
+/** Un média tel que la garde des fichiers le délivre : son URL, ou la raison de sa retenue (sans adresse). */
 export function toPostMediaView(media: EngineMedia): PostMediaView {
+  const withheld = toMediaWithheld(media.withheld)
   return {
     kind: media.kind,
-    url: media.url,
-    withheld: media.withheld === "fileScanPending" ? "scan_pending" : media.withheld === "fileQuarantined" ? "quarantined" : null,
+    url: withheld === null ? media.url : null,
+    withheld,
     altText: media.altText ?? null,
     width: media.width ?? null,
     height: media.height ?? null,

@@ -1069,6 +1069,15 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       height: null,
     })
     expect(toPostMediaView({ url: null, withheld: "fileQuarantined", kind: "image", mimeType: "image/png" } as never).withheld).toBe("quarantined")
+    // A1 (25/11) : une analyse impossible n'est ni un verdict ni un média délivré ; elle garde sa raison, sans adresse.
+    expect(toPostMediaView({ url: "https://f.test/jamais", withheld: "fileScanUnavailable", kind: "image", mimeType: "image/png" } as never)).toEqual({
+      kind: "image",
+      url: null,
+      withheld: "scan_unavailable",
+      altText: null,
+      width: null,
+      height: null,
+    })
   })
 
   it("un dépôt déclaré à la publication : texte alternatif nettoyé, absent s'il est vide ; seules les mesures connues partent", () => {
@@ -1117,7 +1126,8 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       expect(sent).not.toBe(file)
       expect(isPreparedImage(sent as File)).toBe(true)
       const sentSize = (sent as File).size
-      expect(uploaded.value).toEqual({ ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800 })
+      // A1 : le dépôt dit que la garde des fichiers l'analysera à la publication (le composeur ne dira pas « Publié. »).
+      expect(uploaded.value).toEqual({ ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800, pendingCheck: true })
       expect(deposit).toHaveBeenCalledWith("https://depot.test/televersement", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: sent })
       expect(
         await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
