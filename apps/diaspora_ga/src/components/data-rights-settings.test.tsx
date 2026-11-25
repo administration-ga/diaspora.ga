@@ -19,7 +19,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { useSyncExternalStore } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { routes } from "@/lib/routes"
+import { anchors, routes } from "@/lib/routes"
 
 import { DataRightsSettings, type DataRightsPerson } from "./data-rights-settings"
 
@@ -135,8 +135,12 @@ describe("Mes données — section et accès", () => {
     expect(screen.getByRole("button", { name: raw("settings.export") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.delete") })).toBeEnabled()
     expect(screen.getByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).toBeEnabled()
-    // Aucune surface sociale : le seul lien mène à la règle visée, sur la page publique des règles (MD-05).
-    expect(within(section()).queryAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([routes.communityRule("respect")])
+    // Aucune surface sociale : hors des deux onglets (des ancres de la section), le seul lien mène à la
+    // règle visée, sur la page publique des règles (MD-05).
+    const tabs = screen.getByRole("navigation", { name: raw("settings.dataRights.tabs.label") })
+    expect(within(tabs).getAllByRole("link").map((link) => link.getAttribute("href"))).toEqual([anchors.dataRightsExport, anchors.dataRightsDecisions])
+    const outsideTabs = within(section()).queryAllByRole("link").filter((link) => !tabs.contains(link))
+    expect(outsideTabs.map((link) => link.getAttribute("href"))).toEqual([routes.communityRule("respect")])
     expect(new Set(reads)).toEqual(new Set(["last:person_lecture", "erasure:person_lecture", "decisions:person_lecture:"]))
   })
 
@@ -448,6 +452,72 @@ describe("Mes données — décisions et recours", () => {
     mocks.rights = rights
     render(tree())
     expect(screen.getByText(t("settings.dataRights.decisions.loadError"))).toBeInTheDocument()
+  })
+})
+
+describe("Mes données — deux onglets à liens natifs (« une page, une vue », lot 2b)", () => {
+  const tab = (key: string) => screen.getByRole("link", { name: raw(key) })
+  const group = (key: string) => screen.getByRole("group", { name: raw(key) })
+
+  afterEach(() => {
+    window.location.hash = ""
+  })
+
+  /** Change l'ancre comme un clic sur un onglet : l'adresse, puis l'événement du navigateur. */
+  const go = (hash: string) =>
+    act(() => {
+      window.location.hash = hash
+      window.dispatchEvent(new HashChangeEvent("hashchange"))
+    })
+
+  it("sans ancre : « Export et effacement » est l'onglet montré, les deux groupes restent montés", () => {
+    mocks.rights = fakeRights({ decisions: page([DECISION]) }).rights
+    render(tree())
+    expect(tab("settings.dataRights.tabs.data")).toHaveAttribute("href", "#mes-donnees")
+    expect(tab("settings.dataRights.tabs.data")).toHaveAttribute("aria-current", "true")
+    expect(tab("settings.dataRights.tabs.moderation")).toHaveAttribute("href", "#mes-decisions")
+    expect(tab("settings.dataRights.tabs.moderation")).not.toHaveAttribute("aria-current")
+    expect(group("settings.dataRights.tabs.data")).not.toHaveAttribute("data-inactive")
+    expect(group("settings.dataRights.tabs.moderation")).toHaveAttribute("data-inactive")
+    // Monté, masqué : le recours en saisie ou l'export en cours survivent au changement d'onglet.
+    expect(within(group("settings.dataRights.tabs.moderation")).getByRole("button", { name: raw("settings.dataRights.decisions.appeal") })).toBeInTheDocument()
+    expect(within(group("settings.dataRights.tabs.data")).getByRole("button", { name: raw("settings.export") })).toBeInTheDocument()
+  })
+
+  it.each(["#mes-decisions", "#mes-signalements"])("%s montre « Décisions et signalements »", (hash) => {
+    window.location.hash = hash
+    mocks.rights = fakeRights({ decisions: page([DECISION]) }).rights
+    render(tree())
+    expect(tab("settings.dataRights.tabs.moderation")).toHaveAttribute("aria-current", "true")
+    expect(group("settings.dataRights.tabs.moderation")).not.toHaveAttribute("data-inactive")
+    expect(group("settings.dataRights.tabs.moderation")).toHaveAttribute("id", "mes-decisions")
+    expect(group("settings.dataRights.tabs.data")).toHaveAttribute("data-inactive")
+  })
+
+  it("l'ancre suit les clics : un onglet, puis le retour du navigateur", () => {
+    mocks.rights = fakeRights().rights
+    render(tree())
+    go("#mes-decisions")
+    expect(group("settings.dataRights.tabs.data")).toHaveAttribute("data-inactive")
+    expect(group("settings.dataRights.tabs.moderation")).not.toHaveAttribute("data-inactive")
+    go("#mes-donnees")
+    expect(group("settings.dataRights.tabs.data")).not.toHaveAttribute("data-inactive")
+    expect(tab("settings.dataRights.tabs.data")).toHaveAttribute("aria-current", "true")
+  })
+
+  it("un groupe ne joue aucune transition (mouvement réduit), le masqué disparaît par sa classe", () => {
+    mocks.rights = fakeRights().rights
+    render(tree())
+    for (const key of ["settings.dataRights.tabs.data", "settings.dataRights.tabs.moderation"]) {
+      expect(group(key).className).toContain("transition-none")
+      expect(group(key).className).toContain("data-[inactive]:hidden")
+    }
+  })
+
+  it("sans capacité : ni onglets ni groupes", () => {
+    render(tree())
+    expect(screen.queryByRole("navigation", { name: raw("settings.dataRights.tabs.label") })).toBeNull()
+    expect(screen.queryByRole("group")).toBeNull()
   })
 })
 

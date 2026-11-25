@@ -26,7 +26,7 @@ export const SETTINGS_VIEW_ANCHORS = {
   affichage: ["apparence", "notifications-appareil"],
   consentements: ["consentements"],
   parrainage: ["parrainage"],
-  donnees: ["mes-donnees", "mes-signalements"],
+  donnees: ["mes-donnees", "mes-decisions", "mes-signalements"],
 } as const satisfies Readonly<Record<SettingsViewId, readonly [string, ...string[]]>>
 
 export type SettingsAnchor = (typeof SETTINGS_VIEW_ANCHORS)[SettingsViewId][number]

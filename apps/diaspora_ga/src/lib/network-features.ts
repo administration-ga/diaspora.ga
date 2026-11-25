@@ -74,6 +74,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   settingsImages: CORE,
   settingsData: CORE,
   settingsReports: CORE,
+  settingsDecisions: CORE,
   sponsorHelp: CORE,
   attestation: CORE,
   myData: CORE,

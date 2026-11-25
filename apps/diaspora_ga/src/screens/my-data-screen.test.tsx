@@ -8,7 +8,7 @@ import { act, cleanup, render, screen, waitFor, within } from "@testing-library/
 import userEvent from "@testing-library/user-event"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { routes } from "@/lib/routes"
+import { anchors, routes } from "@/lib/routes"
 
 import { MyDataScreen } from "./my-data-screen"
 
@@ -60,6 +60,9 @@ const ALLOWED_LINKS = new Set([
   routes.charte(),
   routes.welcome(),
   routes.settings(),
+  // Les deux onglets de « Mes données » : des ancres de la page elle-même (lot 2b).
+  anchors.dataRightsExport,
+  anchors.dataRightsDecisions,
 ])
 
 type Situation = "sans adhésion" | "partie" | "membre"
@@ -150,6 +153,20 @@ describe("/mes-donnees — droits personnels, adhésion facultative", () => {
     await user.click(cancel)
     expect(await screen.findByRole("button", { name: raw("settings.delete") })).toBeEnabled()
     expect(screen.getByRole("status")).toHaveTextContent(text("settings.dataRights.erasure.cancelled"))
+  })
+
+  it("une page, une vue (lot 2b) : un seul volet nommé « Mes données », le retour en tête, un pied d'une ligne", async () => {
+    renderScreen(await storeFor("membre"))
+    const pane = await screen.findByRole("region", { name: raw("settings.data") })
+    expect(pane).toHaveAttribute("data-view-pane")
+    expect(document.querySelectorAll("[data-view-pane]")).toHaveLength(1)
+    // Le titre et les deux onglets sont dans le volet ; le retour, au-dessus ; le pied, en dessous.
+    expect(within(pane).getByRole("heading", { level: 1, name: raw("settings.data") })).toBeInTheDocument()
+    expect(within(pane).getByRole("navigation", { name: raw("settings.dataRights.tabs.label") })).toBeInTheDocument()
+    const frame = pane.closest("[data-view-frame]")
+    expect(frame?.querySelector("[data-view-frame-header]")).toContainElement(screen.getByRole("link", { name: raw("myData.backToSettings") }))
+    const footer = frame?.querySelector("[data-view-frame-footer]")
+    expect(Array.from(footer?.querySelectorAll("a") ?? []).map((link) => link.getAttribute("href"))).toEqual([routes.privacy(), routes.contact()])
   })
 
   it("sans session : renvoi à l'entrée, rien n'est monté", async () => {

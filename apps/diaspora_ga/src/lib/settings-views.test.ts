@@ -35,6 +35,7 @@ describe("sous-vues des réglages — la table des ancres", () => {
       settingsImages: "profil",
       settingsData: "donnees",
       settingsReports: "donnees",
+      settingsDecisions: "donnees",
       sponsorHelp: "parrainage",
     })
   })

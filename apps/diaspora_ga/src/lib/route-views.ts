@@ -13,13 +13,14 @@
 export type RouteView = "stream" | "view" | "reference" | "pending"
 
 export const ROUTE_VIEWS: Readonly<Record<string, RouteView>> = {
-  // ── Vues : les textes du site (lot 1) et les réglages (lot 2a) ──
+  // ── Vues : les textes du site (lot 1), les réglages (lot 2a) et « Mes données » (lot 2b) ──
   "/mentions-legales": "view",
   "/confidentialite": "view",
   "/conditions-utilisation": "view",
   "/regles-communaute": "view",
   "/contact": "view",
   "/parametres": "view",
+  "/mes-donnees": "view",
 
   // ── Flux : le document défile (à confirmer au lot 6) ──
   "/fil": "stream",
@@ -59,8 +60,6 @@ export const ROUTE_VIEWS: Readonly<Record<string, RouteView>> = {
   "/notifications/ouvrir": "reference",
 
   // ── En attente de leur lot ──
-  // Devient `view` au lot 2b.
-  "/mes-donnees": "pending",
   "/moderation": "pending",
   "/mon-activite": "pending",
   "/mon-activite/demandes/[requestId]": "pending",

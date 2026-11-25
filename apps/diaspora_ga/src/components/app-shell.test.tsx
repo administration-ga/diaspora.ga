@@ -1158,7 +1158,8 @@ describe("coque — Publier, une action stable", () => {
     await user.click(railButton!)
     const explanation = await screen.findByRole("dialog", { name: "Votre compte est suspendu." })
     expect(explanation).toHaveTextContent("Vous pourrez publier de nouveau à la fin de la suspension.")
-    expect(within(explanation).getByRole("link", { name: "Mes données" })).toHaveAttribute("href", "/parametres#mes-donnees")
+    // Le chemin des recours : l'onglet « Décisions et signalements » de « Mes données » (lot 2b).
+    expect(within(explanation).getByRole("link", { name: "Mes données" })).toHaveAttribute("href", "/parametres#mes-decisions")
     await user.click(within(explanation).getByRole("button", { name: "Fermer l'explication" }))
     expect(screen.queryByRole("dialog", { name: "Votre compte est suspendu." })).toBeNull()
   })
