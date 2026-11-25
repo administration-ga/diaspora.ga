@@ -1,3 +1,4 @@
+// Dupliqué de UDB_GA apps/udb-web/src/components/community-social/feed-video.test.tsx @ ca31436b4 (origin/demo) — adaptations : Testing Library et le fournisseur de DIASPORA.GA au lieu d'un rendu React nu, textes par i18n, scénarios propres à DIASPORA.GA ajoutés (pause choisie, mouvement réduit, économie de données, appel, découverte gérée) ; les tests « la plus visible », « le son ne vient que du bouton » et l'observateur simulé `show` viennent d'UDB.
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
