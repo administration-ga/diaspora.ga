@@ -14,7 +14,7 @@
 #
 # Les variables NEXT_PUBLIC_* sont inscrites dans le bundle à la construction :
 # chacune est un ARG ci-dessous (cliquet deploy-catalog du moteur). Aucun secret
-# en ARG. Aucune publication sans décision du propriétaire (hébergement à trancher).
+# en ARG. Hébergement : le serveur OVH, derrière Traefik (décision du propriétaire du 25/11/2026).
 # Garde de construction (LX-01, `next.config.ts`) : la construction échoue sans
 # source de données déclarée, avec la source « demo » vers un domaine public, ou
 # vers un domaine public sans version (NEXT_PUBLIC_BUILD_SHA, que dit la sonde).
@@ -29,6 +29,11 @@ ARG NEXT_PUBLIC_IDN_PORTAL_URL
 ARG NEXT_PUBLIC_CONSULATE_URL
 # CH-817 : l'origine des actions HTTP du moteur, lue par le navigateur (porte des comptes de démonstration).
 ARG NEXT_PUBLIC_CONVEX_SITE_URL
+# Origine des actions HTTP du moteur, lue par le serveur (proxy /api/auth) : la configuration Next
+# commune l'INSCRIT dans le code à la construction (`env`), une variable d'exécution n'y suffit pas.
+ARG CONVEX_SITE_URL
+# Serveur média des appels (facultatif) : seule trace côté site, la politique de sécurité (`connect-src`).
+ARG LIVEKIT_WS_URL
 ENV NEXT_PUBLIC_CONVEX_URL=${NEXT_PUBLIC_CONVEX_URL} \
     NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL} \
     NEXT_PUBLIC_BUILD_SHA=${NEXT_PUBLIC_BUILD_SHA} \
@@ -36,6 +41,8 @@ ENV NEXT_PUBLIC_CONVEX_URL=${NEXT_PUBLIC_CONVEX_URL} \
     NEXT_PUBLIC_IDN_PORTAL_URL=${NEXT_PUBLIC_IDN_PORTAL_URL} \
     NEXT_PUBLIC_CONSULATE_URL=${NEXT_PUBLIC_CONSULATE_URL} \
     NEXT_PUBLIC_CONVEX_SITE_URL=${NEXT_PUBLIC_CONVEX_SITE_URL} \
+    CONVEX_SITE_URL=${CONVEX_SITE_URL} \
+    LIVEKIT_WS_URL=${LIVEKIT_WS_URL} \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_OPTIONS=--max-old-space-size=4096
 WORKDIR /src

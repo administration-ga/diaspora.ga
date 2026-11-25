@@ -16,7 +16,7 @@
 # Les variables NEXT_PUBLIC_* sont inscrites dans le bundle à la construction :
 # chacune est un ARG ci-dessous (cliquet deploy-catalog du moteur, entrée
 # `admin_diaspora_ga` du catalogue). Aucun secret en ARG. Aucune publication sans
-# décision du propriétaire (hébergement et domaine à poser par lui).
+# décision du propriétaire. Hébergement : le serveur OVH, derrière Traefik (décision du 25/11/2026).
 
 # ── Étape 1 : dépendances et construction ─────────────────────────────────────
 FROM oven/bun:1.4.2 AS builder
@@ -24,10 +24,14 @@ ARG NEXT_PUBLIC_CONVEX_URL
 ARG NEXT_PUBLIC_SITE_URL
 ARG NEXT_PUBLIC_BUILD_SHA
 ARG NEXT_PUBLIC_MEMBERS_SITE_URL
+# Origine des actions HTTP du moteur, lue par le serveur (proxy /api/auth) : la configuration Next
+# commune l'INSCRIT dans le code à la construction (`env`), une variable d'exécution n'y suffit pas.
+ARG CONVEX_SITE_URL
 ENV NEXT_PUBLIC_CONVEX_URL=${NEXT_PUBLIC_CONVEX_URL} \
     NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL} \
     NEXT_PUBLIC_BUILD_SHA=${NEXT_PUBLIC_BUILD_SHA} \
     NEXT_PUBLIC_MEMBERS_SITE_URL=${NEXT_PUBLIC_MEMBERS_SITE_URL} \
+    CONVEX_SITE_URL=${CONVEX_SITE_URL} \
     NEXT_TELEMETRY_DISABLED=1 \
     NODE_OPTIONS=--max-old-space-size=4096
 WORKDIR /src
