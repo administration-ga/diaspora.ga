@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor, within } from "@testing-librar
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { POST_IMAGE_MAX_BYTES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
+import { VIDEO_TRANSCODE_MAX_SOURCE_BYTES } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DataSourceProvider } from "../data/context"
@@ -388,6 +389,25 @@ describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel e
     await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
     expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeDisabled()
     expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeDisabled()
+  })
+
+  it("M2 : un MP4 plus lourd que la borne d'envoi part en préparation (compression) ; au-delà du plafond de conversion du moteur, refusé dès le choix", async () => {
+    render(<Composer />)
+    const heavy = new File(["v"], "telephone.mp4", { type: "video/mp4" })
+    Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES * 2 })
+    choose([heavy])
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+    expect(uploadMedia).toHaveBeenCalledOnce()
+    expect(uploadMedia.mock.calls[0]?.[0]).toBe(heavy)
+    expect(screen.getByText(plain(t("composer.videoProbing")))).toBeVisible()
+    fireEvent.click(screen.getByRole("button", { name: t("composer.mediaRemove", { name: "telephone.mp4" }) }))
+    uploadMedia.mockClear()
+    const enormous = new File(["v"], "enorme.mov", { type: "video/quicktime" })
+    Object.defineProperty(enormous, "size", { value: VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1 })
+    choose([enormous])
+    expect(await screen.findByRole("alert")).toHaveTextContent(plain(t("errors.media_video_too_large_to_convert")))
+    expect(uploadMedia).not.toHaveBeenCalled()
+    expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
   })
 
   it("l'envoi dit son pour cent, lu par une barre nommée", async () => {

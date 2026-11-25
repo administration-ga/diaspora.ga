@@ -4,6 +4,7 @@ import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { prepareVideoForUpload, type PrepareVideo, type VideoRuntime } from "@antsia/social-features/features/video-upload/video-preparation"
 import { TRANSCODE_ABORTED } from "@antsia/social-features/features/video-upload/video-upload-probe"
+import { VIDEO_TRANSCODE_MAX_SOURCE_BYTES } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { isPreparedImage } from "@antsia/social-features/media-upload"
 import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
@@ -1210,16 +1211,27 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     }
   })
 
-  it("FD-02 : une vidéo plus lourde que la borne du moteur est refusée avant l'envoi", async () => {
+  it("A4 (M2 du moteur) : un MP4 plus lourd que la borne d'envoi est compressé, puis le converti part ; au-delà du plafond de conversion, refusé avant toute URL", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
-    const deposit = vi.fn()
+    const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-compressee" }), { status: 200 }))
     vi.stubGlobal("fetch", deposit)
     try {
-      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      const browser = simulatedBrowser()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(), prepareVideo: browser.prepareVideo })
       const heavy = new File(["v"], "lourde.mp4", { type: "video/mp4" })
       Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES + 1 })
-      expect(await actions.uploadMedia(heavy)).toEqual({ ok: false, code: "media_too_large" })
-      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      const uploaded = await actions.uploadMedia(heavy)
+      expect(uploaded).toMatchObject({ ok: true, value: { ref: "kg-compressee", kind: "video", mimeType: "video/mp4", durationMs: 8_960, pendingCheck: true } })
+      const sent = deposit.mock.calls[0]?.[1].body as File
+      expect(sent).not.toBe(heavy)
+      expect(sent.size).toBeLessThanOrEqual(POST_VIDEO_MAX_BYTES)
+
+      const before = calls.length
+      deposit.mockClear()
+      const enormous = new File(["v"], "enorme.mp4", { type: "video/mp4" })
+      Object.defineProperty(enormous, "size", { value: VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1 })
+      expect(await actions.uploadMedia(enormous)).toEqual({ ok: false, code: "media_video_too_large_to_convert" })
+      expect(calls.slice(before).some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
       expect(deposit).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()

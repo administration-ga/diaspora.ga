@@ -44,8 +44,10 @@ import {
   type VideoPreparationPhase,
 } from "@antsia/social-features/features/video-upload/video-preparation"
 import {
+  isDirectUploadVideoType,
   isVideoCandidateType,
   POST_VIDEO_UPLOAD_LIMITS,
+  VIDEO_TRANSCODE_MAX_SOURCE_BYTES,
   VIDEO_UPLOAD_ACCEPT,
   type VideoPreparationRefusal,
 } from "@antsia/social-features/features/video-upload/video-upload-policy"
@@ -109,16 +111,29 @@ export function postMediaKindOf(mimeType: string): PostMediaKind | null {
 
 /**
  * Ce qu'un fichier CHOISI présente aux règles du moteur avant tout envoi (FD-02). Une photo, un
- * MP4 ou un WebM : ses vrais type et poids. Une vidéo d'un autre conteneur (le .mov de l'iPhone)
- * se présente comme le MP4 qu'elle deviendra, au plus lourd admis : seule sa PLACE (une vidéo
- * seule, jamais une pièce de trop) se juge ici ; son type, son poids et sa durée réels se jugent
- * sur le fichier PRÉPARÉ, avant tout dépôt (`prepareMediaFile`). `null` : ni photo ni vidéo.
+ * MP4 ou un WebM dans la borne d'envoi : ses vrais type et poids. Une vidéo d'un autre conteneur
+ * (le .mov de l'iPhone), ou un MP4 ou un WebM plus lourd que la borne (A4 : le moteur le
+ * compresse depuis son lot M2), se présente comme le MP4 qu'elle deviendra, au plus lourd
+ * admis : seule sa PLACE (une vidéo seule, jamais une pièce de trop) se juge ici ; son type, son
+ * poids et sa durée réels se jugent sur le fichier PRÉPARÉ, avant tout dépôt
+ * (`prepareMediaFile`). `null` : ni photo ni vidéo.
  */
 export function selectionMediaInput(file: File): PostMediaInput | null {
   const kind = postMediaKindOf(file.type)
-  if (kind) return { kind, mimeType: file.type, sizeBytes: file.size }
+  if (kind === "image" || (kind === "video" && file.size <= POST_VIDEO_MAX_BYTES)) return { kind, mimeType: file.type, sizeBytes: file.size }
+  if (kind === "video") return { kind, mimeType: file.type, sizeBytes: POST_VIDEO_MAX_BYTES }
   if (isVideoCandidateType(file.type)) return { kind: "video", mimeType: POST_VIDEO_UPLOAD_MIME_TYPES[0], sizeBytes: POST_VIDEO_MAX_BYTES }
   return null
+}
+
+/**
+ * A4 (M2 du moteur) : une vidéo plus lourde que ce que le moteur accepte de convertir dans un
+ * navigateur (`VIDEO_TRANSCODE_MAX_SOURCE_BYTES`, lu dans sa politique) est refusée dès le
+ * choix, sans analyse ; toute autre se prépare. Une telle source doit toujours être convertie
+ * (elle dépasse la borne d'envoi), le refus est donc celui que la préparation rendrait.
+ */
+export function videoSourceRefusal(file: File): ActionErrorCode | null {
+  return isVideoCandidateType(file.type) && file.size > VIDEO_TRANSCODE_MAX_SOURCE_BYTES ? "media_video_too_large_to_convert" : null
 }
 
 /**
@@ -247,6 +262,23 @@ export const VIDEO_PREPARATION_CODES: Readonly<Record<VideoPreparationRefusal, A
   "too-long-to-convert": "media_video_too_long_to_convert",
   "no-encoder": "media_video_format",
   "conversion-failed": "media_video_conversion_failed",
+  // M2 du moteur : la source dépasse ce qu'un navigateur convertit.
+  "too-large-to-convert": "media_video_too_large_to_convert",
+}
+
+/**
+ * A4 : un MP4 ou un WebM trop lourd n'a pas à changer de FORMAT, il doit être COMPRESSÉ. Les
+ * refus qui conseilleraient un autre format (trop long à convertir, aucun encodeur) disent
+ * alors la compression impossible (comme les phrases propres du moteur).
+ */
+const HEAVY_DIRECT_VIDEO_CODES: Partial<Record<VideoPreparationRefusal, ActionErrorCode>> = {
+  "too-long-to-convert": "media_video_too_heavy_to_compress",
+  "no-encoder": "media_video_cannot_compress",
+}
+
+function videoRefusalCode(refusal: VideoPreparationRefusal, file: File): ActionErrorCode {
+  const heavyDirect = isDirectUploadVideoType(file.type) && file.size > POST_VIDEO_MAX_BYTES
+  return (heavyDirect ? HEAVY_DIRECT_VIDEO_CODES[refusal] : undefined) ?? VIDEO_PREPARATION_CODES[refusal]
 }
 
 /** Ce que l'écran suit et peut arrêter pendant la préparation d'une vidéo (FD-02). */
@@ -279,20 +311,17 @@ function failedPreparation(signal: AbortSignal | undefined): VideoPreparation {
 }
 
 /**
- * Prépare une VIDÉO avant son dépôt (FD-02) : un MP4 ou un WebM trop lourd est refusé avant
- * toute analyse ; puis le module du moteur la sonde et, s'il le faut (un .mov, un MP4 en HEVC),
- * la convertit en MP4 ou en WebM dans ce navigateur. Le fichier RENDU est pesé (une conversion
- * vise un débit sans le tenir à l'octet) et sa durée jugée par la règle du moteur. Échec fermé :
- * un refus, ou `media_cancelled`, jamais l'original d'un conteneur non admis.
+ * Prépare une VIDÉO avant son dépôt (FD-02) : le module du moteur la sonde et, s'il le faut (un
+ * .mov, un MP4 en HEVC, et depuis son lot M2 un MP4 ou un WebM plus lourd que la borne d'envoi,
+ * A4), la convertit en MP4 ou en WebM dans ce navigateur ; sa politique décide avec le POIDS de
+ * la source (plafond de conversion compris). Le fichier RENDU est pesé (une conversion vise un
+ * débit sans le tenir à l'octet) et sa durée jugée par la règle du moteur. Échec fermé : un
+ * refus, ou `media_cancelled`, jamais l'original d'un conteneur non admis.
  */
 async function prepareVideoMedia(
   file: File,
   options: MediaPreparationOptions,
 ): Promise<ActionResult<{ readonly file: File; readonly facts: MediaFileFacts }>> {
-  if (postMediaKindOf(file.type) === "video") {
-    const weight = postMediaRefusal([{ kind: "video", mimeType: file.type, sizeBytes: file.size }])
-    if (weight) return { ok: false, code: weight }
-  }
   const { signal, onPhase } = options
   let result: VideoPreparation
   try {
@@ -306,7 +335,7 @@ async function prepareVideoMedia(
     result = failedPreparation(signal)
   }
   if (result.status === "cancelled" || signal?.aborted) return { ok: false, code: "media_cancelled" }
-  if (result.status === "refused") return { ok: false, code: VIDEO_PREPARATION_CODES[result.refusal] }
+  if (result.status === "refused") return { ok: false, code: videoRefusalCode(result.refusal, file) }
   const output = result.file
   if (postMediaKindOf(output.type) !== "video") return { ok: false, code: "media_video_conversion_failed" }
   const weight = postMediaRefusal([{ kind: "video", mimeType: output.type, sizeBytes: output.size }])

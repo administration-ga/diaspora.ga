@@ -20,6 +20,7 @@ import {
   postMediaRefusal,
   selectionMediaInput,
   unsupportedMediaRefusal,
+  videoSourceRefusal,
 } from "../data/media"
 import type { MediaUploadPhase, PublishMediaInput, UploadedMedia } from "../data/port"
 import type { PagePublicationInput, PagePublicationsCapability } from "../data/page-publications-port"
@@ -361,6 +362,12 @@ export function PostComposerSheet(props: {
       const input = selectionMediaInput(file)
       if (!input) {
         setMediaError(unsupportedMediaRefusal(file.type))
+        return
+      }
+      // A4 (M2 du moteur) : un MP4 lourd se compresse ; seule une source au-delà du plafond de conversion est refusée, dès le choix.
+      const sourceRefusal = videoSourceRefusal(file)
+      if (sourceRefusal) {
+        setMediaError(sourceRefusal)
         return
       }
       chosen.push({ file, input })

@@ -90,6 +90,11 @@ export const DATA_ERROR_CODES = [
   "media_video_too_long_to_convert",
   "media_video_conversion_failed",
   "media_video_converted_too_large",
+  // M2 du moteur (A4, 25/11/2026) : une source trop lourde pour être convertie ici ; un MP4 trop lourd
+  // que la compression ne peut pas servir (trop long à compresser, aucun encodeur).
+  "media_video_too_large_to_convert",
+  "media_video_too_heavy_to_compress",
+  "media_video_cannot_compress",
   "media_cancelled",
   // Partage cité : seule une publication publique et publiée se partage ; un partage ne joint pas de média.
   "share_not_allowed",

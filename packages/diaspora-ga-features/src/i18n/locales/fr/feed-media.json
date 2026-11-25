@@ -36,5 +36,10 @@
     "shortcutsLabel": "Publier une photo ou une vidéo",
     "shortcutPhoto": "Photo",
     "shortcutVideo": "Vidéo"
+  },
+  "errors": {
+    "media_video_too_large_to_convert": "Cette vidéo est trop lourde pour être préparée dans ce navigateur : au-delà de {{postVideoConvertMaxGigabytes}} Go, la conversion n’est pas possible ici. Elle n’est pas envoyée. Raccourcissez-la ou exportez-la en plus basse définition, puis choisissez-la de nouveau.",
+    "media_video_too_heavy_to_compress": "Cette vidéo dépasse {{postVideoMaxMegabytes}} Mo : elle doit être compressée ici, en temps réel, et au-delà de {{postVideoConvertMaxMinutes}} min l’attente serait trop longue. Elle n’est pas envoyée. Raccourcissez-la, puis choisissez-la de nouveau.",
+    "media_video_cannot_compress": "Cette vidéo dépasse {{postVideoMaxMegabytes}} Mo et ce navigateur ne sait pas la compresser : elle n’est pas envoyée. Raccourcissez-la, ou essayez avec un navigateur à jour."
   }
 }

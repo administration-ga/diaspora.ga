@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
-import { VIDEO_TRANSCODE_MAX_DURATION_MS } from "@antsia/social-features/features/video-upload/video-upload-policy"
+import { VIDEO_TRANSCODE_MAX_DURATION_MS, VIDEO_TRANSCODE_MAX_SOURCE_BYTES } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { describe, expect, it } from "vitest"
 
 import { getFixedT } from "./index"
@@ -36,6 +36,10 @@ const LIMIT_PHRASES = [
   // M3 : le nombre de photos d'une publication (dix au lot M3 du moteur), jamais écrit en toutes lettres.
   "errors.media_too_many",
   "eventGallery.composeDescription",
+  // M2 et A4 : les refus d'une vidéo trop lourde à convertir ou à compresser.
+  "errors.media_video_too_large_to_convert",
+  "errors.media_video_too_heavy_to_compress",
+  "errors.media_video_cannot_compress",
   "profile.images.requirements",
   "profile.images.format",
   "profile.images.inputTooLarge",
@@ -46,6 +50,9 @@ const LIMIT_PHRASES = [
 describe("FD-02 — les bornes des médias suivent le moteur", () => {
   it("les variables sont tirées des constantes du domaine", () => {
     expect(MEDIA_LIMIT_VARIABLES.postMediaMaxCount).toBe(String(POST_MEDIA_MAX_COUNT))
+    // M2 : le plafond de conversion du moteur, en gibioctets entiers (un gigaoctet au lot M2).
+    expect(MEDIA_LIMIT_VARIABLES.postVideoConvertMaxGigabytes).toBe(String(VIDEO_TRANSCODE_MAX_SOURCE_BYTES / (1024 * 1024 * 1024)))
+    expect(VIDEO_TRANSCODE_MAX_SOURCE_BYTES % (1024 * 1024 * 1024)).toBe(0)
     expect(MEDIA_LIMIT_VARIABLES.postImageMaxMegabytes).toBe(String(POST_IMAGE_MAX_BYTES / (1024 * 1024)))
     expect(MEDIA_LIMIT_VARIABLES.postVideoMaxMegabytes).toBe(String(POST_VIDEO_MAX_BYTES / (1024 * 1024)))
     expect(MEDIA_LIMIT_VARIABLES.postImageFormats).toBe(formatNames(POST_IMAGE_MIME_TYPES))
