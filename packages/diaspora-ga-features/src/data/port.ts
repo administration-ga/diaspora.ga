@@ -193,7 +193,10 @@ export interface JoinedView {
  * FD-02 : où en est le dépôt d'un média, tel que le composeur l'annonce — l'analyse puis la
  * conversion d'une vidéo (progression de 0 à 1, phases du module du moteur), puis l'envoi.
  */
-export type MediaUploadPhase = VideoPreparationPhase | { readonly phase: "uploading" }
+export type MediaUploadPhase =
+  | VideoPreparationPhase
+  /** A3 : l'envoi du fichier préparé ; `progress` de 0 à 1 quand l'envoi le dit (absent : inconnu). */
+  | { readonly phase: "uploading"; readonly progress?: number }
 
 /** Ce que l'écran suit et peut arrêter pendant un dépôt de média (FD-02). */
 export interface MediaUploadOptions {

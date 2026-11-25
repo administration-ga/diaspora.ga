@@ -81,10 +81,12 @@ import { Wordmark } from "./wordmark"
 
 interface ComposerControl {
   readonly open: () => void
+  /** A3 : des fichiers choisis hors de la feuille (raccourcis Photo et Vidéo du fil) ; la feuille s'ouvre et les joint. */
+  readonly attach: (files: readonly File[]) => void
   readonly canPublish: boolean
 }
 
-const ComposerContext = createContext<ComposerControl>({ open: () => {}, canPublish: false })
+const ComposerContext = createContext<ComposerControl>({ open: () => {}, attach: () => {}, canPublish: false })
 
 /** Ouvre le composeur de la coque depuis un écran (« Quoi de neuf ? »). */
 export function useComposer(): ComposerControl {
@@ -343,6 +345,8 @@ type AppShellProps = { readonly membership: MembershipView; readonly children: R
 export function AppShell(props: AppShellProps) {
   const pathname = usePathname() ?? ""
   const [composerOpen, setComposerOpen] = useState(false)
+  // A3 : les fichiers choisis depuis le fil, numérotés : chaque geste n'est joint qu'une fois.
+  const [composerFiles, setComposerFiles] = useState<{ readonly id: number; readonly files: readonly File[] } | null>(null)
   // Partage cité : la publication citée reste posée pendant la fermeture de la feuille (pas de bascule de titre).
   const [shareTarget, setShareTarget] = useState<PostView | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
@@ -403,6 +407,10 @@ export function AppShell(props: AppShellProps) {
   const feature = featureOfPath(pathname)
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
   const openComposer = () => setComposerOpen(true)
+  const attachToComposer = (files: readonly File[]) => {
+    setComposerFiles((current) => ({ id: (current?.id ?? 0) + 1, files }))
+    setComposerOpen(true)
+  }
 
   // La page flottante « Informations » (une page = une vue) : ouverte depuis le menu ou la feuille du
   // compte, sur l'adresse où elle l'a été. Suivre un lien qui mène ailleurs (un renvoi d'une rubrique)
@@ -457,7 +465,7 @@ export function AppShell(props: AppShellProps) {
                 view ? "min-[960px]:pb-6 tall:min-h-0 tall:flex-1 tall:grid-rows-[minmax(0,1fr)]" : "min-[960px]:pb-10",
               )}
             >
-              <ComposerContext.Provider value={{ open: openComposer, canPublish }}>
+              <ComposerContext.Provider value={{ open: openComposer, attach: attachToComposer, canPublish }}>
                 <InformationReaderContext.Provider value={{ available: information.length > 0, open: openInformation }}>
                   {/* En vue, les avis prennent leur hauteur et le `ViewFrame` de l'écran le reste. */}
                   <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : "max-w-[792px]")}>
@@ -504,6 +512,7 @@ export function AppShell(props: AppShellProps) {
             memberCountry={membership.facet.countryOfResidence}
             openCountries={open}
             draftKey={`diaspora-ga:brouillon:${membership.personId}`}
+            incomingFiles={composerFiles}
           />
         ) : null}
         {canPublish ? (

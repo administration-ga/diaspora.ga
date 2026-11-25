@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
+import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
 import { VIDEO_TRANSCODE_MAX_DURATION_MS } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { describe, expect, it } from "vitest"
@@ -31,6 +31,8 @@ const LIMIT_PHRASES = [
   "errors.media_video_too_long_to_convert",
   "errors.media_video_conversion_failed",
   "errors.media_video_converted_too_large",
+  // A3 : les bornes dites sous les sélecteurs Photos et Vidéo du composeur.
+  "composer.mediaLimits",
   "profile.images.requirements",
   "profile.images.format",
   "profile.images.inputTooLarge",
@@ -40,6 +42,7 @@ const LIMIT_PHRASES = [
 
 describe("FD-02 — les bornes des médias suivent le moteur", () => {
   it("les variables sont tirées des constantes du domaine", () => {
+    expect(MEDIA_LIMIT_VARIABLES.postMediaMaxCount).toBe(String(POST_MEDIA_MAX_COUNT))
     expect(MEDIA_LIMIT_VARIABLES.postImageMaxMegabytes).toBe(String(POST_IMAGE_MAX_BYTES / (1024 * 1024)))
     expect(MEDIA_LIMIT_VARIABLES.postVideoMaxMegabytes).toBe(String(POST_VIDEO_MAX_BYTES / (1024 * 1024)))
     expect(MEDIA_LIMIT_VARIABLES.postImageFormats).toBe(formatNames(POST_IMAGE_MIME_TYPES))

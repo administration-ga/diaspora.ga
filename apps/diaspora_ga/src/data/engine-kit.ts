@@ -30,6 +30,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import type { DemoGateTokenStore } from "./engine-demo-gate"
 import { engineActionErrorCode } from "./engine-errors"
+import type { UploadTransport } from "./engine-upload"
 
 export const PAGE_ACCESS_ERRORS: ReadonlySet<ActionErrorCode> = new Set(["not_signed_in", "not_member", "not_found", "status_insufficient", "suspended", "network_unavailable"])
 
@@ -157,6 +158,11 @@ export interface EngineSourceDeps {
    * tests — `jsdom` n'a ni décodeur vidéo ni `MediaRecorder`.
    */
   readonly prepareVideo?: PrepareVideo
+  /**
+   * A3 (25/11/2026) : l'envoi du fichier au dépôt, qui dit son avancement (XHR) ; à défaut
+   * de XHR, `fetch`. Remplaçable dans les tests.
+   */
+  readonly uploadTransport?: UploadTransport
 }
 
 export class Refusal extends Error {

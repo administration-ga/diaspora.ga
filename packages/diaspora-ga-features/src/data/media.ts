@@ -77,6 +77,12 @@ export type { PostMediaInput, PostMediaKind, PrepareVideo, VideoPreparationPhase
  */
 export const POST_MEDIA_ACCEPT = [...POST_IMAGE_MIME_TYPES, VIDEO_UPLOAD_ACCEPT].join(",")
 
+/** A3 (25/11/2026) : le sélecteur des PHOTOS seules (types admis par le moteur), entrée « Photos » du composeur et du fil. */
+export const POST_PHOTO_ACCEPT = POST_IMAGE_MIME_TYPES.join(",")
+
+/** A3 : le sélecteur de la VIDÉO, toute vidéo (le .mov de l'iPhone se prépare), entrée « Vidéo » du composeur et du fil. */
+export const POST_VIDEO_ACCEPT = VIDEO_UPLOAD_ACCEPT
+
 /**
  * Les règles des médias du moteur, et de son dépôt de fichiers, dites par
  * DIASPORA.GA : une seule table, lue par l'écran et par la traduction des refus

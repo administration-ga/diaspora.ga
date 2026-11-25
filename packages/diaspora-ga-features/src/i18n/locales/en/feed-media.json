@@ -23,6 +23,18 @@
   },
   "composer": {
     "mediaAfterCheck": "Post sent: your photos or video will appear once their security check is done.",
-    "mediaAfterCheckDetail": "Photos and videos will appear once their security check is done."
+    "mediaAfterCheckDetail": "Photos and videos will appear once their security check is done.",
+    "mediaAddPhotos": "Photos",
+    "mediaAddVideo": "Video",
+    "mediaLimits": "Up to {{postMediaMaxCount}} photos of {{postImageMaxMegabytes}} MB each, or a single video of up to {{postVideoMaxMegabytes}} MB and {{postVideoMaxMinutes}} min.",
+    "mediaUploadingPercent": "Uploading: {{percent}}",
+    "mediaUploadProgressLabel": "Uploading {{name}}",
+    "mediaRetry": "Retry",
+    "mediaRetryLabel": "Retry uploading {{name}}"
+  },
+  "feed": {
+    "shortcutsLabel": "Post a photo or a video",
+    "shortcutPhoto": "Photo",
+    "shortcutVideo": "Video"
   }
 }

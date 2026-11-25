@@ -8,7 +8,7 @@
  * noms de formats) : l'instance change de langue sans être recréée, et l'unité
  * (« Mo », « MB ») est dans la phrase de chaque langue.
  */
-import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
+import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
 import { VIDEO_TRANSCODE_MAX_DURATION_MS } from "@antsia/social-features/features/video-upload/video-upload-policy"
 
@@ -43,6 +43,8 @@ export function minutes(durationMs: number): string {
 
 /** Les variables par défaut des textes de DIASPORA.GA qui disent une borne ou des formats. */
 export const MEDIA_LIMIT_VARIABLES = {
+  // A3 : le nombre de photos d'une publication, borne du moteur (aujourd'hui quatre ; un lot du moteur pourra l'élever).
+  postMediaMaxCount: String(POST_MEDIA_MAX_COUNT),
   postImageMaxMegabytes: megabytes(POST_IMAGE_MAX_BYTES),
   postVideoMaxMegabytes: megabytes(POST_VIDEO_MAX_BYTES),
   postImageFormats: formatNames(POST_IMAGE_MIME_TYPES),

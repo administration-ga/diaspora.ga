@@ -1148,6 +1148,29 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     }
   })
 
+  it("A3 : l'envoi dit son avancement au pour cent près, garde l'annulation, et ne montre jamais la réponse du serveur", async () => {
+    const { convex } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const controller = new AbortController()
+    const uploadTransport = vi.fn(async (request: { url: string; file: File; signal?: AbortSignal; onProgress?: (fraction: number) => void }) => {
+      request.onProgress?.(0.25)
+      request.onProgress?.(1)
+      return { status: 200, body: JSON.stringify({ storageId: "kg-progression" }) }
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage({ width: 800, height: 600 }), uploadTransport })
+    const phases: MediaUploadPhase[] = []
+    const uploaded = await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }), { signal: controller.signal, onPhase: (phase) => phases.push(phase) })
+    expect(uploaded).toMatchObject({ ok: true, value: { ref: "kg-progression", pendingCheck: true } })
+    expect(phases).toEqual([{ phase: "uploading" }, { phase: "uploading", progress: 0.25 }, { phase: "uploading", progress: 1 }])
+    expect(uploadTransport.mock.calls[0]?.[0]).toMatchObject({ url: "https://depot.test/televersement", signal: controller.signal })
+    // Un refus du dépôt se dit par son code fermé, jamais par la réponse du serveur.
+    uploadTransport.mockResolvedValueOnce({ status: 500, body: "panne interne" })
+    expect(await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }))).toEqual({ ok: false, code: "media_upload_failed" })
+    uploadTransport.mockRejectedValueOnce(new DOMException("annulé", "AbortError"))
+    const cancelled = new AbortController()
+    const pending = actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }), { signal: cancelled.signal, onPhase: (phase) => { if (phase.phase === "uploading") cancelled.abort() } })
+    expect(await pending).toEqual({ ok: false, code: "media_cancelled" })
+  })
+
   it("FD-01 : une photo portant sa position GPS part sans aucun segment EXIF ; l'original ne quitte jamais le navigateur", async () => {
     const { convex } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
     const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-photo" }), { status: 200 }))

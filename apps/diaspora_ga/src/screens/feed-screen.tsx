@@ -2,12 +2,12 @@
 
 import { hasCapability, parseFeedScope, parseResidenceCountry, type CounterPresentation, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
 import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
-import { useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
+import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT, useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { ArrowRightIcon, Building2Icon, GalleryVerticalEndIcon, HandshakeIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
+import { ArrowRightIcon, Building2Icon, FilmIcon, GalleryVerticalEndIcon, HandshakeIcon, ImagePlusIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react"
 
 import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
@@ -195,6 +195,7 @@ function Feed(props: { membership: MembershipView }) {
                   {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
                 </button>
               </div>
+              <ComposerMediaShortcuts open={composer.open} attach={composer.attach} />
               {/* Qui publie est en règle (`declaree` ou `verifiee`) : l'inscription lui est proposée ici ; un membre en
                   attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. Pages fermées
                   sur le réseau (ADR-0041 du moteur) : aucune inscription proposée. */}
@@ -229,6 +230,41 @@ function Feed(props: { membership: MembershipView }) {
         </>
       )}
     </>
+  )
+}
+
+/**
+ * A3 (25/11/2026, comme UDB) : les raccourcis Photo et Vidéo de la carte « Quoi de neuf ? ».
+ * Un seul geste ouvre la feuille de publication ET le sélecteur de fichiers : le sélecteur
+ * est appelé dans le geste même (un navigateur de téléphone refuse de l'ouvrir plus tard),
+ * puis les fichiers choisis rejoignent le composeur, qui les juge comme un choix fait chez lui.
+ */
+function ComposerMediaShortcuts(props: { open: () => void; attach: (files: readonly File[]) => void }) {
+  const { t } = useDiasporaGaT()
+  const photoInput = useRef<HTMLInputElement>(null)
+  const videoInput = useRef<HTMLInputElement>(null)
+  const pick = (input: HTMLInputElement | null) => {
+    input?.click()
+    props.open()
+  }
+  const chosen = (event: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files ?? [])
+    event.target.value = ""
+    if (files.length > 0) props.attach(files)
+  }
+  return (
+    <div role="group" aria-label={t("feed.shortcutsLabel")} className="flex flex-wrap gap-2">
+      <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={() => pick(photoInput.current)}>
+        <ImagePlusIcon aria-hidden />
+        {t("feed.shortcutPhoto")}
+      </Button>
+      <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={() => pick(videoInput.current)}>
+        <FilmIcon aria-hidden />
+        {t("feed.shortcutVideo")}
+      </Button>
+      <input ref={photoInput} type="file" accept={POST_PHOTO_ACCEPT} multiple hidden onChange={chosen} />
+      <input ref={videoInput} type="file" accept={POST_VIDEO_ACCEPT} hidden onChange={chosen} />
+    </div>
   )
 }
 

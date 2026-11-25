@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
+import { POST_IMAGE_MAX_BYTES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { DataSourceProvider } from "../data/context"
@@ -8,6 +9,8 @@ import type { ActionResult, DiasporaGaDataSource, MediaUploadOptions, MediaUploa
 import type { PagePublicationsCapability } from "../data/page-publications-port"
 import { getFixedT } from "../i18n"
 import { I18nProvider } from "../i18n/client"
+import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT } from "../data/media"
+import { megabytes } from "../i18n/media-limits"
 import { PostComposerSheet } from "./composer"
 
 const t = getFixedT("fr")
@@ -143,7 +146,8 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     expect(publish.mock.calls[0]?.[0].media).toBeUndefined()
     choose([new File(["photo"], "trop-tard.png", { type: "image/png" })])
     expect(uploadMedia).not.toHaveBeenCalled()
-    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeDisabled()
     const form = document.querySelector("form")
     if (!form) throw new Error("Formulaire absent")
     await act(async () => { fireEvent.submit(form) })
@@ -182,7 +186,7 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(publish).toHaveBeenCalledOnce())
-    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeEnabled()
     expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(2)
     expect(onClose).not.toHaveBeenCalled()
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
@@ -292,8 +296,8 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
     expect(screen.getByText(plain(t("composer.videoCancelled")))).toHaveAttribute("aria-live", "polite")
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:recette-IMG_0412.MOV")
-    // Le bouton d'annulation a disparu : le focus revient au bouton d'ajout, de nouveau actif.
-    const add = screen.getByRole("button", { name: t("composer.mediaAdd") })
+    // Le bouton d'annulation a disparu : le focus revient au bouton d'ajout d'une vidéo, de nouveau actif.
+    const add = screen.getByRole("button", { name: t("composer.mediaAddVideo") })
     expect(add).toBeEnabled()
     expect(add).toHaveFocus()
 
@@ -342,7 +346,7 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
     await act(async () => { upload.result.resolve({ ok: false, code: "media_video_too_long_to_convert" }) })
     expect(await screen.findByRole("alert")).toHaveTextContent(plain(t("errors.media_video_too_long_to_convert")))
     expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
-    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeEnabled()
 
     // Rechargé, le composeur rend le texte, jamais une vidéo à moitié préparée.
     view.unmount()
@@ -362,6 +366,78 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
     expect(screen.getByRole("button", { name: t("composer.mediaRemove", { name: "IMG_0412.MOV" }) })).toBeEnabled()
   })
 })
+
+describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel essai (A3)", () => {
+  it("deux sélecteurs distincts, photos (plusieurs) et vidéo (une), et les bornes du moteur dites", () => {
+    render(<Composer />)
+    const group = screen.getByRole("group", { name: t("composer.mediaAdd") })
+    expect(within(group).getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeEnabled()
+    expect(within(group).getByRole("button", { name: t("composer.mediaAddVideo") })).toBeEnabled()
+    const [photoInput, videoInput] = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')]
+    expect(photoInput?.accept).toBe(POST_PHOTO_ACCEPT)
+    expect(photoInput?.multiple).toBe(true)
+    expect(videoInput?.accept).toBe(POST_VIDEO_ACCEPT)
+    expect(videoInput?.multiple).toBe(false)
+    const limits = screen.getByText(plain(t("composer.mediaLimits")))
+    for (const value of [String(POST_MEDIA_MAX_COUNT), megabytes(POST_IMAGE_MAX_BYTES), megabytes(POST_VIDEO_MAX_BYTES), String(POST_VIDEO_MAX_DURATION_MS / 60_000)]) expect(limits.textContent).toContain(value)
+  })
+
+  it("une vidéo jointe ferme l'ajout ; des photos ferment l'ajout d'une vidéo et le rouvrent au plafond", async () => {
+    render(<Composer />)
+    choose([new File(["v"], "clip.mp4", { type: "video/mp4" })])
+    await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
+    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeDisabled()
+  })
+
+  it("l'envoi dit son pour cent, lu par une barre nommée", async () => {
+    const upload = controlledUpload()
+    render(<Composer />)
+    choose([new File(["photo"], "marche.png", { type: "image/png" })])
+    await upload.phase({ phase: "uploading", progress: 0.426 })
+    const bar = screen.getByRole("progressbar", { name: t("composer.mediaUploadProgressLabel", { name: "marche.png" }) })
+    expect(bar).toHaveAttribute("value", "42")
+    expect(bar.parentElement?.textContent).toContain(t("composer.mediaUploadingPercent", { percent: percent(0.42) }))
+    expect(screen.getByRole("button", { name: t("composer.publish") })).toBeDisabled()
+  })
+
+  it("« Réessayer » renvoie la pièce échouée sans perdre le texte, puis la publication la porte", async () => {
+    uploadMedia.mockResolvedValueOnce({ ok: false, code: "media_upload_failed" })
+    const user = userEvent.setup()
+    render(<Composer />)
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Texte à garder")
+    const file = new File(["photo"], "reessai.png", { type: "image/png" })
+    choose([file])
+    const retry = await screen.findByRole("button", { name: t("composer.mediaRetryLabel", { name: "reessai.png" }) })
+    await user.click(retry)
+    await waitFor(() => expect(uploadMedia).toHaveBeenCalledTimes(2))
+    expect(uploadMedia.mock.calls[1]?.[0]).toBe(file)
+    await waitFor(() => expect(screen.queryByRole("button", { name: t("composer.mediaRetryLabel", { name: "reessai.png" }) })).not.toBeInTheDocument())
+    expect(screen.getByRole("textbox", { name: t("composer.bodyLabel") })).toHaveValue("Texte à garder")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(publish).toHaveBeenCalledOnce())
+    expect(publish.mock.calls[0]?.[0]).toMatchObject({ body: "Texte à garder", media: [{ upload: { ref: "stored-reessai.png" } }] })
+  })
+
+  it("les fichiers choisis depuis le fil (Photo, Vidéo) rejoignent le composeur, une fois par geste", async () => {
+    const photo = new File(["photo"], "depuis-le-fil.png", { type: "image/png" })
+    const view = render(<IncomingComposer incoming={{ id: 1, files: [photo] }} />)
+    await waitFor(() => expect(uploadMedia).toHaveBeenCalledOnce())
+    expect(uploadMedia.mock.calls[0]?.[0]).toBe(photo)
+    expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(1)
+    view.rerender(<IncomingComposer incoming={{ id: 1, files: [photo] }} />)
+    expect(uploadMedia).toHaveBeenCalledOnce()
+    view.rerender(<IncomingComposer incoming={{ id: 2, files: [new File(["photo"], "seconde.png", { type: "image/png" })] }} />)
+    await waitFor(() => expect(uploadMedia).toHaveBeenCalledTimes(2))
+    expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(2)
+  })
+})
+
+function IncomingComposer(props: { readonly incoming: { readonly id: number; readonly files: readonly File[] } }) {
+  return <I18nProvider locale="fr"><DataSourceProvider source={source}>
+    <PostComposerSheet open onOpenChange={() => undefined} memberCountry="FR" openCountries={["FR"]} incomingFiles={props.incoming} />
+  </DataSourceProvider></I18nProvider>
+}
 
 function CountryComposer(props: { readonly memberCountry: "FR" | "ES"; readonly openCountries: readonly ("FR" | "ES")[] | null; readonly pageCountry?: "FR" | "ES" }) {
   const [open, setOpen] = useState(true)
