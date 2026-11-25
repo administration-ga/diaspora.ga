@@ -1,6 +1,6 @@
 "use client"
 
-import { Button, Card, Checkbox, Label, Sheet, SheetContent, cn, formatDate } from "@diaspora-ga/features"
+import { Button, Card, Checkbox, FolderTabsNav, Label, Sheet, SheetContent, cn, formatDate } from "@diaspora-ga/features"
 import {
   ERASURE_GRACE_DAYS,
   ERASURE_GRACE_MS,
@@ -25,6 +25,9 @@ import {
   useFeedback,
   useMounted,
 } from "./moderation-decisions"
+import { anchors } from "@/lib/routes"
+import { useHashView } from "@/lib/use-hash-view"
+
 import { ReportResults } from "./my-reports"
 
 /**
@@ -32,6 +35,14 @@ import { ReportResults } from "./my-reports"
  * commun, demander puis annuler son effacement pendant la grâce, lire les
  * décisions de modération qui nous concernent et les contester, et suivre ses
  * propres signalements (`#mes-signalements`, SU01d du moteur).
+ *
+ * Deux onglets (« une page, une vue », lot 2b) : « Export et effacement »
+ * (`#mes-donnees`) et « Décisions et signalements » (`#mes-decisions`, où mène
+ * aussi `#mes-signalements`). Ce sont des LIENS natifs vers une ancre : l'adresse
+ * dit l'onglet, le retour du navigateur le rend, la même section marche dans les
+ * réglages et à `/mes-donnees`. Les deux groupes restent montés, l'inactif masqué
+ * (`data-inactive`) : un export en cours ou un recours en saisie survit au
+ * changement d'onglet.
  *
  * Elle reçoit la PERSONNE, jamais l'adhésion (NP-02) : la même section sert
  * les réglages d'un membre et la page `/mes-donnees`, ouverte à toute personne
@@ -50,8 +61,12 @@ export function DataRightsSettings(props: {
   const titleId = useId()
   const { person } = props
   const Heading = props.heading ?? "h2"
+  const anchor = useHashView(DATA_RIGHTS_ANCHORS)
+  const tab: DataRightsTab = anchor === null || anchor === "mes-donnees" ? "data" : "moderation"
   return (
-    <section id="mes-donnees" aria-labelledby={titleId} className="scroll-mt-20">
+    // Devenue la page elle-même (`h1`, `/mes-donnees`), la section n'est pas une seconde région : le
+    // volet de la page en porte déjà le nom (« une page, une vue », lot 2b).
+    <section id="mes-donnees" aria-labelledby={Heading === "h2" ? titleId : undefined} className="scroll-mt-20">
       <Card className="flex min-w-0 flex-col gap-5 p-5">
         <div>
           <Heading id={titleId} className={cn("font-display font-bold", Heading === "h1" ? "text-3xl" : "text-xl")}>{t("settings.data")}</Heading>
@@ -61,10 +76,15 @@ export function DataRightsSettings(props: {
           <p className="rounded-lg bg-muted px-3 py-2 text-sm">{t("settings.dataRights.unavailable")}</p>
         ) : (
           <div key={person.personId} className="flex min-w-0 flex-col gap-5">
-            <ExportPanel rights={rights} personId={person.personId} handle={person.handle} />
-            <ErasurePanel rights={rights} personId={person.personId} canLeave={person.canLeave} />
-            <DecisionsPanel rights={rights} personId={person.personId} />
-            {rights.useReports ? <ReportsPanel useReports={rights.useReports} personId={person.personId} /> : null}
+            <DataRightsTabs active={tab} />
+            <TabGroup tab="data" active={tab}>
+              <ExportPanel rights={rights} personId={person.personId} handle={person.handle} />
+              <ErasurePanel rights={rights} personId={person.personId} canLeave={person.canLeave} />
+            </TabGroup>
+            <TabGroup tab="moderation" active={tab} id={DECISIONS_ANCHOR}>
+              <DecisionsPanel rights={rights} personId={person.personId} />
+              {rights.useReports ? <ReportsPanel useReports={rights.useReports} personId={person.personId} /> : null}
+            </TabGroup>
           </div>
         )}
       </Card>
@@ -82,6 +102,68 @@ export interface DataRightsPerson {
    * alternative. Faux pour qui est parti ou n'est jamais entré : il n'y a rien à quitter.
    */
   readonly canLeave: boolean
+}
+
+// ── Onglets ────────────────────────────────────────────────────────────────
+
+type DataRightsTab = "data" | "moderation"
+
+/** L'ancre de l'onglet des décisions (sans croisillon) : la route `settingsDecisions` y mène. */
+const DECISIONS_ANCHOR = anchors.dataRightsDecisions.slice(1)
+
+/** Les ancres que lit la section : celle de chaque onglet, et celle des signalements, qui ouvre le second. */
+const DATA_RIGHTS_ANCHORS = [anchors.dataRightsExport.slice(1), DECISIONS_ANCHOR, "mes-signalements"] as const
+
+const TAB_HREFS: Readonly<Record<DataRightsTab, string>> = {
+  data: anchors.dataRightsExport,
+  moderation: anchors.dataRightsDecisions,
+}
+
+const TAB_LABELS: Readonly<Record<DataRightsTab, string>> = {
+  data: "settings.dataRights.tabs.data",
+  moderation: "settings.dataRights.tabs.moderation",
+}
+
+function DataRightsTabs(props: { active: DataRightsTab }) {
+  const { t } = useDiasporaGaT()
+  return (
+    <FolderTabsNav
+      label={t("settings.dataRights.tabs.label")}
+      items={(["data", "moderation"] as const).map((tab) => ({ id: tab, label: t(TAB_LABELS[tab]), href: TAB_HREFS[tab], active: tab === props.active }))}
+      renderLink={(item, className, children) => (
+        // Cibles de 44 px (la piste partagée en pose 40) : on les touche du doigt. Les deux onglets se
+        // partagent la piste et passent sur deux lignes à l'étroit : aucun ne sort de la vue au téléphone.
+        <a
+          key={item.id}
+          href={item.href}
+          className={cn(className, "min-h-11 min-w-0 flex-1 shrink px-3 py-1 text-center leading-tight")}
+          aria-current={item.active ? "true" : undefined}
+        >
+          {children}
+        </a>
+      )}
+    />
+  )
+}
+
+/** Un groupe d'onglet : toujours monté, masqué s'il n'est pas l'onglet choisi ; nommé par son onglet. */
+function TabGroup(props: { tab: DataRightsTab; active: DataRightsTab; id?: string; children: ReactNode }) {
+  const { t } = useDiasporaGaT()
+  const inactive = props.tab !== props.active
+  return (
+    <div
+      id={props.id}
+      role="group"
+      aria-label={t(TAB_LABELS[props.tab])}
+      data-tab-group={props.tab}
+      data-inactive={inactive ? "" : undefined}
+      tabIndex={props.id ? -1 : undefined}
+      // Aucune transition (leçon du lot 1) : la charte en pose une de 0,01 ms en mouvement réduit.
+      className="flex min-w-0 scroll-mt-20 flex-col gap-5 outline-none transition-none data-[inactive]:hidden"
+    >
+      {props.children}
+    </div>
+  )
 }
 
 /** L'heure de l'appareil, relue chaque minute : le compte à rebours se tient sans relecture du serveur. */

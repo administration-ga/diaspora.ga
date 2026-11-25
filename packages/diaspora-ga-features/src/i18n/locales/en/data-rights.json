@@ -2,6 +2,11 @@
   "settings": {
     "dataRights": {
       "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available without a DIASPORA.GA membership, after leaving, or if your membership is suspended.",
+      "tabs": {
+        "label": "My data sections",
+        "data": "Export and erasure",
+        "moderation": "Decisions and reports"
+      },
       "unavailable": "These actions are not available here yet.",
       "loading": "Loading…",
       "export": {

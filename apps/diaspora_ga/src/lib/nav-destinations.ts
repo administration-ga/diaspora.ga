@@ -182,6 +182,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   settingsImages: member("settings", routes.settingsImages()),
   settingsData: member("settings", routes.settingsData()),
   settingsReports: member("settings", routes.settingsReports()),
+  settingsDecisions: member("settings", routes.settingsDecisions()),
   sponsorHelp: member("settings", routes.sponsorHelp()),
   attestation: member("settings", routes.attestation()),
   // Hors de la coque : « Mes données » pour toute personne connectée, et les pages publiques.

@@ -365,6 +365,12 @@ export const routes = {
   /** Mes signalements : accusé de réception, échéance légale et issue (SU01d du moteur). */
   settingsReports: () => "/parametres#mes-signalements",
   /**
+   * Mes décisions de modération et leurs recours : l'onglet « Décisions et signalements » de « Mes
+   * données » (lot 2b de « une page, une vue ») — la destination de l'avis de décision et du membre
+   * suspendu.
+   */
+  settingsDecisions: () => "/parametres#mes-decisions",
+  /**
    * « Mes données » hors de la coque de membre (NP-02, EA-05) : export, effacement, décisions,
    * recours et signalements pour toute personne connectée — membre, partie, suspendue ou sans
    * adhésion. Aucune surface sociale n'y est montée.
@@ -450,4 +456,7 @@ export const anchors = {
   legalSummary: "#sommaire",
   /** La liste des rubriques des réglages : au téléphone, la vue d'arrivée, que rouvre la ligne « Toutes les rubriques » (lot 2a). */
   settingsList: "#rubriques",
+  /** Les deux onglets de « Mes données » (lot 2b) : liens natifs, valables dans les réglages comme à `/mes-donnees`. */
+  dataRightsExport: "#mes-donnees",
+  dataRightsDecisions: "#mes-decisions",
 } as const

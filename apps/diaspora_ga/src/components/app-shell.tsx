@@ -280,7 +280,8 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
       hintKey: "nav.publish.suspendedHint",
       titleKey: "status.suspendedTitle",
       bodyKey: "nav.publish.suspendedBody",
-      paths: [{ href: routes.settingsData(), labelKey: "nav.myData" }],
+      // La décision qui le suspend et son recours : l'onglet « Décisions et signalements » de « Mes données ».
+      paths: [{ href: routes.settingsDecisions(), labelKey: "nav.myData" }],
     }
   }
   return {

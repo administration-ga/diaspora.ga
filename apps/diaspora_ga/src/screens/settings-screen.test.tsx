@@ -271,6 +271,8 @@ describe("Réglages — une vue, des sous-vues (« une page = une vue », lot 2a
     ["#parrainage", "parrainage", "Parrainage"],
     ["#annuaire", "fil", "Fil et annuaire"],
     ["#mes-signalements", "donnees", "Mes données"],
+    // L'onglet « Décisions et signalements » (lot 2b) : l'avis de décision et le membre suspendu y mènent.
+    ["#mes-decisions", "donnees", "Mes données"],
   ])("l'ancre %s montre sa sous-vue, et elle seule", (hash, subView, label) => {
     window.history.replaceState(null, "", `${routes.settings()}${hash}`)
     render(tree())

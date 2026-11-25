@@ -2,6 +2,11 @@
   "settings": {
     "dataRights": {
       "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts sans adhésion à DIASPORA.GA, après un départ ou si votre adhésion est suspendue.",
+      "tabs": {
+        "label": "Rubriques de mes données",
+        "data": "Export et effacement",
+        "moderation": "Décisions et signalements"
+      },
       "unavailable": "Ces gestes ne sont pas encore disponibles ici.",
       "loading": "Chargement…",
       "export": {
