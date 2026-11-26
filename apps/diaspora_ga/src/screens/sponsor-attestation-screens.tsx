@@ -13,6 +13,7 @@ import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { RedeemSponsorCode } from "@/components/redeem-sponsor-code"
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
 import { SPONSOR_REQUEST_PARAM, routes } from "@/lib/routes"
@@ -48,7 +49,7 @@ export function SponsorScreen() {
       {(session) =>
         session.membership ? (
           <AppShell membership={session.membership}>
-            <Sponsor />
+            <Sponsor membership={session.membership} />
           </AppShell>
         ) : null
       }
@@ -56,7 +57,7 @@ export function SponsorScreen() {
   )
 }
 
-function Sponsor() {
+function Sponsor({ membership }: { membership: MembershipView }) {
   const { t, locale } = useDiasporaGaT()
   const dashboard = useSponsorDashboard()
   const actions = useActions()
@@ -85,6 +86,22 @@ function Sponsor() {
         <h1 className="font-display text-3xl font-bold">{t("sponsor.title")}</h1>
         <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("sponsor.lead")}</p>
       </div>
+      {(membership.status === "en_attente" || membership.status === "declaree") && !membership.sponsoredBy ? <RedeemSponsorCode /> : null}
+      {view.code && view.eligible ? (
+        <Card className="flex flex-col items-start gap-2 p-5">
+          <Label htmlFor={`${ids}-code`}>{t("sponsorCode.mine")}</Label>
+          <Input id={`${ids}-code`} readOnly value={view.code} onFocus={event => event.currentTarget.select()} className="max-w-xs font-mono tracking-wide" />
+          <p className="text-sm text-muted-foreground">{t("sponsorCode.hint")}</p>
+          <Button variant="secondary" onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(view.code!)
+              toast.success(t("sponsorCode.copied"))
+            } catch {
+              toast.error(t("errors.clipboard_unavailable"))
+            }
+          }}>{t("sponsorCode.copy")}</Button>
+        </Card>
+      ) : null}
       {!view.eligible ? (
         <Card className="flex gap-3 p-4">
           <InfoIcon className="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden />
@@ -227,14 +244,14 @@ function Attestation(props: { membership: MembershipView }) {
   const [error, setError] = useState<string | null>(null)
   const { attestation, status } = props.membership
 
-  if (status === "verifiee" && attestation.outcome === "verified") {
+  if (status === "verifiee") {
     return (
       <Card className="flex gap-3 p-5">
         <BadgeCheckIcon className="mt-0.5 size-6 shrink-0 text-[var(--success)]" aria-hidden />
         <div>
-          <h1 className="font-display text-2xl font-bold">{t("attestation.verifiedTitle")}</h1>
+          <h1 className="font-display text-2xl font-bold">{attestation.outcome === "verified" ? t("attestation.verifiedTitle") : t("status.verifiedTitle")}</h1>
           <p className="mt-1 text-[15px]">
-            {attestation.requestedAt ? t("attestation.verifiedSince", { date: formatDate(attestation.requestedAt, locale) }) : null}
+            {attestation.outcome === "verified" && attestation.requestedAt ? t("attestation.verifiedSince", { date: formatDate(attestation.requestedAt, locale) }) : null}
           </p>
         </div>
       </Card>

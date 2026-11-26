@@ -11,6 +11,7 @@ import { useEffect, useId, useRef, useState } from "react"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { idnStartOptionsFor, rememberArrival, type ArrivalOrigin } from "@/lib/arrival"
+import { configuredConsulateGateway } from "@/lib/consulate-gateway"
 import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
 import { forgetIdnReturnError } from "@/lib/idn-return"
 import { CONSULAR_ATTESTATION_ANNOUNCED } from "@/lib/public-offer"
@@ -83,6 +84,11 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           {t("landing.signInTitle")}
         </h2>
       )}
+      {source.kind === "engine" && configuredConsulateGateway() ? (
+        <Button asChild variant="outline" size="lg" className="mb-3 w-full">
+          <NextLink href={routes.enterFromConsulate()}>{t("consulateGateway.passage.continueConsulate")}</NextLink>
+        </Button>
+      ) : null}
       {props.signOutIncomplete ? (
         <p role="alert" className="mb-4 rounded-lg bg-muted p-4 text-sm">
           {t("entry.signOutIncomplete")}
