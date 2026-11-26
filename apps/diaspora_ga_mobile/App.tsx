@@ -1,0 +1,79 @@
+import React, { useEffect, useRef, useState } from "react"
+import { ActivityIndicator, BackHandler, Button, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
+import { WebView } from "react-native-webview"
+import { destination, feed, incoming } from "./navigation"
+
+function Browser() {
+  const dark = useColorScheme() === "dark"
+  const colors = dark ? { backgroundColor: "#171411", color: "#eeeae3" } : { backgroundColor: "#faf8f4", color: "#262320" }
+  const web = useRef<WebView>(null)
+  const canGoBack = useRef(false)
+  const latestLink = useRef<string | null>(null)
+  const [source, setSource] = useState<{ uri: string } | null>(null)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let live = true
+    let received = false
+    const go = (url: string) => {
+      latestLink.current = url
+      setError(false)
+      setSource({ uri: url })
+    }
+    const listener = Linking.addEventListener("url", event => {
+      const url = incoming(event.url)
+      if (url) { received = true; go(url) }
+    })
+    void Linking.getInitialURL().then(link => {
+      if (live && !received) go(incoming(link) ?? feed)
+    }).catch(() => { if (live && !received) go(feed) })
+    const back = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!canGoBack.current || !web.current) return false
+      web.current.goBack()
+      return true
+    })
+    return () => { live = false; listener.remove(); back.remove() }
+  }, [])
+
+  function openExternal(url: string) {
+    void Linking.openURL(url).catch(() => setError(true))
+  }
+  return <SafeAreaView style={[styles.fill, { backgroundColor: colors.backgroundColor }]}>
+    <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
+    {source && <WebView ref={web} source={source} style={styles.fill} originWhitelist={["*"]}
+      allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
+      mixedContentMode="never" thirdPartyCookiesEnabled={false} allowsInlineMediaPlayback
+      mediaCapturePermissionGrantType="grantIfSameHostElseDeny" setSupportMultipleWindows
+      onNavigationStateChange={state => { canGoBack.current = state.canGoBack }}
+      onShouldStartLoadWithRequest={req => {
+        const kind = destination(req.url)
+        if (kind === "outside" && req.isTopFrame !== false) openExternal(req.url)
+        return kind === "inside"
+      }}
+      onOpenWindow={event => {
+        const url = event.nativeEvent.targetUrl
+        const kind = destination(url)
+        if (kind === "outside") openExternal(url)
+        if (kind === "inside") setSource({ uri: url })
+      }}
+      onContentProcessDidTerminate={() => web.current?.reload()}
+      onRenderProcessGone={() => setError(true)}
+      onError={() => setError(true)}
+      onHttpError={e => { if (e.nativeEvent.statusCode >= 500 && e.nativeEvent.url === latestLink.current) setError(true) }}
+      renderError={() => <View />}
+    />}
+    {(!source || error) && <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
+      {error ? <><Text accessibilityRole="header" style={[styles.title, { color: colors.color }]}>DIASPORA.GA est indisponible</Text>
+        <Text style={{ color: colors.color }}>Vérifiez votre connexion puis réessayez.</Text>
+        <Button title="Réessayer" onPress={() => { setError(false); web.current?.reload() }} /></>
+        : <ActivityIndicator accessibilityLabel="Ouverture de DIASPORA.GA" />}
+    </View>}
+  </SafeAreaView>
+}
+
+export default function App() { return <SafeAreaProvider><Browser /></SafeAreaProvider> }
+const styles = StyleSheet.create({
+  fill: { flex: 1 }, overlay: { ...StyleSheet.absoluteFill, padding: 24, gap: 16, alignItems: "center", justifyContent: "center" },
+  title: { fontSize: 22, fontWeight: "600" },
+})
