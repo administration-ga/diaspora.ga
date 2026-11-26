@@ -10,14 +10,15 @@ import { keepConsent, passResult } from "@/lib/consulate-consent"
 import { configuredConsulateGateway } from "@/lib/consulate-gateway"
 import { passMode, startPass, takePass } from "@/lib/consulate-pass"
 import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
-import { liveMember } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 import { ConsulateTransition } from "./consulate-transition"
 
-async function goToIdn(callback: string, fresh: boolean, version: 1 | 2, loginHint?: string) {
-  const additionalData = version === 2
-    ? { antsiaEntry: "consulate", ...(loginHint ? { loginHint } : {}), ...(fresh ? { requireLogin: true } : {}) }
-    : fresh ? undefined : { antsiaEntry: "sso" }
+async function goToIdn(callback: string, ticket?: { loginHint?: string }) {
+  // Le parcours ordinaire, sans intention SSO, impose prompt=login chez IDN.
+  const additionalData = ticket && {
+    antsiaEntry: "consulate", ...(ticket.loginHint ? { loginHint: ticket.loginHint } : {}),
+    ...(explicitSignOutHappened() ? { requireLogin: true } : {}),
+  }
   const result = await authClient.signIn.oauth2({
     providerId: "idn", callbackURL: new URL(callback, location.origin).href,
     errorCallbackURL: new URL(routes.consulatePass() + "?echec=idn", location.origin).href,
@@ -37,7 +38,7 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
     if (started.current) return
     const query = new URLSearchParams(location.search)
     const afterIdn = query.get("apres") === "idn"
-    if (!returning && (legacy || afterIdn) && session.status === "loading") return
+    if (!returning && !legacy && afterIdn && session.status === "loading") return
     started.current = true
     async function proceed() {
       if (query.has("echec")) throw new Error("IDN")
@@ -55,7 +56,7 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
         const grant = passResult.parse(result.data)
         if (grant.next === "idn") {
           if (confirmed) throw new Error("Identité différente")
-          await goToIdn(routes.consulatePass() + "?apres=idn&mode=" + mode, explicitSignOutHappened(), 2, grant.loginHint)
+          await goToIdn(routes.consulatePass() + "?apres=idn&mode=" + mode, grant)
           return
         }
         rememberArrival("consulat")
@@ -69,14 +70,8 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
       }
 
       if (legacy) {
-        if (session.status !== "ready") throw new Error("Session")
-        if (session.data.status === "signed_in" && liveMember(session.data.membership)) {
-          rememberArrival("consulat")
-          location.replace(routes.feed())
-        } else {
-          // La V1 ne fournit aucune preuve consulaire : seule la connexion IDN établit l’identité.
-          await goToIdn(routes.consulateConsent() + "?origine=idn", explicitSignOutHappened(), 1)
-        }
+        // La V1 n'identifie pas le ressortissant. La session locale peut appartenir à un autre membre.
+        await goToIdn(routes.consulateConsent() + "?origine=idn")
         return
       }
       if (afterIdn && (session.status !== "ready" || session.data.status !== "signed_in")) throw new Error("Session IDN")
@@ -90,12 +85,13 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
     void proceed().catch(() => setFailed(true))
   }, [legacy, returning, session])
 
-  if (!failed) return <ConsulateTransition />
+  if (!failed) return <ConsulateTransition mobileHandoff={!legacy && !returning} />
   return <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 px-6">
     <p className="flex flex-wrap items-center gap-2 text-sm font-semibold"><span className="uppercase">{t("consulateGateway.entry.label")}</span> → <BrandLogo /></p>
     <h1 className="text-2xl font-semibold">{t("consulateGateway.passage.failed")}</h1>
     <p role="alert">{t("consulateGateway.passage.retryInfo")}</p>
     <a className="underline" href={retry}>{t("consulateGateway.passage.retry")}</a>
+    {!legacy && <a className="underline" href={routes.consulatePass() + "?secours=idn"}>{t("consulateGateway.arrival.continueIdn")}</a>}
     <a className="underline" href={routes.enter()}>{t("consulateGateway.passage.home")}</a>
   </main>
 }

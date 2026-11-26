@@ -25,21 +25,28 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.unstubAllGlobals() })
 
 describe("bascule depuis Consulat.ga", () => {
-  it("garde uniquement le logo pendant la lecture, puis ouvre directement le fil du membre", async () => {
-    const view = render(<ConsulatePassage legacy />)
+  it("garde uniquement le logo jusqu'à la confirmation du membre par le ticket V2, puis ouvre le fil", async () => {
+    let confirm!: (response: unknown) => void
+    mocks.redeem.mockReturnValue(new Promise(resolve => { confirm = resolve }))
+    render(<ConsulatePassage returning />)
     expect(screen.getByRole("status")).toHaveTextContent("DIASPORA.GA")
     expect(screen.queryByRole("button")).toBeNull()
-    expect(mocks.oauth).not.toHaveBeenCalled()
-    mocks.session.current = { status: "ready", data: { status: "signed_in", membership: { status: "verifiee", facet: { countryOfResidence: "FR" } } } }
-    view.rerender(<ConsulatePassage legacy />)
+    expect(mocks.replace).not.toHaveBeenCalled()
+    await act(async () => confirm({ data: { ok: true, next: "feed" } }))
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith("/fil"))
     expect(mocks.oauth).not.toHaveBeenCalled()
   })
-  it("ouvre IDN sans exposer la porte publique quand la V1 ne connaît pas la session", async () => {
-    mocks.session.current = { status: "ready", data: { status: "anonymous" } }
+  it.each([
+    ["sans session", { status: "anonymous" }],
+    ["sur l’appareil partagé du membre A", { status: "signed_in", account: { id: "A" }, membership: { status: "verifiee", facet: { countryOfResidence: "FR" } } }],
+  ])("V1 %s : l’arrivée consulaire B exige une nouvelle authentification IDN", async (_case, localSession) => {
+    mocks.session.current = { status: "ready", data: localSession }
     render(<ConsulatePassage legacy />)
     await waitFor(() => expect(mocks.oauth).toHaveBeenCalledTimes(1))
-    expect(mocks.oauth.mock.calls[0]?.[0]).toMatchObject({ callbackURL: "https://diaspora.ga/passerelle/consentement?origine=idn" })
+    const request = mocks.oauth.mock.calls[0]?.[0]
+    expect(request).toMatchObject({ providerId: "idn", callbackURL: "https://diaspora.ga/passerelle/consentement?origine=idn" })
+    expect(request).not.toHaveProperty("additionalData")
+    expect(mocks.replace).not.toHaveBeenCalled()
     expect(screen.queryByRole("textbox")).toBeNull()
   })
   it("transmet uniquement le repère IDN retourné par le serveur puis vérifie un nouveau ticket au retour", async () => {

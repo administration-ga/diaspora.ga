@@ -1,6 +1,6 @@
 # Passage de CONSULAT.GA à DIASPORA.GA
 
-Le citoyen appuie sur **DIASPORA.GA** dans son espace consulaire. Une session consulaire active et un profil autorisé par le réglage « Passerelles » suffisent pour ouvrir une session Diaspora. Le réseau garde son parcours de première adhésion. Un membre déjà reconnu retrouve son fil. Le badge **CONSULAT.GA** du fil ramène à l’espace consulaire quand le module correspondant est ouvert.
+Le citoyen appuie sur **DIASPORA.GA** dans son espace consulaire. Le logo animé accompagne la vérification du ticket. Un membre déjà reconnu retrouve son fil. À la première adhésion, le ressortissant confirme son identité chez IDN et accepte la création de son profil social. Le badge **CONSULAT.GA** du fil ramène à l’espace consulaire quand le module correspondant est ouvert.
 
 | Point de départ | Comportement |
 | --- | --- |
@@ -9,18 +9,26 @@ Le citoyen appuie sur **DIASPORA.GA** dans son espace consulaire. Une session co
 | Application Consulat avec Diaspora absente | La page mobile propose les fiches des boutiques publiées. « Continuer sur le web » utilise l’application Consulat pour autoriser le navigateur. |
 | Session consulaire expirée, utilisateur inéligible ou passerelle fermée | Le serveur refuse d’émettre une session Diaspora. |
 
+## Arrivée sans ticket consulaire
+
+Quand le service de tickets est indisponible, le lien V1 indique seulement que la navigation provient du Consulat. Diaspora affiche son logo puis demande à IDN une nouvelle authentification (`prompt=login`), y compris si un membre utilise déjà Diaspora dans ce navigateur. Sur un appareil partagé, le ressortissant confirme ainsi son propre compte avant d’ouvrir le fil. L’identifiant consulaire ne peut être prérempli dans ce mode. Un membre retrouve son fil après IDN. Une personne qui rejoint le réseau confirme son profil. Seul un rapprochement vérifié côté serveur établit le niveau 2.
+
 ## Échange entre les services
 
 1. Diaspora génère un état et un vérificateur aléatoires indépendants de 256 bits. Le navigateur ou l’application garde le vérificateur. Le consulat reçoit son empreinte SHA-256.
 2. Le serveur consulaire vérifie la session, l’accès à la passerelle et la durée de validité. Il émet un code valable 90 secondes. Le retour passe par le fragment d’une adresse fixe du domaine Diaspora.
 3. Diaspora efface le fragment puis présente le code et le vérificateur à son propre serveur. ANTSIA les échange côté serveur auprès du consulat. La consommation du code est atomique. Le consulat vérifie à nouveau l’éligibilité et la session source.
-4. L’échange fournit un identifiant consulaire pseudonyme. Il permet de retrouver une identité IDN déjà liée ou un compte Diaspora déjà connecté dont les deux services ont vérifié la même adresse. Le navigateur ne reçoit aucune adresse consulaire.
+4. Le serveur reçoit un identifiant consulaire pseudonyme et, si le compte consulaire est relié à IDN, le sujet stable du fournisseur IDN. Il retrouve le membre par une liaison consulaire déjà établie ou par ce sujet. Une contradiction entre les deux liaisons interrompt le passage.
+5. Pour une première adhésion, Diaspora ouvre IDN avec l’identifiant de connexion associé au compte consulaire lorsqu’il est disponible. Celui-ci reste visible pendant la saisie du code. Au retour, un nouveau ticket permet de comparer le sujet IDN du compte consulaire à celui de la session authentifiée. La nationalité gabonaise requise pour l’adhésion provient directement d’IDN.
+6. Diaspora présente le profil proposé avec le nom, les prénoms et le pays de résidence connus. Le ressortissant choisit le pays s’il manque, puis accepte la publication du profil social. La visibilité dans l’annuaire et les notifications sont désactivées par défaut. Une adhésion déjà validée mène directement au fil.
 
 ## Statut et parrainage dans DIASPORA.GA
 
-Dès que la passerelle confirme le compte CONSULAT.GA, DIASPORA.GA accorde le statut de membre vérifié. Pour une première adhésion, ce statut prend effet à la fin du parcours habituel. Pour une adhésion existante, les droits sont recalculés au retour du consulat. Une suspension ou un départ reste prioritaire.
+Dès que la passerelle confirme le compte CONSULAT.GA, DIASPORA.GA accorde le niveau 2 (membre vérifié). Pour une première adhésion, ce statut prend effet à l’acceptation du profil social. Pour une adhésion existante, les droits sont recalculés au retour du consulat. Une suspension ou un départ reste prioritaire.
 
-Le membre trouve son code personnel dans **Parrainer** et peut le transmettre immédiatement, dans la limite de dix parrainages sur trente jours glissants. Le proche saisit ce code depuis sa salle d’attente ou la page **Parrainer**. Chaque utilisation réussie remplace le code.
+Si le ressortissant arrive directement par IDN, Diaspora peut aussi demander au Consulat si le même sujet vérifié possède un compte, après consentement au profil social. Le Consulat répond par un booléen. Après une réponse négative ou une indisponibilité, le moteur attend quinze minutes avant le prochain essai, déclenché lors d’un nouveau passage du membre.
+
+Le membre vérifié trouve son code personnel dans **Parrainer** et peut le transmettre immédiatement, dans la limite de dix parrainages sur trente jours glissants. Le proche saisit ce code depuis sa salle d’attente ou la page **Parrainer**. Chaque utilisation réussie remplace le code.
 
 ## Configuration de production
 
