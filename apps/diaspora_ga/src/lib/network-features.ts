@@ -28,6 +28,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   // La porte et l'accueil.
   home: CORE,
   enter: CORE,
+  consulatePass: CORE,
   register: CORE,
   enterFromConsulate: CORE,
   enterAfterSignOut: CORE,

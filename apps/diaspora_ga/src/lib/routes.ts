@@ -226,6 +226,7 @@ export const NOTIFICATION_REFERENCE_PARAM = "reference"
 export const routes = {
   home: () => "/",
   enter: () => "/entrer",
+  consulatePass: () => "/passerelle/consulat",
   register: () => "/entrer?inscription=1",
   /**
    * La porte d'arrivée de qui vient de consulat.ga (contrat DIASPORA-PASSERELLE-V1, CH-863) : un

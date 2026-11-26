@@ -25,6 +25,7 @@ const KEYS = Object.keys(routes) as RouteKey[]
 const OUTSIDE_SHELL: readonly RouteKey[] = [
   "home",
   "enter",
+  "consulatePass",
   "register",
   // CH-863 : la porte d'arrivée de qui vient de consulat.ga, la même porte.
   "enterFromConsulate",
