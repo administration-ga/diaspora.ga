@@ -7,7 +7,7 @@ const valid = (value: unknown): value is string => typeof value === "string" && 
 const hex = (bytes: Uint8Array) => Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("")
 export const passMode = (value: string | null): PassMode => value === "app" || value === "companion" ? value : "web"
 
-function pending(store: PassStore, key: string, now: number): { verifier: string; expires: number } | null {
+function pending(store: PassStore, key: string, now: number): { verifier: string; expires: number; mode?: PassMode; afterIdn?: boolean } | null {
   const raw = store.getItem(key)
   if (!raw) return null
   try {
@@ -18,7 +18,7 @@ function pending(store: PassStore, key: string, now: number): { verifier: string
   return null
 }
 
-export async function startPass(origin: string, mode: PassMode, store: PassStore): Promise<string> {
+export async function startPass(origin: string, mode: PassMode, store: PassStore, afterIdn = false): Promise<string> {
   const url = new URL(mode === "web" ? "/my-space/diaspora/continuer" : "/my-space/diaspora/autoriser", origin)
   if (url.protocol !== "https:" || url.username || url.password) throw new Error("Origine invalide")
   const verifier = hex(crypto.getRandomValues(new Uint8Array(32)))
@@ -34,7 +34,7 @@ export async function startPass(origin: string, mode: PassMode, store: PassStore
   }
   // Concurrent tabs keep independent verifiers. Bound abandoned mobile requests on this device.
   for (const record of active.sort((a, b) => b.expires - a.expires).slice(7)) store.removeItem(record.key)
-  store.setItem(prefix + state, JSON.stringify({ verifier, expires: now + ttl }))
+  store.setItem(prefix + state, JSON.stringify({ verifier, expires: now + ttl, mode, afterIdn }))
   url.search = new URLSearchParams({ state, challenge, mode }).toString()
   return url.href
 }
@@ -49,7 +49,7 @@ export function takePass(fragment: string, stores: readonly PassStore[], now = D
       const record = pending(store, key, now)
       if (!record) continue
       store.removeItem(key)
-      return { code, verifier: record.verifier }
+      return { code, verifier: record.verifier as string, mode: passMode(record.mode ?? null), afterIdn: record.afterIdn === true }
     } catch { /* A private tab can block one storage type while permitting the other. */ }
   }
   throw new Error("Passage expiré")

@@ -13,6 +13,7 @@ import {
   cn,
   handleRefusal,
   normalizeHandle,
+  normalizeCivilName,
 } from "@diaspora-ga/features"
 import {
   useActions,
@@ -58,6 +59,9 @@ const residenceShape = {
   country: z.string().refine((value) => isResidenceCountry(value), "country_required"),
   city: z.string().trim().max(80, "city_too_long"),
   handleOther: z.string(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  declaredGabonese: z.boolean().optional(),
 }
 /** Un compte neuf : un nom affiché et un identifiant, montrés ou saisis avant le clic. */
 const schema = z.object({
@@ -67,6 +71,11 @@ const schema = z.object({
 })
 /** Un profil commun déjà là (EA-04) : ni nom ni identifiant à saisir, rien à réécrire. */
 const keptIdentitySchema = z.object({ ...residenceShape, displayName: z.string(), handleChoice: z.string() })
+const phoneFields = {
+  firstName: z.string().trim().min(1, "given_name_required").max(100, "given_name_required"),
+  lastName: z.string().trim().min(1, "family_name_required").max(100, "family_name_required"),
+  declaredGabonese: z.boolean().optional().refine((value) => value === true, "nationality_required"),
+}
 // Le pays est une chaîne en saisie et un `CountryCode` en sortie (garde de type du domaine).
 type FormInput = z.input<typeof schema>
 type Values = z.output<typeof schema>
@@ -125,6 +134,8 @@ function useHandleAvailability(handle: string, actions: Pick<DiasporaGaActions, 
 
 /** Ce que l'accueil reçoit de sa page : l'adhésion partie s'il y en a une, et la prise de main de la garde. */
 interface OnboardingContext {
+  readonly idnLinked: boolean
+  readonly phoneRegistration: boolean
   readonly membership: MembershipView | null
   /** Pendant l'entrée qu'il écrit, l'accueil garde la main : il mène lui-même à la page demandée. */
   readonly onFinishing: (finishing: boolean) => void
@@ -144,7 +155,15 @@ export function WelcomeScreen() {
   return (
     <PublicShell hideEnter>
       <Gate require="account" holdMember={finishing}>
-        {(session) => <WelcomeOnboarding membership={session.membership} onFinishing={setFinishing} />}
+        {(session) => (
+          <WelcomeOnboarding
+            idnLinked={session.account.idn !== null}
+            phoneRegistration={(session.account.phoneVerified === true || session.account.local?.kind === "phone") &&
+              (session.account.idn === null || session.account.idn.gaboneseNationality === null)}
+            membership={session.membership}
+            onFinishing={setFinishing}
+          />
+        )}
       </Gate>
     </PublicShell>
   )
@@ -222,15 +241,15 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
     asksIdentityRef.current = asksIdentity
   }, [asksIdentity])
   const resolver = useMemo<Resolver<FormInput, unknown, Values>>(() => {
-    const chooseIdentity = zodResolver(schema)
-    const keepIdentity = zodResolver(keptIdentitySchema)
+    const chooseIdentity = zodResolver(props.phoneRegistration ? schema.extend(phoneFields) : schema)
+    const keepIdentity = zodResolver(props.phoneRegistration ? keptIdentitySchema.extend(phoneFields) : keptIdentitySchema)
     return (values, context, options) => (asksIdentityRef.current ? chooseIdentity : keepIdentity)(values, context, options)
-  }, [])
+  }, [props.phoneRegistration])
   const form = useForm<FormInput, unknown, Values>({
     resolver,
     mode: "onTouched",
     // Ce qu'IDN propose (nom, premier identifiant libre) et la résidence connue : montrés, jamais écrits avant le clic.
-    defaultValues: { ...model.defaults, handleOther: "" },
+    defaultValues: { ...model.defaults, handleOther: "", firstName: "", lastName: "", declaredGabonese: false },
   })
   const [displayName, handleChoice, country, handleOther] = useWatch({
     control: form.control,
@@ -240,6 +259,12 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
   // Les propositions viennent d'IDN seulement quand il en donne (consigne du propriétaire, 25/11/2026) :
   // libres, dans l'ordre de l'échelle. Sans IDN (entrée par code), celles tirées du nom affiché.
   const handleOptions = model.handleCandidates.length > 0 ? model.handleCandidates : suggestions
+  const suggestedHandle = handleOptions[0]
+  useEffect(() => {
+    if (props.phoneRegistration && asksIdentity && suggestedHandle && handleChoice !== OTHER_HANDLE && !handleOptions.includes(handleChoice)) {
+      form.setValue("handleChoice", suggestedHandle)
+    }
+  }, [props.phoneRegistration, asksIdentity, suggestedHandle, handleChoice, handleOptions, form])
   // L'identifiant « autre » se juge pendant la saisie ; les propositions sont déjà libres.
   const handleAvailability = useHandleAvailability(asksIdentity && identityFields && handleChoice === OTHER_HANDLE ? normalizeHandle(handleOther) : "", actions)
 
@@ -312,7 +337,10 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
     props.onFinishing(true)
     let result: Awaited<ReturnType<typeof actions.join>>
     try {
-      result = await actions.join(welcomeJoinInput(model, { displayName: values.displayName, handle, country: values.country, city: values.city }))
+      const input = welcomeJoinInput(model, { displayName: values.displayName, handle, country: values.country, city: values.city })
+      result = await actions.join(props.phoneRegistration && values.declaredGabonese === true
+        ? { ...input, phoneRegistration: { ...normalizeCivilName({ firstName: values.firstName ?? "", lastName: values.lastName ?? "" }), declaredGabonese: true } }
+        : input)
     } catch {
       result = { ok: false, code: "unknown" }
     }
@@ -373,9 +401,31 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
             />
           ) : null}
 
+          {props.phoneRegistration ? (
+            <>
+              {(["firstName", "lastName"] as const).map((field) => (
+                <Field key={field} id={`${ids}-${field}`} label={t(`idn.${field}`)} error={errorOf(field)}>
+                  {(control) => <Input id={control.id} aria-describedby={control.describedBy} aria-invalid={control.invalid || undefined}
+                    autoComplete={field === "firstName" ? "given-name" : "family-name"} maxLength={100} required
+                    {...form.register(field, { onChange: () => {
+                      if (!asksIdentity) return
+                      const names = normalizeCivilName({ firstName: form.getValues("firstName") ?? "", lastName: form.getValues("lastName") ?? "" })
+                      form.setValue("displayName", [names.firstName, names.lastName].filter(Boolean).join(" "), { shouldValidate: form.formState.isSubmitted })
+                    } })}
+                  />}
+                </Field>
+              ))}
+              {errorOf("displayName") ? <p role="alert" className="text-sm text-destructive">{errorOf("displayName")}</p> : null}
+              <label className="flex min-h-11 items-center gap-3 text-sm font-medium">
+                <input type="checkbox" required className="size-5" {...form.register("declaredGabonese")} />
+                {t("welcomeEntry.declareGabonese")}
+              </label>
+              {errorOf("declaredGabonese") ? <p role="alert" className="text-sm text-destructive">{errorOf("declaredGabonese")}</p> : null}
+            </>
+          ) : null}
           {asksIdentity && identityFields ? (
             <>
-              <Field id={`${ids}-nom`} label={t("welcome.displayNameLabel")} hint={t("welcome.displayNameHint")} error={errorOf("displayName")}>
+              {!props.phoneRegistration ? <Field id={`${ids}-nom`} label={t("welcome.displayNameLabel")} hint={t("welcome.displayNameHint")} error={errorOf("displayName")}>
                 {(control) => (
                   <Input
                     id={control.id}
@@ -385,7 +435,7 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
                     {...form.register("displayName")}
                   />
                 )}
-              </Field>
+              </Field> : null}
               <fieldset className="flex flex-col gap-2">
                 <legend className="mb-1 text-sm font-medium">{t("welcome.handleLegend")}</legend>
                 <p className="text-[13px] text-muted-foreground">{t("welcome.handleHint")}</p>
@@ -498,7 +548,9 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
 
         <div className="flex flex-col gap-4 border-t border-border pt-5">
           {/* Le geste vaut consentement au profil social : la phrase dit ce que les membres verront, avant le clic. */}
-          <p id={`${ids}-accord`} className="text-[13px] leading-snug text-muted-foreground">{t("welcomeEntry.consent")}</p>
+          <p id={`${ids}-accord`} className="text-[13px] leading-snug text-muted-foreground">{t("welcomeEntry.consent")}
+            {props.idnLinked ? <> {t("welcomeEntry.idnConsulateCheck")}</> : null}
+          </p>
           <Button type="submit" size="lg" aria-describedby={`${ids}-accord`} disabled={form.formState.isSubmitting} className="w-full sm:w-auto sm:self-end">
             <CheckIcon aria-hidden />
             {form.formState.isSubmitting ? t("common.pleaseWait") : t(asksIdentity ? "welcomeEntry.submit" : "welcomeEntry.submitKept")}

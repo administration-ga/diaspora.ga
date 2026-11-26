@@ -30,7 +30,7 @@
     },
     "arrival": {
       "door": "You are coming from consulat.ga.",
-      "doorHint": "Sign in with the same digital identity, or with a code sent by email.",
+      "doorHint": "Continue with the digital identity linked to your consular account.",
       "continueIdn": "Continue with my digital identity",
       "cardTitle": "You are coming from consulat.ga",
       "cardBody": "You are here as @{{handle}}.",
@@ -44,14 +44,19 @@
       "retry": "Try again",
       "home": "DIASPORA home",
       "continueConsulate": "Continue with CONSULAT.GA",
-      "checking": "Checking your session.",
       "downloadIntro": "Join your community in the app or continue in your browser with your consular session.",
       "ios": "Download on the App Store",
       "android": "Get it on Google Play",
       "later": "The apps will appear here when they are released.",
       "laterIos": "The iOS app will appear here when it is released.",
       "laterAndroid": "The Android app will appear here when it is released.",
-      "continueWeb": "Continue on the web"
+      "continueWeb": "Continue on the web",
+      "acceptTitle": "Join DIASPORA.GA",
+      "acceptLead": "By accepting, you allow DIASPORA.GA to publish the name and handle shown here and use your digital identity to confirm consular registration for verified membership. Your profile stays hidden in the directory.",
+      "terms": "Terms of use",
+      "privacy": "Privacy",
+      "accept": "Accept and join",
+      "checkProfile": "Review my profile"
     }
   }
 }

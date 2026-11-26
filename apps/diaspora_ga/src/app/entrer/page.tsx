@@ -1,16 +1,15 @@
-import { redirect } from "next/navigation"
 import { publicEnv } from "@/lib/env"
-import { routes } from "@/lib/routes"
 import type { Metadata } from "next"
 
 import { getAppT } from "@/i18n/server"
 import { ARRIVAL_PARAM, parseArrival } from "@/lib/arrival"
 import { idnReturnRefusal } from "@/lib/idn-return"
+import { ConsulateEntry } from "@/components/consulate-entry"
 import { LandingScreen } from "@/screens/landing-screen"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getAppT()
-  return { title: t("entry.title") }
+  return { title: t("entry.title"), referrer: "no-referrer" }
 }
 
 /**
@@ -24,7 +23,9 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function EnterPage(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await props.searchParams
-  if (publicEnv.dataSource === "engine" && publicEnv.consulateUrl && parseArrival(params[ARRIVAL_PARAM]) === "consulat") redirect(routes.consulatePass())
+  if (publicEnv.dataSource === "engine" && parseArrival(params[ARRIVAL_PARAM]) === "consulat") {
+    return <ConsulateEntry />
+  }
   return (
     <LandingScreen
       intent={params.inscription === "1" ? "sign-up" : "sign-in"}

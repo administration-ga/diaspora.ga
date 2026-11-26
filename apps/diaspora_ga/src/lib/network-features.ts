@@ -29,6 +29,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   home: CORE,
   enter: CORE,
   consulatePass: CORE,
+  consulateConsent: CORE,
   register: CORE,
   enterFromConsulate: CORE,
   enterAfterSignOut: CORE,

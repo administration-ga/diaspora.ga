@@ -80,7 +80,7 @@
       },
       "stepsTitle": "Comment entrer",
       "steps": {
-        "account": "Créez votre compte avec un code reçu par e-mail, sans mot de passe.",
+        "account": "Entrez avec votre identité numérique ou inscrivez-vous avec votre numéro de téléphone et un code reçu sur WhatsApp.",
         "residence": "Dites où vous vivez : votre pays de résidence, puis vos consentements, un par un.",
         "publish": "Lisez tout de suite ; publiez après la vérification consulaire ou un parrainage.",
         "publishSponsored": "Lisez tout de suite ; publiez dès qu'un membre vérifié vous parraine."

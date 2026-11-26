@@ -48,6 +48,11 @@ export const ROUTE_VIEWS: Readonly<Record<string, RouteView>> = {
   // ── Références : la porte, la vitrine, la charte, les transits ──
   "/": "reference",
   "/entrer": "reference",
+  "/mobile/ouvrir": "reference",
+  "/mobile/retour": "reference",
+  "/passerelle/consulat": "reference",
+  "/passerelle/retour": "reference",
+  "/passerelle/consentement": "reference",
   "/entrer/code": "reference",
   "/entrer/idn": "reference",
   "/bienvenue": "reference",

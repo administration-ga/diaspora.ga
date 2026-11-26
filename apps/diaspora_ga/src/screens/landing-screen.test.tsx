@@ -37,7 +37,7 @@ const t = getFixedT("fr")
 /** Avec le moteur, la porte suit la configuration du déploiement : ici, IDN fermée et code par e-mail ouvert. */
 const IDN_CLOSED: Loadable<EntryDoorsView> = { status: "ready", data: { idn: false, emailCode: true } }
 
-function setup(kind: DiasporaGaDataSource["kind"] = "demo") {
+function setup(kind: DiasporaGaDataSource["kind"] = "demo", doors = IDN_CLOSED) {
   const store = new DemoStore(null, () => Date.UTC(2026, 9, 17, 12), 0)
   const demo = createDemoDataSource(store)
   const requestCode = vi.fn<DiasporaGaActions["requestCode"]>().mockResolvedValue({ ok: true, value: { demoCode: "123456" } })
@@ -46,7 +46,7 @@ function setup(kind: DiasporaGaDataSource["kind"] = "demo") {
   const source: DiasporaGaDataSource = {
     ...demo,
     kind,
-    ...(kind === "engine" ? { useEntryDoors: () => IDN_CLOSED } : {}),
+    ...(kind === "engine" ? { useEntryDoors: () => doors } : {}),
     actions: { ...demo.actions, requestCode, verifyCode, join },
   }
   const mount = (children: ReactNode = <LandingScreen />) => render(
@@ -75,12 +75,38 @@ describe("Accueil — accès au réseau personnel", () => {
     expect(screen.queryByRole("link", { name: t("landing.idnContinue") })).not.toBeInTheDocument()
     expect(screen.getByRole("button", { name: t("landing.idnContinue") })).toBeDisabled()
     expect(screen.getByText(t("landing.idnUnavailable"))).toBeInTheDocument()
-    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: t("code.send") })).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: t("code.emailLabel") })).toBeNull()
+    expect(screen.getByRole("textbox", { name: t("code.whatsappLabel") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("code.sendWhatsApp") })).toBeDisabled()
     expect(screen.getByRole("link", { name: t("entry.existingAccount") })).toHaveAttribute("href", routes.enter())
     expect(screen.queryByRole("link", { name: t("landing.createAccount") })).not.toBeInTheDocument()
     // Le moteur n'expose que l'e-mail : aucun SMS proposé, ni ici ni par un lien.
     expect(screen.queryByRole("link", { name: t("entry.smsInstead") })).not.toBeInTheDocument()
+  })
+
+  it("inscription directe : IDN et WhatsApp, sans ouvrir le formulaire d’e-mail", async () => {
+    const { mount, user, requestCode, verifyCode } = setup("engine", { status: "ready", data: { idn: true, emailCode: true, whatsappOtp: true } })
+    mount(<LandingScreen intent="sign-up" />)
+    expect(screen.getByRole("button", { name: t("landing.idnContinue") })).toBeEnabled()
+    expect(screen.queryByRole("textbox", { name: t("code.emailLabel") })).toBeNull()
+    expect(screen.queryByRole("button", { name: t("code.legacyEmail") })).toBeNull()
+    const phone = "+33 6 00 00 00 00"
+    await user.type(screen.getByRole("textbox", { name: t("code.whatsappLabel") }), phone)
+    await user.click(screen.getByRole("button", { name: t("code.sendWhatsApp") }))
+    expect(requestCode).toHaveBeenCalledExactlyOnceWith({ kind: "phone", value: phone })
+    await user.type(await screen.findByRole("textbox", { name: t("code.codeLabel") }), "123456")
+    await user.click(screen.getByRole("button", { name: t("code.verify") }))
+    expect(verifyCode).toHaveBeenCalledExactlyOnceWith("123456", { kind: "phone", value: phone })
+  })
+
+  it("la connexion garde le courriel d’un compte existant comme choix explicite", async () => {
+    const { mount, user } = setup("engine", { status: "ready", data: { idn: true, emailCode: true, whatsappOtp: true } })
+    mount()
+    expect(screen.getByRole("textbox", { name: t("code.whatsappLabel") })).toBeVisible()
+    await user.click(screen.getByRole("button", { name: t("code.legacyEmail") }))
+    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeVisible()
+    await user.click(screen.getByRole("button", { name: t("code.useWhatsApp") }))
+    expect(screen.getByRole("textbox", { name: t("code.whatsappLabel") })).toBeVisible()
   })
 
   it("la carte d'inscription ne présente la vérification consulaire que si elle est annoncée, et ne promet pas IDN", () => {

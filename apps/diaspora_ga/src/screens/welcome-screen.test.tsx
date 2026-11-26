@@ -139,6 +139,28 @@ function stubPageNavigation() {
 }
 
 describe("/bienvenue — un seul écran, un seul geste (décision du 25/11/2026)", () => {
+  it("un nouveau membre WhatsApp saisit ses prénoms et son nom et déclare la nationalité gabonaise avant le clic", async () => {
+    const store = new DemoStore(null, () => NOW, 0)
+    const sent = await store.requestCode({ kind: "phone", value: "+33600000000" })
+    if (!sent.ok || !sent.value.demoCode) throw new Error("Code de démonstration attendu")
+    await store.verifyCode(sent.value.demoCode)
+    const join = vi.fn<DiasporaGaActions["join"]>().mockResolvedValue({ ok: true, value: { country: "FR", status: "en_attente" } })
+    const { user } = renderWelcome(store, { actions: { join } })
+    expect(screen.queryByRole("textbox", { name: "Nom affiché" })).toBeNull()
+    await user.type(await screen.findByRole("textbox", { name: t("idn.firstName") }), "marie louise")
+    await user.type(screen.getByRole("textbox", { name: t("idn.lastName") }), "ndong")
+    await chooseCountry(user, "France")
+    await user.click(screen.getByRole("button", { name: SUBMIT }))
+    expect(join).not.toHaveBeenCalled()
+    expect(await screen.findByText(t("errors.nationality_required"))).toBeInTheDocument()
+    await user.click(screen.getByRole("checkbox", { name: t("welcomeEntry.declareGabonese") }))
+    await user.click(screen.getByRole("button", { name: SUBMIT }))
+    expect(join).toHaveBeenCalledWith(expect.objectContaining({
+      displayName: "Marie Louise NDONG",
+      phoneRegistration: { firstName: "Marie Louise", lastName: "NDONG", declaredGabonese: true },
+    }))
+  })
+
   it("pré-remplissage complet : nom et identifiant en ligne de rappel, aucune case ; le clic crée le profil, annuaire masqué, notifications coupées", async () => {
     const { store, user } = await signedInAwa()
 
@@ -153,7 +175,7 @@ describe("/bienvenue — un seul écran, un seul geste (décision du 25/11/2026)
     expect(screen.queryByRole("textbox", { name: /Année d'arrivée/ })).not.toBeInTheDocument()
     // La phrase dit ce que les membres verront, et accompagne le bouton.
     const button = screen.getByRole("button", { name: SUBMIT })
-    expect(button).toHaveAccessibleDescription(t("welcomeEntry.consent"))
+    expect(button).toHaveAccessibleDescription(`${t("welcomeEntry.consent")} ${t("welcomeEntry.idnConsulateCheck")}`)
 
     await chooseCountry(user, "France")
     // Rien n'est écrit avant le clic.

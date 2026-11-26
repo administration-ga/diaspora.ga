@@ -24,6 +24,8 @@ Le membre trouve son code personnel dans **Parrainer** et peut le transmettre im
 
 ## Configuration de production
 
+À l’arrivée, le site interroge la configuration publique du moteur. Elle annonce uniquement l’origine de l’application quand les trois paramètres du ticket sont configurés. Le site utilise le ticket sur cette origine et garde l’entrée IDN historique si le moteur ne l’annonce pas ou ne répond pas. Une reprise de ticket reste en V2 jusqu’à la fin de sa vérification. Sur OVH, le changement prend effet dès la configuration du moteur, avec la même image web.
+
 | Emplacement | Réglage |
 | --- | --- |
 | Convex consulaire et Convex ANTSIA | Installer le même secret aléatoire dans `DIASPORA_PASS_SECRET` (au moins 32 caractères). Le conserver dans les gestionnaires de secrets des deux déploiements. |

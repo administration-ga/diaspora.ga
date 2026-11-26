@@ -209,8 +209,8 @@ function mountLiquid(options: MountOptions): () => void {
  * rien ne bouge alors. Le canevas est décoratif et passe sous le reste de la
  * vitrine (`-z-10` dans son contexte d'empilement).
  */
-export function LiquidWordmark(props: { text: string; areaRef: RefObject<HTMLElement | null> }) {
-  const { text, areaRef } = props
+export function LiquidWordmark(props: { text: string; areaRef: RefObject<HTMLElement | null>; replayIntro?: boolean }) {
+  const { text, areaRef, replayIntro = false } = props
   const wrapperRef = useRef<HTMLSpanElement>(null)
   const stageRef = useRef<HTMLSpanElement>(null)
   const labelRef = useRef<HTMLSpanElement>(null)
@@ -222,7 +222,7 @@ export function LiquidWordmark(props: { text: string; areaRef: RefObject<HTMLEle
   useLayoutEffect(() => {
     const wrapper = wrapperRef.current
     if (!wrapper || !motionAllowed()) return
-    if (introRef.current === null) introRef.current = claimIntro()
+    if (introRef.current === null) introRef.current = replayIntro || claimIntro()
     if (!introRef.current) return
     wrapper.dataset.liquid = "intro"
     // Filet de sécurité : sans première image à temps, le texte réel revient. Seul compte le
@@ -243,7 +243,7 @@ export function LiquidWordmark(props: { text: string; areaRef: RefObject<HTMLEle
     }
     frame = requestAnimationFrame(watch)
     return () => cancelAnimationFrame(frame)
-  }, [])
+  }, [replayIntro])
 
   useEffect(() => {
     const wrapper = wrapperRef.current

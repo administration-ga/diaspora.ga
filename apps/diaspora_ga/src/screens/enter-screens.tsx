@@ -1,5 +1,6 @@
 "use client"
 
+import { normalizeDemoGatePhone } from "@antsia/social-contracts/demoGate"
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
   Button,
@@ -285,15 +286,19 @@ type ResendNotice = "ready" | "resent"
  * à son ouverture. L'adresse s'oublie à la connexion, au changement d'adresse et à la sortie.
  * Aucun texte ne cite la durée de validité du code : le moteur ne la publie pas.
  */
-export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
+export function CodeForm(props: { compact?: boolean; signUp?: boolean; publicEntry?: boolean } = {}) {
   const { t } = useDiasporaGaT()
   const actions = useActions()
   const source = useDataSource()
   const doors = useEntryDoors()
-  const codeClosed = doors.status === "ready" && !doors.data.emailCode
+  const direct = props.publicEntry === true && source.kind === "engine"
+  const whatsappOpen = doors.status === "ready" && doors.data.whatsappOtp === true
   const router = useRouter()
   const ids = useId()
-  const [kind, setKind] = useState<"email" | "phone">("email")
+  const [chosenKind, setKind] = useState<"email" | "phone" | null>(null)
+  const kind = chosenKind ?? (direct && (props.signUp || doors.status === "loading" || whatsappOpen) ? "phone" : "email")
+  const whatsapp = source.kind === "engine" && kind === "phone"
+  const codeClosed = whatsapp ? !whatsappOpen : doors.status === "ready" && !doors.data.emailCode
   const [sent, setSent] = useState<SentCode | null>(null)
   const [now, setNow] = useState(() => Date.now())
   const [resending, setResending] = useState(false)
@@ -301,7 +306,7 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const [notice, setNotice] = useState<ResendNotice | null>(null)
   const destinationForm = useForm<{ destination: string }>({
     resolver: zodResolver(z.object({
-      destination: z.string().refine((value) => isValidDestination({ kind, value }), kind === "email" ? "email_invalid" : "phone_invalid"),
+      destination: z.string().refine((value) => (whatsapp ? normalizeDemoGatePhone(value) !== null : isValidDestination({ kind, value })), kind === "email" ? "email_invalid" : "phone_invalid"),
     })),
     defaultValues: { destination: "" },
   })
@@ -314,12 +319,12 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
   const setDestination = destinationForm.setValue
   useEffect(() => {
     const pending = peekPendingCode()
-    if (pending === null) return
+    if (pending === null || (direct && props.signUp && pending.destination.kind !== "phone")) return
     setKind(pending.destination.kind)
     setDestination("destination", pending.destination.value)
     setNow(Date.now())
     setSent({ ...pending, demoCode: null })
-  }, [setDestination])
+  }, [setDestination, direct, props.signUp])
 
   const focusCode = codeForm.setFocus
   useEffect(() => {
@@ -445,7 +450,7 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
           </div> : null}
           <Field
             id={`${ids}-destination`}
-            label={t(kind === "email" ? "code.emailLabel" : "code.phoneLabel")}
+            label={t(whatsapp ? "code.whatsappLabel" : kind === "email" ? "code.emailLabel" : "code.phoneLabel")}
             hint={props.compact ? undefined : t("code.destinationHint")}
             error={destinationError ? t(`errors.${destinationError}`) : undefined}
           >
@@ -465,16 +470,24 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
               />
             )}
           </Field>
-          {codeClosed ? <p className="text-[13px] text-muted-foreground">{t("entryDoors.codeClosed")}</p> : null}
+          {codeClosed ? <p className="text-[13px] text-muted-foreground">{t(whatsapp ? "code.whatsappClosed" : "entryDoors.codeClosed")}</p> : null}
           <Button type="submit" size="lg" disabled={sending || codeClosed}>
-            {sending ? t("common.pleaseWait") : t(props.compact && !props.signUp ? "landing.signIn" : "code.send")}
+            {sending ? t("common.pleaseWait") : t(whatsapp ? "code.sendWhatsApp" : props.compact && !props.signUp ? "landing.signIn" : "code.send")}
           </Button>
+          {direct && !props.signUp && whatsappOpen && doors.status === "ready" && doors.data.emailCode ? (
+            <Button type="button" variant="link" disabled={sending} onClick={() => {
+              setKind(kind === "phone" ? "email" : "phone")
+              destinationForm.reset({ destination: "" })
+            }}>
+              {t(kind === "phone" ? "code.legacyEmail" : "code.useWhatsApp")}
+            </Button>
+          ) : null}
         </form>
       ) : (
         <form noValidate onSubmit={verify} aria-busy={verifying || undefined} className="flex flex-col gap-5">
           {/* L'adresse se montre masquée (MO-04) : elle reste sur l'appareil, et l'écran peut être vu par-dessus l'épaule. */}
           <p role="status" className="break-words text-[15px]">
-            {t("code.sentTo", { destination: maskDestination(sent.destination.kind, sent.destination.value) })}
+            {t(whatsapp ? "code.whatsappSentTo" : "code.sentTo", { destination: maskDestination(sent.destination.kind, sent.destination.value) })}
           </p>
           {sent.demoCode ? (
             // Le code à recopier ne se ferme pas : la carte n'a pas de croix.
@@ -503,7 +516,7 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean } = {}) {
               {verifying ? t("common.pleaseWait") : t("code.verify")}
             </Button>
             <Button variant="ghost" size="lg" disabled={verifying || resending} onClick={changeDestination}>
-              {t("code.changeDestination")}
+              {t(whatsapp ? "code.changePhone" : "code.changeDestination")}
             </Button>
           </div>
           <div className="flex flex-col items-start gap-1" aria-busy={resending || undefined}>

@@ -204,6 +204,7 @@ export interface CodeDestination {
  * interrompue se reprend sans rien publier deux fois.
  */
 export interface JoinInput {
+  readonly phoneRegistration?: { readonly firstName: string; readonly lastName: string; readonly declaredGabonese: true }
   readonly facet: FacetInput
   readonly handle?: string
   readonly displayName?: string

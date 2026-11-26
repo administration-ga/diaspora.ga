@@ -377,7 +377,8 @@ export interface CountryHubView {
 export interface AccountView {
   readonly id: string
   /** Porte d'entrée : IDN (niveau de garantie) ou compte léger (adresse masquée). */
-  readonly idn: { readonly loa: number } | null
+  readonly idn: { readonly loa: number; readonly gaboneseNationality?: boolean | null } | null
+  readonly phoneVerified?: boolean
   readonly local: { readonly kind: "email" | "phone"; readonly masked: string } | null
   /** Prénom et nom reçus d'IDN — servent aux propositions de nom et d'identifiant de l'accueil (25/11/2026), publiés seulement au geste de la personne, jamais d'office. */
   readonly nameHints: { readonly firstName?: string; readonly lastName?: string }

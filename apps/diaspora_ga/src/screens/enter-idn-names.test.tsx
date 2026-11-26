@@ -3,8 +3,7 @@ import type { Loadable, SessionView } from "@diaspora-ga/features/data"
 import { DEMO_IDN_IDENTITIES } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
-import userEvent from "@testing-library/user-event"
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import type { ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -41,10 +40,6 @@ vi.mock("@/components/site-chrome", () => ({
 vi.mock("@/components/entry-door", () => ({
   EntryDoor: (props: { children: ReactNode }) => <main>{props.children}</main>,
   EntryCard: (props: { children: ReactNode }) => <section>{props.children}</section>,
-}))
-vi.mock("@/components/gate", () => ({
-  Gate: (props: { children: (session: { membership: null }) => ReactNode }) => props.children({ membership: null }),
-  GateSkeleton: () => null,
 }))
 vi.mock("sonner", () => ({ toast: { success: mocks.success, error: mocks.error } }))
 
@@ -131,16 +126,19 @@ describe("IDN de démonstration — présentation des noms civils", () => {
   })
 
   it("conserve l'alias social libre lors de sa saisie et de son blur, sans en déduire un nom civil", async () => {
-    const user = userEvent.setup()
+    mocks.session = {
+      status: "ready",
+      data: {
+        status: "signed_in",
+        account: { id: "alias-demo", idn: { loa: 2, gaboneseNationality: true }, local: null, nameHints: {} },
+        membership: null,
+      },
+    }
     render(tree(<WelcomeScreen />))
-    await user.click(screen.getByRole("combobox", { name: t("welcome.countryLabel") }))
-    await user.type(screen.getByRole("searchbox"), "France")
-    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /France/ }))
-    // L'accueil en un écran (25/11/2026) : sans pré-remplissage, le nom affiché se saisit sur le même écran.
     const displayName = await screen.findByRole("textbox", { name: t("welcome.displayNameLabel") })
     const alias = "l’Atelier éCHO-Monde"
-    await user.type(displayName, alias)
-    await user.tab()
+    fireEvent.change(displayName, { target: { value: alias } })
+    fireEvent.blur(displayName)
 
     expect(displayName).toHaveValue(alias)
     expect(mocks.suggestions).toHaveBeenLastCalledWith(alias)

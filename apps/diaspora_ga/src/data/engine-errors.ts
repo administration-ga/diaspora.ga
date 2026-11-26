@@ -103,6 +103,8 @@ export type AuthError = { readonly code?: string | undefined; readonly status?: 
 const AUTH_CODES: Readonly<Record<string, ActionErrorCode>> = {
   INVALID_OTP: "code_invalid",
   OTP_EXPIRED: "code_expired",
+  OTP_NOT_FOUND: "code_expired",
+  INVALID_PHONE_NUMBER: "phone_invalid",
   TOO_MANY_ATTEMPTS: "too_many_attempts",
   INVALID_EMAIL: "email_invalid",
   otpDeliveryUnavailable: "delivery_unavailable",

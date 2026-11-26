@@ -64,7 +64,7 @@
     "createAccount": "Create an account",
     "newHere": "New to DIASPORA?",
     "free": "Registration is free.",
-    "privacy": "Your email stays private. Sign in with a code, without a password.",
+    "privacy": "Your contact details stay private. Sign in with a code, without a password.",
     "boardTitle": "Your community, country by country."
   },
   "entry": {
@@ -103,6 +103,13 @@
     "submit": "Allow and continue"
   },
   "code": {
+    "whatsappLabel": "Your WhatsApp number (including country code)",
+    "sendWhatsApp": "Send code via WhatsApp",
+    "whatsappClosed": "WhatsApp codes are temporarily unavailable.",
+    "whatsappSentTo": "WhatsApp code sent to {{destination}}.",
+    "changePhone": "Change number",
+    "legacyEmail": "Use my existing account email",
+    "useWhatsApp": "Use my WhatsApp number",
     "title": "Get a code",
     "lead": "A one-time code, valid for a short time. It works only once.",
     "kindLabel": "Receive the code by",
@@ -1342,6 +1349,11 @@
     "sessionRetry": "Try again"
   },
   "errors": {
+    "gabonese_nationality_required": "DIASPORA.GA is for Gabonese nationals. Check your nationality on Identité.ga, then sign in again.",
+    "verified_phone_required": "To join DIASPORA.GA, use your digital ID or verify your phone number with a WhatsApp code.",
+    "given_name_required": "Enter your given names (up to 100 characters).",
+    "family_name_required": "Enter your family name (up to 100 characters).",
+    "nationality_required": "Confirm your Gabonese nationality to join DIASPORA.GA.",
     "unknown": "Something went wrong. Try again in a moment.",
     "not_found": "This item no longer exists.",
     "not_signed_in": "Your session has expired: please sign in again.",

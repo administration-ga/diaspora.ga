@@ -1,5 +1,6 @@
 {
   "welcomeEntry": {
+    "declareGabonese": "I declare that I am a Gabonese national.",
     "title": "Welcome to DIASPORA",
     "lead": "Check what members will see about you, then enter: one step is enough.",
     "identityHeading": "Your profile",
@@ -8,6 +9,7 @@
     "editIdentity": "Edit display name and handle",
     "editResidence": "Edit country and city",
     "fromIdn": "Suggested from your IDN identity.",
+    "idnConsulateCheck": "DIASPORA checks with Consulat.ga whether your digital identity is linked to a consular account. If it is, your account automatically becomes Level 2 (verified).",
     "consent": "When you create your profile, your display name, your handle and your country become visible to DIASPORA members; the directory and notifications stay off until you turn them on.",
     "submit": "Create my profile and enter",
     "submitKept": "Enter DIASPORA"

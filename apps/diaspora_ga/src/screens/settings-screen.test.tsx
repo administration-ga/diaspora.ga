@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
-import type { ActionResult, ConsentView, MembershipView } from "@diaspora-ga/features/data"
+import { DataSourceProvider, type ActionResult, type ConsentView, type MembershipView } from "@diaspora-ga/features/data"
+import { createDemoDataSource, DemoStore } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -96,7 +97,12 @@ const membership: MembershipView = {
   rateTier: "reinforced",
   directoryVisibility: "hidden",
 }
-const tree = () => <I18nProvider locale="fr"><SettingsScreen /></I18nProvider>
+const settingsSource = createDemoDataSource(new DemoStore(null))
+const tree = () => (
+  <I18nProvider locale="fr">
+    <DataSourceProvider source={settingsSource}><SettingsScreen /></DataSourceProvider>
+  </I18nProvider>
+)
 
 beforeEach(() => {
   vi.clearAllMocks()

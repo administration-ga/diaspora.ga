@@ -10,6 +10,14 @@ import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedS
 import { moderationDeskPath, type ModerationDeskTab } from "@diaspora-ga/features/navigation"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
 
+/** Adresses officielles de distribution, activées par la configuration de chaque boutique. */
+export function mobileStoreLinks(appleId: string | undefined, playStoreLive: boolean) {
+  return {
+    ios: appleId && /^[0-9]{6,12}$/.test(appleId) ? `https://apps.apple.com/app/id${appleId}` : null,
+    android: playStoreLive ? "https://play.google.com/store/apps/details?id=ga.diaspora.mobile" : null,
+  }
+}
+
 /** Le jeton peut contenir une expansion Unicode de minuscule (İ → i̇) : ne pas le redécouper. */
 export function normalizeFeedTag(raw: string | null | undefined): string | undefined {
   return raw?.trim().toLowerCase() || undefined
@@ -227,6 +235,7 @@ export const routes = {
   home: () => "/",
   enter: () => "/entrer",
   consulatePass: () => "/passerelle/consulat",
+  consulateConsent: () => "/passerelle/consentement",
   register: () => "/entrer?inscription=1",
   /**
    * La porte d'arrivée de qui vient de consulat.ga (contrat DIASPORA-PASSERELLE-V1, CH-863) : un
