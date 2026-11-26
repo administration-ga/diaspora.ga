@@ -5,6 +5,7 @@ import { useSession, type MembershipView, type SessionView } from "@diaspora-ga/
 import { useRouter } from "next/navigation"
 import { useEffect, useState, type ReactNode } from "react"
 
+import { forgetExplicitSignOut } from "@/lib/explicit-sign-out"
 import { forgetPendingCode } from "@/lib/pending-code"
 import { entryExit, forgetReturnPath, liveMember, peekReturnPath, rememberReturnPath, type ReturnDestination } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
@@ -75,9 +76,14 @@ export function Gate(props: {
   }, [arrives])
 
   // Une session ouverte n'attend plus de code : l'adresse gardée pour la saisie est oubliée (EA-08).
+  // Elle prouve aussi une entrée réussie depuis toute déconnexion explicite : la porte d'arrivée peut
+  // de nouveau demander l'entrée sans ressaisie (CH-863 D2). L'effet ne se rejoue qu'au passage à
+  // « connecté », jamais pendant une sortie en cours, où la session reste ouverte jusqu'à la navigation.
   const signedIn = ready?.status === "signed_in"
   useEffect(() => {
-    if (signedIn) forgetPendingCode()
+    if (!signedIn) return
+    forgetPendingCode()
+    forgetExplicitSignOut()
   }, [signedIn])
 
   if (ready === null || ready.status === "anonymous" || redirect !== null) return <GateSkeleton />

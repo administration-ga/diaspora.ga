@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react"
 
 import { AppShell, useComposer } from "@/components/app-shell"
+import { ArrivalCard } from "@/components/arrival-card"
 import { Gate } from "@/components/gate"
 import { FeedLives } from "@/components/feed-lives"
 import { FeedPages } from "@/components/feed-pages"
@@ -131,6 +132,8 @@ function Feed(props: { membership: MembershipView }) {
   return (
     <>
       <StatusBanner membership={props.membership} />
+      {/* CH-863 : venue de consulat.ga par la porte d'arrivée, une carte le dit une fois. */}
+      <ArrivalCard membership={props.membership} />
       <h1 className="sr-only">{t("feed.title")}</h1>
       <FolderTabsNav
         label={t("feed.scopesLabel")}

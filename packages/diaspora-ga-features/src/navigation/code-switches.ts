@@ -16,6 +16,11 @@
  *  · `icomPro` — l'espace iCom Pro, boutiques et mises en relation (`icomPro` du moteur, non
  *    déclaré) : fermé.
  *
+ * Un interrupteur de code est réservé à ce que l'administrateur du réseau ne doit PAS régler. La
+ * passerelle « consulat.ga » du menu du compte n'en est donc pas un (CH-863) : c'est le module du
+ * réseau `consulateGateway`, fermé par défaut, ouvert et fermé dans admin.diaspora.ga
+ * (`MEMBER_GATEWAY_RULES`, `./member-menu`).
+ *
  * diaspora.ga prouve par un test que ces états sont ceux de son code : l'interrupteur des appels
  * et ce que son îlot iCom déclare au moteur (appels, direct, iCom Pro).
  */

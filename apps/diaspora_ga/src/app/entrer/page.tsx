@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 
 import { getAppT } from "@/i18n/server"
+import { ARRIVAL_PARAM, parseArrival } from "@/lib/arrival"
 import { idnReturnRefusal } from "@/lib/idn-return"
 import { LandingScreen } from "@/screens/landing-screen"
 
@@ -11,8 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * `/entrer` — la même porte que l'accueil (principe de l'accueil d'ANTSIA), avec
- * ses deux intentions validées côté serveur : `inscription=1` ouvre la création
- * de compte, `deconnexion=incomplete` rend visible une déconnexion inachevée.
+ * ses intentions validées côté serveur : `inscription=1` ouvre la création
+ * de compte, `deconnexion=incomplete` rend visible une déconnexion inachevée,
+ * `depuis=consulat` (CH-863, contrat DIASPORA-PASSERELLE-V1) dit à qui vient de
+ * consulat.ga d'où il arrive (`lib/arrival.ts`, valeur fermée).
  * `error` : l'échec d'un passage par IDN (EA-02), lu en un refus fermé (`lib/idn-return.ts`),
  * jamais affiché tel quel. Toute autre valeur (casse, tableau) est ignorée.
  */
@@ -23,6 +26,7 @@ export default async function EnterPage(props: { searchParams: Promise<Record<st
       intent={params.inscription === "1" ? "sign-up" : "sign-in"}
       signOutIncomplete={params.deconnexion === "incomplete"}
       idnRefusal={idnReturnRefusal(params.error)}
+      arrival={parseArrival(params[ARRIVAL_PARAM])}
     />
   )
 }

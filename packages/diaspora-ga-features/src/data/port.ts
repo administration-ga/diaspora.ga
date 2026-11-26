@@ -160,6 +160,17 @@ export interface IdnSignInInput {
   readonly gaboneseNationality: boolean | null
 }
 
+/** Les options d'un départ vers IDN (CH-863, lot D2). */
+export interface IdnStartOptions {
+  /**
+   * Demander au moteur d'accepter la session identite.ga encore vivante, sans ressaisie (intention
+   * fermée `antsiaEntry: "sso"`, ADR-0045 du moteur). Réservé à la porte d'arrivée depuis
+   * consulat.ga, au geste explicite de la personne, et jamais après une déconnexion explicite dans
+   * ce navigateur ; l'application seule en décide. La démonstration l'ignore.
+   */
+  readonly reuseIdnSession?: boolean
+}
+
 export interface CodeDestination {
   readonly kind: "email" | "phone"
   readonly value: string
@@ -300,8 +311,9 @@ export interface DiasporaGaActions {
    *   · Moteur : SANS argument (une identité passée est ignorée, aucun nom civil ne part). Départ
    *     vers IDN par le client d'authentification du moteur (fournisseur `idn`), retour sur
    *     `/bienvenue` sans aucun paramètre ; `ok` veut dire que le navigateur part chez IDN.
+   *     `options.reuseIdnSession` : l'entrée sans ressaisie de la porte d'arrivée (CH-863 D2).
    */
-  signInWithIdn(input?: IdnSignInInput): Promise<ActionResult>
+  signInWithIdn(input?: IdnSignInInput, options?: IdnStartOptions): Promise<ActionResult>
   /**
    * Demander un code. `demoCode` : le code à recopier, quand le fournisseur peut le montrer
    * (moteur : porte de démonstration non armée seulement, `open` — développement local compris) ;

@@ -5,8 +5,10 @@
  * Le menu reste du CODE ; les modules du réseau (ADR-0041 du moteur) sont le seul levier. Cette
  * fonction dit, pour des modules ouverts et une situation de membre, le menu EXACT que la coque
  * de diaspora.ga monte : la barre (rail du bureau et barre basse du téléphone, même liste), le
- * menu du compte (profil, réglages, « Mon espace », mes données), son groupe « Informations » et
- * les formats de « Créer ». La coque des membres la lit pour monter ses entrées ; l'aperçu
+ * menu du compte (profil, réglages, « Mon espace », mes données), son groupe « Informations », les
+ * formats de « Créer » et les passerelles vers une autre application (« Démarches
+ * administratives », CH-863 : le module `consulateGateway`, fermé par défaut, ouvert dans
+ * admin.diaspora.ga). La coque des membres la lit pour monter ses entrées ; l'aperçu
  * d'admin.diaspora.ga la lit pour montrer le menu avant d'ouvrir un module. Un test commun de
  * diaspora.ga verrouille que la coque rend exactement ce qu'elle renvoie.
  *
@@ -199,6 +201,45 @@ export const MEMBER_CREATE_RULES: Readonly<Record<MemberCreateFormatId, MemberCr
 export type MemberCodeSwitchStates = Readonly<Record<MembersAppCodeSwitch, CodeSwitchState>>
 
 // ═══════════════════════════════════════════════════════════════
+// Les passerelles : sortir vers une AUTRE application de la même identité
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Les passerelles du menu du compte (CH-863, contrat DIASPORA-PASSERELLE-V1) : des sorties vers
+ * une autre application, dans le même onglet, qui ne lui transmettent rien. Ce ne sont pas des
+ * entrées internes (aucune clé dans la table des routes : `MemberMenuEntryId` et
+ * `MemberMenuRouteKey` restent « internes seulement »). Chacune est réglée par UN module du réseau
+ * (ADR-0041 du moteur, amendé le 26/11/2026) : un module d'affichage, FERMÉ tant que
+ * l'administrateur du réseau ne l'a pas ouvert dans admin.diaspora.ga, avec motif et ligne au
+ * journal ; il ne garde aucune fonction du moteur. Le module ouvert, l'application compose
+ * l'adresse depuis sa configuration, et retire l'entrée quand l'adresse manque. Elles tiennent
+ * dans le groupe « Démarches administratives », entre « Mon espace » et « Mes données ».
+ */
+export const MEMBER_GATEWAY_ENTRIES = ["consulate"] as const
+export type MemberGatewayId = (typeof MEMBER_GATEWAY_ENTRIES)[number]
+
+/** Le titre du groupe des passerelles, dans le menu du compte (espace `diaspora-ga`). */
+export const MEMBER_GATEWAY_GROUP_LABEL_KEY = "consulateGateway.group"
+
+/** La règle d'une passerelle : son libellé, sa ligne d'explication et le module du réseau qui l'ouvre. */
+export interface MemberGatewayRule {
+  readonly labelKey: string
+  /** Dit qu'elle ouvre une autre application (annoncé avec l'entrée). */
+  readonly hintKey: string
+  /** Le module qui la règle : fermé (l'état de départ), la passerelle n'existe pas. Jamais un interrupteur de code. */
+  readonly feature: NetworkFeature
+}
+
+export const MEMBER_GATEWAY_RULES: Readonly<Record<MemberGatewayId, MemberGatewayRule>> = {
+  consulate: { labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint", feature: "consulateGateway" },
+}
+
+/** La passerelle que ce module règle, ou `null` : un module d'affichage n'a ni page ni fonction du moteur. */
+export function gatewayOfFeature(feature: NetworkFeature): MemberGatewayId | null {
+  return MEMBER_GATEWAY_ENTRIES.find((id) => MEMBER_GATEWAY_RULES[id].feature === feature) ?? null
+}
+
+// ═══════════════════════════════════════════════════════════════
 // La situation du membre
 // ═══════════════════════════════════════════════════════════════
 
@@ -289,6 +330,13 @@ export interface MemberCreateEntry {
   readonly hintKey: string
 }
 
+/** Une passerelle offerte : son identifiant fermé et ses libellés ; l'application compose l'adresse. */
+export interface MemberGatewayEntry {
+  readonly id: MemberGatewayId
+  readonly labelKey: string
+  readonly hintKey: string
+}
+
 export interface MemberMenu {
   /** Le rail du bureau : la barre, dans l'ordre. */
   readonly rail: readonly MemberMenuEntry[]
@@ -302,6 +350,12 @@ export interface MemberMenu {
   readonly information: readonly MemberMenuEntry[]
   /** « Créer » : sous « Publier » au bureau, dans la feuille du compte au téléphone. */
   readonly create: readonly MemberCreateEntry[]
+  /**
+   * Les passerelles vers une autre application (« Démarches administratives » du menu du compte) :
+   * celles dont le module est ouvert, pour tout membre que la coque accueille. Hors de la barre et
+   * de « Mon espace » ; aucun autre module, aucun interrupteur de code ne les ajoute ni ne les retire.
+   */
+  readonly gateways: readonly MemberGatewayEntry[]
 }
 
 /** L'entrée paraît-elle ? Son module servi, le module qui l'offre servi, son public touché. */
@@ -331,6 +385,9 @@ export function memberMenu(input: MemberMenuInput): MemberMenu {
     const rule = MEMBER_CREATE_RULES[id]
     return { id, routeKey: rule.routeKey, pageKind: rule.pageKind, labelKey: rule.labelKey, hintKey: rule.hintKey }
   })
+  const gateways = MEMBER_GATEWAY_ENTRIES.filter((id) => open.has(MEMBER_GATEWAY_RULES[id].feature)).map(
+    (id): MemberGatewayEntry => ({ id, labelKey: MEMBER_GATEWAY_RULES[id].labelKey, hintKey: MEMBER_GATEWAY_RULES[id].hintKey }),
+  )
   return {
     rail: bar,
     phoneBar: bar,
@@ -338,6 +395,7 @@ export function memberMenu(input: MemberMenuInput): MemberMenu {
     account: [...pick(MEMBER_ACCOUNT_ENTRIES), ...personal, ...pick([MEMBER_DATA_ENTRY])],
     information: pick(MEMBER_INFORMATION_ENTRIES),
     create,
+    gateways,
   }
 }
 
@@ -345,31 +403,37 @@ export function memberMenu(input: MemberMenuInput): MemberMenu {
 // Ce qu'un module change au menu
 // ═══════════════════════════════════════════════════════════════
 
-/** Où se tient une entrée qui change : la barre (rail et téléphone), le menu du compte, ou « Créer ». */
-export const MEMBER_MENU_PLACEMENTS = ["bar", "account", "create"] as const
+/**
+ * Où se tient une entrée qui change : la barre (rail et téléphone), le menu du compte, ses
+ * passerelles (le groupe « Démarches administratives » du menu du compte, CH-863), ou « Créer ».
+ */
+export const MEMBER_MENU_PLACEMENTS = ["bar", "account", "gateways", "create"] as const
 export type MemberMenuPlacement = (typeof MEMBER_MENU_PLACEMENTS)[number]
 
 export interface MemberMenuChange {
   readonly placement: MemberMenuPlacement
-  readonly id: MemberMenuEntryId | MemberCreateFormatId
+  readonly id: MemberMenuEntryId | MemberCreateFormatId | MemberGatewayId
   readonly labelKey: string
   /** Le public de l'entrée : qui la verra (ou ne la verra plus). */
   readonly audience: MemberMenuAudience
 }
 
-function audienceOf(placement: MemberMenuPlacement, id: MemberMenuEntryId | MemberCreateFormatId): MemberMenuAudience {
+function audienceOf(placement: MemberMenuPlacement, id: MemberMenuChange["id"]): MemberMenuAudience {
+  // Une passerelle s'offre à tout membre que la coque accueille : seul son module la règle.
+  if (placement === "gateways") return "everyone"
   return placement === "create" ? MEMBER_CREATE_RULES[id as MemberCreateFormatId].audience : MEMBER_MENU_ENTRIES[id as MemberMenuEntryId].audience
 }
 
 /**
- * Les entrées présentes dans `after` et absentes de `before`, par endroit (barre, compte, « Créer »),
- * dans l'ordre du menu. Les retraits se lisent en inversant les deux menus. Le groupe
- * « Informations » ne dépend d'aucun module : il n'y figure jamais.
+ * Les entrées présentes dans `after` et absentes de `before`, par endroit (barre, compte,
+ * passerelles, « Créer »), dans l'ordre du menu. Les retraits se lisent en inversant les deux
+ * menus. Le groupe « Informations » ne dépend d'aucun module : il n'y figure jamais.
  */
 export function menuDifference(before: MemberMenu, after: MemberMenu): MemberMenuChange[] {
   const lists: Readonly<Record<MemberMenuPlacement, readonly [readonly { readonly id: string; readonly labelKey: string }[], readonly { readonly id: string; readonly labelKey: string }[]]>> = {
     bar: [before.rail, after.rail],
     account: [before.account, after.account],
+    gateways: [before.gateways, after.gateways],
     create: [before.create, after.create],
   }
   return MEMBER_MENU_PLACEMENTS.flatMap((placement) => {
@@ -378,7 +442,7 @@ export function menuDifference(before: MemberMenu, after: MemberMenu): MemberMen
     return now
       .filter((entry) => !present.has(entry.id))
       .map((entry): MemberMenuChange => {
-        const id = entry.id as MemberMenuEntryId | MemberCreateFormatId
+        const id = entry.id as MemberMenuChange["id"]
         return { placement, id, labelKey: entry.labelKey, audience: audienceOf(placement, id) }
       })
   })

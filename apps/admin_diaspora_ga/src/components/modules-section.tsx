@@ -5,7 +5,14 @@ import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import { Button, cn, formatDate, Skeleton } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { featureMenuAdditions, MEMBERS_APP_CODE_SWITCH_STATES, MEMBERS_APP_CODE_SWITCHES, type MembersAppCodeSwitch } from "@diaspora-ga/features/navigation"
+import {
+  featureMenuAdditions,
+  gatewayOfFeature,
+  MEMBERS_APP_CODE_SWITCH_STATES,
+  MEMBERS_APP_CODE_SWITCHES,
+  type MemberGatewayId,
+  type MembersAppCodeSwitch,
+} from "@diaspora-ga/features/navigation"
 import { useQuery } from "convex/react"
 import { CircleCheck, CircleDashed, ListChecks, LockKeyhole, MonitorSmartphone, Power, PowerOff } from "lucide-react"
 import NextLink from "next/link"
@@ -35,7 +42,9 @@ import { useNetworkAdmin } from "./network-admin-context"
  * qu'il exige, ce qu'il ajoute au menu des membres (dérivé de la règle partagée du menu, jamais
  * recopié), sa dernière décision et son motif (`features.lastDecisions`), la liste des prérequis à
  * relire avant de l'ouvrir. La bascule passe par une fenêtre motivée. Appels, direct et iCom Pro,
- * fermés par le code de l'application des membres, se lisent à part, sans geste.
+ * réglés par le code de l'application des membres, se lisent à part, sans geste. L'entrée
+ * « consulat.ga » du menu des membres est un module comme les autres (`consulateGateway`, CH-863) :
+ * fermée par défaut, elle s'ouvre et se ferme ici.
  */
 export function ModulesSection() {
   const { t } = useTranslation(APP_NAMESPACE)
@@ -174,8 +183,24 @@ function StateBadge(props: { state: ModuleCardState }) {
   )
 }
 
+/** Les prérequis communs à tout module : ses textes relus, sa recette faite. */
+const COMMON_PREREQUISITE_KEYS = ["modules.prerequisite.texts", "modules.prerequisite.rehearsal"] as const
 /** Les prérequis à relire avant d'ouvrir (fiche CH-815 § 4.3, étape 2) : une liste à lire, rien n'est coché ni gardé. */
-const PREREQUISITE_KEYS = ["modules.prerequisite.team", "modules.prerequisite.texts", "modules.prerequisite.rehearsal"] as const
+const PREREQUISITE_KEYS = ["modules.prerequisite.team", ...COMMON_PREREQUISITE_KEYS] as const
+
+/**
+ * Un module qui règle une passerelle (CH-863) n'ouvre aucun contenu à modérer : son premier
+ * prérequis est l'adresse de l'autre application, configurée dans l'application des membres —
+ * sans elle, l'entrée ne s'affiche pas, module ouvert ou non. Cette application ne peut pas la lire.
+ */
+const GATEWAY_ADDRESS_PREREQUISITE_KEYS: Readonly<Record<MemberGatewayId, string>> = {
+  consulate: "modules.prerequisite.consulateAddress",
+}
+
+function prerequisiteKeysOf(feature: NetworkFeature): readonly string[] {
+  const gateway = gatewayOfFeature(feature)
+  return gateway === null ? PREREQUISITE_KEYS : [GATEWAY_ADDRESS_PREREQUISITE_KEYS[gateway], ...COMMON_PREREQUISITE_KEYS]
+}
 
 /** `decision` : rendue par `features.lastDecisions`, `null` si le module n'y figure pas, `undefined` pendant la lecture. */
 function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: ToggleBlock | null; decision: FeatureDecision | null | undefined; onToggle: () => void }) {
@@ -232,7 +257,7 @@ function ModuleCard(props: { row: FeatureState; state: ModuleCardState; block: T
             </summary>
             <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 leading-relaxed">
               {row.requires !== null ? <li>{t("modules.prerequisite.parentOpen", { module: moduleName(row.requires) })}</li> : null}
-              {PREREQUISITE_KEYS.map((key) => (
+              {prerequisiteKeysOf(row.feature).map((key) => (
                 <li key={key}>{t(key)}</li>
               ))}
             </ul>

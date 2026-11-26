@@ -6,6 +6,7 @@ import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { ExternalLinkIcon } from "lucide-react"
 import NextLink from "next/link"
 
+import { configuredConsulateGateway, CONSULATE_LINK_ATTRIBUTES } from "@/lib/consulate-gateway"
 import { publicEnv } from "@/lib/env"
 import { routes } from "@/lib/routes"
 
@@ -18,10 +19,13 @@ import { floatingLinkClass } from "./site-chrome"
  * d'abord), l'aide au parrainage, et les sorties vers identite.ga et consulat.ga
  * — seulement si l'environnement les fournit (jamais de lien mort, jamais d'URL
  * en dur). Écartée, la carte ne revient qu'au prochain changement de statut.
+ * « M'inscrire au consulat » mène à l'inscription de consulat.ga (destination `register` du
+ * contrat DIASPORA-PASSERELLE-V1, CH-863), dans le même onglet, sans référent.
  */
 export function StatusBanner(props: { membership: MembershipView }) {
   const { t, locale } = useDiasporaGaT()
   const { membership } = props
+  const consulate = configuredConsulateGateway()
   const verified = membership.badges.includes("verified")
   const shown = membership.status !== "verifiee" && membership.status !== "partie"
   useFloatingCard({
@@ -56,10 +60,10 @@ export function StatusBanner(props: { membership: MembershipView }) {
                     ),
                   }
                 : {}),
-              ...(publicEnv.consulateUrl
+              ...(consulate !== null
                 ? {
                     registerConsulate: (
-                      <a href={publicEnv.consulateUrl} className={floatingLinkClass} rel="noopener">
+                      <a href={consulate.register} {...CONSULATE_LINK_ATTRIBUTES} className={floatingLinkClass}>
                         {t("status.registerConsulate")}
                         <ExternalLinkIcon className="size-3.5" aria-hidden />
                       </a>

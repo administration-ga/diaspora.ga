@@ -13,9 +13,9 @@ describe("adresses et fonctionnalités du réseau", () => {
     expect(Object.keys(ROUTE_FEATURES).sort()).toEqual(Object.keys(ROUTE_DESTINATIONS).sort())
   })
 
-  it("chaque fonctionnalité a au moins une adresse, sauf la mesure du pilote (lue dans l'administration, CH-815 A6) ; aucune adresse hors de la coque n'en relève", () => {
+  it("chaque fonctionnalité a au moins une adresse, sauf la mesure du pilote (lue dans l'administration, CH-815 A6) et la passerelle consulat.ga (CH-863 : un lien sortant du menu du compte) ; aucune adresse hors de la coque n'en relève", () => {
     const used = new Set(Object.values(ROUTE_FEATURES).filter((feature) => feature !== null))
-    expect(NETWORK_FEATURES.filter((feature) => !used.has(feature))).toEqual(["pilotMetrics"])
+    expect(NETWORK_FEATURES.filter((feature) => !used.has(feature))).toEqual(["pilotMetrics", "consulateGateway"])
     for (const [key, home] of Object.entries(ROUTE_DESTINATIONS)) {
       if (home.kind === "outside") expect(ROUTE_FEATURES[key as keyof typeof ROUTE_FEATURES], key).toBeNull()
     }
@@ -57,6 +57,15 @@ describe("adresses et fonctionnalités du réseau", () => {
     expect(featureOfPath(routes.arrivalKitResource("k-1"))).toBe("arrivalKit")
     // CH-815 A6 : la mesure du pilote n'a plus d'adresse sur diaspora.ga.
     expect(Object.values(ROUTE_FEATURES)).not.toContain("pilotMetrics")
+  })
+
+  it("la passerelle consulat.ga (CH-863) est un module d'affichage : aucune adresse de diaspora.ga n'en relève, fermée elle ne rend aucune page « introuvable »", () => {
+    expect(Object.values(ROUTE_FEATURES)).not.toContain("consulateGateway")
+    // La porte d'arrivée de qui vient de consulat.ga reste au socle : elle ne dépend pas du module.
+    expect(ROUTE_FEATURES.enterFromConsulate).toBeNull()
+    for (const destination of ["feed", "explore", "services", "communities", "messages", "myActivity", "moderation"] as const) {
+      expect(featuresUnderDestination(destination), destination).not.toContain("consulateGateway")
+    }
   })
 
   it("une adresse inconnue ou hors de la coque ne relève d'aucune fonctionnalité", () => {
@@ -107,6 +116,9 @@ describe("les modules rangés sous une destination, dérivés des deux tables", 
     [["mutualAid"], true],
     [["mentoring"], true],
     [["arrivalKit"], true],
+    // CH-863 : la passerelle consulat.ga ne se range sous aucune entrée de la barre.
+    [["consulateGateway"], false],
+    [["pages", "consulateGateway"], false],
     [[...NETWORK_FEATURES], true],
   ] as const)("ouverts %j : Communautés offerte = %s", (open, offered) => {
     expect(communitiesOffered(gate(open))).toBe(offered)

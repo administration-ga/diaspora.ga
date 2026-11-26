@@ -139,6 +139,7 @@
     },
     "prerequisite": {
       "parentOpen": "The required module is open: {{module}}.",
+      "consulateAddress": "The consulat.ga address is configured in the members’ application: without it, the entry is not shown.",
       "team": "A moderation team is in place for each open country.",
       "texts": "The module’s texts have been reviewed, in French and in English.",
       "rehearsal": "The module has been rehearsed in the demo."
@@ -164,6 +165,8 @@
       "closeTitle": "Close “{{module}}”",
       "openDescription": "The module will appear for every member of the network, and the engine will serve its pages.",
       "closeDescription": "The module will disappear for every member of the network, and the engine will refuse its pages. No data is deleted: reopening it brings everything back.",
+      "openConsulateDescription": "The entry will appear in the account menu of every member of the network. It leads to consulat.ga, another application: nothing is sent to it.",
+      "closeConsulateDescription": "The entry will disappear from the account menu of every member of the network. Nothing is deleted: reopening the module brings it back.",
       "effectAdded": "Appears in the members’ menu",
       "effectRemoved": "Disappears from the members’ menu",
       "effectNone": "The members’ menu does not change: its entries are already offered by another open module.",
@@ -187,6 +190,7 @@
     "placement": {
       "bar": "navigation bar",
       "account": "account menu",
+      "gateways": "account menu, “{{group}}” group",
       "create": "“Create” menu"
     },
     "audience": {
@@ -231,7 +235,8 @@
     "createMenu": "Create",
     "account": "Account menu",
     "information": "Information",
-    "phoneBar": "Phone bar"
+    "phoneBar": "Phone bar",
+    "gatewayNote": "Link to another application, shown only when the consulat.ga address is configured."
   },
   "notice": {
     "region": "Notices",

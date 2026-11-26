@@ -4,6 +4,7 @@ import type { AccountView, MembershipView, SessionView } from "@diaspora-ga/feat
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { explicitSignOutHappened, rememberExplicitSignOut } from "@/lib/explicit-sign-out"
 import { parseReturnPath, peekReturnPath, rememberReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
@@ -176,5 +177,20 @@ describe("la page demandée avant la connexion (UX-02, MO-03)", () => {
     render(<Gate require="account" holdMember>{() => <p data-testid="accueil" />}</Gate>)
     expect(screen.getByTestId("accueil")).toBeInTheDocument()
     expect(mocks.replace).not.toHaveBeenCalled()
+  })
+})
+
+describe("CH-863 D2 — une entrée réussie oublie la déconnexion explicite", () => {
+  it("une session ouverte efface le repère ; sans session ou pendant le chargement, il reste", () => {
+    rememberExplicitSignOut()
+    mocks.session = { status: "loading" }
+    render(<Gate require="member">{() => <p />}</Gate>)
+    expect(explicitSignOutHappened()).toBe(true)
+    cleanup()
+    renderGate("member", { status: "anonymous" })
+    expect(explicitSignOutHappened()).toBe(true)
+    cleanup()
+    renderGate("member", SESSIONS["déclarée"])
+    expect(explicitSignOutHappened()).toBe(false)
   })
 })

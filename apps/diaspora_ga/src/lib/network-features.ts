@@ -9,7 +9,9 @@
  * Socle : la porte et l'accueil, le fil, les publications, les actus, les notifications, les
  * pays et les communautés (actus du pays), les personnes, iCom, le compte, la confiance et les
  * pages légales. Les adresses d'une page relèvent des pages ; ses services, ses offres d'emploi,
- * son groupe et ses évènements relèvent de leur fonctionnalité, qui exige les pages.
+ * son groupe et ses évènements relèvent de leur fonctionnalité, qui exige les pages. Deux modules
+ * n'ont AUCUNE adresse ici : la mesure du pilote (lue dans l'administration) et la passerelle
+ * consulat.ga (CH-863, un module d'affichage : un lien sortant du menu du compte).
  *
  * Croisée avec la table des destinations, cette table dit aussi quels modules se rangent sous
  * une entrée de la barre (`featuresUnderDestination`) : « Communautés » n'y entre qu'avec l'un
@@ -27,6 +29,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   home: CORE,
   enter: CORE,
   register: CORE,
+  enterFromConsulate: CORE,
   enterAfterSignOut: CORE,
   enterIdn: CORE,
   enterCode: CORE,
