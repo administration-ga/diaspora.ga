@@ -52,6 +52,12 @@ export interface FeatureRoutes {
    * Absent quand l'application ne propose pas d'appel : aucun lien n'y mène alors.
    */
   callJournal?(): string
+  /**
+   * Lot A5 : la page d'un direct, où mène l'annonce d'un direct dans le fil. Absente quand cette
+   * page n'est pas servie (direct fermé par le code, démonstration) : la carte dit alors le direct
+   * sans lien.
+   */
+  conference?(sessionId: string): string
   hub(country: CountryCode): string
   /** Le filtre restreint le fil ; une carte peut conserver sa portée et le pays de son hub. */
   feed(tag?: string, context?: { readonly scope: FeedScope; readonly country?: CountryCode }): string

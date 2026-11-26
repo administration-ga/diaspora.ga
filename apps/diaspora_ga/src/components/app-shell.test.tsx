@@ -44,19 +44,19 @@ const mocks = vi.hoisted(() => ({
   unreadReads: 0,
   /** Le chiffre que le lecteur remonte à la coque, comme le ferait le serveur. */
   reportUnread: null as ((total: number) => void) | null,
-  /** CH-817 : le direct ouvert par le code, posé par un test (la position du dépôt est fermée). */
-  liveOpen: false,
+  /** CH-817 : le direct refermé par le code, posé par un test (la position du dépôt est ouverte depuis le 26/11/2026). */
+  liveClosed: false,
   /** La demande de création d'une conférence, posée au magasin du moteur. */
   launch: vi.fn(),
 }))
 
-// Le menu partagé, tel quel ; seul un test du direct l'ouvre par le code (CH-817).
+// Le menu partagé, tel quel ; seul un test du direct le referme par le code (CH-817).
 vi.mock("@diaspora-ga/features/navigation", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@diaspora-ga/features/navigation")>()
   return {
     ...actual,
     memberMenu: (input: Parameters<typeof actual.memberMenu>[0]) =>
-      actual.memberMenu(mocks.liveOpen ? { ...input, codeSwitches: { ...actual.MEMBERS_APP_CODE_SWITCH_STATES, live: "open" } } : input),
+      actual.memberMenu(mocks.liveClosed ? { ...input, codeSwitches: { ...actual.MEMBERS_APP_CODE_SWITCH_STATES, live: "closed" } } : input),
   }
 })
 vi.mock("@antsia/social-features/features/iappel/conference-launch-store", () => ({ requestConferenceLaunch: mocks.launch }))
@@ -311,7 +311,7 @@ beforeEach(() => {
   mocks.desktop = true
   mocks.unreadReads = 0
   mocks.reportUnread = null
-  mocks.liveOpen = false
+  mocks.liveClosed = false
 })
 
 afterEach(() => {
@@ -1226,7 +1226,7 @@ describe("coque — le contexte pays", () => {
 })
 
 describe("coque — « Créer », le menu de création (modèle du réseau de l'administration)", () => {
-  it("au bureau, sous « Publier » : une actu quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
+  it("au bureau, sous « Publier » : une actu et une conférence quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true })
     // « Publier » garde son bouton à part : le menu ne le double pas (vu avant l'ouverture, le menu étant modal).
@@ -1234,9 +1234,11 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
     await user.click(screen.getByRole("button", { name: "Créer" }))
     const menu = await screen.findByRole("menu")
     const items = within(menu).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), routes.newPage("association"), routes.newPage("company")])
-    expect(items[1]).toHaveTextContent("Inscrire une association")
-    expect(items[1]).toHaveTextContent("Sa page, ses adhérents, son groupe et ses évènements.")
+    // La conférence (direct ouvert par le code, CH-817) est un geste sans adresse, juste après l'actu.
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null, routes.newPage("association"), routes.newPage("company")])
+    expect(items[1]).toHaveTextContent("Une conférence")
+    expect(items[2]).toHaveTextContent("Inscrire une association")
+    expect(items[2]).toHaveTextContent("Sa page, ses adhérents, son groupe et ses évènements.")
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("menu")).toBeNull()
   })
@@ -1266,20 +1268,7 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
 })
 
 describe("coque — « Créer → Une conférence » (CH-817), derrière l'interrupteur du direct", () => {
-  it("fermé par le code (la position du dépôt) : aucune conférence, au bureau comme au téléphone", async () => {
-    const user = userEvent.setup()
-    renderShell({ icom: true, features: ["pages"] })
-    await user.click(screen.getByRole("button", { name: "Créer" }))
-    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Une conférence/ })).toBeNull()
-    await user.keyboard("{Escape}")
-    await user.click(accountTrigger("dialog"))
-    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    expect(within(sheet).queryByRole("button", { name: "Une conférence" })).toBeNull()
-    expect(mocks.launch).not.toHaveBeenCalled()
-  })
-
-  it("ouvert, au bureau : un geste du menu après l'actu, sans adresse, qui demande au moteur la création d'une conférence", async () => {
-    mocks.liveOpen = true
+  it("ouvert par le code (la position du dépôt), au bureau : un geste du menu après l'actu, sans adresse, qui demande au moteur la création d'une conférence", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
@@ -1293,7 +1282,6 @@ describe("coque — « Créer → Une conférence » (CH-817), derrière l'inter
   })
 
   it("ouvert, au téléphone : un bouton de la feuille du compte, qui la referme et demande la création", async () => {
-    mocks.liveOpen = true
     mocks.desktop = false
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
@@ -1305,11 +1293,23 @@ describe("coque — « Créer → Une conférence » (CH-817), derrière l'inter
   })
 
   it("ouvert, sans iCom (démonstration, membre qui n'écrit pas) : aucune conférence, l'hôte du direct n'étant pas monté", async () => {
-    mocks.liveOpen = true
     const user = userEvent.setup()
     renderShell({ features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
     expect(within(await screen.findByRole("menu")).getAllByRole("menuitem").map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
+  })
+
+  it("refermé par le code : aucune conférence, au bureau comme au téléphone", async () => {
+    mocks.liveClosed = true
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: ["pages"] })
+    await user.click(screen.getByRole("button", { name: "Créer" }))
+    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Une conférence/ })).toBeNull()
+    await user.keyboard("{Escape}")
+    await user.click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(within(sheet).queryByRole("button", { name: "Une conférence" })).toBeNull()
+    expect(mocks.launch).not.toHaveBeenCalled()
   })
 })
 
@@ -1345,12 +1345,13 @@ describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les module
     expect(bar.querySelector('[class*="grid-cols"]')).toBeNull()
   })
 
-  it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation", async () => {
+  it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation (l'actu et la conférence restent, elles ne sont pas des modules)", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: [] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory()])
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null])
+    expect(items[1]).toHaveTextContent("Une conférence")
   })
 
   it("un module ouvert retrouve ses entrées, les autres restent fermés", async () => {
@@ -1391,10 +1392,10 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     { name: "un responsable qui gère une page et adhère", icom: true, network: true, responsible: true, holdings: HOLDS_ALL, holds: true },
   ] as const
   const FEATURE_SETS: readonly (readonly NetworkFeature[])[] = [[], ["pages"], NETWORK_FEATURES]
-  // Le direct fermé (la position du dépôt) partout ; ouvert par le code (CH-817) avec tous les modules.
+  // Le direct ouvert (la position du dépôt depuis le 26/11/2026) partout ; refermé par le code (CH-817) avec tous les modules.
   const CASES = [
-    ...FEATURE_SETS.flatMap((features) => SITUATIONS.map((situation) => [features, situation.name, situation, false] as const)),
-    ...SITUATIONS.map((situation) => [NETWORK_FEATURES, `${situation.name}, direct ouvert`, situation, true] as const),
+    ...FEATURE_SETS.flatMap((features) => SITUATIONS.map((situation) => [features, situation.name, situation, true] as const)),
+    ...SITUATIONS.map((situation) => [NETWORK_FEATURES, `${situation.name}, direct refermé`, situation, false] as const),
   ]
 
   const entryLink = (entry: MemberMenuEntry) => [t(entry.labelKey), memberMenuHref(entry, MEMBER.handle)]
@@ -1403,7 +1404,7 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
   const sheetCreateHrefs = (container: HTMLElement) => Array.from(container.querySelectorAll("a, button")).map((item) => item.getAttribute("href"))
 
   it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation, liveOpen) => {
-    mocks.liveOpen = liveOpen
+    mocks.liveClosed = !liveOpen
     const user = userEvent.setup()
     renderShell({ icom: situation.icom, network: situation.network, responsible: situation.responsible, holdings: situation.holdings, features })
     const expected = memberMenu({

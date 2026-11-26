@@ -33,8 +33,8 @@ import {
  * fonction ; diaspora.ga prouve ailleurs que sa coque la rend.
  */
 
-/** Le direct ouvert par le code : une position posée par le test, jamais celle du dépôt. */
-const LIVE_OPEN: MemberCodeSwitchStates = { ...MEMBERS_APP_CODE_SWITCH_STATES, live: "open" }
+/** Le direct refermé par le code : une position posée par le test (celle du dépôt est ouverte depuis le 26/11/2026). */
+const LIVE_CLOSED: MemberCodeSwitchStates = { ...MEMBERS_APP_CODE_SWITCH_STATES, live: "closed" }
 
 /** Un membre ordinaire du moteur : il peut publier, iCom ouvert, rien d'autre. */
 const MEMBER: MemberMenuSituation = {
@@ -61,11 +61,12 @@ describe("menu des membres — le socle, modules tous fermés", () => {
     expect(ids(closed.personal)).toEqual(["relations", "bookmarks", "sponsor"])
     expect(ids(closed.account)).toEqual(["profile", "settings", "relations", "bookmarks", "sponsor", "myData"])
     expect(ids(closed.information)).toEqual(["legalNotice", "privacy", "terms", "communityRules", "contact", "charte"])
-    expect(ids(closed.create)).toEqual(["story"])
+    // La conférence n'est pas un module : le direct ouvert par le code (CH-817), elle reste au socle.
+    expect(ids(closed.create)).toEqual(["story", "live"])
   })
 
   it("chaque entrée porte la clé de son adresse et de son libellé, telles que la table les déclare", () => {
-    const open = memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: NETWORK_FEATURES, codeSwitches: LIVE_OPEN })
+    const open = memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: NETWORK_FEATURES })
     for (const entry of [...open.rail, ...open.account, ...open.information]) {
       expect(entry).toEqual({ id: entry.id, routeKey: MEMBER_MENU_ENTRIES[entry.id].routeKey, labelKey: MEMBER_MENU_ENTRIES[entry.id].labelKey })
     }
@@ -76,15 +77,19 @@ describe("menu des membres — le socle, modules tous fermés", () => {
 })
 
 describe("menu des membres — la conférence, derrière l'interrupteur de code du direct (CH-817)", () => {
-  it("fermé par le code (la position du dépôt) : jamais offerte, quels que soient les modules et la situation", () => {
-    expect(MEMBERS_APP_CODE_SWITCH_STATES.live).toBe("closed")
-    for (const features of ALL_FEATURE_SETS) expect(ids(menu(features).create), features.join(",")).not.toContain("live")
+  it("ouvert par le code (la position du dépôt depuis le 26/11/2026) : offerte quels que soient les modules, jamais comme ajout d'un module", () => {
+    expect(MEMBERS_APP_CODE_SWITCH_STATES.live).toBe("open")
+    for (const features of ALL_FEATURE_SETS) expect(ids(menu(features).create), features.join(",")).toContain("live")
     // L'aperçu d'admin.diaspora.ga lit les ajouts de chaque module : la conférence n'en est pas un.
     for (const feature of NETWORK_FEATURES) expect(featureMenuAdditions(feature).map((change) => change.id)).not.toContain("live")
   })
 
+  it("refermé par le code : jamais offerte, quels que soient les modules et la situation", () => {
+    for (const features of ALL_FEATURE_SETS) expect(ids(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: features, codeSwitches: LIVE_CLOSED }).create), features.join(",")).not.toContain("live")
+  })
+
   it("ouvert : offerte juste après l'actu, au même public (publier ET iCom), sans adresse ni module", () => {
-    const open = (situation: MemberMenuSituation, features: readonly NetworkFeature[] = ["pages"]) => ids(memberMenu({ ...situation, openFeatures: features, codeSwitches: LIVE_OPEN }).create)
+    const open = (situation: MemberMenuSituation, features: readonly NetworkFeature[] = ["pages"]) => ids(memberMenu({ ...situation, openFeatures: features }).create)
     expect(open(MEMBER)).toEqual(["story", "live", "association", "company"])
     expect(open(MEMBER, [])).toEqual(["story", "live"])
     expect(open({ ...MEMBER, canPublish: false })).toEqual(["association", "company"])
@@ -94,8 +99,8 @@ describe("menu des membres — la conférence, derrière l'interrupteur de code 
 
   it("seule la conférence dépend d'un interrupteur ; la position « open » seule l'ouvre", () => {
     expect(MEMBER_CREATE_FORMATS.filter((id) => MEMBER_CREATE_RULES[id].codeSwitch !== null)).toEqual(["live"])
-    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live)).toBe(false)
-    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live, LIVE_OPEN)).toBe(true)
+    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live)).toBe(true)
+    expect(codeSwitchAllows(MEMBER_CREATE_RULES.live, LIVE_CLOSED)).toBe(false)
     expect(codeSwitchAllows(MEMBER_CREATE_RULES.story)).toBe(true)
   })
 })
@@ -244,8 +249,8 @@ describe("table des entrées — complète et cohérente", () => {
     }
   })
 
-  it("appels, direct et iCom Pro : trois interrupteurs de code, fermés", () => {
+  it("appels, direct et iCom Pro : trois interrupteurs de code ; le direct ouvert le 26/11/2026, les deux autres fermés", () => {
     expect(MEMBERS_APP_CODE_SWITCHES).toEqual(["calls", "live", "icomPro"])
-    expect(Object.values(MEMBERS_APP_CODE_SWITCH_STATES)).toEqual(["closed", "closed", "closed"])
+    expect(MEMBERS_APP_CODE_SWITCH_STATES).toEqual({ calls: "closed", live: "open", icomPro: "closed" })
   })
 })

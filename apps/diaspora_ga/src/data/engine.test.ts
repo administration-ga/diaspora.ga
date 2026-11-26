@@ -30,6 +30,7 @@ import {
   toOpenCountries,
   postModerationOf,
   toPostMediaView,
+  toPostView,
   toPublishOutcome,
   toSharedPostView,
   toProfileView,
@@ -854,6 +855,38 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
     const pinned = item("epinglee", "local", "FR")
     expect(ids(toWall({ items: [item("a", "local", "FR"), pinned, item("b", "diaspora", null)], pinned }))).toEqual(["epinglee", "a", "b"])
     expect(ids(toWall({ items: [item("a", "local", "FR")], pinned: null }))).toEqual(["a"])
+  })
+
+  it("lot A5 : le direct et l'évènement annoncés passent dans la vue, tels que le moteur les relit ; absents ou nuls, la vue n'en dit rien", () => {
+    const live = { sessionId: "sessions_demo_1", status: "live", title: "Démo — Rencontre des Gabonais de Lyon" } as const
+    const event = {
+      eventId: "events_demo_1",
+      title: "Démo — Pique-nique de la communauté",
+      startAt: Date.UTC(2026, 11, 5, 11),
+      endAt: Date.UTC(2026, 11, 5, 15, 30),
+      timeZone: "Europe/Paris",
+      status: "cancelled",
+      myParticipation: "maybe",
+      myParticipationId: "eventParticipants_demo_1",
+    } as const
+    const announced = { ...(item("annonce", "diaspora", null) as object), live, event } as never
+    const view = toPostView(announced)
+    expect(view.live).toEqual(live)
+    // L'identifiant de ma ligne d'invitation n'est pas repris : la carte ne répond pas depuis le fil.
+    expect(view.event).toEqual({ eventId: "events_demo_1", title: event.title, startAt: event.startAt, endAt: event.endAt, timeZone: "Europe/Paris", status: "cancelled", myParticipation: "maybe" })
+    // Le fil et le mur passent par la même projection.
+    expect(toFeed([announced], "recents", "FR")[0]).toMatchObject({ id: "annonce", live, event: { eventId: "events_demo_1" } })
+    expect(toWall({ items: [announced], pinned: null })[0]).toMatchObject({ live, event: { status: "cancelled" } })
+    // Une publication ordinaire : `live` absent, `event` nul (le moteur rend `null`) ou absent.
+    for (const plain of [{ ...(item("ordinaire", "diaspora", null) as object), event: null }, item("ancienne", "diaspora", null) as object]) {
+      const ordinary = toPostView(plain as never)
+      expect(ordinary).not.toHaveProperty("live")
+      expect(ordinary).not.toHaveProperty("event")
+    }
+    // Chaque statut du direct passe tel quel.
+    for (const status of ["scheduled", "live", "ended"] as const) {
+      expect(toPostView({ ...(item("s", "diaspora", null) as object), live: { ...live, status } } as never).live?.status).toBe(status)
+    }
   })
 
   const OPEN_FR = { "modules/diaspora/hubs:listOpenCountries": () => [{ country: "FR" }] }

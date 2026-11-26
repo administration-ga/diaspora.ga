@@ -40,3 +40,26 @@ export function calendarParts(timestamp: number, locale: string): { day: string;
     month: new Intl.DateTimeFormat(locale, { month: "short" }).format(date).replace(".", ""),
   }
 }
+
+/** La plage d'un évènement : jour, date et heures, et le fuseau dit à la fin. */
+const EVENT_RANGE_OPTIONS: Intl.DateTimeFormatOptions = {
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZoneName: "short",
+}
+
+/**
+ * La plage d'un évènement annoncé (lot A5), dans la langue du lecteur et le fuseau de SON navigateur
+ * (`timeZone` ne sert qu'aux tests) : « jeu. 3 déc. 2026, 18:00 – 20:00 UTC+1 ». Le même jour, la
+ * date ne se répète pas ; une fin qui ne suit pas le début se lit comme un instant seul.
+ */
+export function formatEventRange(startAt: number, endAt: number, locale: string, timeZone?: string): string {
+  const formatter = new Intl.DateTimeFormat(locale, { ...EVENT_RANGE_OPTIONS, ...(timeZone === undefined ? {} : { timeZone }) })
+  if (!(endAt > startAt)) return formatter.format(startAt)
+  // Un navigateur ancien sans `formatRange` lit les deux bornes en entier.
+  return typeof formatter.formatRange === "function" ? formatter.formatRange(startAt, endAt) : `${formatter.format(startAt)} – ${formatter.format(endAt)}`
+}

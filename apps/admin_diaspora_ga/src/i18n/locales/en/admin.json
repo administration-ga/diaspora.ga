@@ -144,8 +144,8 @@
       "rehearsal": "The module has been rehearsed in the demo."
     },
     "code": {
-      "title": "Closed in the code",
-      "lead": "These features of the members’ app are not network modules: they are opened in the diaspora.ga code, never from this app.",
+      "title": "Set in the code",
+      "lead": "These features of the members’ app are not network modules: they are opened and closed in the diaspora.ga code, never from this app.",
       "closedByCode": "Closed in the code",
       "openByCode": "Open in the code",
       "names": {

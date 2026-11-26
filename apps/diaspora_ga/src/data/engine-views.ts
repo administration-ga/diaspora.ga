@@ -36,6 +36,8 @@ import {
   type MembershipView,
   type OpenCountryView,
   type OwnProfileView,
+  type PostEventView,
+  type PostLiveView,
   type PostMediaView,
   type PostMediaWithheld,
   type PostView,
@@ -314,6 +316,28 @@ export function toPublishOutcome(result: { readonly postId: string; readonly mod
   return { moderation: result.moderation ?? null }
 }
 
+/** Lot A5 : le direct annoncé, tel que le moteur le relit à chaque lecture — sa référence, son statut, son titre. */
+export function toPostLiveView(live: NonNullable<FeedItem["live"]>): PostLiveView {
+  return { sessionId: live.sessionId, status: live.status, title: live.title }
+}
+
+/**
+ * Lot A5 : l'évènement annoncé, relu à chaque lecture (statut, MA réponse). L'identifiant de ma
+ * ligne d'invitation (`myParticipationId`) n'est pas repris : la carte de DIASPORA.GA ne répond pas
+ * depuis le fil.
+ */
+export function toPostEventView(event: NonNullable<FeedItem["event"]>): PostEventView {
+  return {
+    eventId: event.eventId,
+    title: event.title,
+    startAt: event.startAt,
+    endAt: event.endAt,
+    timeZone: event.timeZone,
+    status: event.status,
+    myParticipation: event.myParticipation,
+  }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
@@ -337,6 +361,9 @@ export function toPostView(item: FeedItem): PostView {
     notifying: item.viewer.notifying,
     edited: item.editedAt !== null,
     editedAt: item.editedAt,
+    // Lot A5 : le direct et l'évènement annoncés, relus par le moteur ; absents (ou `null`), la carte reste ordinaire.
+    ...(item.live ? { live: toPostLiveView(item.live) } : {}),
+    ...(item.event ? { event: toPostEventView(item.event) } : {}),
   }
 }
 

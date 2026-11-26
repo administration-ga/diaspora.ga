@@ -1,0 +1,22 @@
+{
+  "post": {
+    "announcement": {
+      "live": {
+        "label": "Live announced",
+        "scheduled": "Scheduled",
+        "onAir": "Live now",
+        "ended": "Ended"
+      },
+      "event": {
+        "label": "Event announced",
+        "cancelled": "Cancelled",
+        "participation": {
+          "pending": "Invitation not answered",
+          "accepted": "You're attending",
+          "declined": "You're not attending",
+          "maybe": "You might attend"
+        }
+      }
+    }
+  }
+}

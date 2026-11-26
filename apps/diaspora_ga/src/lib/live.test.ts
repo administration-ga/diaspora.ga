@@ -2,13 +2,16 @@ import { DIASPORA_GA_LOCALES } from "@diaspora-ga/features/i18n"
 import { MEMBERS_APP_CODE_SWITCH_STATES } from "@diaspora-ga/features/navigation"
 import { describe, expect, it } from "vitest"
 
-import { conferenceRouteServed, conferenceSessionId, isLiveSwitchOpen, LIVE_SWITCH, LIVE_SWITCH_STATES, liveIsOpen } from "./live"
+import { conferenceFeatureRoute, conferenceRouteServed, conferenceSessionId, isLiveSwitchOpen, LIVE_SWITCH, LIVE_SWITCH_STATES, liveIsOpen } from "./live"
 import { OFFER_CARDS } from "./public-offer"
+import { routes } from "./routes"
 
-describe("interrupteur du direct (CH-817) — rien n'est proposé tant que le direct n'est pas prouvé", () => {
-  it("est fermé par défaut : le pilote ouvre sans direct, comme sans appels (décision 2 du plan 04)", () => {
-    expect(LIVE_SWITCH).toBe("closed")
-    expect(liveIsOpen()).toBe(false)
+describe("interrupteur du direct (CH-817) — ouvert depuis que le moteur a un vrai serveur vidéo", () => {
+  it("est ouvert depuis le 26/11/2026 (serveur vidéo du moteur sur le serveur OVH) ; les appels restent fermés", () => {
+    expect(LIVE_SWITCH).toBe("open")
+    expect(liveIsOpen()).toBe(true)
+    expect(MEMBERS_APP_CODE_SWITCH_STATES.calls).toBe("closed")
+    expect(MEMBERS_APP_CODE_SWITCH_STATES.icomPro).toBe("closed")
   })
 
   it("deux positions seulement, et seule « open » ouvre le direct", () => {
@@ -23,14 +26,22 @@ describe("interrupteur du direct (CH-817) — rien n'est proposé tant que le di
 })
 
 describe("la page d'un direct — servie seulement interrupteur ouvert ET moteur branché", () => {
-  it("fermé (la position du dépôt) : introuvable, moteur ou démonstration", () => {
-    expect(conferenceRouteServed("engine")).toBe(false)
+  it("ouvert (la position du dépôt) : servie avec le moteur, jamais par la démonstration de ce navigateur", () => {
+    expect(conferenceRouteServed("engine")).toBe(true)
     expect(conferenceRouteServed("demo")).toBe(false)
-  })
-
-  it("ouvert : servie avec le moteur, jamais par la démonstration de ce navigateur", () => {
     expect(conferenceRouteServed("engine", "open")).toBe(true)
     expect(conferenceRouteServed("demo", "open")).toBe(false)
+  })
+
+  it("refermé : introuvable, moteur ou démonstration", () => {
+    expect(conferenceRouteServed("engine", "closed")).toBe(false)
+    expect(conferenceRouteServed("demo", "closed")).toBe(false)
+  })
+
+  it("la page du direct comme destination des surfaces (annonce du fil) : fournie seulement quand elle est servie", () => {
+    expect(conferenceFeatureRoute("engine")).toEqual({ conference: routes.conference })
+    expect(conferenceFeatureRoute("demo")).toEqual({})
+    expect(conferenceFeatureRoute("engine", "closed")).toEqual({})
   })
 
   it("l'identifiant de la session se décode une fois ; vide ou mal encodé, aucun", () => {
