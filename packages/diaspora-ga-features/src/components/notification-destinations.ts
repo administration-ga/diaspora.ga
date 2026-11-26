@@ -34,6 +34,7 @@ export const BELL_DESTINATION_KINDS = [
   "groupConversation",
   "personalConversation",
   "callJournal",
+  "live",
   "none",
 ] as const
 export type BellDestination = (typeof BELL_DESTINATION_KINDS)[number]
@@ -112,6 +113,12 @@ export const BELL_DESTINATIONS: Readonly<Record<NotificationKind, BellDestinatio
   personal_message: "personalConversation",
   call_missed: "callJournal",
   voicemail_left: "callJournal",
+  // Lot `live` du moteur : la page du live (le direct, ou son replay une fois publié), servie
+  // seulement l'interrupteur du direct ouvert et le moteur branché — sinon le lien se tait.
+  live_started: "live",
+  live_invite: "live",
+  live_antenna_invite: "live",
+  live_replay_published: "live",
   // Un genre inconnu reste « nouvelle activité » ; il ne mène qu'à la publication qu'il désigne, s'il en désigne une.
   other: "post",
 }
@@ -245,6 +252,12 @@ export function noticeLink(item: NoticeTarget, routes: FeatureRoutes): NoticeLin
       // Appels fermés (IM-01), l'application ne fournit pas le journal : le lien se tait, la phrase reste.
       const href = routes.callJournal?.()
       return href ? { href, label: "bell.openCallJournal" } : null
+    }
+    case "live": {
+      // L'application ne fournit la page d'un live que l'interrupteur du direct ouvert et le moteur
+      // branché (`conferenceFeatureRoute`) : sinon, la phrase reste et le lien se tait.
+      const href = item.liveSessionId ? routes.conference?.(item.liveSessionId) : undefined
+      return href ? { href, label: item.kind === "live_replay_published" ? "bell.openLiveReplay" : "bell.openLive" } : null
     }
   }
 }

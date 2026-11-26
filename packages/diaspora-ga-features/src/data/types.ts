@@ -666,6 +666,16 @@ export const ICOM_NOTIFICATION_KINDS = ["group_message", "group_added", "persona
 export type IcomNotificationKind = (typeof ICOM_NOTIFICATION_KINDS)[number]
 
 /**
+ * Les avis d'un LIVE que le moteur émet (lot `live`, mêmes noms que son domaine) : l'hôte est en
+ * direct (au démarrage, jamais à la préparation), il m'invite à son live, il m'invite à prendre la
+ * parole, il a publié le replay. Le sujet est la SESSION, relue avec sa garde à l'ouverture ; l'hôte
+ * est nommé par son profil publié. Jamais le titre du live : le moteur ne le recopie pas dans
+ * l'avis (« la cloche ne recopie pas le titre »), ni n'en sert un.
+ */
+export const LIVE_NOTIFICATION_KINDS = ["live_started", "live_invite", "live_antenna_invite", "live_replay_published"] as const
+export type LiveNotificationKind = (typeof LIVE_NOTIFICATION_KINDS)[number]
+
+/**
  * Les avis de la cloche que DIASPORA.GA sait dire. Tout autre genre du moteur se
  * dit « nouvelle activité » (`other`) : jamais un libellé inventé.
  */
@@ -691,6 +701,7 @@ export const NOTIFICATION_KINDS = [
   ...ACTIVITY_NOTIFICATION_KINDS,
   ...PAGE_GOVERNANCE_NOTIFICATION_KINDS,
   ...ICOM_NOTIFICATION_KINDS,
+  ...LIVE_NOTIFICATION_KINDS,
   "other",
 ] as const
 export type NotificationKind = (typeof NOTIFICATION_KINDS)[number]
@@ -763,6 +774,11 @@ export interface NotificationView {
    * (active, sans blocage) ; `null` quand elle ne se lit plus. Jamais le message.
    */
   readonly personalThreadId?: string | null
+  /**
+   * Avis d'un live : la session désignée (sa page sert le direct ou son replay, et relit la garde à
+   * l'ouverture) ; `null` sans sujet. Jamais son titre.
+   */
+  readonly liveSessionId?: string | null
 }
 
 /**
@@ -783,6 +799,7 @@ export type NoticeTarget = Pick<
   | "governancePageHandle"
   | "groupThreadId"
   | "personalThreadId"
+  | "liveSessionId"
 > & {
   /** Qui a agi, par l'adresse de son profil PUBLIÉ seulement ; `null` sans profil publié. */
   readonly actor: { readonly handle: string } | null

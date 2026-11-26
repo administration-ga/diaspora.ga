@@ -75,7 +75,8 @@ describe("cloche DIASPORA.GA — genres communs nommés (NP-04)", () => {
   })
 
   it("un genre que DIASPORA.GA ne nomme pas reste « nouvelle activité », sans erreur", () => {
-    expect(toNotificationView(notice({ kind: "live_started", subject: { kind: "liveSession", id: "live-demo" } }))).toEqual({ ...BASE, kind: "other", actor: null, inviteOutcome: null })
+    // Le contact commercial (boutiques du moteur) n'a pas de phrase dans DIASPORA.GA ; le live en a une depuis le 26/11/2026.
+    expect(toNotificationView(notice({ kind: "commercial_contact", subject: { kind: "commercialThread", id: "thread-demo" } }))).toEqual({ ...BASE, kind: "other", actor: null, inviteOutcome: null })
     expect(toNotificationView(notice({ kind: futureKind("genre_inconnu_demo") })).kind).toBe("other")
   })
 })

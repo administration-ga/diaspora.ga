@@ -10,5 +10,15 @@
   "feed": {
     "shortcutLive": "Live",
     "shortcutsLabelLive": "Publier une photo, une vidéo, ou lancer un live"
+  },
+  "bell": {
+    "openLive": "Voir le live",
+    "openLiveReplay": "Voir le replay",
+    "kind": {
+      "live_started": "est en direct.",
+      "live_invite": "vous invite à son live.",
+      "live_antenna_invite": "vous invite à prendre la parole dans son live.",
+      "live_replay_published": "a publié le replay de son live."
+    }
   }
 }
