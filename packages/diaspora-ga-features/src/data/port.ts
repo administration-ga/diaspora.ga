@@ -413,6 +413,7 @@ export interface DiasporaGaActions {
   markNotificationRead(notificationId: string): Promise<ActionResult>
   markAllNotificationsRead(): Promise<ActionResult>
   sponsor(handle: string): Promise<ActionResult>
+  redeemSponsorCode(code: string): Promise<ActionResult>
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
   /**

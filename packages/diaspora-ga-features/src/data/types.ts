@@ -872,6 +872,7 @@ export interface SponsorshipView {
 }
 
 export interface SponsorDashboardView {
+  readonly code?: string | null
   readonly eligible: boolean
   readonly refusal: SponsorshipRefusal | null
   readonly remaining: number
