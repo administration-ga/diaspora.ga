@@ -30,6 +30,8 @@ vi.mock("@/components/gate", () => ({ Gate: () => null }))
 vi.mock("@/components/app-shell", () => ({ AppShell: () => null, useComposer: () => ({ canPublish: false, open: vi.fn() }) }))
 vi.mock("@/components/feed-pages", () => ({ FeedPages: () => null }))
 vi.mock("@/components/feed-stories", () => ({ FeedStories: () => null }))
+// Les lives en cours ont leurs propres scénarios (`feed-lives.test.tsx`) : ici, leur place dans le rail.
+vi.mock("@/components/feed-lives", () => ({ FeedLives: () => <section aria-label="Lives en cours" /> }))
 vi.mock("@/components/status-banner", () => ({ StatusBanner: () => null }))
 // Les suggestions ont leurs propres scénarios : ici, seulement leur place dans le rail.
 vi.mock("@diaspora-ga/features", async (importOriginal) => ({
@@ -91,7 +93,7 @@ const follows = (first: Element, second: Element) => (first.compareDocumentPosit
 afterEach(cleanup)
 
 describe("/fil — le rail droit au lancement (CH-816, P2)", () => {
-  it("dans l'ordre : des membres à rencontrer, le pays, ses pages (officielles d'abord), les évènements, le parrainage", () => {
+  it("dans l'ordre : des membres à rencontrer, le pays, ses pages (officielles d'abord), les évènements, les lives en cours, le parrainage", () => {
     renderRail({
       open: ["pages", "groupsAndEvents"],
       pages: { ...NO_PAGES, officialPages: [page("ambassade-france", "Ambassade (fictive)", "institution", "official")], associations: [page("amicale-lyon", "Amicale de Lyon (fictive)", "association")] },
@@ -104,7 +106,10 @@ describe("/fil — le rail droit au lancement (CH-816, P2)", () => {
     expect(follows(members, country)).toBe(true)
     expect(follows(country, pagesHeading)).toBe(true)
     expect(follows(pagesHeading, events)).toBe(true)
-    expect(follows(events, sponsor)).toBe(true)
+    // Les lives en cours à la place que leur donnent antsia.ga et administration.ga : après les évènements.
+    const lives = screen.getByRole("region", { name: "Lives en cours" })
+    expect(follows(events, lives)).toBe(true)
+    expect(follows(lives, sponsor)).toBe(true)
     const official = screen.getByRole("link", { name: /Ambassade \(fictive\)/ })
     const association = screen.getByRole("link", { name: /Amicale de Lyon \(fictive\)/ })
     expect(follows(official, association)).toBe(true)

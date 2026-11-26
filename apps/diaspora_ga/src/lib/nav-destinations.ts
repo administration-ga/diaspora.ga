@@ -5,6 +5,9 @@
  *  · une destination de la barre, cinq au plus (Fil, Membres, Services, Communautés, Messages) ;
  *  · une entrée personnelle du menu du compte, sous l'avatar, entrées des responsables comprises ;
  *  · une entrée du compte, sous l'avatar (profil, réglages) ;
+ *  · dans la coque mais sous AUCUNE entrée : la page d'un live, plein écran dans les applications
+ *    de référence (antsia.ga ne pose ni rail ni barre sur un direct ; administration.ga retire le
+ *    chrome de l'espace sur sa page de conférence, « un lieu du réseau sans onglet ») ;
  *  · hors de la coque : la porte, les pages publiques et « Mes données » hors adhésion.
  *
  * Menu léger (CH-816, lot P1) : la barre n'offre une destination que si elle a de quoi montrer.
@@ -57,10 +60,15 @@ export type OutsideShell = "door" | "public" | "outsideMembership"
 
 export type RouteKey = keyof typeof routes
 
-/** Le rangement d'une adresse de la table : une entrée, un profil (le sien ou celui d'un autre), ou hors de la coque. */
+/**
+ * Le rangement d'une adresse de la table : une entrée, un profil (le sien ou celui d'un autre), une
+ * page de la coque qui ne relève d'aucune entrée (`standalone` : rien n'y est « courant »), ou hors
+ * de la coque.
+ */
 export type RouteHome =
   | { readonly kind: "member"; readonly path: string; readonly destination: NavDestination }
   | { readonly kind: "person"; readonly path: string }
+  | { readonly kind: "standalone"; readonly path: string }
   | { readonly kind: "outside"; readonly reason: OutsideShell }
 
 /**
@@ -84,6 +92,7 @@ function segmentsOf(path: string): string[] {
 
 const member = (destination: NavDestination, href: string): RouteHome => ({ kind: "member", path: pathOf(href), destination })
 const person = (href: string): RouteHome => ({ kind: "person", path: pathOf(href) })
+const standalone = (href: string): RouteHome => ({ kind: "standalone", path: pathOf(href) })
 const outside = (reason: OutsideShell): RouteHome => ({ kind: "outside", reason })
 
 /**
@@ -120,10 +129,12 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   pageServices: member("explore", routes.pageServices(SEGMENT)),
   pageOpenJobs: member("explore", routes.pageOpenJobs(SEGMENT)),
   pageClaim: member("explore", routes.pageClaim(SEGMENT)),
-  // La page d'un direct (CH-817, servie l'interrupteur du direct ouvert) : rangée comme le volet des
-  // conférences de la coque du moteur (Découvrir). Elle s'ouvre sans coque ; la coque ne paraît
-  // autour d'elle que pour dire pourquoi elle est fermée à ce membre.
-  conference: member("explore", routes.conference(SEGMENT)),
+  // La page d'un live (CH-817, servie l'interrupteur du direct ouvert) : dans la coque depuis le
+  // 26/11/2026 (page large), mais sous AUCUNE entrée — ni Membres, ni Fil. Les applications de
+  // référence n'y marquent rien : antsia.ga n'y pose ni rail ni barre (`isLiveSessionPath`),
+  // administration.ga y retire le chrome de l'espace et n'y donne aucun onglet (« un lieu du
+  // réseau sans onglet »). Seul le VOLET des lives se range sous Découvrir dans le moteur.
+  conference: standalone(routes.conference(SEGMENT)),
   // Un profil : le sien relève du compte, celui d'un autre membre de Membres.
   profile: person(routes.profile(SEGMENT)),
   profilePreview: person(routes.profilePreview(SEGMENT)),
@@ -254,15 +265,17 @@ export function routeKeyOf(pathname: string): RouteKey | null {
 }
 
 /**
- * L'entrée de navigation dont relève ce chemin, ou `null` (hors de la coque, ou inconnu). Le
- * gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer` relève de « Mes pages »,
- * `/pages/<page>` de Membres, `/messages/<conversation>` de Messages ; `/servicesx` d'aucune.
+ * L'entrée de navigation dont relève ce chemin, ou `null` (hors de la coque, page de la coque sous
+ * aucune entrée, ou inconnu). Le gabarit le plus long qui le couvre l'emporte : `/pages/<page>/gerer`
+ * relève de « Mes pages », `/pages/<page>` de Membres, `/messages/<conversation>` de Messages ;
+ * `/direct/<session>` (la page d'un live) et `/servicesx` d'aucune.
  */
 export function navDestinationOf(pathname: string, ownHandle: string | null): NavDestination | null {
   const segments = segmentsOf(pathname)
   const best = bestRowOf(segments)
   if (best === null) return null
   if (best.home.kind === "member") return best.home.destination
+  if (best.home.kind === "standalone") return null
   const own = ownHandle === null ? undefined : segmentsOf(routes.profile(ownHandle))[0]
   return own !== undefined && segments[0] === own ? "profile" : "explore"
 }

@@ -35,6 +35,8 @@ import {
   MessageSquareMoreIcon,
   MessageSquareIcon,
   PhoneMissedIcon,
+  RadioIcon,
+  SquarePlayIcon,
   UserRoundPlusIcon,
   VoicemailIcon,
   type LucideIcon,
@@ -67,6 +69,7 @@ import {
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
   ICOM_NOTIFICATION_KINDS,
+  LIVE_NOTIFICATION_KINDS,
   PAGE_GOVERNANCE_NOTIFICATION_KINDS,
   REPORTER_NOTIFICATION_KINDS,
   SERVICE_NOTIFICATION_KINDS,
@@ -157,6 +160,12 @@ const KIND_ICONS: Readonly<Record<NotificationKind, LucideIcon>> = {
   personal_message: MessageSquareIcon,
   call_missed: PhoneMissedIcon,
   voicemail_left: VoicemailIcon,
+  // Lot `live` du moteur : l'antenne qui émet (la même icône que « Créer → Un live » et l'annonce du
+  // fil) pour le direct et ses invitations ; le replay publié, une vidéo à lire.
+  live_started: RadioIcon,
+  live_invite: RadioIcon,
+  live_antenna_invite: RadioIcon,
+  live_replay_published: SquarePlayIcon,
   other: BellIcon,
 }
 
@@ -184,6 +193,8 @@ export const BELL_ACTOR_LED_KINDS = [
   // IM-04 : l'auteur du message, de l'invitation, de l'appel ou du message vocal, par son profil publié ;
   // IC-09 : l'expéditeur d'un message à deux, de même.
   ...ICOM_NOTIFICATION_KINDS,
+  // Lot `live` : l'hôte du live, par son profil publié (« Awa est en direct. »).
+  ...LIVE_NOTIFICATION_KINDS,
 ] as const satisfies readonly NotificationKind[]
 type ActorLedKind = (typeof BELL_ACTOR_LED_KINDS)[number]
 const ACTOR_LED: ReadonlySet<NotificationKind> = new Set(BELL_ACTOR_LED_KINDS)

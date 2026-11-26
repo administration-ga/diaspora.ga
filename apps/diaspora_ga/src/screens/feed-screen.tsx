@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObj
 
 import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { FeedLives } from "@/components/feed-lives"
 import { FeedPages } from "@/components/feed-pages"
 import { FeedStories } from "@/components/feed-stories"
 import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
@@ -182,6 +183,10 @@ function Feed(props: { membership: MembershipView }) {
 
           <FeedStories now={now} />
 
+          {/* Les lives en cours, sous le bandeau des actus, là où le rail droit est retiré (sous 1 280 px) ;
+              dès 1 280 px, la même carte vit au rail droit (`FeedRail`) : jamais deux exemplaires à l'écran. */}
+          <FeedLives now={now} className="xl:hidden" />
+
           {/* La carte d'identité du fil, comme celle du réseau de l'administration : elle porte les gestes
               de création — publier, et inscrire son organisation (AS-05) — à la même place sur chaque visite. */}
           {composer.canPublish ? (
@@ -332,7 +337,9 @@ function railCounterShown(counter: CounterPresentation): boolean {
  * Rail droit (≥ 1 280 px), dans l'ordre de la fiche de lancement (CH-816, P2) : des membres à
  * rencontrer, la carte de mon pays, les pages du pays (AS-05 : les officielles d'abord, les
  * institutions à suivre), les prochains évènements (module des groupes et évènements ouvert,
- * HB-02), puis le rappel du parrainage. Un compteur à zéro ne s'affiche pas ; le nombre des
+ * HB-02), les lives en cours (26/11/2026, à la place que leur donnent antsia.ga et
+ * administration.ga : après les évènements ; rien sans live, ni en démonstration), puis le rappel
+ * du parrainage. Un compteur à zéro ne s'affiche pas ; le nombre des
  * évènements ne s'affiche que mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit
  * pas les évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
  */
@@ -400,6 +407,7 @@ export function FeedRail(props: { membership: MembershipView }) {
         )}
       </section>
       ) : null}
+      <FeedLives now={now} />
       <RailSponsorReminder membership={props.membership} />
     </>
   )

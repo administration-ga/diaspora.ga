@@ -9,6 +9,24 @@
   },
   "feed": {
     "shortcutLive": "Live",
-    "shortcutsLabelLive": "Post a photo or a video, or go live"
+    "shortcutsLabelLive": "Post a photo or a video, or go live",
+    "lives": {
+      "title": "Live now",
+      "since": "{{host}} · live for {{minutes}} min",
+      "justStarted": "{{host}} · just started",
+      "someone": "Network member",
+      "emptyWindow": "No accessible live in this window. Continue with “Show more”.",
+      "more": "Show more"
+    }
+  },
+  "bell": {
+    "openLive": "Watch the live",
+    "openLiveReplay": "Watch the replay",
+    "kind": {
+      "live_started": "is live.",
+      "live_invite": "invited you to their live.",
+      "live_antenna_invite": "invited you to speak in their live.",
+      "live_replay_published": "published the replay of their live."
+    }
   }
 }
