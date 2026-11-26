@@ -14,12 +14,19 @@
  *    serveur OVH (dossier `Stacks/rtc_antsia_demo` de l'infrastructure) ; la recette à deux comptes
  *    reste à faire avant toute annonce (`docs/36_MISE_EN_PRODUCTION.md`, § 6.3) ;
  *  · `icomPro` — l'espace iCom Pro, boutiques et mises en relation (`icomPro` du moteur, non
- *    déclaré) : fermé.
+ *    déclaré) : fermé ;
+ *  · `consulateGateway` — la passerelle « consulat.ga » (CH-863, lot D1, contrat
+ *    DIASPORA-PASSERELLE-V1) : le groupe « Démarches administratives » du menu du compte et le lien
+ *    au pied du rail du bureau. Une simple navigation vers une autre application, rien ne lui est
+ *    transmis ; elle n'existe que si l'adresse de consulat.ga est configurée
+ *    (`apps/diaspora_ga/src/lib/consulate-gateway.ts`). Ouverte le 26/11/2026 (plan approuvé de
+ *    CH-863). La carte de statut et la carte d'arrivée ne la lisent pas : leurs liens vers
+ *    consulat.ga ne dépendent que de l'adresse configurée.
  *
- * diaspora.ga prouve par un test que ces états sont ceux de son code : l'interrupteur des appels
- * et ce que son îlot iCom déclare au moteur (appels, direct, iCom Pro).
+ * diaspora.ga prouve par un test que ces états sont ceux de son code : l'interrupteur des appels,
+ * ce que son îlot iCom déclare au moteur (appels, direct, iCom Pro) et la passerelle consulat.ga.
  */
-export const MEMBERS_APP_CODE_SWITCHES = ["calls", "live", "icomPro"] as const
+export const MEMBERS_APP_CODE_SWITCHES = ["calls", "live", "icomPro", "consulateGateway"] as const
 export type MembersAppCodeSwitch = (typeof MEMBERS_APP_CODE_SWITCHES)[number]
 
 export type CodeSwitchState = "open" | "closed"
@@ -28,4 +35,5 @@ export const MEMBERS_APP_CODE_SWITCH_STATES: Readonly<Record<MembersAppCodeSwitc
   calls: "closed",
   live: "open",
   icomPro: "closed",
+  consulateGateway: "open",
 }

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 
 import { DIASPORA_GA_LOCALES } from "../i18n/resources"
 import { MEMBERS_APP_CODE_SWITCH_STATES, MEMBERS_APP_CODE_SWITCHES } from "./code-switches"
-import { MEMBER_CREATE_ICONS, MEMBER_MENU_ICONS } from "./icons"
+import { MEMBER_CREATE_ICONS, MEMBER_GATEWAY_ICONS, MEMBER_MENU_ICONS } from "./icons"
 import {
   audienceReached,
   canSeeRegistration,
@@ -14,6 +14,9 @@ import {
   MEMBER_COMMUNITY_FEATURES,
   MEMBER_CREATE_FORMATS,
   MEMBER_CREATE_RULES,
+  MEMBER_GATEWAY_ENTRIES,
+  MEMBER_GATEWAY_GROUP_LABEL_KEY,
+  MEMBER_GATEWAY_RULES,
   MEMBER_MENU_AUDIENCES,
   MEMBER_MENU_ENTRIES,
   MEMBER_MENU_ENTRY_IDS,
@@ -249,8 +252,62 @@ describe("table des entrées — complète et cohérente", () => {
     }
   })
 
-  it("appels, direct et iCom Pro : trois interrupteurs de code ; le direct ouvert le 26/11/2026, les deux autres fermés", () => {
-    expect(MEMBERS_APP_CODE_SWITCHES).toEqual(["calls", "live", "icomPro"])
-    expect(MEMBERS_APP_CODE_SWITCH_STATES).toEqual({ calls: "closed", live: "open", icomPro: "closed" })
+  it("appels, direct, iCom Pro et passerelle consulat.ga : quatre interrupteurs de code ; le direct et la passerelle ouverts le 26/11/2026, les deux autres fermés", () => {
+    expect(MEMBERS_APP_CODE_SWITCHES).toEqual(["calls", "live", "icomPro", "consulateGateway"])
+    expect(MEMBERS_APP_CODE_SWITCH_STATES).toEqual({ calls: "closed", live: "open", icomPro: "closed", consulateGateway: "open" })
+  })
+})
+
+describe("menu des membres — la passerelle « consulat.ga » (CH-863, lot D1), une sortie vers une autre application", () => {
+  /** La passerelle refermée par le code : une position posée par le test (celle du dépôt est ouverte). */
+  const GATEWAY_CLOSED: MemberCodeSwitchStates = { ...MEMBERS_APP_CODE_SWITCH_STATES, consulateGateway: "closed" }
+
+  it("une liste fermée à une entrée, hors des entrées internes : ni identifiant d'entrée, ni clé de route", () => {
+    expect(MEMBER_GATEWAY_ENTRIES).toEqual(["consulate"])
+    expect(MEMBER_MENU_ENTRY_IDS).not.toContain("consulate")
+    expect(Object.keys(MEMBER_MENU_ENTRIES)).not.toContain("consulate")
+    expect(MEMBER_GATEWAY_RULES.consulate).toEqual({ labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint", codeSwitch: "consulateGateway" })
+  })
+
+  it("ouverte par le code (la position du dépôt) : offerte à tout membre, quels que soient les modules et la situation", () => {
+    const nobody: MemberMenuSituation = { icom: false, engineNetwork: false, canPublish: false, status: "en_attente", holdsPageRole: false, holdsAssociation: false, moderator: false }
+    for (const features of ALL_FEATURE_SETS) {
+      for (const situation of [MEMBER, MEMBER_MENU_WIDEST_SITUATION, nobody]) {
+        expect(memberMenu({ ...situation, openFeatures: features }).gateways, features.join(",")).toEqual([
+          { id: "consulate", labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint" },
+        ])
+      }
+    }
+  })
+
+  it("refermée par le code : absente, quels que soient les modules", () => {
+    for (const features of ALL_FEATURE_SETS) expect(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: features, codeSwitches: GATEWAY_CLOSED }).gateways).toEqual([])
+    expect(codeSwitchAllows(MEMBER_GATEWAY_RULES.consulate, GATEWAY_CLOSED)).toBe(false)
+    expect(codeSwitchAllows(MEMBER_GATEWAY_RULES.consulate)).toBe(true)
+  })
+
+  it("la barre (rail et téléphone), le menu du compte, « Informations » et « Créer » ne changent pas, ouverte ou refermée", () => {
+    for (const features of ALL_FEATURE_SETS) {
+      const open = memberMenu({ ...MEMBER, openFeatures: features })
+      const closed = memberMenu({ ...MEMBER, openFeatures: features, codeSwitches: GATEWAY_CLOSED })
+      const { gateways: openGateways, ...openRest } = open
+      const { gateways: closedGateways, ...closedRest } = closed
+      expect(openGateways.length - closedGateways.length).toBe(1)
+      expect(openRest).toEqual(closedRest)
+      expect(open.phoneBar).toEqual(open.rail)
+    }
+  })
+
+  it("jamais un ajout de module : l'aperçu d'admin.diaspora.ga ne la compte dans aucun module", () => {
+    for (const feature of NETWORK_FEATURES) expect(featureMenuAdditions(feature).map((change) => change.id)).not.toContain("consulate")
+  })
+
+  it("son icône, son titre de groupe et ses libellés existent, en français et en anglais", () => {
+    expect(Object.keys(MEMBER_GATEWAY_ICONS)).toEqual([...MEMBER_GATEWAY_ENTRIES])
+    const lookup = (tree: unknown, key: string) => key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], tree)
+    for (const key of [MEMBER_GATEWAY_GROUP_LABEL_KEY, MEMBER_GATEWAY_RULES.consulate.labelKey, MEMBER_GATEWAY_RULES.consulate.hintKey]) {
+      expect(typeof lookup(DIASPORA_GA_LOCALES.fr, key), `fr ${key}`).toBe("string")
+      expect(typeof lookup(DIASPORA_GA_LOCALES.en, key), `en ${key}`).toBe("string")
+    }
   })
 })

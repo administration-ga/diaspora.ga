@@ -100,6 +100,7 @@ import enPostSharing from "./locales/en/post-sharing.json"
 import enPostSearch from "./locales/en/post-search.json"
 import enDemoGate from "./locales/en/demo-gate.json"
 import enPostAnnouncements from "./locales/en/post-announcements.json"
+import enConsulateGateway from "./locales/en/consulate-gateway.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -189,6 +190,7 @@ import frPostSharing from "./locales/fr/post-sharing.json"
 import frPostSearch from "./locales/fr/post-search.json"
 import frDemoGate from "./locales/fr/demo-gate.json"
 import frPostAnnouncements from "./locales/fr/post-announcements.json"
+import frConsulateGateway from "./locales/fr/consulate-gateway.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -297,6 +299,8 @@ export const LOCALE_PARTS = {
     "demo-gate": frDemoGate,
     // Lot A5 : le direct et l’évènement annoncés dans la carte de publication.
     "post-announcements": frPostAnnouncements,
+    // CH-863 (lot D1) : la passerelle consulat.ga et la porte d’arrivée.
+    "consulate-gateway": frConsulateGateway,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -396,6 +400,8 @@ export const LOCALE_PARTS = {
     "demo-gate": enDemoGate,
     // Lot A5 : le direct et l’évènement annoncés dans la carte de publication.
     "post-announcements": enPostAnnouncements,
+    // CH-863 (lot D1) : la passerelle consulat.ga et la porte d’arrivée.
+    "consulate-gateway": enConsulateGateway,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

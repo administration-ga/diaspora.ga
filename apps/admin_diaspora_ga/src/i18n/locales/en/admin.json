@@ -151,12 +151,14 @@
       "names": {
         "calls": "Calls",
         "live": "Live",
-        "icomPro": "iCom Pro"
+        "icomPro": "iCom Pro",
+        "consulateGateway": "consulat.ga gateway"
       },
       "descriptions": {
         "calls": "iCom audio and video calls, one-to-one and in groups.",
         "live": "Members’ lives: going live in front of their connections, the network or their guests.",
-        "icomPro": "iCom’s professional space: shops and introductions."
+        "icomPro": "iCom’s professional space: shops and introductions.",
+        "consulateGateway": "The “Administrative procedures” group of the account menu: a link to consulat.ga, in the same tab, which sends it nothing. It only appears when the consulat.ga address is configured."
       }
     },
     "dialog": {
@@ -231,7 +233,8 @@
     "createMenu": "Create",
     "account": "Account menu",
     "information": "Information",
-    "phoneBar": "Phone bar"
+    "phoneBar": "Phone bar",
+    "gatewayNote": "Link to another application, shown only when the consulat.ga address is configured."
   },
   "notice": {
     "region": "Notices",

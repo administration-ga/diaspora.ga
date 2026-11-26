@@ -43,6 +43,7 @@ import { HubMutualAidBlock } from "@/components/aid-on-the-way"
 import { AppShell, useComposer } from "@/components/app-shell"
 import { CommunityShortcuts, communityShortcutsOffered } from "@/components/community-shortcuts"
 import { FeedPages } from "@/components/feed-pages"
+import { ArrivalCard } from "@/components/arrival-card"
 import { Gate } from "@/components/gate"
 import { HubAbout, HubCountersNote, hubCountersMeasured } from "@/components/hub-about"
 import { countryEventsReader, HubEventsTab } from "@/components/hub-events"
@@ -214,6 +215,8 @@ function HubBody(props: HubContentProps & { readonly pages: HubPagesQuery | null
       ) : null}
 
       {isHome ? <StatusBanner membership={props.membership} /> : null}
+      {/* CH-863 : un nouveau membre venu de consulat.ga arrive sur le hub de son pays, pas sur le fil. */}
+      {isHome ? <ArrivalCard membership={props.membership} /> : null}
 
       {hub.status === "ready" && !hub.data.open ? (
         <FloatingNotice role="note" tone="pending" icon={<HourglassIcon />} heading={t("hub.notOpen")} dismissLabel={t("notice.dismiss")}>

@@ -267,9 +267,10 @@ const CODE_SWITCH_KEYS: Readonly<Record<MembersAppCodeSwitch, { readonly name: s
   calls: { name: "modules.code.names.calls", description: "modules.code.descriptions.calls" },
   live: { name: "modules.code.names.live", description: "modules.code.descriptions.live" },
   icomPro: { name: "modules.code.names.icomPro", description: "modules.code.descriptions.icomPro" },
+  consulateGateway: { name: "modules.code.names.consulateGateway", description: "modules.code.descriptions.consulateGateway" },
 }
 
-/** Appels, direct et iCom Pro : des interrupteurs du code de l'application des membres, lus ici sans aucun geste. */
+/** Appels, direct, iCom Pro et passerelle consulat.ga : des interrupteurs du code de l'application des membres, lus ici sans aucun geste. */
 function CodeSwitches() {
   const { t } = useTranslation(APP_NAMESPACE)
   const id = useId()

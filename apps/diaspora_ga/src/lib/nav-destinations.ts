@@ -105,6 +105,7 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   home: outside("door"),
   enter: outside("door"),
   register: outside("door"),
+  enterFromConsulate: outside("door"),
   enterAfterSignOut: outside("door"),
   enterIdn: outside("door"),
   enterCode: outside("door"),

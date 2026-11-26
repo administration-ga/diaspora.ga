@@ -116,6 +116,34 @@ describe("aperçu du menu — il part de l'état courant", () => {
   })
 })
 
+describe("aperçu du menu — la passerelle consulat.ga (CH-863, lot D1), en lecture seule", () => {
+  it("« Démarches administratives » dans le menu du compte, après ses entrées et avant les informations, sans lien ni case", () => {
+    mount()
+    const menu = memberMenu({ ...previewSituation(DEFAULT_PREVIEW_PERSON), openFeatures: ["pages"] })
+    expect(menu.gateways.map((entry) => entry.id)).toEqual(["consulate"])
+    const account = panel(t("preview.account"))
+    const group = within(account).getByRole("group", { name: members("consulateGateway.group") })
+    expect(labels(group)).toEqual(menu.gateways.map((entry) => `${members(entry.labelKey)}${members(entry.hintKey)}`))
+    expect(within(group).getByText(t("preview.gatewayNote"))).toBeInTheDocument()
+    expect(within(group).queryByRole("link")).toBeNull()
+    // Les entrées du compte d'abord, les informations après : la passerelle se tient entre les deux.
+    const information = within(account).getByRole("group", { name: t("preview.information") })
+    expect(group.compareDocumentPosition(information) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it("aucun module ne l'ajoute ni ne la retire : cocher ou décocher ne la fait jamais paraître dans les changements", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(checkbox("services"))
+    await user.click(checkbox("pages"))
+    expect(screen.queryByText(members("consulateGateway.entry.label"), { selector: "li *" })).toBeInTheDocument()
+    for (const heading of [t("preview.added"), t("preview.removed")]) {
+      const block = screen.queryByRole("heading", { level: 3, name: heading })?.parentElement
+      if (block) expect(within(block).queryByText(members("consulateGateway.entry.label"))).toBeNull()
+    }
+  })
+})
+
 describe("aperçu du menu — cocher pour voir, sans rien écrire", () => {
   it.each([
     [["services"], ["pages", "services"]],

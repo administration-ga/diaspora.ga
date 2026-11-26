@@ -230,11 +230,11 @@ describe("section Modules — les cartes", () => {
     expect(card("pages").queryByText(t("modules.card.prerequisites"))).toBeNull()
   })
 
-  it("appels, direct et iCom Pro : en lecture seule, sans aucun geste ; le direct « ouvert par le code » (26/11/2026), les deux autres « fermé par le code »", () => {
+  it("appels, direct, iCom Pro et passerelle consulat.ga : en lecture seule, sans aucun geste ; le direct et la passerelle « ouverts par le code » (26/11/2026), les deux autres « fermé par le code »", () => {
     mount()
     const section = within(screen.getByRole("heading", { level: 2, name: t("modules.code.title") }).closest("section")!)
-    const expected = { calls: "modules.code.closedByCode", live: "modules.code.openByCode", icomPro: "modules.code.closedByCode" } as const
-    for (const key of ["calls", "live", "icomPro"] as const) {
+    const expected = { calls: "modules.code.closedByCode", live: "modules.code.openByCode", icomPro: "modules.code.closedByCode", consulateGateway: "modules.code.openByCode" } as const
+    for (const key of ["calls", "live", "icomPro", "consulateGateway"] as const) {
       const item = within(section.getByRole("heading", { level: 3, name: t(`modules.code.names.${key}`) }).closest("li")!)
       expect(item.getByText(t(expected[key]))).toBeInTheDocument()
       expect(item.getByText(n(t(`modules.code.descriptions.${key}`)))).toBeInTheDocument()

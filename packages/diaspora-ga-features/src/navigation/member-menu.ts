@@ -5,8 +5,9 @@
  * Le menu reste du CODE ; les modules du réseau (ADR-0041 du moteur) sont le seul levier. Cette
  * fonction dit, pour des modules ouverts et une situation de membre, le menu EXACT que la coque
  * de diaspora.ga monte : la barre (rail du bureau et barre basse du téléphone, même liste), le
- * menu du compte (profil, réglages, « Mon espace », mes données), son groupe « Informations » et
- * les formats de « Créer ». La coque des membres la lit pour monter ses entrées ; l'aperçu
+ * menu du compte (profil, réglages, « Mon espace », mes données), son groupe « Informations », les
+ * formats de « Créer » et les passerelles vers une autre application (« Démarches
+ * administratives », CH-863). La coque des membres la lit pour monter ses entrées ; l'aperçu
  * d'admin.diaspora.ga la lit pour montrer le menu avant d'ouvrir un module. Un test commun de
  * diaspora.ga verrouille que la coque rend exactement ce qu'elle renvoie.
  *
@@ -199,6 +200,37 @@ export const MEMBER_CREATE_RULES: Readonly<Record<MemberCreateFormatId, MemberCr
 export type MemberCodeSwitchStates = Readonly<Record<MembersAppCodeSwitch, CodeSwitchState>>
 
 // ═══════════════════════════════════════════════════════════════
+// Les passerelles : sortir vers une AUTRE application de la même identité
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Les passerelles du menu du compte (CH-863, lot D1, contrat DIASPORA-PASSERELLE-V1) : des sorties
+ * vers une autre application, dans le même onglet, qui ne lui transmettent rien. Ce ne sont ni des
+ * entrées internes (aucune clé dans la table des routes : `MemberMenuEntryId` et
+ * `MemberMenuRouteKey` restent « internes seulement »), ni des modules du réseau : un interrupteur
+ * de CODE les ouvre, l'application compose leur adresse depuis sa configuration et les retire
+ * quand l'adresse manque. Elles tiennent dans le groupe « Démarches administratives », entre
+ * « Mon espace » et « Mes données ».
+ */
+export const MEMBER_GATEWAY_ENTRIES = ["consulate"] as const
+export type MemberGatewayId = (typeof MEMBER_GATEWAY_ENTRIES)[number]
+
+/** Le titre du groupe des passerelles, dans le menu du compte (espace `diaspora-ga`). */
+export const MEMBER_GATEWAY_GROUP_LABEL_KEY = "consulateGateway.group"
+
+/** La règle d'une passerelle : son libellé, sa ligne d'explication et l'interrupteur de code qui l'ouvre. */
+export interface MemberGatewayRule {
+  readonly labelKey: string
+  /** Dit qu'elle ouvre une autre application (annoncé avec l'entrée). */
+  readonly hintKey: string
+  readonly codeSwitch: MembersAppCodeSwitch
+}
+
+export const MEMBER_GATEWAY_RULES: Readonly<Record<MemberGatewayId, MemberGatewayRule>> = {
+  consulate: { labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint", codeSwitch: "consulateGateway" },
+}
+
+// ═══════════════════════════════════════════════════════════════
 // La situation du membre
 // ═══════════════════════════════════════════════════════════════
 
@@ -289,6 +321,13 @@ export interface MemberCreateEntry {
   readonly hintKey: string
 }
 
+/** Une passerelle offerte : son identifiant fermé et ses libellés ; l'application compose l'adresse. */
+export interface MemberGatewayEntry {
+  readonly id: MemberGatewayId
+  readonly labelKey: string
+  readonly hintKey: string
+}
+
 export interface MemberMenu {
   /** Le rail du bureau : la barre, dans l'ordre. */
   readonly rail: readonly MemberMenuEntry[]
@@ -302,6 +341,12 @@ export interface MemberMenu {
   readonly information: readonly MemberMenuEntry[]
   /** « Créer » : sous « Publier » au bureau, dans la feuille du compte au téléphone. */
   readonly create: readonly MemberCreateEntry[]
+  /**
+   * Les passerelles vers une autre application (« Démarches administratives » du menu du compte) :
+   * celles que le code ouvre, pour tout membre que la coque accueille. Hors de la barre et de
+   * « Mon espace » : aucun module ne les ajoute ni ne les retire.
+   */
+  readonly gateways: readonly MemberGatewayEntry[]
 }
 
 /** L'entrée paraît-elle ? Son module servi, le module qui l'offre servi, son public touché. */
@@ -331,6 +376,9 @@ export function memberMenu(input: MemberMenuInput): MemberMenu {
     const rule = MEMBER_CREATE_RULES[id]
     return { id, routeKey: rule.routeKey, pageKind: rule.pageKind, labelKey: rule.labelKey, hintKey: rule.hintKey }
   })
+  const gateways = MEMBER_GATEWAY_ENTRIES.filter((id) => codeSwitchAllows(MEMBER_GATEWAY_RULES[id], switches)).map(
+    (id): MemberGatewayEntry => ({ id, labelKey: MEMBER_GATEWAY_RULES[id].labelKey, hintKey: MEMBER_GATEWAY_RULES[id].hintKey }),
+  )
   return {
     rail: bar,
     phoneBar: bar,
@@ -338,6 +386,7 @@ export function memberMenu(input: MemberMenuInput): MemberMenu {
     account: [...pick(MEMBER_ACCOUNT_ENTRIES), ...personal, ...pick([MEMBER_DATA_ENTRY])],
     information: pick(MEMBER_INFORMATION_ENTRIES),
     create,
+    gateways,
   }
 }
 

@@ -14,6 +14,9 @@ export {
   MEMBER_CREATE_FORMATS,
   MEMBER_CREATE_RULES,
   MEMBER_DATA_ENTRY,
+  MEMBER_GATEWAY_ENTRIES,
+  MEMBER_GATEWAY_GROUP_LABEL_KEY,
+  MEMBER_GATEWAY_RULES,
   MEMBER_INFORMATION_ENTRIES,
   MEMBER_MENU_AUDIENCES,
   MEMBER_MENU_ENTRIES,
@@ -31,6 +34,9 @@ export {
   type MemberCreateEntry,
   type MemberCreateFormatId,
   type MemberCreateFormatRule,
+  type MemberGatewayEntry,
+  type MemberGatewayId,
+  type MemberGatewayRule,
   type MemberMenu,
   type MemberMenuAudience,
   type MemberMenuChange,
@@ -42,6 +48,6 @@ export {
   type MemberMenuRouteKey,
   type MemberMenuSituation,
 } from "./member-menu"
-export { MEMBER_CREATE_ICONS, MEMBER_INFORMATION_ICON, MEMBER_MENU_ICONS } from "./icons"
+export { MEMBER_CREATE_ICONS, MEMBER_GATEWAY_ICONS, MEMBER_INFORMATION_ICON, MEMBER_MENU_ICONS } from "./icons"
 export { MEMBERS_APP_CODE_SWITCH_STATES, MEMBERS_APP_CODE_SWITCHES, type CodeSwitchState, type MembersAppCodeSwitch } from "./code-switches"
 export { MODERATION_DESK_TABS, moderationDeskPath, type ModerationDeskTab } from "./moderation-desk"

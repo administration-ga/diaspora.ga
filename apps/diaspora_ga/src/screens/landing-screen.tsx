@@ -3,12 +3,14 @@
 import { Button } from "@diaspora-ga/features"
 import { type ActionErrorCode, type EntryDoorsErrorCode, useActions, useDataSource, useEntryDoors } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
+import { MEMBER_GATEWAY_ICONS } from "@diaspora-ga/features/navigation"
 import { IdCardIcon, LockKeyholeIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
+import { rememberArrival, type ArrivalOrigin } from "@/lib/arrival"
 import { forgetIdnReturnError } from "@/lib/idn-return"
 import { CONSULAR_ATTESTATION_ANNOUNCED } from "@/lib/public-offer"
 import { routes } from "@/lib/routes"
@@ -27,20 +29,39 @@ export type EntryIntent = "sign-in" | "sign-up"
  *
  * `idnRefusal` : l'échec d'un passage par IDN, lu par la page `/entrer` dans l'adresse de retour
  * (`lib/idn-return.ts`) ; la porte le dit, puis retire le code de l'adresse.
+ *
+ * `arrival` (CH-863, `/entrer?depuis=consulat`) : la personne arrive de consulat.ga. La porte le
+ * dit en une ligne, l'entrée par l'identité numérique devient l'action principale — le départ
+ * EXISTANT, inchangé, jamais lancé d'office —, et le code par e-mail reste offert. L'arrivée est
+ * retenue dans l'onglet (`lib/arrival.ts`) pour la carte d'arrivée du fil.
  */
-export function LandingScreen(props: { intent?: EntryIntent; signOutIncomplete?: boolean; idnRefusal?: EntryDoorsErrorCode | null } = {}) {
+export function LandingScreen(
+  props: { intent?: EntryIntent; signOutIncomplete?: boolean; idnRefusal?: EntryDoorsErrorCode | null; arrival?: ArrivalOrigin | null } = {},
+) {
   return (
     <EntryDoor after={<DoorVision showJoin={props.intent !== "sign-up"} />}>
-      <AccessCard signUp={props.intent === "sign-up"} signOutIncomplete={props.signOutIncomplete === true} idnRefusal={props.idnRefusal ?? null} />
+      <AccessCard
+        signUp={props.intent === "sign-up"}
+        signOutIncomplete={props.signOutIncomplete === true}
+        idnRefusal={props.idnRefusal ?? null}
+        arrival={props.arrival ?? null}
+      />
     </EntryDoor>
   )
 }
 
 /** Même accès par code sur l'accueil et sur sa page dédiée : aucune seconde authentification. */
-function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRefusal: EntryDoorsErrorCode | null }) {
+function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRefusal: EntryDoorsErrorCode | null; arrival: ArrivalOrigin | null }) {
   const { t } = useDiasporaGaT()
   const source = useDataSource()
+  const { arrival } = props
+  // Retenue AVANT le départ d'une session déjà ouverte (effet déclaré avant celui de la sortie) :
+  // le fil la lira pour sa carte d'arrivée.
+  useEffect(() => {
+    if (arrival !== null) rememberArrival(arrival)
+  }, [arrival])
   useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
+  const ArrivalIcon = MEMBER_GATEWAY_ICONS.consulate
   return (
     <section aria-labelledby="acces-titre" className="rounded-xl bg-card p-4 shadow-float sm:p-6">
       {props.signUp ? (
@@ -66,7 +87,16 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           {t("entry.signOutIncomplete")}
         </p>
       ) : null}
-      <IdnEntry refusal={props.idnRefusal} />
+      {arrival !== null ? (
+        <div role="note" className="mb-4 flex items-start gap-3 rounded-lg bg-muted p-3">
+          <ArrivalIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div className="min-w-0 text-sm leading-snug">
+            <p className="font-semibold">{t("consulateGateway.arrival.door")}</p>
+            <p className="mt-0.5 text-muted-foreground">{t("consulateGateway.arrival.doorHint")}</p>
+          </div>
+        </div>
+      ) : null}
+      <IdnEntry refusal={props.idnRefusal} arrival={arrival !== null} />
       <div className="my-4 flex items-center gap-3 text-[13px] text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         <span>{t("landing.or")}</span>
@@ -107,21 +137,27 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
   )
 }
 
-/** IDN en démonstration : la simulation de `/entrer/idn`, inchangée. Avec le moteur : la vraie porte. */
-function IdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
+/**
+ * IDN en démonstration : la simulation de `/entrer/idn`, inchangée. Avec le moteur : la vraie porte.
+ * À l'arrivée depuis consulat.ga (CH-863), le même départ devient l'action principale, sous le
+ * libellé « Continuer avec mon identité numérique » ; rien d'autre ne change.
+ */
+function IdnEntry(props: { refusal: EntryDoorsErrorCode | null; arrival: boolean }) {
   const { t } = useDiasporaGaT()
   const source = useDataSource()
+  const labelKey = props.arrival ? "consulateGateway.arrival.continueIdn" : "landing.idnContinue"
+  const variant = props.arrival ? "primary" : "outline"
   if (source.kind === "demo") {
     return (
-      <Button asChild size="lg" variant="outline" className="w-full">
+      <Button asChild size="lg" variant={variant} className="w-full">
         <NextLink href={routes.enterIdn()}>
           <IdCardIcon aria-hidden />
-          {t("landing.idnContinue")}
+          {t(labelKey)}
         </NextLink>
       </Button>
     )
   }
-  return <EngineIdnEntry refusal={props.refusal} />
+  return <EngineIdnEntry refusal={props.refusal} labelKey={labelKey} variant={variant} />
 }
 
 /**
@@ -130,7 +166,7 @@ function IdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
  * moteur). « Disponible prochainement » ne se dit que d'une porte fermée. Un départ refusé, ou
  * l'échec rapporté au retour d'IDN, se dit sous le bouton, traduit.
  */
-function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
+function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null; labelKey: string; variant: "primary" | "outline" }) {
   const { t } = useDiasporaGaT()
   const doors = useEntryDoors()
   const actions = useActions()
@@ -184,7 +220,7 @@ function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
     <>
       <Button
         size="lg"
-        variant="outline"
+        variant={props.variant}
         className="w-full"
         disabled={!open || pending}
         aria-busy={pending || undefined}
@@ -192,7 +228,7 @@ function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null }) {
         onClick={() => void start()}
       >
         <IdCardIcon aria-hidden />
-        {pending ? t("entryDoors.idnStarting") : t("landing.idnContinue")}
+        {pending ? t("entryDoors.idnStarting") : t(props.labelKey)}
       </Button>
       <p id={helpId} className="mt-2 text-center text-[13px] text-muted-foreground">
         {help}
