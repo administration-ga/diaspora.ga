@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspora-ga/features"
-import { DataSourceProvider, type DiasporaGaDataSource, type Loadable, type MembershipView, type SessionView } from "@diaspora-ga/features/data"
+import { GatedDataSourceProvider, NETWORK_FEATURES, type DiasporaGaDataSource, type Loadable, type MembershipView, type NetworkFeature, type SessionView } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
@@ -16,18 +16,22 @@ import { routes } from "@/lib/routes"
 import { AppShell } from "./app-shell"
 
 /**
- * CH-863, lot D1 — la passerelle « consulat.ga » dans la coque des membres : le groupe
+ * CH-863 — la passerelle « consulat.ga » dans la coque des membres : le groupe
  * « Démarches administratives » du menu du compte (bureau et téléphone), entre « Mon espace » et
  * « Mes données », et un lien discret au pied du rail du bureau. Un vrai lien vers consulat.ga,
  * dans le même onglet ; la première fois, un clic simple ouvre la feuille d'information ; ensuite,
- * il mène directement. Sans adresse configurée, ou interrupteur de code fermé : rien.
+ * il mène directement. Elle est réglée par le module du réseau `consulateGateway`, fermé par
+ * défaut et ouvert dans admin.diaspora.ga : module fermé, lecture des modules en cours, ou adresse
+ * de consulat.ga absente, rien n'est monté. La coque est montée comme dans l'application : par le
+ * fournisseur GARDÉ, qui lit les modules ouverts du réseau.
  */
 const mocks = vi.hoisted(() => ({
   pathname: "/fil",
   desktop: true,
   consulateUrl: null as string | null,
   idnPortalUrl: null as string | null,
-  gatewayClosed: false,
+  /** Les modules que le réseau dit ouverts (`networks/features.open`) ; `null` : la lecture n'a pas encore répondu. */
+  openFeatures: ["consulateGateway"] as readonly string[] | null,
   /** Les liens vers consulat.ga que le navigateur suivrait (clic non intercepté), dans l'ordre. */
   followed: [] as string[],
 }))
@@ -45,14 +49,6 @@ vi.mock("@/lib/env", async (importOriginal) => {
         return mocks.idnPortalUrl
       },
     },
-  }
-})
-vi.mock("@diaspora-ga/features/navigation", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@diaspora-ga/features/navigation")>()
-  return {
-    ...actual,
-    memberMenu: (input: Parameters<typeof actual.memberMenu>[0]) =>
-      actual.memberMenu(mocks.gatewayClosed ? { ...input, codeSwitches: { ...actual.MEMBERS_APP_CODE_SWITCH_STATES, consulateGateway: "closed" } } : input),
   }
 })
 vi.mock("@antsia/social-features/features/iappel/conference-launch-store", () => ({ requestConferenceLaunch: vi.fn() }))
@@ -144,18 +140,24 @@ function renderShell(options: { membership?: MembershipView; idn?: boolean } = {
   const membership = options.membership ?? MEMBER
   const demo = createDemoDataSource(new DemoStore(null, () => NOW, 0))
   const session = sessionOf(membership, options.idn ?? false)
-  const source: DiasporaGaDataSource = { ...demo, useSession: () => session }
-  return render(
+  // Les modules ouverts, tels que le moteur les rend à un membre ; lus à chaque rendu.
+  const open = (): Loadable<readonly NetworkFeature[]> =>
+    mocks.openFeatures === null ? { status: "loading" } : { status: "ready", data: NETWORK_FEATURES.filter((feature) => mocks.openFeatures?.includes(feature)) }
+  const source: DiasporaGaDataSource = { ...demo, useSession: () => session, networkFeatures: { useOpen: open } }
+  const tree = () => (
     <I18nProvider locale="fr">
-      <DataSourceProvider source={source}>
+      <GatedDataSourceProvider source={source}>
         <RoutingProvider routes={featureRoutes} Link={Link}>
           <AppShell membership={membership}>
             <p>Contenu</p>
           </AppShell>
         </RoutingProvider>
-      </DataSourceProvider>
-    </I18nProvider>,
+      </GatedDataSourceProvider>
+    </I18nProvider>
   )
+  const view = render(tree())
+  /** Le réseau a répondu, ou une décision est tombée : le même arbre relit les modules ouverts. */
+  return { ...view, refresh: () => view.rerender(tree()) }
 }
 
 /** Note les liens vers consulat.ga que le navigateur suivrait, sans laisser jsdom naviguer. */
@@ -186,7 +188,8 @@ beforeEach(() => {
   mocks.desktop = true
   mocks.consulateUrl = ORIGIN
   mocks.idnPortalUrl = null
-  mocks.gatewayClosed = false
+  // L'administrateur du réseau a ouvert le module : l'état des tests qui regardent la passerelle.
+  mocks.openFeatures = ["consulateGateway"]
   mocks.followed = []
   window.localStorage.clear()
   window.addEventListener("click", recordOutboundClicks)
@@ -208,12 +211,51 @@ describe("coque — passerelle consulat.ga absente", () => {
     expect(within(menu).queryByRole("menuitem", { name: t("consulateGateway.entry.label") })).toBeNull()
   })
 
-  it("interrupteur de code fermé : rien non plus, même avec l'adresse", async () => {
-    mocks.gatewayClosed = true
+  it("module fermé (aucune décision : l'état de départ du réseau) : rien, même avec l'adresse, au bureau", async () => {
+    mocks.openFeatures = []
     renderShell()
     expect(screen.queryByRole("link", { name: t("consulateGateway.rail") })).toBeNull()
     const menu = await openAccountMenu()
     expect(within(menu).queryByRole("group", { name: GROUP })).toBeNull()
+    expect(within(menu).queryByRole("menuitem", { name: t("consulateGateway.entry.label") })).toBeNull()
+  })
+
+  it("module fermé : rien non plus au téléphone, dans la feuille du compte", async () => {
+    mocks.openFeatures = []
+    mocks.desktop = false
+    const user = userEvent.setup()
+    renderShell()
+    await user.click(accountTrigger("dialog"))
+    const account = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(within(account).queryByRole("group", { name: GROUP })).toBeNull()
+    expect(within(account).queryByRole("link", { name: t("consulateGateway.entry.label") })).toBeNull()
+  })
+
+  it("tous les autres modules ouverts, pas le sien : rien — aucun autre module ne l'apporte", async () => {
+    mocks.openFeatures = NETWORK_FEATURES.filter((feature) => feature !== "consulateGateway")
+    renderShell()
+    expect(screen.queryByRole("link", { name: t("consulateGateway.rail") })).toBeNull()
+    const menu = await openAccountMenu()
+    expect(within(menu).queryByRole("group", { name: GROUP })).toBeNull()
+  })
+
+  it("tant que la lecture des modules n'a pas répondu : rien ; elle paraît dès que le réseau la dit ouverte, et se retire s'il la referme, sans rechargement", () => {
+    mocks.openFeatures = null
+    const view = renderShell()
+    expect(screen.queryByRole("link", { name: t("consulateGateway.rail") })).toBeNull()
+    mocks.openFeatures = ["consulateGateway"]
+    view.refresh()
+    expect(screen.getByRole("link", { name: t("consulateGateway.rail") })).toHaveAttribute("href", LINKS.mySpace)
+    mocks.openFeatures = []
+    view.refresh()
+    expect(screen.queryByRole("link", { name: t("consulateGateway.rail") })).toBeNull()
+  })
+
+  it("module ouvert par l'administrateur du réseau, seul : la passerelle paraît, sans qu'aucun autre module le soit", async () => {
+    renderShell()
+    expect(screen.getByRole("link", { name: t("consulateGateway.rail") })).toHaveAttribute("href", LINKS.mySpace)
+    const menu = await openAccountMenu()
+    expect(within(within(menu).getByRole("group", { name: GROUP })).getByRole("menuitem", { name: t("consulateGateway.entry.label") })).toHaveAttribute("href", LINKS.mySpace)
   })
 })
 

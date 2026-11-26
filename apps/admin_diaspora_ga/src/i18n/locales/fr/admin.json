@@ -139,6 +139,7 @@
     },
     "prerequisite": {
       "parentOpen": "Le module exigé est ouvert : {{module}}.",
+      "consulateAddress": "L’adresse de consulat.ga est configurée dans l’application des membres : sans elle, l’entrée ne s’affiche pas.",
       "team": "Une équipe de modération est en place pour chaque pays ouvert.",
       "texts": "Les textes du module sont relus, en français et en anglais.",
       "rehearsal": "La recette du module est faite en démonstration."
@@ -151,14 +152,12 @@
       "names": {
         "calls": "Appels",
         "live": "Live (direct)",
-        "icomPro": "iCom Pro",
-        "consulateGateway": "Passerelle consulat.ga"
+        "icomPro": "iCom Pro"
       },
       "descriptions": {
         "calls": "Les appels audio et vidéo d’iCom, à deux et en groupe.",
         "live": "Les lives des membres : passer en direct devant ses relations, le réseau ou ses invités.",
-        "icomPro": "L’espace professionnel d’iCom : boutiques et mises en relation.",
-        "consulateGateway": "Le groupe « Démarches administratives » du menu du compte : un lien vers consulat.ga, dans le même onglet, qui ne lui transmet rien. Il n’apparaît que si l’adresse de consulat.ga est configurée."
+        "icomPro": "L’espace professionnel d’iCom : boutiques et mises en relation."
       }
     },
     "dialog": {
@@ -166,6 +165,8 @@
       "closeTitle": "Fermer « {{module}} »",
       "openDescription": "Le module apparaîtra pour tous les membres du réseau, et le moteur servira ses pages.",
       "closeDescription": "Le module disparaîtra pour tous les membres du réseau, et le moteur refusera ses pages. Aucune donnée n’est supprimée : le rouvrir les retrouve.",
+      "openConsulateDescription": "L’entrée apparaîtra dans le menu du compte de tous les membres du réseau. Elle mène à consulat.ga, une autre application : rien ne lui est transmis.",
+      "closeConsulateDescription": "L’entrée disparaîtra du menu du compte de tous les membres du réseau. Rien n’est supprimé : rouvrir le module la fait revenir.",
       "effectAdded": "Apparaît dans le menu des membres",
       "effectRemoved": "Disparaît du menu des membres",
       "effectNone": "Le menu des membres ne change pas : ses entrées sont déjà offertes par un autre module ouvert.",
@@ -189,6 +190,7 @@
     "placement": {
       "bar": "barre de navigation",
       "account": "menu du compte",
+      "gateways": "menu du compte, groupe « {{group}} »",
       "create": "menu « Créer »"
     },
     "audience": {

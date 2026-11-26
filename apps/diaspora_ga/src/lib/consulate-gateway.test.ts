@@ -1,5 +1,6 @@
 import { CONSULATE_DESTINATIONS, consulateDestinationUrl } from "@diaspora-ga/domain"
-import { MEMBERS_APP_CODE_SWITCH_STATES } from "@diaspora-ga/features/navigation"
+import { NETWORK_FEATURES } from "@diaspora-ga/features/data"
+import { MEMBER_GATEWAY_RULES, MEMBERS_APP_CODE_SWITCHES } from "@diaspora-ga/features/navigation"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 const env = vi.hoisted(() => ({ consulateUrl: null as string | null }))
@@ -16,9 +17,9 @@ vi.mock("./env", async (importOriginal) => {
   }
 })
 
+import * as gateway from "./consulate-gateway"
 import {
   CONSULATE_GATEWAY_SEEN_KEY,
-  CONSULATE_GATEWAY_SWITCH,
   CONSULATE_LINK_ATTRIBUTES,
   configuredConsulateGateway,
   consulateGatewayLinks,
@@ -70,9 +71,12 @@ describe("passerelle consulat.ga — les adresses, depuis la configuration", () 
     expect(CONSULATE_LINK_ATTRIBUTES).not.toHaveProperty("target")
   })
 
-  it("admin.diaspora.ga dit vrai : l'interrupteur qu'elle montre est celui que la coque lit, ouvert", () => {
-    expect(CONSULATE_GATEWAY_SWITCH).toBe(MEMBERS_APP_CODE_SWITCH_STATES.consulateGateway)
-    expect(CONSULATE_GATEWAY_SWITCH).toBe("open")
+  it("plus aucun interrupteur de code : le module du réseau `consulateGateway` règle l'entrée, ouvert et fermé dans admin.diaspora.ga", () => {
+    expect(MEMBER_GATEWAY_RULES.consulate.feature).toBe("consulateGateway")
+    expect(NETWORK_FEATURES).toContain(MEMBER_GATEWAY_RULES.consulate.feature)
+    expect(MEMBERS_APP_CODE_SWITCHES as readonly string[]).not.toContain("consulateGateway")
+    // Ce module ne décide de rien : il compose des adresses et retient « déjà vu ».
+    expect(Object.keys(gateway)).not.toContain("CONSULATE_GATEWAY_SWITCH")
   })
 })
 

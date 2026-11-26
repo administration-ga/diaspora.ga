@@ -4,8 +4,8 @@
  * Adaptateur moteur de la capacité « fonctionnalités du réseau » (ADR-0041 du moteur).
  *
  * Fonction du moteur, `networks/features.open`, bornée par le réseau `diaspora-ga` : les clés
- * ouvertes, pour tout membre (rien d'autre). L'état des huit et la bascule motivée se lisent et
- * se posent dans l'application d'administration du réseau (fiche CH-815, D5, lots A5 et A6).
+ * ouvertes, pour tout membre (rien d'autre). L'état de chaque module et la bascule motivée se lisent
+ * et se posent dans l'application d'administration du réseau (fiche CH-815, D5, lots A5 et A6).
  * Hors session, hors réseau ou hors adhésion, rien n'est ouvert, sans appel inutile ; une
  * lecture refusée n'ouvre rien non plus.
  */

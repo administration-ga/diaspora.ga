@@ -1,5 +1,5 @@
 /**
- * La passerelle « consulat.ga » de DIASPORA.GA (CH-863, lot D1, contrat DIASPORA-PASSERELLE-V1,
+ * La passerelle « consulat.ga » de DIASPORA.GA (CH-863, contrat DIASPORA-PASSERELLE-V1,
  * `docs/contrats/DIASPORA-PASSERELLE-V1.md`).
  *
  * DIASPORA.GA et consulat.ga restent deux applications (deux dépôts, deux bases, deux sessions),
@@ -10,12 +10,18 @@
  * déjà configurée (`publicEnv.consulateUrl`, `NEXT_PUBLIC_CONSULATE_URL`, au catalogue de
  * déploiement) : adresse absente ou invalide, la passerelle n'existe pas du tout.
  *
+ * Ce module ne décide PAS si l'entrée du menu s'affiche : c'est le module du réseau
+ * `consulateGateway` (ADR-0041 du moteur), fermé par défaut, que l'administrateur du réseau ouvre
+ * et ferme dans admin.diaspora.ga ; le menu partagé le lit (`MEMBER_GATEWAY_RULES`,
+ * `@diaspora-ga/features/navigation`) et la coque ne monte l'entrée et le lien du rail que s'il
+ * est ouvert ET que l'adresse est configurée. La carte de statut et la carte d'arrivée, elles, ne
+ * dépendent que de l'adresse configurée.
+ *
  * La première fois, un clic simple ouvre une feuille d'information, choisie selon l'état de la
  * personne (`consulateGatewayState`) ; ensuite le lien mène directement. « Déjà vu » se garde dans
  * ce navigateur, jamais sur le serveur.
  */
 import { consulateDestinationUrl, type AttestationOutcome, type MembershipStatus } from "@diaspora-ga/domain"
-import { MEMBERS_APP_CODE_SWITCH_STATES, type CodeSwitchState } from "@diaspora-ga/features/navigation"
 
 import { publicEnv } from "./env"
 
@@ -36,12 +42,6 @@ export function consulateGatewayLinks(origin: string | null | undefined): Consul
 export function configuredConsulateGateway(): ConsulateGatewayLinks | null {
   return consulateGatewayLinks(publicEnv.consulateUrl)
 }
-
-/**
- * L'interrupteur de code de la passerelle, celui que montre admin.diaspora.ga en lecture seule et
- * que lit le menu partagé (`MEMBER_GATEWAY_RULES`) : une seule valeur.
- */
-export const CONSULATE_GATEWAY_SWITCH: CodeSwitchState = MEMBERS_APP_CODE_SWITCH_STATES.consulateGateway
 
 /**
  * Les attributs de tout lien vers consulat.ga : le même onglet (aucune cible), aucun ouvreur,

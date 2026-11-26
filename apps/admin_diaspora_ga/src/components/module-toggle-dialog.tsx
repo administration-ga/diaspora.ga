@@ -6,7 +6,7 @@ import { api } from "@convex/_generated/api"
 import type { Id } from "@convex/_generated/dataModel"
 import { Button, Field, Sheet, SheetContent, Textarea } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { MEMBER_MENU_WIDEST_SITUATION, memberMenu, menuDifference } from "@diaspora-ga/features/navigation"
+import { gatewayOfFeature, MEMBER_MENU_WIDEST_SITUATION, memberMenu, menuDifference, type MemberGatewayId } from "@diaspora-ga/features/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "convex/react"
 import { Power, PowerOff } from "lucide-react"
@@ -29,6 +29,17 @@ const reasonSchema = z.object({
   reason: z.string().trim().min(REASON_BOUNDS.min, "modules.dialog.reasonLength").max(REASON_BOUNDS.max, "modules.dialog.reasonLength"),
 })
 type ReasonValues = z.infer<typeof reasonSchema>
+
+/** Ce que la fenêtre annonce pour un module ordinaire : son menu, et les pages que le moteur sert ou refuse. */
+const DESCRIPTION_KEYS = { open: "modules.dialog.openDescription", close: "modules.dialog.closeDescription" } as const
+
+/**
+ * … et pour un module qui règle une passerelle (CH-863) : une entrée du menu du compte vers une
+ * autre application. Le moteur ne sert aucune page pour elle : la fenêtre ne l'affirme pas.
+ */
+const GATEWAY_DESCRIPTION_KEYS: Readonly<Record<MemberGatewayId, { readonly open: string; readonly close: string }>> = {
+  consulate: { open: "modules.dialog.openConsulateDescription", close: "modules.dialog.closeConsulateDescription" },
+}
 
 /**
  * Ouvrir ou fermer un module (fiche CH-815 § 4.3, étapes 4 et 7) : ce que la bascule change au
@@ -91,6 +102,8 @@ function ToggleContent(props: {
     ? menuDifference(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: served }), memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: [...served, row.feature] }))
     : menuDifference(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: without }), memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: served }))
   const children = networkFeatureChildren(row.feature)
+  const gateway = gatewayOfFeature(row.feature)
+  const description = (gateway === null ? DESCRIPTION_KEYS : GATEWAY_DESCRIPTION_KEYS[gateway])[opening ? "open" : "close"]
 
   const submit = async (values: ReasonValues) => {
     if (locked.current) return
@@ -115,7 +128,7 @@ function ToggleContent(props: {
   return (
     <SheetContent
       title={t(opening ? "modules.dialog.openTitle" : "modules.dialog.closeTitle", { module: name })}
-      description={t(opening ? "modules.dialog.openDescription" : "modules.dialog.closeDescription")}
+      description={t(description)}
       closeLabel={props.closeLabel}
     >
       <form noValidate onSubmit={(event) => void form.handleSubmit(submit)(event)} className="flex min-w-0 flex-col gap-4">

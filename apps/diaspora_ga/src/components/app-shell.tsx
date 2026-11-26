@@ -168,9 +168,10 @@ interface AccountGroups {
 }
 
 /**
- * La passerelle « consulat.ga » telle que la coque la monte (CH-863, lot D1) : un VRAI lien vers
- * l'espace consulat.ga, dans le même onglet, sans ouvreur ni référent. Elle n'existe que si le menu
- * partagé l'offre (interrupteur de code) ET que l'adresse de consulat.ga est configurée.
+ * La passerelle « consulat.ga » telle que la coque la monte (CH-863) : un VRAI lien vers l'espace
+ * consulat.ga, dans le même onglet, sans ouvreur ni référent. Elle n'existe que si le menu partagé
+ * l'offre (le module du réseau `consulateGateway`, fermé par défaut, ouvert dans admin.diaspora.ga)
+ * ET que l'adresse de consulat.ga est configurée.
  */
 interface ConsulateGateway {
   readonly links: ConsulateGatewayLinks
@@ -475,9 +476,10 @@ export function AppShell(props: AppShellProps) {
     setInformationAt(pathname)
   }
 
-  // La passerelle « consulat.ga » (CH-863, lot D1) : offerte par le menu partagé, composée sur
-  // l'adresse configurée ; la feuille d'information s'ouvre au premier clic simple, puis plus jamais
-  // dans ce navigateur. L'état de la personne vient des vues du port (adhésion, compte).
+  // La passerelle « consulat.ga » (CH-863) : offerte par le menu partagé quand son module est ouvert
+  // sur le réseau (`menu.gateways` : les modules servis ci-dessus), composée sur l'adresse configurée ;
+  // la feuille d'information s'ouvre au premier clic simple, puis plus jamais dans ce navigateur.
+  // L'état de la personne vient des vues du port (adhésion, compte).
   const session = useSession()
   const [gatewayOpen, setGatewayOpen] = useState(false)
   const gatewayReturn = useRef<HTMLElement | null>(null)

@@ -62,7 +62,7 @@ const n = (text: string) => text.replace(/\s+/gu, " ")
 const members = i18n.getFixedT("fr", "diaspora-ga")
 const moduleName = (feature: NetworkFeature) => members(`networkFeatures.names.${feature}`)
 
-/** Les huit lignes du moteur : `open` (décisions), les autres fermées, aucune décision sauf mention. */
+/** Les neuf lignes du moteur : `open` (décisions), les autres fermées, aucune décision sauf mention. */
 function rowsWith(open: readonly NetworkFeature[], decided: Partial<Record<NetworkFeature, number>> = {}): FeatureState[] {
   return NETWORK_FEATURES.map((feature) => {
     const parent = NETWORK_FEATURE_PARENTS[feature]
@@ -162,9 +162,11 @@ describe("section Modules — les cartes", () => {
     expect(items).toEqual(
       featureMenuAdditions(feature).map(
         (change) =>
-          `${members(change.labelKey)} · ${t(`menuChange.placement.${change.placement}`)}${change.audience === "everyone" ? "" : ` · ${t(`menuChange.audience.${change.audience}`)}`}`,
+          `${members(change.labelKey)} · ${t(`menuChange.placement.${change.placement}`, { group: members("consulateGateway.group") })}${change.audience === "everyone" ? "" : ` · ${t(`menuChange.audience.${change.audience}`)}`}`,
       ),
     )
+    // Chaque place a son texte : jamais une clé rendue telle quelle.
+    for (const item of items) expect(item).not.toContain("menuChange.")
   })
 
   it("dernière décision : la date, l'auteur et le motif d'un module décidé ; la date seule s'il n'y figure pas ; « aucune décision » sans ligne", () => {
@@ -230,16 +232,101 @@ describe("section Modules — les cartes", () => {
     expect(card("pages").queryByText(t("modules.card.prerequisites"))).toBeNull()
   })
 
-  it("appels, direct, iCom Pro et passerelle consulat.ga : en lecture seule, sans aucun geste ; le direct et la passerelle « ouverts par le code » (26/11/2026), les deux autres « fermé par le code »", () => {
+  it("appels, direct et iCom Pro : en lecture seule, sans aucun geste ; le direct « ouvert par le code » (26/11/2026), les deux autres « fermé par le code » ; la passerelle consulat.ga n'y est plus (CH-863 : un module)", () => {
     mount()
     const section = within(screen.getByRole("heading", { level: 2, name: t("modules.code.title") }).closest("section")!)
-    const expected = { calls: "modules.code.closedByCode", live: "modules.code.openByCode", icomPro: "modules.code.closedByCode", consulateGateway: "modules.code.openByCode" } as const
-    for (const key of ["calls", "live", "icomPro", "consulateGateway"] as const) {
+    const expected = { calls: "modules.code.closedByCode", live: "modules.code.openByCode", icomPro: "modules.code.closedByCode" } as const
+    for (const key of ["calls", "live", "icomPro"] as const) {
       const item = within(section.getByRole("heading", { level: 3, name: t(`modules.code.names.${key}`) }).closest("li")!)
       expect(item.getByText(t(expected[key]))).toBeInTheDocument()
       expect(item.getByText(n(t(`modules.code.descriptions.${key}`)))).toBeInTheDocument()
     }
+    expect(section.getAllByRole("heading", { level: 3 })).toHaveLength(3)
+    expect(section.queryByText(/consulat\.ga/)).toBeNull()
     expect(section.queryByRole("button")).toBeNull()
+  })
+})
+
+describe("section Modules — « Démarches consulaires (consulat.ga) » (CH-863) : l'entrée du menu des membres, réglée ici", () => {
+  const GATEWAY = "consulateGateway" satisfies NetworkFeature
+  const NAME = "Démarches consulaires (consulat.ga)"
+
+  it("sa carte, la dernière : fermée sans décision (l'état de départ), sa description, aucun module exigé", () => {
+    mount()
+    expect(moduleName(GATEWAY)).toBe(NAME)
+    expect(screen.getAllByRole("article").at(-1)).toBe(screen.getByRole("article", { name: NAME }))
+    expect(card(GATEWAY).getByText(t("modules.state.closed"))).toBeInTheDocument()
+    expect(card(GATEWAY).getByText(t("modules.card.neverDecided"))).toBeInTheDocument()
+    expect(card(GATEWAY).getByText(n(members(`networkFeatures.descriptions.${GATEWAY}`)))).toBeInTheDocument()
+    expect(card(GATEWAY).queryByText(/^Exige/)).toBeNull()
+    // Aucune dépendance : elle s'ouvre même tous les autres modules fermés.
+    expect(toggleButton(GATEWAY, "open")).toBeEnabled()
+  })
+
+  it("ce qu'elle ajoute au menu des membres : l'entrée « consulat.ga », dans le groupe « Démarches administratives » du menu du compte, pour tout membre", () => {
+    mount()
+    const adds = card(GATEWAY).getByRole("heading", { name: t("modules.card.adds") }).parentElement!
+    expect(within(adds).getAllByRole("listitem").map((item) => n(item.textContent ?? ""))).toEqual(["consulat.ga · menu du compte, groupe « Démarches administratives »"])
+    expect(featureMenuAdditions(GATEWAY)).toEqual([{ placement: "gateways", id: "consulate", labelKey: "consulateGateway.entry.label", audience: "everyone" }])
+  })
+
+  it("avant d'ouvrir, à relire : l'adresse de consulat.ga configurée dans l'application des membres, les textes, la recette — pas d'équipe de modération pour un lien", () => {
+    mount()
+    const prerequisites = card(GATEWAY).getByText(t("modules.card.prerequisites")).closest("details")!
+    expect(within(prerequisites).getAllByRole("listitem", { hidden: true }).map((item) => item.textContent)).toEqual([
+      t("modules.prerequisite.consulateAddress"),
+      t("modules.prerequisite.texts"),
+      t("modules.prerequisite.rehearsal"),
+    ])
+    expect(t("modules.prerequisite.consulateAddress")).toMatch(/consulat\.ga/)
+  })
+
+  it("ouvrir : la fenêtre dit ce qui paraît et qu'aucune page du moteur n'est en jeu, exige le motif, puis l'appel exact au moteur et l'avis", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(toggleButton(GATEWAY, "open"))
+    const dialog = within(await screen.findByRole("dialog", { name: t("modules.dialog.openTitle", { module: NAME }) }))
+    expect(dialog.getByText(n(t("modules.dialog.openConsulateDescription")))).toBeInTheDocument()
+    expect(dialog.queryByText(n(t("modules.dialog.openDescription")))).toBeNull()
+    expect(dialog.getByText(t("modules.dialog.effectAdded"))).toBeInTheDocument()
+    expect(dialog.getByText(members("consulateGateway.entry.label"))).toBeInTheDocument()
+    expect(dialog.queryByText(/Module exigé/)).toBeNull()
+
+    const reason = dialog.getByRole("textbox", { name: t("modules.dialog.reason") })
+    await user.type(reason, "court")
+    await user.click(dialog.getByRole("button", { name: t("modules.dialog.confirmOpen") }))
+    expect(await dialog.findByText(t("modules.dialog.reasonLength", { min: 10, max: 500 }))).toBeInTheDocument()
+    expect(mocks.setFeature).not.toHaveBeenCalled()
+
+    await user.clear(reason)
+    await user.type(reason, "Ouverture de l'entrée consulat.ga pour le pilote.")
+    await user.click(dialog.getByRole("button", { name: t("modules.dialog.confirmOpen") }))
+    await waitFor(() => expect(mocks.setFeature).toHaveBeenCalledOnce())
+    expect(mocks.setFeature).toHaveBeenCalledWith({ networkId: NETWORK_ID, feature: GATEWAY, enabled: true, reason: "Ouverture de l'entrée consulat.ga pour le pilote." })
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("modules.dialog.opened", { module: NAME })))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+  })
+
+  it("ouverte : sa carte le dit, avec la décision et son motif ; la fermer dit ce qui disparaît, puis l'appel avec `enabled: false`", async () => {
+    const user = userEvent.setup()
+    mocks.rows = rowsWith([GATEWAY], { [GATEWAY]: DECIDED_AT })
+    mocks.decisions = [lastDecision({ feature: GATEWAY, reason: "Ouverture de l'entrée consulat.ga pour le pilote." })]
+    mount()
+    expect(card(GATEWAY).getByText(t("modules.state.open"))).toBeInTheDocument()
+    expect(card(GATEWAY).getByText(t("modules.card.reason", { reason: "Ouverture de l'entrée consulat.ga pour le pilote." }))).toBeInTheDocument()
+    expect(card(GATEWAY).queryByText(t("modules.card.prerequisites"))).toBeNull()
+    // Les autres modules n'en dépendent pas : les pages s'ouvrent et se ferment sans elle.
+    expect(toggleButton("pages", "open")).toBeEnabled()
+
+    await user.click(toggleButton(GATEWAY, "close"))
+    const dialog = within(await screen.findByRole("dialog", { name: t("modules.dialog.closeTitle", { module: NAME }) }))
+    expect(dialog.getByText(n(t("modules.dialog.closeConsulateDescription")))).toBeInTheDocument()
+    expect(dialog.getByText(t("modules.dialog.effectRemoved"))).toBeInTheDocument()
+    expect(dialog.getByText(members("consulateGateway.entry.label"))).toBeInTheDocument()
+    await user.type(dialog.getByRole("textbox", { name: t("modules.dialog.reason") }), "Fermeture de l'entrée, le temps d'une vérification.")
+    await user.click(dialog.getByRole("button", { name: t("modules.dialog.confirmClose") }))
+    await waitFor(() => expect(mocks.setFeature).toHaveBeenCalledWith({ networkId: NETWORK_ID, feature: GATEWAY, enabled: false, reason: "Fermeture de l'entrée, le temps d'une vérification." }))
+    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("modules.dialog.closed", { module: NAME })))
   })
 })
 

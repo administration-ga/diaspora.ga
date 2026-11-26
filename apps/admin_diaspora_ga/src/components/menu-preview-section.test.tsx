@@ -116,31 +116,82 @@ describe("aperçu du menu — il part de l'état courant", () => {
   })
 })
 
-describe("aperçu du menu — la passerelle consulat.ga (CH-863, lot D1), en lecture seule", () => {
-  it("« Démarches administratives » dans le menu du compte, après ses entrées et avant les informations, sans lien ni case", () => {
+describe("aperçu du menu — la passerelle consulat.ga (CH-863) : seulement quand son module est ouvert, ou coché pour voir", () => {
+  const GATEWAY = "consulateGateway" satisfies NetworkFeature
+  const gatewayGroup = () => within(panel(t("preview.account"))).queryByRole("group", { name: members("consulateGateway.group") })
+  const changeBlock = (heading: string) => screen.queryByRole("heading", { level: 3, name: heading })?.parentElement ?? null
+  /** La ligne d'un changement : le libellé des membres, puis sa place dans le menu. */
+  const CHANGE = `${members("consulateGateway.entry.label")} · ${t("menuChange.placement.gateways", { group: members("consulateGateway.group") })}`
+
+  it("module fermé (l'état de départ du réseau) : aucune « Démarches administratives » dans l'aperçu ; sa case est décochée, et libre", () => {
     mount()
-    const menu = memberMenu({ ...previewSituation(DEFAULT_PREVIEW_PERSON), openFeatures: ["pages"] })
+    expect(memberMenu({ ...previewSituation(DEFAULT_PREVIEW_PERSON), openFeatures: ["pages"] }).gateways).toEqual([])
+    expect(gatewayGroup()).toBeNull()
+    expect(screen.queryByText(t("preview.gatewayNote"))).toBeNull()
+    expect(checkbox(GATEWAY)).toHaveAttribute("aria-checked", "false")
+    expect(checkbox(GATEWAY)).toBeEnabled()
+  })
+
+  it("module ouvert : « Démarches administratives » dans le menu du compte, après ses entrées et avant les informations, sans lien ni case", () => {
+    mocks.rows = rowsWith(["pages", GATEWAY])
+    mount()
+    const menu = memberMenu({ ...previewSituation(DEFAULT_PREVIEW_PERSON), openFeatures: ["pages", GATEWAY] })
     expect(menu.gateways.map((entry) => entry.id)).toEqual(["consulate"])
-    const account = panel(t("preview.account"))
-    const group = within(account).getByRole("group", { name: members("consulateGateway.group") })
+    expect(checkbox(GATEWAY)).toHaveAttribute("aria-checked", "true")
+    const group = gatewayGroup()
+    if (!group) throw new Error("groupe des passerelles absent")
     expect(labels(group)).toEqual(menu.gateways.map((entry) => `${members(entry.labelKey)}${members(entry.hintKey)}`))
     expect(within(group).getByText(t("preview.gatewayNote"))).toBeInTheDocument()
     expect(within(group).queryByRole("link")).toBeNull()
     // Les entrées du compte d'abord, les informations après : la passerelle se tient entre les deux.
-    const information = within(account).getByRole("group", { name: t("preview.information") })
+    const information = within(panel(t("preview.account"))).getByRole("group", { name: t("preview.information") })
     expect(group.compareDocumentPosition(information) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText(t("preview.noChange"))).toBeInTheDocument()
+    expectPreviewOf(menu)
   })
 
-  it("aucun module ne l'ajoute ni ne la retire : cocher ou décocher ne la fait jamais paraître dans les changements", async () => {
+  it("cocher son module la fait paraître et la dit dans « Apparaît » ; la décocher la retire ; rien n'est écrit", async () => {
+    const user = userEvent.setup()
+    mount()
+    await user.click(checkbox(GATEWAY))
+    expect(gatewayGroup()).not.toBeNull()
+    const added = changeBlock(t("preview.added"))
+    if (!added) throw new Error("bloc « Apparaît » absent")
+    expect(labels(added)).toEqual([CHANGE])
+    expect(CHANGE).not.toContain("menuChange.")
+    await user.click(checkbox(GATEWAY))
+    expect(gatewayGroup()).toBeNull()
+    expect(screen.getByText(t("preview.noChange"))).toBeInTheDocument()
+    expect(mocks.mutations).toEqual([])
+  })
+
+  it("ouverte aujourd'hui, décochée pour voir : elle quitte l'aperçu et se dit dans « Disparaît »", async () => {
+    const user = userEvent.setup()
+    mocks.rows = rowsWith([GATEWAY])
+    mount()
+    expect(gatewayGroup()).not.toBeNull()
+    await user.click(checkbox(GATEWAY))
+    expect(gatewayGroup()).toBeNull()
+    const removed = changeBlock(t("preview.removed"))
+    if (!removed) throw new Error("bloc « Disparaît » absent")
+    expect(labels(removed)).toEqual([CHANGE])
+  })
+
+  it("aucun autre module ne l'ajoute ni ne la retire ; elle ne dépend pas non plus du membre regardé", async () => {
     const user = userEvent.setup()
     mount()
     await user.click(checkbox("services"))
-    await user.click(checkbox("pages"))
-    expect(screen.queryByText(members("consulateGateway.entry.label"), { selector: "li *" })).toBeInTheDocument()
+    await user.click(checkbox("mutualAid"))
+    expect(gatewayGroup()).toBeNull()
     for (const heading of [t("preview.added"), t("preview.removed")]) {
-      const block = screen.queryByRole("heading", { level: 3, name: heading })?.parentElement
+      const block = changeBlock(heading)
       if (block) expect(within(block).queryByText(members("consulateGateway.entry.label"))).toBeNull()
     }
+    await user.click(checkbox(GATEWAY))
+    await user.click(screen.getByRole("radio", { name: t("preview.membership.pending") }))
+    expect(gatewayGroup()).not.toBeNull()
+    await user.click(checkbox("pages"))
+    expect(gatewayGroup()).not.toBeNull()
   })
 })
 

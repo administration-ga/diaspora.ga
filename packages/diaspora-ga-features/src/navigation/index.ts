@@ -8,6 +8,7 @@ export {
   canSeeRegistration,
   codeSwitchAllows,
   featureMenuAdditions,
+  gatewayOfFeature,
   MEMBER_ACCOUNT_ENTRIES,
   MEMBER_BAR_ENTRIES,
   MEMBER_COMMUNITY_FEATURES,

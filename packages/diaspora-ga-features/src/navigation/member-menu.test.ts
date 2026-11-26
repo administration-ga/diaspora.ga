@@ -20,6 +20,7 @@ import {
   MEMBER_MENU_AUDIENCES,
   MEMBER_MENU_ENTRIES,
   MEMBER_MENU_ENTRY_IDS,
+  MEMBER_MENU_PLACEMENTS,
   MEMBER_MENU_WIDEST_SITUATION,
   memberMenu,
   menuDifference,
@@ -30,9 +31,10 @@ import {
 } from "./member-menu"
 
 /**
- * CH-815 A5 — le menu des membres en règle pure : exhaustif sur les huit clés du moteur, les
- * vingt-quatre entrées et les quatre formats de « Créer » (la conférence derrière l'interrupteur de
- * code du direct, CH-817). La coque de diaspora.ga et l'aperçu d'admin.diaspora.ga lisent cette
+ * CH-815 A5 — le menu des membres en règle pure : exhaustif sur les neuf clés du moteur, les
+ * vingt-quatre entrées, les quatre formats de « Créer » (la conférence derrière l'interrupteur de
+ * code du direct, CH-817) et la passerelle « consulat.ga » (CH-863 : le module `consulateGateway`
+ * l'ouvre, fermé par défaut). La coque de diaspora.ga et l'aperçu d'admin.diaspora.ga lisent cette
  * fonction ; diaspora.ga prouve ailleurs que sa coque la rend.
  */
 
@@ -53,7 +55,7 @@ const MEMBER: MemberMenuSituation = {
 const ids = (entries: readonly { readonly id: string }[]) => entries.map((entry) => entry.id)
 const menu = (openFeatures: readonly NetworkFeature[], situation: MemberMenuSituation = MEMBER_MENU_WIDEST_SITUATION): MemberMenu => memberMenu({ ...situation, openFeatures })
 
-/** Toutes les parties de l'ensemble des huit clés (256), pour les propriétés vraies partout. */
+/** Toutes les parties de l'ensemble des neuf clés (512), pour les propriétés vraies partout. */
 const ALL_FEATURE_SETS: NetworkFeature[][] = Array.from({ length: 2 ** NETWORK_FEATURES.length }, (_, mask) => NETWORK_FEATURES.filter((_, index) => (mask >> index) & 1))
 
 describe("menu des membres — le socle, modules tous fermés", () => {
@@ -110,24 +112,35 @@ describe("menu des membres — la conférence, derrière l'interrupteur de code 
 
 describe("menu des membres — chaque module, seul (ses modules exigés ouverts)", () => {
   // Situation la plus large : tout public touché, donc tout ce qu'un module peut ajouter.
-  const EXPECTED: Readonly<Record<NetworkFeature, { bar: string[]; account: string[]; create: string[] }>> = {
-    pages: { bar: [], account: ["myActivity", "myAssociations"], create: ["association", "company"] },
-    groupsAndEvents: { bar: ["communities"], account: [], create: [] },
-    services: { bar: ["services"], account: ["myRequests"], create: [] },
-    jobs: { bar: ["communities"], account: ["myApplications"], create: [] },
-    mutualAid: { bar: ["communities"], account: [], create: [] },
-    mentoring: { bar: ["communities"], account: ["myMentoring"], create: [] },
-    arrivalKit: { bar: ["communities"], account: [], create: [] },
+  const EXPECTED: Readonly<Record<NetworkFeature, { bar: string[]; account: string[]; gateways: string[]; create: string[] }>> = {
+    pages: { bar: [], account: ["myActivity", "myAssociations"], gateways: [], create: ["association", "company"] },
+    groupsAndEvents: { bar: ["communities"], account: [], gateways: [], create: [] },
+    services: { bar: ["services"], account: ["myRequests"], gateways: [], create: [] },
+    jobs: { bar: ["communities"], account: ["myApplications"], gateways: [], create: [] },
+    mutualAid: { bar: ["communities"], account: [], gateways: [], create: [] },
+    mentoring: { bar: ["communities"], account: ["myMentoring"], gateways: [], create: [] },
+    arrivalKit: { bar: ["communities"], account: [], gateways: [], create: [] },
     // La mesure du pilote ne montre rien aux membres (fiche CH-815, lot A6) : elle se lit dans l'administration.
-    pilotMetrics: { bar: [], account: [], create: [] },
+    pilotMetrics: { bar: [], account: [], gateways: [], create: [] },
+    // CH-863 : le module d'affichage n'ajoute que la passerelle « consulat.ga » (« Démarches administratives »).
+    consulateGateway: { bar: [], account: [], gateways: ["consulate"], create: [] },
   }
+
+  it("les endroits d'un changement, dans l'ordre du menu : la barre, le compte, ses passerelles, « Créer »", () => {
+    expect(MEMBER_MENU_PLACEMENTS).toEqual(["bar", "account", "gateways", "create"])
+  })
 
   it.each(NETWORK_FEATURES)("%s : ses ajouts exacts, à leur place", (feature) => {
     const additions = featureMenuAdditions(feature)
     const at = (placement: string) => additions.filter((change) => change.placement === placement).map((change) => change.id)
-    expect({ bar: at("bar"), account: at("account"), create: at("create") }).toEqual(EXPECTED[feature])
-    // Chaque ajout dit son public, celui de la table.
+    expect({ bar: at("bar"), account: at("account"), gateways: at("gateways"), create: at("create") }).toEqual(EXPECTED[feature])
+    // Chaque ajout dit son public, celui de la table ; une passerelle s'offre à tout membre que la coque accueille.
     for (const change of additions) {
+      if (change.placement === "gateways") {
+        expect(change.audience).toBe("everyone")
+        expect(change.labelKey).toBe(MEMBER_GATEWAY_RULES[change.id as keyof typeof MEMBER_GATEWAY_RULES].labelKey)
+        continue
+      }
       const rule = change.placement === "create" ? MEMBER_CREATE_RULES[change.id as keyof typeof MEMBER_CREATE_RULES] : MEMBER_MENU_ENTRIES[change.id as keyof typeof MEMBER_MENU_ENTRIES]
       expect(change.audience).toBe(rule.audience)
       expect(change.labelKey).toBe(rule.labelKey)
@@ -198,7 +211,7 @@ describe("menu des membres — la situation du membre", () => {
   })
 })
 
-describe("menu des membres — propriétés sur toutes les parties des huit clés", () => {
+describe("menu des membres — propriétés sur toutes les parties des neuf clés", () => {
   it("une entrée d'un module fermé n'est jamais offerte ; une entrée du socle à public large l'est toujours", () => {
     for (const features of ALL_FEATURE_SETS) {
       const shown = menu(features)
@@ -212,6 +225,8 @@ describe("menu des membres — propriétés sur toutes les parties des huit clé
         const rule = MEMBER_CREATE_RULES[id]
         expect(ids(shown.create).includes(id)).toBe(codeSwitchAllows(rule) && (rule.feature === null || features.includes(rule.feature)))
       }
+      // CH-863 : une passerelle ne paraît qu'avec SON module ouvert.
+      for (const id of MEMBER_GATEWAY_ENTRIES) expect(ids(shown.gateways).includes(id), `${id} avec ${features.join(",")}`).toBe(features.includes(MEMBER_GATEWAY_RULES[id].feature))
     }
   })
 
@@ -252,44 +267,52 @@ describe("table des entrées — complète et cohérente", () => {
     }
   })
 
-  it("appels, direct, iCom Pro et passerelle consulat.ga : quatre interrupteurs de code ; le direct et la passerelle ouverts le 26/11/2026, les deux autres fermés", () => {
-    expect(MEMBERS_APP_CODE_SWITCHES).toEqual(["calls", "live", "icomPro", "consulateGateway"])
-    expect(MEMBERS_APP_CODE_SWITCH_STATES).toEqual({ calls: "closed", live: "open", icomPro: "closed", consulateGateway: "open" })
+  it("appels, direct et iCom Pro : trois interrupteurs de code ; le direct ouvert le 26/11/2026, les deux autres fermés ; la passerelle consulat.ga n'en est pas un (CH-863 : un module du réseau)", () => {
+    expect(MEMBERS_APP_CODE_SWITCHES).toEqual(["calls", "live", "icomPro"])
+    expect(MEMBERS_APP_CODE_SWITCH_STATES).toEqual({ calls: "closed", live: "open", icomPro: "closed" })
   })
 })
 
-describe("menu des membres — la passerelle « consulat.ga » (CH-863, lot D1), une sortie vers une autre application", () => {
-  /** La passerelle refermée par le code : une position posée par le test (celle du dépôt est ouverte). */
-  const GATEWAY_CLOSED: MemberCodeSwitchStates = { ...MEMBERS_APP_CODE_SWITCH_STATES, consulateGateway: "closed" }
+describe("menu des membres — la passerelle « consulat.ga » (CH-863), une sortie vers une autre application, réglée par le module `consulateGateway`", () => {
+  const GATEWAY = "consulateGateway" satisfies NetworkFeature
+  const ENTRY = { id: "consulate", labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint" }
+  const NOBODY: MemberMenuSituation = { icom: false, engineNetwork: false, canPublish: false, status: "en_attente", holdsPageRole: false, holdsAssociation: false, moderator: false }
+  const without = (features: readonly NetworkFeature[]) => features.filter((feature) => feature !== GATEWAY)
 
-  it("une liste fermée à une entrée, hors des entrées internes : ni identifiant d'entrée, ni clé de route", () => {
+  it("une liste fermée à une entrée, hors des entrées internes : ni identifiant d'entrée, ni clé de route ; son module, plus aucun interrupteur de code", () => {
     expect(MEMBER_GATEWAY_ENTRIES).toEqual(["consulate"])
     expect(MEMBER_MENU_ENTRY_IDS).not.toContain("consulate")
     expect(Object.keys(MEMBER_MENU_ENTRIES)).not.toContain("consulate")
-    expect(MEMBER_GATEWAY_RULES.consulate).toEqual({ labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint", codeSwitch: "consulateGateway" })
+    expect(MEMBER_GATEWAY_RULES.consulate).toEqual({ labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint", feature: GATEWAY })
+    expect(MEMBERS_APP_CODE_SWITCHES as readonly string[]).not.toContain(GATEWAY)
+    // Un module sans parent : il s'ouvre seul, et aucun autre ne vit sur lui.
+    expect(NETWORK_FEATURE_PARENTS[GATEWAY]).toBeNull()
+    expect(requiredFeatures(GATEWAY)).toEqual([])
   })
 
-  it("ouverte par le code (la position du dépôt) : offerte à tout membre, quels que soient les modules et la situation", () => {
-    const nobody: MemberMenuSituation = { icom: false, engineNetwork: false, canPublish: false, status: "en_attente", holdsPageRole: false, holdsAssociation: false, moderator: false }
+  it("module fermé (sans décision : l'état de départ du réseau) : absente, quels que soient les autres modules et la situation", () => {
     for (const features of ALL_FEATURE_SETS) {
-      for (const situation of [MEMBER, MEMBER_MENU_WIDEST_SITUATION, nobody]) {
-        expect(memberMenu({ ...situation, openFeatures: features }).gateways, features.join(",")).toEqual([
-          { id: "consulate", labelKey: "consulateGateway.entry.label", hintKey: "consulateGateway.entry.hint" },
-        ])
-      }
+      for (const situation of [MEMBER, MEMBER_MENU_WIDEST_SITUATION, NOBODY]) expect(memberMenu({ ...situation, openFeatures: without(features) }).gateways, features.join(",")).toEqual([])
     }
   })
 
-  it("refermée par le code : absente, quels que soient les modules", () => {
-    for (const features of ALL_FEATURE_SETS) expect(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: features, codeSwitches: GATEWAY_CLOSED }).gateways).toEqual([])
-    expect(codeSwitchAllows(MEMBER_GATEWAY_RULES.consulate, GATEWAY_CLOSED)).toBe(false)
-    expect(codeSwitchAllows(MEMBER_GATEWAY_RULES.consulate)).toBe(true)
+  it("module ouvert : offerte à tout membre que la coque accueille, quels que soient les autres modules et la situation", () => {
+    for (const features of ALL_FEATURE_SETS) {
+      for (const situation of [MEMBER, MEMBER_MENU_WIDEST_SITUATION, NOBODY]) expect(memberMenu({ ...situation, openFeatures: [...without(features), GATEWAY] }).gateways, features.join(",")).toEqual([ENTRY])
+    }
   })
 
-  it("la barre (rail et téléphone), le menu du compte, « Informations » et « Créer » ne changent pas, ouverte ou refermée", () => {
+  it("aucun interrupteur de code ne l'ouvre ni ne la ferme : seul le module décide", () => {
+    const allOpen: MemberCodeSwitchStates = { calls: "open", live: "open", icomPro: "open" }
+    const allClosed: MemberCodeSwitchStates = { calls: "closed", live: "closed", icomPro: "closed" }
+    expect(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: without(NETWORK_FEATURES), codeSwitches: allOpen }).gateways).toEqual([])
+    expect(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: [GATEWAY], codeSwitches: allClosed }).gateways).toEqual([ENTRY])
+  })
+
+  it("la barre (rail et téléphone), le menu du compte, « Informations » et « Créer » ne changent pas, module ouvert ou fermé", () => {
     for (const features of ALL_FEATURE_SETS) {
-      const open = memberMenu({ ...MEMBER, openFeatures: features })
-      const closed = memberMenu({ ...MEMBER, openFeatures: features, codeSwitches: GATEWAY_CLOSED })
+      const open = memberMenu({ ...MEMBER, openFeatures: [...without(features), GATEWAY] })
+      const closed = memberMenu({ ...MEMBER, openFeatures: without(features) })
       const { gateways: openGateways, ...openRest } = open
       const { gateways: closedGateways, ...closedRest } = closed
       expect(openGateways.length - closedGateways.length).toBe(1)
@@ -298,8 +321,20 @@ describe("menu des membres — la passerelle « consulat.ga » (CH-863, lot D1),
     }
   })
 
-  it("jamais un ajout de module : l'aperçu d'admin.diaspora.ga ne la compte dans aucun module", () => {
-    for (const feature of NETWORK_FEATURES) expect(featureMenuAdditions(feature).map((change) => change.id)).not.toContain("consulate")
+  it("c'est l'ajout de son module, et de lui seul : admin.diaspora.ga le dit sur sa carte, à l'ouverture comme à la fermeture", () => {
+    const change = { placement: "gateways", id: "consulate", labelKey: "consulateGateway.entry.label", audience: "everyone" }
+    expect(featureMenuAdditions(GATEWAY)).toEqual([change])
+    // Même pour le membre le moins doté : la passerelle ne dépend d'aucun public.
+    expect(featureMenuAdditions(GATEWAY, NOBODY)).toEqual([change])
+    for (const feature of without(NETWORK_FEATURES)) expect(featureMenuAdditions(feature).map((entry) => entry.id), feature).not.toContain("consulate")
+    // Quel que soit le reste du réseau : elle est la seule différence entre le menu fermé et le menu ouvert
+    // (ce qui paraît à l'ouverture, ce qui disparaît à la fermeture), et le module n'enlève rien.
+    for (const features of ALL_FEATURE_SETS) {
+      const closed = menu(without(features))
+      const open = menu([...without(features), GATEWAY])
+      expect(menuDifference(closed, open)).toEqual([change])
+      expect(menuDifference(open, closed)).toEqual([])
+    }
   })
 
   it("son icône, son titre de groupe et ses libellés existent, en français et en anglais", () => {
@@ -309,5 +344,20 @@ describe("menu des membres — la passerelle « consulat.ga » (CH-863, lot D1),
       expect(typeof lookup(DIASPORA_GA_LOCALES.fr, key), `fr ${key}`).toBe("string")
       expect(typeof lookup(DIASPORA_GA_LOCALES.en, key), `en ${key}`).toBe("string")
     }
+  })
+
+  it("le module a son nom et sa description d'administration, en français et en anglais, qui nomment l'entrée et disent que rien n'est transmis", () => {
+    const lookup = (tree: unknown, key: string) => key.split(".").reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], tree)
+    expect(lookup(DIASPORA_GA_LOCALES.fr, `networkFeatures.names.${GATEWAY}`)).toBe("Démarches consulaires (consulat.ga)")
+    expect(lookup(DIASPORA_GA_LOCALES.en, `networkFeatures.names.${GATEWAY}`)).toBe("Consular procedures (consulat.ga)")
+    const fr = String(lookup(DIASPORA_GA_LOCALES.fr, `networkFeatures.descriptions.${GATEWAY}`))
+    const en = String(lookup(DIASPORA_GA_LOCALES.en, `networkFeatures.descriptions.${GATEWAY}`))
+    for (const text of [fr, en]) expect(text).toContain("consulat.ga")
+    expect(fr).toContain("Démarches administratives")
+    expect(fr).toMatch(/même onglet/)
+    expect(fr).toMatch(/ne (lui )?transmet rien|rien n.est transmis/)
+    expect(en).toContain("Administrative procedures")
+    expect(en).toMatch(/same tab/)
+    expect(en).toMatch(/nothing is (sent|passed)|sends (it )?nothing/)
   })
 })

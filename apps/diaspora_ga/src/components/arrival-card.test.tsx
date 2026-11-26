@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
-import { DataSourceProvider, type DiasporaGaActions, type DiasporaGaDataSource, type MembershipView } from "@diaspora-ga/features/data"
+import { DataSourceProvider, gateSource, type DiasporaGaActions, type DiasporaGaDataSource, type MembershipView } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
@@ -52,11 +52,13 @@ const MEMBER: MembershipView = {
   directoryVisibility: "hidden",
 }
 
-function mount() {
+/** `gated` : la source telle que l'application la monte, tous les modules du réseau fermés (l'état de départ). */
+function mount(options: { gated?: boolean } = {}) {
   const demo = createDemoDataSource(new DemoStore(null, () => Date.now(), 0))
   const signOutEverywhere = vi.fn<DiasporaGaActions["signOutEverywhere"]>().mockResolvedValue(undefined)
   // Le moteur garde sa navigation de sortie : la porte ordinaire, sans recharger ici.
-  const source: DiasporaGaDataSource = { ...demo, kind: "engine", actions: { ...demo.actions, signOutEverywhere } }
+  const engine: DiasporaGaDataSource = { ...demo, kind: "engine", actions: { ...demo.actions, signOutEverywhere } }
+  const source = options.gated ? gateSource(engine, []) : engine
   const view = render(
     <I18nProvider locale="fr">
       <DataSourceProvider source={source}>
@@ -115,6 +117,14 @@ describe("carte d'arrivée — venue de consulat.ga", () => {
     mount()
     expect(await screen.findByText(t("consulateGateway.arrival.cardTitle"))).toBeInTheDocument()
     expect(screen.queryByRole("link", { name: t("consulateGateway.arrival.back") })).toBeNull()
+    expect(screen.getByRole("button", { name: t("consulateGateway.arrival.notMe") })).toBeInTheDocument()
+  })
+
+  it("le module de l'entrée du menu fermé (CH-863 : l'état de départ du réseau) : la carte et son retour restent, ils ne dépendent que de l'adresse", async () => {
+    rememberArrival("consulat")
+    mount({ gated: true })
+    expect(await screen.findByText(t("consulateGateway.arrival.cardTitle"))).toBeInTheDocument()
+    expect(screen.getByRole("link", { name: t("consulateGateway.arrival.back") })).toHaveAttribute("href", consulateGatewayLinks(ORIGIN)!.mySpace)
     expect(screen.getByRole("button", { name: t("consulateGateway.arrival.notMe") })).toBeInTheDocument()
   })
 

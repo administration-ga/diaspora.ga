@@ -20,10 +20,10 @@ import { APP_NAMESPACE } from "@/i18n/resources"
 /**
  * Le menu des membres de diaspora.ga, dessiné tel que la fonction partagée le rend
  * (`@diaspora-ga/features/navigation`, fiche CH-815 § 5) : le rail du bureau (et « Créer »), la
- * barre du téléphone, le menu du compte, ses passerelles vers une autre application (CH-863) et ses
- * informations. Les libellés et les icônes sont
- * ceux de l'application des membres (espace `diaspora-ga`, table d'icônes partagée) ; rien
- * n'est cliquable : c'est une image du menu, pas une navigation.
+ * barre du téléphone, le menu du compte, ses passerelles vers une autre application (CH-863 :
+ * présentes seulement quand leur module est ouvert, ou coché dans l'aperçu) et ses informations.
+ * Les libellés et les icônes sont ceux de l'application des membres (espace `diaspora-ga`, table
+ * d'icônes partagée) ; rien n'est cliquable : c'est une image du menu, pas une navigation.
  */
 export function MemberMenuPreview(props: { menu: MemberMenu; className?: string }) {
   const { t } = useTranslation(APP_NAMESPACE)
@@ -54,8 +54,9 @@ export function MemberMenuPreview(props: { menu: MemberMenu; className?: string 
       </PreviewPanel>
       <PreviewPanel title={t("preview.account")}>
         <EntryList entries={menu.account} dense />
-        {/* CH-863 : les passerelles vers une autre application (« Démarches administratives »), ouvertes
-            par le code, jamais par un module ; l'application des membres les monte avant « Mes données ». */}
+        {/* CH-863 : les passerelles vers une autre application (« Démarches administratives »), chacune
+            réglée par son module du réseau (fermé par défaut) ; l'application des membres les monte
+            avant « Mes données », si l'adresse de l'autre application est configurée. */}
         {menu.gateways.length > 0 ? (
           <PreviewGroup label={members(MEMBER_GATEWAY_GROUP_LABEL_KEY)}>
             <ul className="flex flex-col gap-1">
@@ -141,6 +142,8 @@ function EntryList(props: { entries: readonly MemberMenuEntry[]; dense?: boolean
 const PLACEMENT_KEYS: Readonly<Record<MemberMenuChange["placement"], string>> = {
   bar: "menuChange.placement.bar",
   account: "menuChange.placement.account",
+  // CH-863 : le groupe des passerelles du menu du compte, nommé par son titre de membre (`group`).
+  gateways: "menuChange.placement.gateways",
   create: "menuChange.placement.create",
 }
 
@@ -169,7 +172,7 @@ export function MenuChangeList(props: { changes: readonly MemberMenuChange[]; to
             <span className="font-semibold">{members(change.labelKey)}</span>
             <span className="text-muted-foreground">
               {" · "}
-              {t(PLACEMENT_KEYS[change.placement])}
+              {t(PLACEMENT_KEYS[change.placement], { group: members(MEMBER_GATEWAY_GROUP_LABEL_KEY) })}
               {change.audience === "everyone" ? null : <>{" · "}{t(AUDIENCE_KEYS[change.audience])}</>}
             </span>
           </span>
