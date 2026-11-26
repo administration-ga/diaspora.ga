@@ -2,7 +2,7 @@
 
 import { extractHashtags } from "@antsia/social-domain/richText"
 import { hasCapability, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
-import { useMemo, useSyncExternalStore } from "react"
+import { useEffect, useMemo, useSyncExternalStore } from "react"
 
 import type { EntryDoorsView } from "../data/entry-doors-port"
 import { describeMediaFile, downscaleImage, isVideoCandidateType } from "../data/media"
@@ -489,6 +489,9 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
 
     useSponsorDashboard() {
       const version = useVersion()
+      useEffect(() => {
+        if (version >= 0) store.ensureMySponsorCode()
+      }, [version])
       return useMemo(() => {
         if (version < 0) return LOADING
         const state = store.getState()
@@ -554,6 +557,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
       markNotificationRead: (notificationId) => store.markNotificationRead(notificationId),
       markAllNotificationsRead: () => store.markAllNotificationsRead(),
       sponsor: (handle) => store.sponsor(handle),
+      redeemSponsorCode: (code) => store.redeemSponsorCode(code),
       revokeSponsorship: (id) => store.revokeSponsorship(id),
       requestAttestation: () => store.requestAttestation(),
       setConsent: (purpose, granted, origin) => store.setConsent(purpose, granted, origin),
