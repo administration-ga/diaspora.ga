@@ -38,16 +38,24 @@ passe de l'une à l'autre, depuis l'intérieur de chacune : par une **navigation
 Côté DIASPORA.GA, la porte d'arrivée n'admet que la valeur `consulat` : toute autre valeur est ignorée et
 la porte ordinaire s'affiche. Les destinations vers consulat.ga sont tenues par le domaine
 (`packages/diaspora-ga-domain/src/consulate-destinations.ts`), la porte d'arrivée par la table des routes
-de l'application (`apps/diaspora_ga/src/lib/routes.ts`, `lib/arrival.ts`).
+de l'application (`apps/diaspora_ga/src/lib/routes.ts`, `lib/arrival.ts`). Le module qui ouvre l'entrée du
+menu est une clé du moteur du réseau (`consulateGateway`, ADR-0041 du moteur, amendé le 26/11/2026) : il ne
+garde aucune fonction du moteur et ne change rien à ces destinations.
 
 ## Ce que chaque côté affiche
 
 - **DIASPORA.GA** : dans le menu du compte (bureau et téléphone), un groupe « Démarches administratives »
-  avec l'entrée « consulat.ga », et un lien discret au pied du rail du bureau. La première fois, une
-  feuille d'information explique le passage (identité numérique, inscription consulaire, accès à
+  avec l'entrée « consulat.ga », et un lien discret au pied du rail du bureau. **Cette entrée est fermée
+  par défaut** : c'est un module du réseau (`consulateGateway`, « Démarches consulaires (consulat.ga) »),
+  que l'administrateur du réseau ouvre et ferme depuis admin.diaspora.ga, section « Modules », avec un
+  motif inscrit au journal — en miroir de l'onglet « Diaspora » de consulat.ga. Module fermé, ou adresse de
+  consulat.ga absente de la configuration, ni l'entrée ni le lien du rail n'apparaissent. La première fois,
+  une feuille d'information explique le passage (identité numérique, inscription consulaire, accès à
   consulat.ga) et rappelle que consulat.ga est une autre application, à qui DIASPORA.GA ne transmet rien.
   À l'arrivée depuis consulat.ga, une carte le dit une fois, nomme le compte connecté et propose « Revenir
-  à consulat.ga » ou « Ce n'est pas moi » (qui déconnecte partout et rouvre la porte ordinaire).
+  à consulat.ga » ou « Ce n'est pas moi » (qui déconnecte partout et rouvre la porte ordinaire). Cette
+  carte, la porte d'arrivée et le lien « M'inscrire au consulat » de la carte de statut ne dépendent pas du
+  module : seulement de l'adresse configurée.
 - **consulat.ga** (prévu au lot C1, pas encore livré) : un onglet « Diaspora » dans l'espace citoyen,
   fermé par défaut et ouvert par le super administrateur depuis admin.consulat.ga ; un panneau
   d'information avant le départ.
