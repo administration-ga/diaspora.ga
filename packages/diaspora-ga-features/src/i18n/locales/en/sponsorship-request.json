@@ -19,6 +19,16 @@
     "attestationTitle": "Have your consular registration verified",
     "attestationBody": "Registered with a consular post? Ask for it to be verified, with your consent."
   },
+  "sponsorCode": {
+    "mine": "My sponsorship code",
+    "hint": "Give this code to someone you know. A new code will appear once it is used.",
+    "copy": "Copy code",
+    "copied": "Code copied.",
+    "received": "Code from my sponsor",
+    "redeem": "Use code",
+    "done": "Sponsorship received. Your access has been updated.",
+    "invalid": "This code cannot be used. Ask your sponsor for a code."
+  },
   "sponsorRequest": {
     "prefilled": "This handle comes from a sponsorship request link. Only sponsor someone you know.",
     "knows": "I know this person."

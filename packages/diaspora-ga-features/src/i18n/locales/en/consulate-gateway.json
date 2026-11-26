@@ -36,6 +36,22 @@
       "cardBody": "You are here as @{{handle}}.",
       "back": "Back to consulat.ga",
       "notMe": "This is not me"
+    },
+    "passage": {
+      "failed": "We couldn’t open your Diaspora session",
+      "opening": "Opening DIASPORA.GA…",
+      "retryInfo": "Return to your consular account to try again with your current session.",
+      "retry": "Try again",
+      "home": "DIASPORA.GA home",
+      "continueConsulate": "Continue with CONSULAT.GA",
+      "checking": "Checking your session.",
+      "downloadIntro": "Join your community in the app or continue in your browser with your consular session.",
+      "ios": "Download on the App Store",
+      "android": "Get it on Google Play",
+      "later": "The apps will appear here when they are released.",
+      "laterIos": "The iOS app will appear here when it is released.",
+      "laterAndroid": "The Android app will appear here when it is released.",
+      "continueWeb": "Continue on the web"
     }
   }
 }
