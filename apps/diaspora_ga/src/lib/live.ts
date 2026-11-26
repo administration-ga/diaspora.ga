@@ -15,11 +15,13 @@
  *
  * Ouvert, avec le moteur comme source :
  *  · la page `routes.conference` (`app/direct/[id]`) monte l'écran du direct du moteur ;
- *  · « Créer » offre « Une conférence » (règle partagée du menu des membres, `codeSwitch`) ;
+ *  · « Créer » offre « Un live », en tête (règle partagée du menu des membres, `codeSwitch`) ; la carte
+ *    « Quoi de neuf ? » du fil et le composeur offrent « Live » par la même règle (`useComposer().goLive`) ;
  *  · une annonce de direct dans le fil mène à sa page (carte de publication, `conferenceFeatureRoute`) ;
  *  · l'îlot des surfaces du moteur (`IcomIsland`) déclare `liveAvailable` vrai : le moteur monte
  *    l'hôte du direct de la couche de communication, place les directs en tête du lecteur des actus
- *    et propose de lancer une conférence depuis un appel.
+ *    et propose de lancer un live depuis un appel. Les textes du moteur disent « live », jamais
+ *    « conférence » (surcharges de `@diaspora-ga/features/i18n`, `engine-overrides`).
  * Refermé (`"closed"`), le direct reste ENTIER et BRANCHÉ, mais rien n'y mène plus : page
  * introuvable, aucune entrée dans « Créer », annonce du fil en texte simple, `liveAvailable` faux.
  *

@@ -22,6 +22,7 @@ import {
   LockKeyholeIcon,
   MessageCircleIcon,
   PaletteIcon,
+  RadioIcon,
   ScaleIcon,
   ScrollTextIcon,
   Settings2Icon,
@@ -30,7 +31,6 @@ import {
   UserRoundCheckIcon,
   UserRoundIcon,
   UsersRoundIcon,
-  VideoIcon,
   type LucideIcon,
 } from "lucide-react"
 
@@ -70,8 +70,9 @@ export const MEMBER_INFORMATION_ICON: LucideIcon = InfoIcon
 
 export const MEMBER_CREATE_ICONS: Readonly<Record<MemberCreateFormatId, LucideIcon>> = {
   story: CameraIcon,
-  // La conférence : la caméra vidéo de « Créer → Conférence » du moteur (icône `video`).
-  live: VideoIcon,
+  // Le live : l'antenne qui émet (lucide `Radio`), la même au menu « Créer », dans la carte
+  // « Quoi de neuf ? » du fil et dans le composeur ; la caméra vidéo y serait confondue avec « Vidéo ».
+  live: RadioIcon,
   association: UsersRoundIcon,
   company: Building2Icon,
 }

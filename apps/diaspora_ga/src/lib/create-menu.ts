@@ -5,9 +5,9 @@
  * sur chaque écran ; le menu porte les autres gestes de création.
  *
  * La règle vit dans le menu des membres partagé (`@diaspora-ga/features/navigation`,
- * fiche CH-815 § 5) : une actu, une conférence quand le direct est ouvert par le code (CH-817),
+ * fiche CH-815 § 5) : un live quand le direct est ouvert par le code (CH-817), une actu,
  * puis l'inscription d'une association et d'une entreprise quand les pages sont ouvertes
- * (ADR-0041 du moteur). Ici, les adresses seulement : la conférence n'en a pas, elle ouvre en
+ * (ADR-0041 du moteur). Ici, les adresses seulement : le live n'en a pas, il ouvre en
  * place la création du direct du moteur.
  * PROPRIÉTAIRE : chantier « coque ».
  */
@@ -20,7 +20,7 @@ export type CreateFormatId = MemberCreateFormatId
 
 export interface CreateFormat {
   readonly id: CreateFormatId
-  /** L'adresse du format ; `null` pour la conférence, qui ouvre en place la création du direct du moteur. */
+  /** L'adresse du format ; `null` pour le live, qui ouvre en place la création du direct du moteur. */
   readonly href: string | null
   readonly labelKey: string
   readonly hintKey: string
