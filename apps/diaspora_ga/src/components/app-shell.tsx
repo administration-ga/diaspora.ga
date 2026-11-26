@@ -391,6 +391,7 @@ type AppShellProps = { readonly membership: MembershipView; readonly children: R
  * redevient un document. Jamais d'`overflow-hidden` : un débordement doit rester visible.
  */
 export function AppShell(props: AppShellProps) {
+  const { t } = useDiasporaGaT()
   const pathname = usePathname() ?? ""
   const [composerOpen, setComposerOpen] = useState(false)
   // A3 : les fichiers choisis depuis le fil, numérotés : chaque geste n'est joint qu'une fois.
@@ -557,6 +558,12 @@ export function AppShell(props: AppShellProps) {
                   {/* En vue, les avis prennent leur hauteur et le `ViewFrame` de l'écran le reste. */}
                   <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : wide ? "xl:col-span-2" : "max-w-[792px]")}>
                     {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
+                    {consulate && pathname === routes.feed() && (
+                      <a href={consulate.links.mySpace} target="_blank" {...CONSULATE_LINK_ATTRIBUTES}
+                        className="inline-flex min-h-11 items-center gap-2 self-end rounded-full bg-muted px-4 text-sm font-semibold text-foreground hover:underline focus-visible:outline-2">
+                        <consulate.icon aria-hidden="true" size={16} /> <span className="uppercase">{t("consulateGateway.entry.label")}</span> <ArrowUpRightIcon aria-hidden="true" size={15} />
+                      </a>
+                    )}
                     <NetworkStatusNotice />
                     <ZoneNotice pathname={pathname} membership={membership} />
                     {/* L'invite de première visite (accueil en un écran, 25/11/2026) : annuaire et notifications,

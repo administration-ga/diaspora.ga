@@ -2,13 +2,15 @@
 
 import { OpaqueQrCode } from "@antsia/social-features/qr"
 import { Button, Field, Input } from "@diaspora-ga/features"
-import type { MembershipView } from "@diaspora-ga/features/data"
+import { useDataSource, type MembershipView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { BadgeCheckIcon, CopyIcon, HandshakeIcon, QrCodeIcon, Share2Icon } from "lucide-react"
 import NextLink from "next/link"
 import { useEffect, useId, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { RedeemSponsorCode } from "./redeem-sponsor-code"
+import { configuredConsulateGateway } from "@/lib/consulate-gateway"
 import { routes } from "@/lib/routes"
 
 /**
@@ -30,6 +32,7 @@ function isAbort(error: unknown): boolean {
 export function PendingRoom(props: { membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const { handle } = props.membership
+  const source = useDataSource()
   const id = useId()
   const input = useRef<HTMLInputElement>(null)
   const mounted = useRef(false)
@@ -88,6 +91,7 @@ export function PendingRoom(props: { membership: MembershipView }) {
               <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("pendingRoom.sponsorLink")}</p>
             </div>
           </div>
+          <RedeemSponsorCode />
           <Field
             id={`${id}-lien`}
             label={t("pendingRoom.linkLabel")}
@@ -142,6 +146,11 @@ export function PendingRoom(props: { membership: MembershipView }) {
           <div className="min-w-0">
             <p className="text-[15px] font-semibold">{t("pendingRoom.attestationTitle")}</p>
             <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{t("pendingRoom.attestationBody")}</p>
+            {source.kind === "engine" && configuredConsulateGateway() ? (
+              <Button asChild variant="secondary" className="mt-2">
+                <NextLink href={routes.enterFromConsulate()}>{t("consulateGateway.passage.continueConsulate")}</NextLink>
+              </Button>
+            ) : null}
             <NextLink
               href={routes.attestation()}
               className="mt-2 inline-flex min-h-11 items-center rounded-md text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:shadow-focus"

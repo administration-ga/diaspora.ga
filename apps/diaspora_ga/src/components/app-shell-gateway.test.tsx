@@ -201,6 +201,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+it("le badge CONSULAT.GA du fil ouvre l’espace consulaire au téléphone", () => {
+  mocks.desktop = false
+  renderShell()
+  const badge = screen.getByRole("link", { name: /^CONSULAT\.GA$/i })
+  expect(badge).toHaveAttribute("href", LINKS.mySpace)
+  expect(badge).toHaveAttribute("target", "_blank")
+})
+
 describe("coque — passerelle consulat.ga absente", () => {
   it("sans adresse de consulat.ga configurée : ni groupe, ni lien du rail, au bureau comme au téléphone", async () => {
     mocks.consulateUrl = null
