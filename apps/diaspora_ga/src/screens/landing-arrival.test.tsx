@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import EnterPage from "@/app/entrer/page"
 import { ARRIVAL_KEY } from "@/lib/arrival"
+import { rememberExplicitSignOut } from "@/lib/explicit-sign-out"
 import { routes } from "@/lib/routes"
 
 /**
@@ -48,6 +49,7 @@ afterEach(() => {
   cleanup()
   vi.clearAllMocks()
   window.sessionStorage.clear()
+  window.localStorage.clear()
 })
 
 describe("porte d'arrivée — `/entrer?depuis=consulat`", () => {
@@ -74,10 +76,26 @@ describe("porte d'arrivée — `/entrer?depuis=consulat`", () => {
     await new Promise((resolve) => setTimeout(resolve, 20))
     expect(signInWithIdn).not.toHaveBeenCalled()
     await user.click(idn)
-    // Le départ existant, inchangé : aucune option de plus (lot D2, après le moteur).
-    expect(signInWithIdn).toHaveBeenCalledTimes(1)
-    expect(signInWithIdn).toHaveBeenCalledWith()
+    // CH-863 D2 : au geste explicite, et sur cette porte seulement, l'entrée sans ressaisie est demandée.
+    expect(signInWithIdn).toHaveBeenCalledExactlyOnceWith(undefined, { reuseIdnSession: true })
     expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+  })
+
+  it("après une déconnexion explicite dans ce navigateur : le départ ordinaire, ressaisie exigée", async () => {
+    const user = userEvent.setup()
+    rememberExplicitSignOut()
+    const { mount, signInWithIdn } = setup({ kind: "engine" })
+    mount(await EnterPage({ searchParams: Promise.resolve({ depuis: "consulat" }) }))
+    await user.click(screen.getByRole("button", { name: t("consulateGateway.arrival.continueIdn") }))
+    expect(signInWithIdn).toHaveBeenCalledExactlyOnceWith()
+  })
+
+  it("la porte ordinaire ne demande jamais l'entrée sans ressaisie", async () => {
+    const user = userEvent.setup()
+    const { mount, signInWithIdn } = setup({ kind: "engine" })
+    mount(await EnterPage({ searchParams: Promise.resolve({}) }))
+    await user.click(screen.getByRole("button", { name: t("landing.idnContinue") }))
+    expect(signInWithIdn).toHaveBeenCalledExactlyOnceWith()
   })
 
   it("toute autre valeur rend la porte ordinaire : aucune phrase d'arrivée, rien de retenu", async () => {

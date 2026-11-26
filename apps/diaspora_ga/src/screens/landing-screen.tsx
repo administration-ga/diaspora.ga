@@ -10,7 +10,8 @@ import { useEffect, useId, useRef, useState } from "react"
 
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
-import { rememberArrival, type ArrivalOrigin } from "@/lib/arrival"
+import { idnStartOptionsFor, rememberArrival, type ArrivalOrigin } from "@/lib/arrival"
+import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
 import { forgetIdnReturnError } from "@/lib/idn-return"
 import { CONSULAR_ATTESTATION_ANNOUNCED } from "@/lib/public-offer"
 import { routes } from "@/lib/routes"
@@ -96,7 +97,7 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           </div>
         </div>
       ) : null}
-      <IdnEntry refusal={props.idnRefusal} arrival={arrival !== null} />
+      <IdnEntry refusal={props.idnRefusal} arrival={arrival} />
       <div className="my-4 flex items-center gap-3 text-[13px] text-muted-foreground">
         <span className="h-px flex-1 bg-border" />
         <span>{t("landing.or")}</span>
@@ -142,11 +143,11 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
  * À l'arrivée depuis consulat.ga (CH-863), le même départ devient l'action principale, sous le
  * libellé « Continuer avec mon identité numérique » ; rien d'autre ne change.
  */
-function IdnEntry(props: { refusal: EntryDoorsErrorCode | null; arrival: boolean }) {
+function IdnEntry(props: { refusal: EntryDoorsErrorCode | null; arrival: ArrivalOrigin | null }) {
   const { t } = useDiasporaGaT()
   const source = useDataSource()
-  const labelKey = props.arrival ? "consulateGateway.arrival.continueIdn" : "landing.idnContinue"
-  const variant = props.arrival ? "primary" : "outline"
+  const labelKey = props.arrival !== null ? "consulateGateway.arrival.continueIdn" : "landing.idnContinue"
+  const variant = props.arrival !== null ? "primary" : "outline"
   if (source.kind === "demo") {
     return (
       <Button asChild size="lg" variant={variant} className="w-full">
@@ -157,7 +158,7 @@ function IdnEntry(props: { refusal: EntryDoorsErrorCode | null; arrival: boolean
       </Button>
     )
   }
-  return <EngineIdnEntry refusal={props.refusal} labelKey={labelKey} variant={variant} />
+  return <EngineIdnEntry refusal={props.refusal} labelKey={labelKey} variant={variant} arrival={props.arrival} />
 }
 
 /**
@@ -165,8 +166,11 @@ function IdnEntry(props: { refusal: EntryDoorsErrorCode | null; arrival: boolean
  * sert IDN ; il dit avant le départ que l'écran d'IDN nommera ANTSIA (client IDN central du
  * moteur). « Disponible prochainement » ne se dit que d'une porte fermée. Un départ refusé, ou
  * l'échec rapporté au retour d'IDN, se dit sous le bouton, traduit.
+ *
+ * À l'arrivée depuis consulat.ga (CH-863 D2), le même geste demande l'entrée sans ressaisie, sauf
+ * après une déconnexion explicite dans ce navigateur : décidé AU CLIC, jamais d'office.
  */
-function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null; labelKey: string; variant: "primary" | "outline" }) {
+function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null; labelKey: string; variant: "primary" | "outline"; arrival: ArrivalOrigin | null }) {
   const { t } = useDiasporaGaT()
   const doors = useEntryDoors()
   const actions = useActions()
@@ -204,7 +208,8 @@ function EngineIdnEntry(props: { refusal: EntryDoorsErrorCode | null; labelKey: 
     setRefusal(null)
     let code: ActionErrorCode
     try {
-      const result = await actions.signInWithIdn()
+      const options = idnStartOptionsFor(props.arrival, explicitSignOutHappened())
+      const result = await (options === undefined ? actions.signInWithIdn() : actions.signInWithIdn(undefined, options))
       // Départ accepté : le navigateur part chez IDN, le bouton reste « ouverture ».
       if (result.ok) return
       code = result.code

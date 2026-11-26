@@ -6,6 +6,7 @@ import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { LogOutIcon } from "lucide-react"
 import { useRef, useState } from "react"
 
+import { rememberExplicitSignOut } from "@/lib/explicit-sign-out"
 import { forgetPendingCode } from "@/lib/pending-code"
 import { forgetReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
@@ -33,6 +34,10 @@ export function useSignOutEverywhere() {
     // d'un code (EA-08), quelle que soit la source.
     forgetReturnPath()
     forgetPendingCode()
+    // CH-863 D2 : une sortie voulue par la personne. La porte d'arrivée ne demandera plus l'entrée
+    // sans ressaisie jusqu'à la prochaine entrée réussie. Écrit AVANT la sortie de la source, sous une
+    // clé que ni la purge du moteur ni celle des brouillons ne retirent (`lib/explicit-sign-out.ts`).
+    rememberExplicitSignOut()
     // Les réserves du script de fond sont vidées AVANT la navigation de la source (MO-05) : bornée,
     // la purge ne retient jamais la sortie, et son échec ne l'empêche pas. Sans réserves possibles
     // (navigateur sans stockage de script de fond), rien à attendre.

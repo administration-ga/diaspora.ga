@@ -12,6 +12,8 @@
  *    le purge. Le fil (ou le hub d'un nouveau membre) le LIT UNE FOIS (`takeArrival`) pour montrer
  *    la carte d'arrivée, et l'oublie aussitôt.
  */
+import type { IdnStartOptions } from "@diaspora-ga/features/data"
+
 import { tabStorage, type TabStorage } from "./return-path"
 
 /** Le paramètre de la porte d'arrivée, et ses seules valeurs. */
@@ -32,6 +34,15 @@ export const ARRIVAL_TTL_MS = 30 * 60 * 1000
 
 function isArrivalOrigin(value: unknown): value is ArrivalOrigin {
   return (ARRIVAL_ORIGINS as readonly unknown[]).includes(value)
+}
+
+/**
+ * L'option du départ vers IDN sur la porte (CH-863 D2) : l'entrée sans ressaisie seulement pour qui
+ * arrive de consulat.ga, et jamais après une déconnexion explicite dans ce navigateur depuis la
+ * dernière entrée réussie (`explicit-sign-out.ts`). Ailleurs : aucune option, le départ ordinaire.
+ */
+export function idnStartOptionsFor(arrival: ArrivalOrigin | null, signedOutExplicitly: boolean): IdnStartOptions | undefined {
+  return arrival === "consulat" && !signedOutExplicitly ? { reuseIdnSession: true } : undefined
 }
 
 /** La valeur lue dans l'adresse (`searchParams` de la page) : `consulat` seul, tel quel ; sinon rien. */

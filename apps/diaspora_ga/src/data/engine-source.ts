@@ -833,7 +833,8 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
 
   return {
     // EA-02 : départ vers IDN par le client du moteur ; l'identité simulée de la démonstration est ignorée.
-    signInWithIdn: () => startIdnSignIn(deps),
+    // CH-863 D2 : l'option de la porte d'arrivée (entrée sans ressaisie) passe telle quelle.
+    signInWithIdn: (_input, options) => startIdnSignIn(deps, options),
 
     async requestCode(destination, options) {
       // Le SMS arrive avec l'identité du moteur (PA4).

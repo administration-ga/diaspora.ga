@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { ARRIVAL_KEY, rememberArrival } from "@/lib/arrival"
 import { consulateGatewayLinks } from "@/lib/consulate-gateway"
+import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
 
 const env = vi.hoisted(() => ({ consulateUrl: null as string | null }))
 vi.mock("@/lib/env", async (importOriginal) => {
@@ -70,6 +71,7 @@ function mount() {
 beforeEach(() => {
   env.consulateUrl = ORIGIN
   window.sessionStorage.clear()
+  window.localStorage.clear()
 })
 
 afterEach(() => {
@@ -130,5 +132,7 @@ describe("carte d'arrivée — venue de consulat.ga", () => {
     // Un clic simple : le glissement de la pile (sonner) réclame la capture du pointeur, absente de jsdom.
     fireEvent.click(await screen.findByRole("button", { name: t("consulateGateway.arrival.notMe") }))
     await waitFor(() => expect(signOutEverywhere).toHaveBeenCalledTimes(1))
+    // CH-863 D2 : une déconnexion explicite, retenue : la porte d'arrivée redemandera l'identité.
+    expect(explicitSignOutHappened()).toBe(true)
   })
 })
