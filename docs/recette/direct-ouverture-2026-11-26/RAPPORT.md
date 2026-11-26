@@ -42,7 +42,25 @@ trois variables du serveur vidéo sur le backend.
 
 ## Vérification
 
-À compléter après la vérification complète sous le verrou commun.
+`bun run --cwd ../ANTSIA verify`, sous le verrou commun, le 26/11 de 7 h 45 à 7 h 58 (poste s12). Couple vérifié :
+moteur `547b80bc` (le `main` du moteur, sans modification) et DIASPORA.GA `7e06426`. Résultat **vert** :
+
+- code généré et typage strict du backend ;
+- moteur : 4 244 tests sur 274 fichiers ; cliquets : 203 tests sur 34 fichiers ; scripts : 181 tests ;
+- typage : 13 paquets ;
+- tests : 13 paquets, dont 2 767 pour l'application, 1 462 pour les surfaces de DIASPORA.GA, 281 pour
+  admin.diaspora.ga et 834 pour le domaine ;
+- lint : 12 paquets, aucune erreur ;
+- aucun écart dans les fichiers suivis.
+
+Tests ajoutés ou réécrits par le lot :
+- la projection : `toPostView` porte `live` et `event`, les omet quand ils sont absents ou nuls ;
+- le bloc du direct : chaque statut en français et en anglais, le point qui ne pulse qu'en mouvement permis, la
+  cible du lien, le texte simple quand le direct est refermé ou que la page n'est pas servie ;
+- le bloc de l'évènement : la plage, l'annulation, chaque réponse ;
+- la carte avec et sans annonce ;
+- la position ouverte de l'interrupteur et ses conséquences (page, « Créer », `liveAvailable`, administration),
+  chacune avec son cas « refermé ».
 
 ## Limites
 
