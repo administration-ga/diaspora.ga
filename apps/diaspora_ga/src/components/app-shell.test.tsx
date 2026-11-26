@@ -628,7 +628,8 @@ describe("coque — une seule entrée courante pour chaque route de membre (UX-0
   /** Toutes les adresses de membre de la table ; un profil l'est deux fois : le sien, puis celui d'un autre membre. */
   const CASES = (Object.keys(ROUTE_DESTINATIONS) as RouteKey[]).flatMap((key): [string, string, NavDestination][] => {
     const home = ROUTE_DESTINATIONS[key]
-    if (home.kind === "outside") return []
+    // Hors de la coque, ou page de la coque sous aucune entrée (la page d'un live : scénario à part).
+    if (home.kind === "outside" || home.kind === "standalone") return []
     if (home.kind === "person") return [[key, compose(key, MEMBER.handle), "profile"], [key, compose(key, "autre.membre"), "explore"]]
     return [[key, compose(key, "valeur-1"), home.destination]]
   })
@@ -1408,6 +1409,21 @@ describe("coque — une page large (`layout=\"wide\"`) : la page d'un live", () 
     // Le rail du bureau et la barre basse du téléphone entourent la page.
     expect(mainNavigations().rail).toBeInTheDocument()
     expect(screen.getByText("Scène du live")).toBeInTheDocument()
+  })
+
+  it("aucune entrée n'est courante sur la page d'un live — ni Membres, ni Fil —, au rail, à la barre ni dans le menu du compte", async () => {
+    // Constaté en ligne à 1 440 px avant le correctif : « Membres » marqué courant sur `/direct/<id>`.
+    // Comme antsia.ga (ni rail ni barre sur un direct) et administration.ga (aucun onglet sur sa page de conférence).
+    render(wideTree())
+    const { rail, bar } = mainNavigations()
+    expect(within(rail).getByRole("link", { name: "Membres" })).not.toHaveAttribute("aria-current")
+    expect(within(rail).getByRole("link", { name: "Fil" })).not.toHaveAttribute("aria-current")
+    expect(currentLinks(rail)).toEqual([])
+    expect(currentLinks(bar)).toEqual([])
+    expect(document.querySelectorAll("[aria-current]")).toHaveLength(0)
+    await userEvent.setup().click(accountTrigger("dialog"))
+    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
+    expect(currentLinks(sheet)).toEqual([])
   })
 })
 

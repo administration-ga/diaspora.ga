@@ -7,6 +7,7 @@ import {
   PRIMARY_DESTINATIONS,
   ROUTE_DESTINATIONS,
   navDestinationOf,
+  routeKeyOf,
   type NavDestination,
   type RouteKey,
 } from "./nav-destinations"
@@ -46,6 +47,12 @@ const OUTSIDE_SHELL: readonly RouteKey[] = [
 ]
 
 /**
+ * Dans la coque, sous AUCUNE entrée : la page d'un live, comme dans les applications de référence
+ * (antsia.ga n'y pose ni rail ni barre ; administration.ga n'y donne aucun onglet).
+ */
+const STANDALONE: readonly RouteKey[] = ["conference"]
+
+/**
  * Compose une adresse de la table en donnant la même valeur à chaque paramètre (identifiant, pays,
  * onglet, filtre) : la route elle-même dit son chemin, sans liste écrite à la main.
  */
@@ -70,6 +77,12 @@ describe("table des destinations — complétude", () => {
     }
   })
 
+  it("seule la page d'un live est dans la coque sans relever d'aucune entrée", () => {
+    for (const key of KEYS) {
+      expect(ROUTE_DESTINATIONS[key].kind === "standalone", key).toBe(STANDALONE.includes(key))
+    }
+  })
+
   it("chaque ligne porte le gabarit de sa propre route", () => {
     for (const key of KEYS) {
       const home = ROUTE_DESTINATIONS[key]
@@ -82,7 +95,7 @@ describe("table des destinations — complétude", () => {
     for (const key of KEYS) {
       const home = ROUTE_DESTINATIONS[key]
       const href = compose(key, "valeur-1")
-      if (home.kind === "outside") {
+      if (home.kind === "outside" || home.kind === "standalone") {
         expect(navDestinationOf(href, OWN), key).toBeNull()
       } else if (home.kind === "person") {
         expect(navDestinationOf(href, "valeur-1"), key).toBe("profile")
@@ -159,5 +172,16 @@ describe("table des destinations — chemins", () => {
 
   it.each(["/servicesx", "/filtre", "/messagesx", "/pays", "/inconnu", "/", ""])("%s ne relève d'aucune entrée", (pathname) => {
     expect(navDestinationOf(pathname, OWN)).toBeNull()
+  })
+})
+
+describe("table des destinations — la page d'un live (comme antsia.ga et administration.ga)", () => {
+  it.each([routes.conference("session-1"), routes.conference("session 2"), "/direct/session-3/"])("%s ne relève d'aucune entrée : ni Membres, ni Fil", (pathname) => {
+    expect(navDestinationOf(pathname, OWN)).toBeNull()
+    expect(navDestinationOf(pathname, null)).toBeNull()
+  })
+
+  it("reste une adresse de la coque, reconnue par la table (la garde des modules la lit)", () => {
+    expect(routeKeyOf(routes.conference("session-1"))).toBe("conference")
   })
 })
