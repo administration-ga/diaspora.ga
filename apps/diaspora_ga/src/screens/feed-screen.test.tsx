@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import type { FeedDiscoveryProps } from "@diaspora-ga/features"
+import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT } from "@diaspora-ga/features/data"
 import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryHubView, HubPagesView, Loadable, MembershipView, PagesCapability, PageView } from "@diaspora-ga/features/data"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
 import type { ComponentProps, ReactNode } from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -25,6 +26,9 @@ const mocks = vi.hoisted(() => ({
   associationEvents: null as Pick<AssociationEventsCapability, "useCountryEvents"> | null,
   pages: null as Pick<PagesCapability, "useHubPages"> | null,
   canPublish: false,
+  // A3 : le composeur de la coque, ouvert et nourri par les raccourcis Photo et Vidéo.
+  composerOpen: vi.fn(),
+  composerAttach: vi.fn(),
   // CH-816 (P2) : la déclaration de l'application ; les scénarios de la découverte la basculent.
   discoveryOffered: false,
 }))
@@ -49,7 +53,7 @@ vi.mock("@/components/gate", () => ({
 }))
 vi.mock("@/components/app-shell", () => ({
   AppShell: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useComposer: () => ({ canPublish: mocks.canPublish, open: vi.fn() }),
+  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach }),
 }))
 vi.mock("@/components/feed-pages", () => ({
   FeedPages: (props: FeedPagesProps) => {
@@ -454,6 +458,41 @@ describe("/fil — la carte d'identité porte l'inscription d'une organisation (
   it("sans publication possible, la carte ne paraît pas", () => {
     render(tree())
     expect(screen.queryByRole("group", { name: "Inscrire votre organisation" })).toBeNull()
+  })
+})
+
+describe("/fil — raccourcis Photo et Vidéo de la carte « Quoi de neuf ? » (A3)", () => {
+  function publisher() {
+    mocks.canPublish = true
+    mocks.membership = { ...MEMBER, status: "declaree", canPublish: true }
+  }
+
+  it.each([
+    { name: "Photo", accept: POST_PHOTO_ACCEPT, multiple: true, file: new File(["p"], "depuis-le-fil.png", { type: "image/png" }) },
+    { name: "Vidéo", accept: POST_VIDEO_ACCEPT, multiple: false, file: new File(["v"], "depuis-le-fil.mp4", { type: "video/mp4" }) },
+  ])("« $name » ouvre le composeur et son sélecteur d'un même geste ; le fichier choisi rejoint le composeur", ({ name, accept, multiple, file }) => {
+    publisher()
+    const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => undefined)
+    try {
+      render(tree())
+      const group = screen.getByRole("group", { name: "Publier une photo ou une vidéo" })
+      fireEvent.click(within(group).getByRole("button", { name }))
+      expect(click).toHaveBeenCalledOnce()
+      expect(mocks.composerOpen).toHaveBeenCalledOnce()
+      const input = click.mock.contexts[0] as HTMLInputElement
+      expect(input.accept).toBe(accept)
+      expect(input.multiple).toBe(multiple)
+      fireEvent.change(input, { target: { files: [file] } })
+      expect(mocks.composerAttach).toHaveBeenCalledWith([file])
+      expect(input.value).toBe("")
+    } finally {
+      click.mockRestore()
+    }
+  })
+
+  it("sans publication possible, aucun raccourci", () => {
+    render(tree())
+    expect(screen.queryByRole("group", { name: "Publier une photo ou une vidéo" })).toBeNull()
   })
 })
 

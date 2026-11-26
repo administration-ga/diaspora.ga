@@ -113,7 +113,8 @@ export function PostCard(props: {
             <RichText text={post.body} />
           </p>
         ) : null}
-        <PostMediaGrid media={post.media} className="px-4 pt-3" />
+        {/* A6 : les médias vont d'un bord à l'autre de la carte (comme UDB) ; le texte garde sa marge, le rayon de la carte découpe. */}
+        <PostMediaGrid media={post.media} bleed className="pt-3" />
         {post.share ? <SharedPostEmbed share={post.share} now={props.now} className="mx-4 mt-3" /> : null}
         <footer className="mt-3 flex flex-wrap items-center gap-2 border-t border-border px-2 py-1.5">
           <DropdownMenu.Root>

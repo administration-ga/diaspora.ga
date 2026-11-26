@@ -98,14 +98,15 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     expect(within(dialog).getByRole("img", { name: "Photo 2" })).toBeInTheDocument()
   })
 
-  it("agrandit la vidéo par un bouton séparé, met la grille en pause et conserve les commandes natives sans autoplay", async () => {
+  it("agrandit la vidéo par un bouton séparé, met la grille en pause ; les commandes natives sont dans la visionneuse", async () => {
     const pause = vi.spyOn(HTMLMediaElement.prototype, "pause").mockImplementation(() => {})
     const clip: PostMediaView = { ...photo, kind: "video", url: "/recette-video.mp4", altText: "La vidéo de recette" }
     const { container } = render(tree([clip]))
     const gridVideo = container.querySelector("video")
     const trigger = screen.getByRole("button", { name: t("post.media.expandVideo") })
     expect(trigger.closest("video")).toBeNull()
-    expect(gridVideo).toHaveAttribute("controls")
+    // A2 : dans le fil, la vidéo a ses propres boutons (lecture, son, agrandir) ; aucune lecture déclarée d'office.
+    expect(gridVideo).not.toHaveAttribute("controls")
     expect(gridVideo).not.toHaveAttribute("autoplay")
     trigger.focus()
     fireEvent.click(trigger)
@@ -134,6 +135,33 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
   })
 
+  it.each(["image", "video"] as const)("A1 : une analyse impossible ($0) dit sa vraie cause, jamais « Média indisponible »", (kind) => {
+    const { container } = render(tree([{ ...photo, kind, withheld: "scan_unavailable", url: "/ne-jamais-delivrer" }]))
+    const tile = screen.getByRole("img", { name: t("post.media.scanUnavailable") })
+    expect(tile).toHaveAccessibleDescription(t("errors:fileScanUnavailable"))
+    expect(tile).toHaveTextContent(t("post.media.scanUnavailable"))
+    expect(screen.queryByText(t("post.media.unavailable"))).not.toBeInTheDocument()
+    expect(container.querySelector("img,video")).toBeNull()
+    expect(screen.queryByRole("button")).not.toBeInTheDocument()
+  })
+
+  it("A1 : une photo qui ne se charge pas se replie sur « Photo indisponible », sans lien mort ni bouton", () => {
+    const { container } = render(tree([photo]))
+    const image = container.querySelector("img")!
+    fireEvent.error(image)
+    expect(screen.getByRole("img", { name: t("post.media.photoFailed") })).toBeInTheDocument()
+    expect(container.querySelector("img")).toBeNull()
+    expect(screen.queryByRole("button", { name: t("post.media.openImage", { position: 1, total: 1 }) })).not.toBeInTheDocument()
+  })
+
+  it("A1 : une vidéo illisible le dit à sa place, sans commande", () => {
+    const clip: PostMediaView = { ...photo, kind: "video", url: "/recette-illisible.mp4", altText: "Vidéo illisible" }
+    const { container } = render(tree([clip]))
+    fireEvent.error(container.querySelector("video")!)
+    expect(screen.getByText(t("post.media.videoFailed"))).toBeInTheDocument()
+    expect(container.querySelector("video")).toBeNull()
+  })
+
   it("referme immédiatement le lecteur si une image ouverte est retenue et ne conserve aucune ancienne URL", async () => {
     const view = render(tree())
     openImage()
@@ -156,7 +184,8 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     fireEvent.click(within(dialog).getByRole("button", { name: t("post.media.viewer.next") }))
 
     expect(within(dialog).getByRole("img", { name: t("post.media.scanPending") })).toBeInTheDocument()
-    expect(dialog.querySelector("img,video")).toBeNull()
+    // A6 : la diapositive courante ne monte aucun fichier ; la voisine reste montée, inerte, pour le balayage.
+    expect(within(dialog).queryByRole("img", { name: photo.altText! })).toBeNull()
     expect(document.querySelector('[src="/retenue-au-milieu.png"]')).toBeNull()
   })
 
@@ -229,6 +258,96 @@ describe("PostMediaGrid — lecteur des DTO vivants", () => {
     second.focus()
     fireEvent.click(second)
     expect(within(await screen.findByRole("dialog")).getByRole("img", { name: "Autre grille" })).toBeInTheDocument()
+  })
+})
+
+describe("PostMediaGrid — grille intelligente et visionneuse en défilement (A6)", () => {
+  const many = (count: number) => Array.from({ length: count }, (_, index) => ({ ...photo, url: `/recette-serie-${index + 1}.png`, altText: `Série ${index + 1}` }))
+
+  it.each([5, 6, 7, 8, 9, 10])("%i photos : trois vignettes et une quatrième voilée « +N », qui ouvre la suite", (count) => {
+    render(tree(many(count)))
+    const more = count - 3
+    const buttons = screen.getAllByRole("button")
+    expect(buttons).toHaveLength(4)
+    expect(buttons.slice(0, 3).map((button) => button.getAttribute("aria-label"))).toEqual([1, 2, 3].map((position) => t("post.media.openImage", { position, total: count })))
+    expect(buttons[3]).toHaveAccessibleName(t("post.media.openMore", { count: more, position: 4, total: count }))
+    expect(within(buttons[3]!).getByText(t("post.media.moreCount", { count: more }))).toBeInTheDocument()
+    // Les photos au-delà de la quatrième ne sont pas montées dans la grille.
+    expect(document.querySelector(`img[src="/recette-serie-${count}.png"]`)).toBeNull()
+  })
+
+  it("quatre photos : une grille 2 × 2, sans « +N »", () => {
+    const { container } = render(tree(many(4)))
+    expect(container.querySelector("[data-media-grid]")).toHaveAttribute("data-media-grid", "quad")
+    expect(screen.queryByText(t("post.media.moreCount", { count: 1 }))).not.toBeInTheDocument()
+    expect(screen.getAllByRole("button")).toHaveLength(4)
+  })
+
+  it.each([
+    { count: 1, variant: "single" },
+    { count: 2, variant: "pair" },
+    { count: 3, variant: "trio" },
+    { count: 6, variant: "overflow" },
+  ])("$count photo(s) : la grille « $variant »", ({ count, variant }) => {
+    const { container } = render(tree(many(count)))
+    expect(container.querySelector("[data-media-grid]")).toHaveAttribute("data-media-grid", variant)
+  })
+
+  it("la tuile « +N » ouvre la visionneuse à la quatrième photo, qui défile jusqu'à la dernière et annonce « 4 / 6 »", async () => {
+    const user = userEvent.setup()
+    render(tree(many(6)))
+    const more = screen.getByRole("button", { name: t("post.media.openMore", { count: 3, position: 4, total: 6 }) })
+    more.focus()
+    fireEvent.click(more)
+    const dialog = await screen.findByRole("dialog")
+    const carousel = within(dialog).getByRole("region", { name: t("post.media.viewer.title") })
+    expect(carousel).toHaveAttribute("aria-roledescription", t("post.media.viewer.carousel"))
+    expect(within(carousel).getByRole("img", { name: "Série 4" })).toHaveAttribute("src", "/recette-serie-4.png")
+    expect(within(dialog).getByText(t("post.media.viewer.positionShort", { position: 4, total: 6 }))).toBeInTheDocument()
+    expect(within(dialog).getByRole("status")).toHaveTextContent(normalize(t("post.media.viewer.position", { position: 4, total: 6 })))
+    const close = within(dialog).getByRole("button", { name: t("common.close") })
+    close.focus()
+    await user.keyboard("{ArrowRight}{ArrowRight}")
+    expect(within(carousel).getByRole("img", { name: "Série 6" })).toBeInTheDocument()
+    expect(within(dialog).getByRole("button", { name: t("post.media.viewer.next") })).toBeDisabled()
+    expect(within(dialog).getByText(t("post.media.viewer.positionShort", { position: 6, total: 6 }))).toBeInTheDocument()
+    // Une seule diapositive se lit à la fois ; les autres sont inertes pour le clavier et les lecteurs d'écran.
+    const slides = within(carousel).getAllByRole("group", { hidden: true })
+    expect(slides).toHaveLength(6)
+    expect(slides.filter((slide) => !slide.hasAttribute("inert")).map((slide) => slide.getAttribute("aria-label"))).toEqual([t("post.media.viewer.slide", { position: 6, total: 6 })])
+    await user.keyboard("{Escape}")
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    await waitFor(() => expect(more).toHaveFocus())
+  })
+
+  it("un balayage du doigt fait avancer la position annoncée", async () => {
+    render(tree(many(5)))
+    fireEvent.click(screen.getByRole("button", { name: t("post.media.openImage", { position: 1, total: 5 }) }))
+    const dialog = await screen.findByRole("dialog")
+    const carousel = within(dialog).getByRole("region", { name: t("post.media.viewer.title") })
+    Object.defineProperty(carousel, "clientWidth", { configurable: true, value: 400 })
+    carousel.scrollLeft = 800
+    fireEvent.scroll(carousel)
+    await waitFor(() => expect(within(dialog).getByRole("status")).toHaveTextContent(normalize(t("post.media.viewer.position", { position: 3, total: 5 }))))
+    expect(within(carousel).getByRole("img", { name: "Série 3" })).toBeInTheDocument()
+  })
+
+  it("bord à bord : la grille d'une carte n'a ni marge ni angle par tuile ; ailleurs, elle garde ses angles", () => {
+    const { container, rerender } = render(<I18nProvider locale="fr"><DataSourceProvider source={source}><PostMediaGrid media={many(2)} bleed /></DataSourceProvider></I18nProvider>)
+    const grid = container.querySelector("[data-media-grid]")!
+    expect(grid).toHaveAttribute("data-bleed", "true")
+    expect([...grid.querySelectorAll("[data-media-tile]")].some((tile) => /\brounded/.test(tile.className))).toBe(false)
+    rerender(<I18nProvider locale="fr"><DataSourceProvider source={source}><PostMediaGrid media={many(2)} /></DataSourceProvider></I18nProvider>)
+    const framed = container.querySelector("[data-media-grid]")!
+    expect(framed).not.toHaveAttribute("data-bleed")
+    expect([...framed.querySelectorAll("[data-media-tile]")].every((tile) => /\brounded-md\b/.test(tile.className))).toBe(true)
+  })
+
+  it("une photo seule garde ses proportions dans les bornes, sans saut au chargement", () => {
+    const { container } = render(tree([{ ...photo, width: 1080, height: 4000 }]))
+    const frame = container.querySelector<HTMLElement>("[data-media-tile]")!
+    // Le rapport borné au portrait 4:5 (le navigateur peut l'écrire « 0.8 / 1 »).
+    expect(frame.style.aspectRatio).toMatch(/^0\.8(?: \/ 1)?$/)
   })
 })
 

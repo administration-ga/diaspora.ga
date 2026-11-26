@@ -55,7 +55,9 @@ import {
   DEMO_STATE_VERSION,
   SEED_DISPLAY_NAMES,
   createDemoSeed,
+  withMediaShowcase,
   type DemoMedia,
+  type DemoMediaShowcase,
   type DemoMembership,
   type DemoNotification,
   type DemoPerson,
@@ -125,13 +127,20 @@ export class DemoStore {
   private sessionRevision = 0
   private readonly listeners = new Set<() => void>()
   private pageReadingProjection: ((state: DemoState) => DemoState) | null = null
+  private readonly mediaShowcase: DemoMediaShowcase | null
 
   constructor(
     private readonly storage: Pick<Storage, "getItem" | "setItem" | "removeItem"> | null,
     private readonly clock: () => number = Date.now,
     private readonly latencyMs = 220,
+    /** A6 et A2 (25/11/2026) : ce que l'application ajoute à la démonstration (vitrine des médias du fil). */
+    options: { readonly mediaShowcase?: DemoMediaShowcase } = {},
   ) {
-    this.state = this.load()
+    this.mediaShowcase = options.mediaShowcase ?? null
+    const loaded = this.load()
+    // La vitrine des médias s'ajoute une fois, aussi à un état déjà enregistré : sans changer de version.
+    this.state = withMediaShowcase(loaded, this.mediaShowcase, this.clock())
+    if (this.state !== loaded) this.persist(this.state)
     this.loadPagePublishedKeys()
   }
 
@@ -1595,7 +1604,7 @@ export class DemoStore {
     } catch {
       // ignoré : la remise à zéro en mémoire suffit
     }
-    this.commit(createDemoSeed(this.clock()))
+    this.commit(withMediaShowcase(createDemoSeed(this.clock()), this.mediaShowcase, this.clock()))
   }
 
   /** Statut courant (tests, diagnostics). */

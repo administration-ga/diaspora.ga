@@ -5,5 +5,5 @@
  */
 export { DemoStore, DEMO_STORAGE_KEY, demoIdnSub, isValidDestination } from "./store"
 export { createDemoDataSource } from "./source"
-export { DEMO_IDN_IDENTITIES, createDemoSeed, type DemoState } from "./state"
+export { DEMO_IDN_IDENTITIES, DEMO_SHOWCASE_POST_IDS, createDemoSeed, withMediaShowcase, type DemoMediaShowcase, type DemoState } from "./state"
 export { fakeConsularAttestation, emailHash } from "./attestation-provider"

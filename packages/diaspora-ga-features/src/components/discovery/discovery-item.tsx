@@ -9,6 +9,7 @@ import { useDiasporaGaT } from "../../i18n/client"
 import { cn } from "../../lib/cn"
 import { Skeleton } from "../../primitives/surface"
 import { PostCard } from "../cards/post-card"
+import { ManagedMediaPlayback } from "../feed-video"
 import type { SlideRendering } from "./discovery-window"
 
 /** Au-delà, un texte sans mise en page mesurable (rendu serveur, tests) est présumé tronqué. */
@@ -27,8 +28,9 @@ function isLongBody(body: string): boolean {
  * grille à deux colonnes : la carte elle-même n'est pas modifiée.
  */
 const MEDIA_FIT = cn(
-  "[&_img]:max-h-[max(8rem,calc(100cqh_-_14rem))] [&_video]:max-h-[max(8rem,calc(100cqh_-_14rem))]",
-  "[&_.grid-cols-2]:mx-auto [&_.grid-cols-2]:w-full [&_.grid-cols-2]:max-w-[max(12rem,calc(100cqh_-_12rem))]",
+  // A6 : les cadres déclarent leurs proportions ; la découverte borne le cadre (la photo s'y recadre), jamais l'image seule.
+  "[&_[data-media-grid=single]_[data-media-tile]]:max-h-[max(8rem,calc(100cqh_-_14rem))]",
+  "[&_[data-media-grid]:not([data-media-grid=single])]:mx-auto [&_[data-media-grid]:not([data-media-grid=single])]:w-full [&_[data-media-grid]:not([data-media-grid=single])]:max-w-[max(12rem,calc(100cqh_-_12rem))]",
 )
 
 export interface DiscoveryItemProps {
@@ -111,13 +113,16 @@ function FullItem(props: DiscoveryItemProps) {
           MEDIA_FIT,
         )}
       >
-        <PostCard
-          post={props.post}
-          now={props.now}
-          {...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry })}
-          canReact={props.canReact}
-          onReact={props.onReact}
-        />
+        {/* A2 : la découverte tient sa propre lecture ; la vidéo du fil n'y décide rien. */}
+        <ManagedMediaPlayback>
+          <PostCard
+            post={props.post}
+            now={props.now}
+            {...(props.hubCountry === undefined ? {} : { hubCountry: props.hubCountry })}
+            canReact={props.canReact}
+            onReact={props.onReact}
+          />
+        </ManagedMediaPlayback>
       </div>
       {truncated ? (
         <button

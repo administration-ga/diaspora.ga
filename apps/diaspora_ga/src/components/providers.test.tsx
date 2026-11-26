@@ -6,6 +6,7 @@ import { renderToString } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { formatLegalTextDate, LEGAL_TEXT_ROUTES } from "@/lib/legal-texts"
+import { DEMO_MEDIA_ASSETS } from "@/lib/routes"
 import { LegalScreen } from "@/screens/legal-screen"
 
 import { Providers } from "./providers"
@@ -23,6 +24,19 @@ const env = vi.hoisted(() => ({
   consulateUrl: null,
 }))
 vi.mock("@/lib/env", () => ({ publicEnv: env }))
+
+// La démonstration, observée : chaque magasin fictif créé et ce que l'application lui a demandé (vitrine des médias).
+const demoStores = vi.hoisted(() => [] as unknown[][])
+vi.mock("@diaspora-ga/features/demo", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@diaspora-ga/features/demo")>()
+  class ObservedDemoStore extends actual.DemoStore {
+    constructor(...args: ConstructorParameters<typeof actual.DemoStore>) {
+      super(...args)
+      demoStores.push(args)
+    }
+  }
+  return { ...actual, DemoStore: ObservedDemoStore }
+})
 
 // Le fournisseur du moteur, tel que le serveur le rend avant toute session : la coque d'attente,
 // jamais les pages (garde de session d'`@antsia/api/next-provider`).
@@ -106,6 +120,30 @@ describe("Textes du site rendus côté serveur, sans attendre la session", () =>
       </Providers>,
     )
     expect(screen.getByRole("status")).toHaveTextContent(SESSION_LOADING)
+  })
+
+  it("sur le moteur, aucune démonstration n'est montée : le clip fictif (absent de l'image de production) n'est jamais demandé", () => {
+    demoStores.length = 0
+    navigation.pathname = "/fil"
+    const html = renderToString(
+      <Providers locale="fr">
+        <p>page de l'application</p>
+      </Providers>,
+    )
+    expect(demoStores).toEqual([])
+    expect(html).not.toContain(DEMO_MEDIA_ASSETS.clip)
+    render(<Providers locale="fr"><p>page de l'application</p></Providers>)
+    expect(demoStores).toEqual([])
+    expect(document.body.innerHTML).not.toContain(DEMO_MEDIA_ASSETS.clip)
+  })
+
+  it("en démonstration seulement, la vitrine des médias reçoit le clip fictif de l'application", () => {
+    demoStores.length = 0
+    env.dataSource = "demo"
+    navigation.pathname = "/fil"
+    render(<Providers locale="fr"><p>page de démonstration</p></Providers>)
+    expect(demoStores.length).toBeGreaterThan(0)
+    expect(demoStores[0]?.[3]).toEqual({ mediaShowcase: { clipUrl: DEMO_MEDIA_ASSETS.clip } })
   })
 
   it("la démonstration ne change pas : ses données fictives restent montées sous les textes", () => {

@@ -128,6 +128,7 @@ import { createEngineNetworkFeatures } from "./engine-network-features"
 import { createEngineCallSettings } from "./engine-call-settings"
 import { createEngineDeviceNotifications } from "./engine-device-notifications"
 import { createEnginePostSearch } from "./engine-post-search"
+import { defaultUploadTransport } from "./engine-upload"
 import {
   toAccountView,
   toConsentViews,
@@ -946,14 +947,25 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         options?.onPhase?.({ phase: "uploading" })
         let storageId: string
         try {
-          const response = await fetch(url, { method: "POST", headers: { "Content-Type": upload.type }, body: upload, ...(signal ? { signal } : {}) })
-          if (!response.ok) throw new Refusal("media_upload_failed")
-          storageId = ((await response.json()) as { storageId: string }).storageId
+          // A3 : l'envoi dit son avancement (XHR), au pour cent près ; l'annulation l'interrompt.
+          const onPhase = options?.onPhase
+          const response = await (deps.uploadTransport ?? defaultUploadTransport())({
+            url,
+            file: upload,
+            ...(signal ? { signal } : {}),
+            ...(onPhase ? { onProgress: (progress: number) => { if (!signal?.aborted) onPhase({ phase: "uploading", progress }) } } : {}),
+          })
+          if (response.status < 200 || response.status >= 300) throw new Refusal("media_upload_failed")
+          const parsed: unknown = JSON.parse(response.body)
+          const stored = typeof parsed === "object" && parsed !== null && "storageId" in parsed ? parsed.storageId : null
+          if (typeof stored !== "string" || stored.length === 0) throw new Refusal("media_upload_failed")
+          storageId = stored
         } catch (error) {
           if (signal?.aborted) throw new Refusal("media_cancelled")
           throw error instanceof Refusal ? error : new Refusal("media_upload_failed")
         }
-        return { ref: storageId, ...facts }
+        // A1 : la garde des fichiers analyse le fichier à la publication ; il ne se montre qu'après.
+        return { ref: storageId, ...facts, pendingCheck: true }
       }),
 
     publish: (input) =>

@@ -10,7 +10,7 @@
     "associationAudience": "Galerie réservée aux adhérents de l’association autorisés à consulter l’événement.",
     "networkAudience": "Galerie accessible aux membres de DIASPORA.GA autorisés à consulter l’événement.",
     "add": "Ajouter des photos ou une vidéo",
-    "composeDescription": "Ajoutez jusqu’à quatre photos ou une vidéo pour « {{title}} ». La publication reste sous l’identité de l’association et l’audience de l’événement.",
+    "composeDescription": "Ajoutez jusqu’à {{postMediaMaxCount}} photos ou une vidéo pour « {{title}} ». La publication reste sous l’identité de l’association et l’audience de l’événement.",
     "empty": "Aucun média accessible dans cette galerie pour le moment.",
     "remove": "Retirer cet ajout",
     "removeTitle": "Retirer des médias de la galerie",

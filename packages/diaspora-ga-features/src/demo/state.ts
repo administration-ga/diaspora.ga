@@ -28,6 +28,7 @@ import {
 } from "@diaspora-ga/domain"
 
 import type { AssociationType, CommunityNoticeView, CompanySector, EventCategory, NotificationKind, ReactionKind, ReportReason } from "../data/types"
+import type { DemoIllustration } from "./illustrations"
 
 /**
  * Version de l'état persisté : v2 = relations (demandes, blocages, abonnements) ;
@@ -110,13 +111,20 @@ export interface DemoPage {
 }
 
 /**
- * Une photo d'une publication de démonstration : réduite (1 280 px au plus) et
- * gardée en data URL dans ce navigateur. Pas de vidéo en démonstration : le
- * stockage du navigateur ne la garderait pas d'une visite à l'autre.
+ * Un média d'une publication de démonstration. Une photo DÉPOSÉE est réduite (1 280 px
+ * au plus) et gardée en data URL dans ce navigateur ; aucune vidéo ne se dépose en
+ * démonstration (le stockage du navigateur ne la garderait pas d'une visite à l'autre).
+ *
+ * A6 (25/11/2026) : la vitrine des médias (`withMediaShowcase`) ajoute une publication à
+ * six photos — des illustrations fictives dessinées aux couleurs du thème (`illustration`,
+ * l'adresse est alors calculée à la lecture) — et une publication à vidéo, dont l'adresse
+ * est celle d'un clip fictif servi par l'application.
  */
 export interface DemoMedia {
-  readonly kind: "image"
+  readonly kind: "image" | "video"
   readonly url: string
+  /** Une illustration fictive : l'adresse se dessine à la lecture, aux couleurs du thème affiché. */
+  readonly illustration?: DemoIllustration
   readonly altText: string | null
   readonly width: number
   readonly height: number
@@ -289,6 +297,7 @@ export interface DemoState {
 
 const DAY = 24 * 60 * 60 * 1000
 const HOUR = 60 * 60 * 1000
+const MINUTE = 60 * 1000
 
 /** Identités IDN proposées par l'écran de connexion simulé (aucune n'existe). */
 export const DEMO_IDN_IDENTITIES = [
@@ -674,4 +683,73 @@ export function createDemoSeed(now: number): DemoState {
     // numérotent au-delà, jamais un identifiant déjà pris.
     sequence: 100,
   }
+}
+
+/**
+ * La vitrine des médias du fil (A6 et A2, 25/11/2026) : ce que l'application offre en
+ * démonstration pour montrer la grille et la vidéo du fil. L'adresse du clip fictif est
+ * celle que l'application sert (sa table des routes) ; sans elle, pas de vitrine.
+ */
+export interface DemoMediaShowcase {
+  readonly clipUrl: string
+}
+
+/** Les publications de la vitrine : sous 100, comme tout le jeu d'essai (les écritures numérotent au-delà). */
+export const DEMO_SHOWCASE_POST_IDS = { photos: "post-90", video: "post-91" } as const
+
+const SHOWCASE_PHOTOS: readonly { readonly illustration: DemoIllustration; readonly altText: string; readonly width: number; readonly height: number }[] = [
+  { illustration: "lagune", altText: "Illustration fictive : la lagune au matin, sous le soleil.", width: 1200, height: 900 },
+  { illustration: "marche", altText: "Illustration fictive : trois étals du marché, auvents colorés.", width: 900, height: 1200 },
+  { illustration: "danse", altText: "Illustration fictive : une ronde de danseurs autour du feu.", width: 1000, height: 1000 },
+  { illustration: "tambours", altText: "Illustration fictive : trois tambours sur une estrade.", width: 1200, height: 900 },
+  { illustration: "plat", altText: "Illustration fictive : un plat partagé et ses garnitures.", width: 1000, height: 1000 },
+  { illustration: "coucher", altText: "Illustration fictive : le coucher du soleil sur l'estuaire.", width: 1600, height: 900 },
+  { illustration: "pirogue", altText: "Illustration fictive : une pirogue sur le fleuve.", width: 1200, height: 900 },
+  { illustration: "foret", altText: "Illustration fictive : trois rangs de cimes dans la forêt.", width: 900, height: 1200 },
+  { illustration: "quartier", altText: "Illustration fictive : les façades colorées d'un quartier.", width: 1200, height: 800 },
+  { illustration: "etoiles", altText: "Illustration fictive : une nuit étoilée sur la plage.", width: 1000, height: 1000 },
+]
+
+const SHOWCASE_PHOTOS_BODY = "Retour en images sur la soirée culturelle du collectif à Lyon : dix illustrations fictives pour la démonstration. Touchez une photo pour les parcourir."
+
+/**
+ * Ajoute la vitrine des médias à un état de démonstration, une fois : une publication à
+ * dix photos (la borne du moteur depuis son lot M3, pour montrer la tuile « +N » et la
+ * visionneuse) et une publication à vidéo. Une vitrine enregistrée avec moins de photos
+ * (six, avant M3) reçoit les dix, sans doublon. Un état déjà à jour, ou dont les auteurs
+ * fictifs manquent, est rendu tel quel. Les dates sont celles du premier ajout : la
+ * vitrine paraît en tête du fil.
+ */
+export function withMediaShowcase(state: DemoState, showcase: DemoMediaShowcase | null | undefined, now: number): DemoState {
+  if (!showcase || showcase.clipUrl.trim().length === 0) return state
+  const present = new Set(state.posts.map((post) => post.id))
+  const photosMedia = SHOWCASE_PHOTOS.map((photo) => ({ kind: "image" as const, url: "", ...photo }))
+  // Une vitrine d'avant M3 (six photos) passe aux dix photos, à sa place et à sa date.
+  const stale = state.posts.find((post) => post.id === DEMO_SHOWCASE_POST_IDS.photos && (post.media?.length ?? 0) !== photosMedia.length)
+  const refreshed = stale ? { ...state, posts: state.posts.map((post) => post === stale ? { ...post, body: SHOWCASE_PHOTOS_BODY, media: photosMedia } : post) } : state
+  const added: DemoPost[] = []
+  const base = { scope: { reach: "diaspora", country: "FR" } as const, audience: "public" as const, visibility: "network" as const, moderation: "published" as const, reactions: {}, editedAt: null }
+  if (!present.has(DEMO_SHOWCASE_POST_IDS.photos) && state.persons["p-mireille"]) {
+    added.push({
+      ...base,
+      id: DEMO_SHOWCASE_POST_IDS.photos,
+      author: { kind: "person", id: "p-mireille" },
+      body: SHOWCASE_PHOTOS_BODY,
+      media: photosMedia,
+      createdAt: now - 20 * MINUTE,
+      baseReactions: 14,
+    })
+  }
+  if (!present.has(DEMO_SHOWCASE_POST_IDS.video) && state.persons["p-steeve"]) {
+    added.push({
+      ...base,
+      id: DEMO_SHOWCASE_POST_IDS.video,
+      author: { kind: "person", id: "p-steeve" },
+      body: "Une courte vidéo fictive pour la démonstration : elle se lance sans le son quand elle est la plus visible du fil, le son vient d'un geste.",
+      media: [{ kind: "video", url: showcase.clipUrl, altText: "Vidéo fictive de démonstration : des bandes de couleur qui glissent, avec un bruit de vagues.", width: 640, height: 360 }],
+      createdAt: now - 50 * MINUTE,
+      baseReactions: 6,
+    })
+  }
+  return added.length === 0 ? refreshed : { ...refreshed, posts: [...added, ...refreshed.posts] }
 }

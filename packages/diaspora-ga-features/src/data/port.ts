@@ -193,7 +193,10 @@ export interface JoinedView {
  * FD-02 : où en est le dépôt d'un média, tel que le composeur l'annonce — l'analyse puis la
  * conversion d'une vidéo (progression de 0 à 1, phases du module du moteur), puis l'envoi.
  */
-export type MediaUploadPhase = VideoPreparationPhase | { readonly phase: "uploading" }
+export type MediaUploadPhase =
+  | VideoPreparationPhase
+  /** A3 : l'envoi du fichier préparé ; `progress` de 0 à 1 quand l'envoi le dit (absent : inconnu). */
+  | { readonly phase: "uploading"; readonly progress?: number }
 
 /** Ce que l'écran suit et peut arrêter pendant un dépôt de média (FD-02). */
 export interface MediaUploadOptions {
@@ -219,6 +222,12 @@ export interface UploadedMedia {
   readonly width?: number
   readonly height?: number
   readonly durationMs?: number
+  /**
+   * A1 (25/11/2026) : le fichier ne sera montré qu'après l'analyse de la garde des fichiers,
+   * lancée à la publication (moteur). Le composeur ne dit alors jamais « Publié. » : il dit que
+   * les médias apparaîtront après leur vérification. Absent : rien à attendre (démonstration).
+   */
+  readonly pendingCheck?: boolean
 }
 
 export interface PublishMediaInput {
@@ -235,7 +244,7 @@ export interface PublishInput {
   readonly audience: "public" | "connections"
   /** « Publier aussi sur ANTSIA » — geste explicite, ignoré hors audience publique. */
   readonly alsoOnRoot: boolean
-  /** Quatre photos au plus, ou une vidéo seule, dans l'ordre choisi. */
+  /** `POST_MEDIA_MAX_COUNT` photos au plus (dix, lot M3 du moteur), ou une vidéo seule, dans l'ordre choisi. */
   readonly media?: readonly PublishMediaInput[]
   /**
    * Partage cité : la publication citée (publique et publiée). Un partage ne

@@ -1,4 +1,4 @@
-import { POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
+import { POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import {
   prepareVideoForUpload,
@@ -11,6 +11,7 @@ import {
   POST_VIDEO_UPLOAD_LIMITS,
   VIDEO_PREPARATION_REFUSALS,
   VIDEO_TRANSCODE_MAX_DURATION_MS,
+  VIDEO_TRANSCODE_MAX_SOURCE_BYTES,
   type VideoPreparationRefusal,
 } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { IMAGE_UPLOAD_QUALITY, isPreparedImage, type PrepareImage } from "@antsia/social-features/media-upload"
@@ -34,6 +35,7 @@ import {
   selectionMediaInput,
   unsupportedMediaRefusal,
   VIDEO_PREPARATION_CODES,
+  videoSourceRefusal,
 } from "./media"
 
 function file(bytes: Uint8Array, name: string, type: string): File {
@@ -147,12 +149,14 @@ describe("médias d'une publication — les règles du moteur, dites par DIASPOR
     expect(postMediaRefusal([photoInput, movInput])).toBe("media_video_alone")
   })
 
-  it("quatre photos au plus, une vidéo seule, un texte alternatif borné : chaque refus a son code", () => {
+  it("autant de photos que la borne du moteur, une vidéo seule, un texte alternatif borné : chaque refus a son code", () => {
     const photo = { kind: "image" as const, mimeType: "image/jpeg", sizeBytes: 1000 }
     const video = { kind: "video" as const, mimeType: "video/mp4", sizeBytes: 1000 }
-    expect(postMediaRefusal([photo, photo, photo, photo])).toBeNull()
+    // M3 du moteur : la borne vient du domaine (dix photos), jamais d'un chiffre écrit ici.
+    expect(POST_MEDIA_MAX_COUNT).toBe(10)
+    expect(postMediaRefusal(Array.from({ length: POST_MEDIA_MAX_COUNT }, () => photo))).toBeNull()
     expect(postMediaRefusal([video])).toBeNull()
-    expect(postMediaRefusal([photo, photo, photo, photo, photo])).toBe("media_too_many")
+    expect(postMediaRefusal(Array.from({ length: POST_MEDIA_MAX_COUNT + 1 }, () => photo))).toBe("media_too_many")
     expect(postMediaRefusal([video, photo])).toBe("media_video_alone")
     expect(postMediaRefusal([{ ...photo, mimeType: "image/bmp" }])).toBe("media_type_invalid")
     expect(postMediaRefusal([{ ...photo, sizeBytes: 21 * 1024 * 1024 }])).toBe("media_too_large")
@@ -282,19 +286,62 @@ describe("FD-01 — une photo part nettoyée et allégée, jamais telle qu'elle 
   })
 })
 
-describe("FD-02 — une vidéo trop lourde est refusée avant l'envoi, à la borne du moteur", () => {
-  it("la borne est celle du domaine : à la limite, recevable ; un octet de plus, refusée", async () => {
+describe("A4 (M2 du moteur) — une vidéo plus lourde que la borne d'envoi se compresse au lieu d'être refusée", () => {
+  /** Un fichier qui pèse ce qu'on lui dit, sans en porter les octets. */
+  const sized = (file: File, bytes: number) => {
+    Object.defineProperty(file, "size", { value: bytes })
+    return file
+  }
+
+  it("à la borne, le MP4 part tel quel ; un octet de plus, il passe par la compression du moteur, jamais par un refus d'office", async () => {
     vi.useFakeTimers()
-    const atLimit = new File(["v"], "limite.mp4", { type: "video/mp4" })
-    Object.defineProperty(atLimit, "size", { value: POST_VIDEO_MAX_BYTES })
-    const heavy = new File(["v"], "lourde.mp4", { type: "video/mp4" })
-    Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES + 1 })
-    expect(postMediaRefusal([{ kind: "video", mimeType: "video/mp4", sizeBytes: POST_VIDEO_MAX_BYTES }])).toBeNull()
-    // Refusée avant toute analyse : la préparation n'est même pas appelée.
-    const unused = simulatedBrowser()
-    expect(await prepareMediaFile(heavy, undefined, { prepareVideo: unused.prepareVideo })).toEqual({ ok: false, code: "media_too_large" })
-    expect(unused.prepareVideo).not.toHaveBeenCalled()
-    expect((await measuredVideo(prepareMediaFile(atLimit, undefined, { prepareVideo: simulatedBrowser({ codecs: ["avc1"] }).prepareVideo }))).ok).toBe(true)
+    const atLimit = sized(new File(["v"], "limite.mp4", { type: "video/mp4" }), POST_VIDEO_MAX_BYTES)
+    const direct = simulatedBrowser({ codecs: ["avc1"] })
+    expect((await measuredVideo(prepareMediaFile(atLimit, undefined, { prepareVideo: direct.prepareVideo }))).ok).toBe(true)
+    expect(direct.transcodes).toEqual([])
+    const heavy = sized(new File(["v"], "lourde.mp4", { type: "video/mp4" }), POST_VIDEO_MAX_BYTES + 1)
+    const compressing = simulatedBrowser({ codecs: ["avc1"] })
+    const result = await measuredVideo(prepareMediaFile(heavy, undefined, { prepareVideo: compressing.prepareVideo }))
+    expect(compressing.prepareVideo).toHaveBeenCalledOnce()
+    expect(compressing.transcodes).toEqual(["video/mp4"])
+    expect(result.ok && result.value.file !== heavy && result.value.facts.sizeBytes <= POST_VIDEO_MAX_BYTES).toBe(true)
+  })
+
+  it("au choix, un MP4 lourd se présente comme le MP4 qu'il deviendra : seule sa place se juge", () => {
+    const heavy = sized(new File(["v"], "lourde.mp4", { type: "video/mp4" }), POST_VIDEO_MAX_BYTES * 3)
+    const input = selectionMediaInput(heavy)
+    expect(input).toEqual({ kind: "video", mimeType: "video/mp4", sizeBytes: POST_VIDEO_MAX_BYTES })
+    expect(postMediaRefusal([input!])).toBeNull()
+  })
+
+  it("au-delà du plafond de conversion du moteur, la source est refusée dès le choix, par le code qui le dit", () => {
+    expect(VIDEO_TRANSCODE_MAX_SOURCE_BYTES).toBe(1024 * 1024 * 1024)
+    expect(videoSourceRefusal(sized(new File(["v"], "enorme.mp4", { type: "video/mp4" }), VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1))).toBe("media_video_too_large_to_convert")
+    expect(videoSourceRefusal(sized(new File(["v"], "enorme.mov", { type: "video/quicktime" }), VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1))).toBe("media_video_too_large_to_convert")
+    expect(videoSourceRefusal(sized(new File(["v"], "plafond.mp4", { type: "video/mp4" }), VIDEO_TRANSCODE_MAX_SOURCE_BYTES))).toBeNull()
+    expect(videoSourceRefusal(sized(new File(["p"], "photo.jpg", { type: "image/jpeg" }), VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1))).toBeNull()
+  })
+
+  it("un MP4 lourd que la compression ne peut pas servir le dit sans conseiller un autre format", async () => {
+    const heavy = () => sized(new File(["v"], "lourde.mp4", { type: "video/mp4" }), POST_VIDEO_MAX_BYTES + 1)
+    const tooLong = simulatedBrowser({ codecs: ["avc1"], durationMs: VIDEO_TRANSCODE_MAX_DURATION_MS + 1 })
+    expect(await prepareMediaFile(heavy(), undefined, { prepareVideo: tooLong.prepareVideo })).toEqual({ ok: false, code: "media_video_too_heavy_to_compress" })
+    const noEncoder = simulatedBrowser({ codecs: ["avc1"], targets: [] })
+    expect(await prepareMediaFile(heavy(), undefined, { prepareVideo: noEncoder.prepareVideo })).toEqual({ ok: false, code: "media_video_cannot_compress" })
+    // Le .mov garde ses propres phrases : il doit changer de format, pas de poids.
+    expect(await prepareMediaFile(iphoneVideo(), undefined, { prepareVideo: simulatedBrowser({ targets: [] }).prepareVideo })).toEqual({ ok: false, code: "media_video_format" })
+    for (const locale of ["fr", "en"] as const) {
+      const t = getFixedT(locale)
+      for (const code of ["media_video_too_heavy_to_compress", "media_video_cannot_compress", "media_video_too_large_to_convert"] as const) {
+        expect(ACTION_ERROR_CODES).toContain(code)
+        expect(t(`errors.${code}`)).not.toBe(`errors.${code}`)
+        expect(t(`errors.${code}`)).not.toMatch(/\{\{|\}\}/)
+        expect(t(`errors.${code}`)).not.toContain("MOV")
+      }
+      expect(t("errors.media_video_too_heavy_to_compress")).toContain(String(POST_VIDEO_MAX_BYTES / (1024 * 1024)))
+      expect(t("errors.media_video_too_heavy_to_compress")).toContain(String(VIDEO_TRANSCODE_MAX_DURATION_MS / 60_000))
+      expect(t("errors.media_video_too_large_to_convert")).toContain(String(VIDEO_TRANSCODE_MAX_SOURCE_BYTES / (1024 * 1024 * 1024)))
+    }
   })
 })
 
@@ -484,6 +531,16 @@ describe("FD-02 — la vidéo d'un iPhone est préparée avant l'envoi : convert
     "too-long-to-convert": { file: iphoneVideo, browser: { durationMs: VIDEO_TRANSCODE_MAX_DURATION_MS + 1 }, code: "media_video_too_long_to_convert" },
     "no-encoder": { file: iphoneVideo, browser: { targets: [] }, code: "media_video_format" },
     "conversion-failed": { file: iphoneVideo, browser: { transcode: async () => { throw new Error("transcode:recorder") } }, code: "media_video_conversion_failed" },
+    // M2 du moteur : une source plus lourde que le plafond de conversion (le .mov d'un téléphone en 4K à 60 images/s).
+    "too-large-to-convert": {
+      file: () => {
+        const mov = iphoneVideo()
+        Object.defineProperty(mov, "size", { value: VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1 })
+        return mov
+      },
+      browser: {},
+      code: "media_video_too_large_to_convert",
+    },
   }
 
   it.each(VIDEO_PREPARATION_REFUSALS.map((refusal) => [refusal]))("le refus « %s » rend son code fermé, dit en français et en anglais", async (refusal) => {

@@ -8,9 +8,9 @@
  * noms de formats) : l'instance change de langue sans être recréée, et l'unité
  * (« Mo », « MB ») est dans la phrase de chaque langue.
  */
-import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
+import { POST_IMAGE_MAX_BYTES, POST_IMAGE_MIME_TYPES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS, POST_VIDEO_UPLOAD_MIME_TYPES } from "@antsia/social-domain/content"
 import { UPLOAD_USAGES } from "@antsia/social-domain/uploadPolicy"
-import { VIDEO_TRANSCODE_MAX_DURATION_MS } from "@antsia/social-features/features/video-upload/video-upload-policy"
+import { VIDEO_TRANSCODE_MAX_DURATION_MS, VIDEO_TRANSCODE_MAX_SOURCE_BYTES } from "@antsia/social-features/features/video-upload/video-upload-policy"
 
 /** Base 1 024, comme les bornes du moteur (« 20 Mo » = 20 × 1 024 × 1 024 octets). */
 const MEBIBYTE = 1024 * 1024
@@ -36,6 +36,11 @@ export function megabytes(bytes: number): string {
   return String(Math.floor(bytes / MEBIBYTE))
 }
 
+/** Un poids en gibioctets entiers, arrondi vers le bas : jamais une borne plus large que celle du moteur. */
+export function gigabytes(bytes: number): string {
+  return String(Math.floor(bytes / (MEBIBYTE * 1024)))
+}
+
 /** Une durée en minutes entières, arrondie vers le bas : jamais une borne plus large que celle du moteur. */
 export function minutes(durationMs: number): string {
   return String(Math.floor(durationMs / 60_000))
@@ -43,6 +48,8 @@ export function minutes(durationMs: number): string {
 
 /** Les variables par défaut des textes de DIASPORA.GA qui disent une borne ou des formats. */
 export const MEDIA_LIMIT_VARIABLES = {
+  // A3 et M3 : le nombre de photos d'une publication, borne du moteur (dix depuis son lot M3).
+  postMediaMaxCount: String(POST_MEDIA_MAX_COUNT),
   postImageMaxMegabytes: megabytes(POST_IMAGE_MAX_BYTES),
   postVideoMaxMegabytes: megabytes(POST_VIDEO_MAX_BYTES),
   postImageFormats: formatNames(POST_IMAGE_MIME_TYPES),
@@ -52,6 +59,8 @@ export const MEDIA_LIMIT_VARIABLES = {
   postVideoMaxMinutes: minutes(POST_VIDEO_MAX_DURATION_MS),
   // FD-02 : la durée qu'une conversion dans le navigateur peut faire attendre (borne du module du moteur, pas de la vidéo).
   postVideoConvertMaxMinutes: minutes(VIDEO_TRANSCODE_MAX_DURATION_MS),
+  // M2 : la source la plus lourde que le moteur accepte de convertir dans un navigateur.
+  postVideoConvertMaxGigabytes: gigabytes(VIDEO_TRANSCODE_MAX_SOURCE_BYTES),
   profileImageFormats: formatNames(UPLOAD_USAGES.avatar.mimeTypes),
   profileAvatarMaxMegabytes: megabytes(UPLOAD_USAGES.avatar.maxBytes),
   profileCoverMaxMegabytes: megabytes(UPLOAD_USAGES.cover.maxBytes),
