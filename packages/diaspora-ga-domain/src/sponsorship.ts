@@ -11,13 +11,28 @@
  * (`target_not_eligible`) : parrainer ne doit rien apprendre du statut d'un
  * autre membre (refus indistinct, cahier §12.6).
  */
-import type { MembershipStatus } from "./eligibility"
+import type { MembershipGrounds, MembershipStatus } from "./eligibility"
 import { ok, refuse, type Result } from "./result"
 import { DAY_MS } from "./time"
+
+/** Code à usage unique. La source fournit un UUID aléatoire côté moteur (ou dans la démonstration locale). */
+export function sponsorCodeFromUuid(uuid: string): string {
+  return uuid.replaceAll("-", "").slice(-16).toUpperCase()
+}
+
+export function normalizeSponsorCode(raw: string): string | null {
+  const code = raw.trim().replace(/[ -]/g, "").toUpperCase()
+  return /^[A-F0-9]{16}$/.test(code) ? code : null
+}
 
 export const SPONSOR_MIN_VERIFIED_DAYS = 30
 export const SPONSORSHIPS_PER_WINDOW = 10
 export const SPONSORSHIP_WINDOW_DAYS = 30
+
+/** Les deux preuves de CONSULAT.GA et la dispense fondatrice ouvrent le parrainage immédiatement. */
+export function sponsorSeniorityWaived(grounds: MembershipGrounds): boolean {
+  return grounds.consulateAccount === true || grounds.consularAttestation || grounds.foundingAdmission?.seniorityWaiver === true
+}
 
 export interface SponsorFacts {
   readonly status: MembershipStatus

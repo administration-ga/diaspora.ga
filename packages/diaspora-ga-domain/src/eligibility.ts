@@ -72,6 +72,8 @@ export interface FoundingAdmissionGround {
 export interface MembershipGrounds {
   readonly idn: IdnGround | null
   readonly sponsored: boolean
+  /** Compte CONSULAT.GA authentifié par la passerelle serveur. */
+  readonly consulateAccount?: boolean
   readonly consularAttestation: boolean
   /** Admission fondatrice par décision du réseau ; `null` sans décision en vigueur. */
   readonly foundingAdmission: FoundingAdmissionGround | null
@@ -112,7 +114,7 @@ export function isSuspensionActive(suspension: SuspensionGround | null, now: num
 export function deriveMembershipStatus(grounds: MembershipGrounds, now: number): MembershipStatus {
   if (grounds.leftAt !== null) return "partie"
   if (isSuspensionActive(grounds.suspension, now)) return "suspendue"
-  if (grounds.consularAttestation) return "verifiee"
+  if (grounds.consularAttestation || grounds.consulateAccount) return "verifiee"
   // Un jeu de faits enregistré avant EA-01 (démonstration du navigateur) n'a pas le champ : sans décision.
   if (grounds.foundingAdmission) return "verifiee"
   const idn = idnCountsAsGround(grounds.idn) ? grounds.idn : null

@@ -176,7 +176,7 @@ export type EngineVerificationSource = "consulat" | "idn" | "operator"
  */
 export function engineVerificationSource(grounds: MembershipGrounds, now: number): EngineVerificationSource | null {
   if (deriveMembershipStatus(grounds, now) !== "verifiee") return null
-  if (grounds.consularAttestation) return "consulat"
+  if (grounds.consularAttestation || grounds.consulateAccount) return "consulat"
   return deriveMembershipStatus({ ...grounds, foundingAdmission: null }, now) === "verifiee" ? "idn" : "operator"
 }
 
