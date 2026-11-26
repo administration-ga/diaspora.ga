@@ -101,8 +101,8 @@ const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
     awaiting: {},
   },
   privacy: {
-    version: "1.0",
-    date: "2026-11-23",
+    version: "1.1",
+    date: "2026-11-26",
     status: "final",
     sections: [
       "controller",
@@ -128,8 +128,8 @@ const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
     awaiting: {},
   },
   terms: {
-    version: "1.0",
-    date: "2026-11-23",
+    version: "1.1",
+    date: "2026-11-26",
     status: "final",
     sections: [
       "purpose",
