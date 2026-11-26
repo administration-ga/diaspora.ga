@@ -226,47 +226,63 @@ démonstration et pour la production est refusée par le script.
 ### 6.3 Le direct (et les appels) : ce que leur ouverture demande
 
 Le direct du moteur (conférences : studio, antenne, salle, discussion, rediffusion) est monté dans
-diaspora.ga depuis CH-817 et **fermé par le code**, comme les appels (IM-01) : décision du
-propriétaire, rien n'est proposé avant d'avoir été prouvé avec un vrai serveur vidéo. Fermé, la page
-du direct répond « introuvable », « Créer » n'offre pas « Une conférence », et l'îlot des surfaces du
-moteur déclare `liveAvailable` faux (ni hôte du direct, ni directs en tête du lecteur des actus, ni
-conférence lancée depuis un appel). La démonstration de ce navigateur ne sert jamais le direct.
+diaspora.ga depuis CH-817. Il est **ouvert par le code depuis le 26/11/2026** (lot « ouverture du
+direct », branche `chantier/direct-ouverture`), le jour où le moteur a eu un vrai serveur vidéo ; les
+appels restent **fermés par le code** (IM-01). Ouvert, avec le moteur comme source : la page du direct
+monte l'écran du moteur, « Créer » offre « Une conférence », une annonce de direct dans le fil mène à
+sa page (lot A5), et l'îlot des surfaces du moteur déclare `liveAvailable` vrai (hôte du direct,
+directs en tête du lecteur des actus, conférence lancée depuis un appel). La démonstration de ce
+navigateur ne sert jamais le direct : page introuvable, annonce dite sans lien. **Rien n'est encore
+annoncé** : la recette à deux comptes (étape 4) reste à faire.
 
-Ouvrir demande, dans l'ordre :
+Ce que l'ouverture demande, et où l'on en est :
 
-1. **Le serveur vidéo du backend du moteur** (geste du propriétaire, noms seulement) :
-   `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_WS_URL` (requises ; absentes, le moteur répond
-   « non configuré », jamais un faux succès) ; facultatives : `LIVEKIT_WAKE_URL` et
-   `LIVEKIT_WAKE_TOKEN` (réveil d'un serveur qui se suspend), `LIVEKIT_EGRESS_URL` (service
-   d'enregistrement hébergé ailleurs que le serveur vidéo), `LIVEKIT_WEBHOOK_SECRET` (secret d'un
-   relais du webhook d'enregistrement, jamais requis). Ce sont les mêmes variables pour les appels.
-2. **L'origine du serveur vidéo dans la politique de sécurité du site.** La configuration commune du
-   moteur (`@antsia/api/next-config`, que `apps/diaspora_ga/next.config.ts` emploie) ajoute à
-   `connect-src` l'origine tirée de `LIVEKIT_WS_URL` **lue à la construction du site**. Depuis CH-817
-   (lot A1), le catalogue du moteur la déclare pour `diaspora_ga` (`runtime_env`, comme
-   `CONVEX_SITE_URL`) et `scripts/release.mjs` la passe à la construction quand la variable
-   facultative de la machine `DIASPORA_GA_<CIBLE>_LIVEKIT_WS_URL` est posée (origine `wss://` exacte,
-   sans chemin, sinon le plan refuse). Sans elle, la page s'ouvre mais le navigateur refuse la
-   connexion au serveur vidéo. L'image autoportante (Cloud Build) ne la reçoit pas à la construction,
-   comme `CONVEX_SITE_URL` ; le contrôle public (`scripts/release-check.mjs`) ne juge que les origines
-   Convex.
-3. **L'interrupteur, une valeur** : `MEMBERS_APP_CODE_SWITCH_STATES.live = "open"` dans
-   `packages/diaspora-ga-features/src/navigation/code-switches.ts` (celle que lisent
-   `apps/diaspora_ga/src/lib/live.ts`, le menu des membres et admin.diaspora.ga). Les tests qui
-   verrouillent la position fermée (ils le disent : « fermé par le code », « la position du
-   dépôt ») se mettent à jour dans le même lot. Les appels ont leur propre valeur (`CALLS_SWITCH`,
-   `apps/diaspora_ga/src/lib/calls.ts`, et sa ligne `calls` du même tableau).
-4. **La recette réelle à deux comptes**, sur le déploiement visé, avant toute annonce : un membre
-   qui peut publier ouvre « Créer → Une conférence », prépare puis lance le direct ; un second membre
-   de l'audience le voit en tête du lecteur des actus, entre dans la salle, voit et entend l'hôte,
-   écrit dans la discussion, sort et revient (la carte flottante tient la salle hors de sa page) ;
-   l'hôte exclut puis réintègre, ferme la discussion, termine. Consigner le rapport daté dans
-   `docs/recette/` (deux comptes réels, aucun identifiant).
+1. **Le serveur vidéo du backend du moteur** — fait pour la démonstration. Un serveur LiveKit dédié
+   au moteur de démonstration tourne sur le serveur OVH de NTSAGUI, distinct de celui d'UDB ; son
+   installation, ses contrôles et son retour arrière sont dans le dossier
+   `OKA_TECH/INFRASTRUCTURE/Montage_serveur/Stacks/rtc_antsia_demo` de l'atelier (hors de ce dépôt).
+   Le backend du moteur lit `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_WS_URL` (requises ;
+   absentes, le moteur répond « non configuré », jamais un faux succès) ; facultatives :
+   `LIVEKIT_WAKE_URL` et `LIVEKIT_WAKE_TOKEN` (réveil d'un serveur qui se suspend, inutile ici : le
+   serveur tourne en permanence), `LIVEKIT_EGRESS_URL` (service d'enregistrement hébergé ailleurs que
+   le serveur vidéo), `LIVEKIT_WEBHOOK_SECRET` (secret d'un relais du webhook d'enregistrement, jamais
+   requis). Leurs valeurs se posent sur le backend par le propriétaire, jamais dans un dépôt (noms
+   seulement ici). Ce sont les mêmes variables pour les appels. La production aura sa propre
+   instance et ses propres clés.
+2. **L'origine du serveur vidéo dans la politique de sécurité du site** — faite pour la
+   démonstration. La configuration commune du moteur (`@antsia/api/next-config`, que
+   `apps/diaspora_ga/next.config.ts` emploie) ajoute à `connect-src` l'origine tirée de
+   `LIVEKIT_WS_URL` **lue à la construction du site**. Le catalogue du moteur la déclare pour
+   `diaspora_ga` (`runtime_env`, comme `CONVEX_SITE_URL`) et `apps/diaspora_ga/Dockerfile` la reçoit
+   en `ARG`. Sur le serveur OVH, c'est `Stacks/diaspora_ga/build.sh.modele` (dossier
+   `OKA_TECH/INFRASTRUCTURE/Montage_serveur/Stacks/diaspora_ga` de l'atelier) qui la passe à la
+   construction de l'image (`--build-arg LIVEKIT_WS_URL`) ; `deployer.sh` du même dossier en fournit
+   la valeur (origine `wss://` exacte, sans chemin), tirée de la variable de la machine
+   `DIASPORA_GA_DEMO_LIVEKIT_WS_URL` quand elle existe. Une image construite sans elle : la page
+   s'ouvre, mais le navigateur refuse la connexion au serveur vidéo. Le site se publie par cette seule
+   chaîne du serveur OVH.
+3. **L'interrupteur, une valeur** — fait dans ce lot : `MEMBERS_APP_CODE_SWITCH_STATES.live = "open"`
+   dans `packages/diaspora-ga-features/src/navigation/code-switches.ts` (celle que lisent
+   `apps/diaspora_ga/src/lib/live.ts`, le menu des membres, la carte de publication et
+   admin.diaspora.ga, qui la montre « ouvert par le code »). Les tests qui verrouillaient la position
+   fermée verrouillent désormais la position ouverte et ses conséquences ; chacun garde un cas
+   « refermé par le code ». Le refermer reste une seule valeur (`"closed"`). Les appels ont leur
+   propre valeur (`CALLS_SWITCH`, `apps/diaspora_ga/src/lib/calls.ts`, et sa ligne `calls` du même
+   tableau), toujours fermée.
+4. **La recette réelle à deux comptes — à faire**, sur le déploiement visé, avant toute annonce : un
+   membre qui peut publier ouvre « Créer → Une conférence », prépare puis lance le direct ; un second
+   membre de l'audience le voit en tête du lecteur des actus, entre dans la salle, voit et entend
+   l'hôte, écrit dans la discussion, sort et revient (la carte flottante tient la salle hors de sa
+   page) ; l'hôte exclut puis réintègre, ferme la discussion, termine. Consigner le rapport daté dans
+   `docs/recette/` (deux comptes réels, aucun identifiant). Les contrôles du serveur vidéo (dossier
+   de la stack) ne prouvent pas un direct : seule cette recette le prouve.
 5. **L'enregistrement et l'accord** : décoché par défaut (formulaire et serveur). Coché, chaque
    intervenant accepte l'enregistrement, horodaté, avant de monter à l'antenne ; la copie n'est
    lisible que de l'hôte tant qu'il n'a pas décidé de la publier, jamais au-delà de l'audience du
-   direct, puis se purge à son échéance. La recette le rejoue une fois avec l'enregistrement coché.
-   Les durées et plafonds (décisions 6 à 9 du plan 04 du moteur) restent au propriétaire.
+   direct, puis se purge à son échéance. **Aucun service d'enregistrement (Egress) n'est déployé** à
+   côté du serveur vidéo de démonstration : une rediffusion demandée ne peut pas être produite, et la
+   recette avec l'enregistrement coché attend ce service. Les durées et plafonds (décisions 6 à 9 du
+   plan 04 du moteur) restent au propriétaire.
 
 ### 6.4 La porte des comptes de démonstration (déploiement de démonstration seulement)
 

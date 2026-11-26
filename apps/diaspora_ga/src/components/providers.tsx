@@ -14,6 +14,7 @@ import { EngineDataProviders } from "@/data/engine-providers"
 import { APPEARANCE } from "@/lib/appearance"
 import { callJournalRoute } from "@/lib/calls"
 import { publicEnv } from "@/lib/env"
+import { conferenceFeatureRoute } from "@/lib/live"
 import { DEMO_MEDIA_ASSETS, routes } from "@/lib/routes"
 import { isStaticPublicPath } from "@/lib/static-public-routes"
 
@@ -59,6 +60,8 @@ const featureRoutes: FeatureRoutes = {
   personalConversation: routes.personalConversation,
   // IM-04 : le journal d'appels, seulement quand les appels sont ouverts (aucune route d'appel, IM-01).
   ...callJournalRoute(),
+  // Lot A5 : la page d'un direct (annonce du fil), seulement quand elle est servie (direct ouvert, moteur branché).
+  ...conferenceFeatureRoute(publicEnv.dataSource),
   hub: routes.hub,
   feed: (tag, context) => routes.feed(context?.scope, tag, context?.country),
   sponsor: routes.sponsor,

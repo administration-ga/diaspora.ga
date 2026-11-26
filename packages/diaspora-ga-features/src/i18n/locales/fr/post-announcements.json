@@ -1,0 +1,22 @@
+{
+  "post": {
+    "announcement": {
+      "live": {
+        "label": "Direct annoncé",
+        "scheduled": "Programmé",
+        "onAir": "En direct",
+        "ended": "Terminé"
+      },
+      "event": {
+        "label": "Évènement annoncé",
+        "cancelled": "Annulé",
+        "participation": {
+          "pending": "Invitation sans réponse",
+          "accepted": "Vous participez",
+          "declined": "Vous ne participez pas",
+          "maybe": "Vous participerez peut-être"
+        }
+      }
+    }
+  }
+}

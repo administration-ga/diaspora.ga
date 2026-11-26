@@ -20,6 +20,7 @@ import { RichText } from "../rich-text"
 import { ContentScopeTag } from "../country-tag"
 import { ModerationBanner } from "../moderation-banner"
 import { TrustBadges } from "../trust-badge"
+import { PostEventAnnouncement, PostLiveAnnouncement } from "./post-announcements"
 
 const REACTIONS: Record<ReactionKind, { icon: LucideIcon; key: string }> = {
   like: { icon: HeartIcon, key: "post.reaction.like" },
@@ -33,7 +34,8 @@ const REACTIONS: Record<ReactionKind, { icon: LucideIcon; key: string }> = {
  * `social-features` n'est pas dupliqué) : auteur et badges P1, étiquette pays
  * ou portée, corps, réactions. L'auteur voit l'état de modération de sa
  * publication (carte flottante en tête, qu'il peut écarter) ; une publication
- * `root` dit qu'elle est aussi lue dans ANTSIA.
+ * `root` dit qu'elle est aussi lue dans ANTSIA. Lot A5 : le direct et
+ * l'évènement qu'elle annonce viennent après ses médias et sa citation.
  */
 export function PostCard(props: {
   post: PostView
@@ -116,6 +118,8 @@ export function PostCard(props: {
         {/* A6 : les médias vont d'un bord à l'autre de la carte (comme UDB) ; le texte garde sa marge, le rayon de la carte découpe. */}
         <PostMediaGrid media={post.media} bleed className="pt-3" />
         {post.share ? <SharedPostEmbed share={post.share} now={props.now} className="mx-4 mt-3" /> : null}
+        {post.live ? <PostLiveAnnouncement live={post.live} className="mx-4 mt-3" /> : null}
+        {post.event ? <PostEventAnnouncement event={post.event} className="mx-4 mt-3" /> : null}
         <footer className="mt-3 flex flex-wrap items-center gap-2 border-t border-border px-2 py-1.5">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger

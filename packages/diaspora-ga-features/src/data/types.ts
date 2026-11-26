@@ -6,6 +6,8 @@
  */
 export { DISPLAY_NAME_MAX_LENGTH, HEADLINE_MAX_LENGTH } from "@antsia/social-domain/content"
 import type { MediaWithheld } from "@antsia/social-contracts/media"
+import type { PersonalEventParticipationStatus, PersonalEventStatus } from "@antsia/social-domain/events"
+import type { DirectStatus } from "@antsia/social-domain/live/domain"
 import { CONTENT_REPORT_REASONS } from "@antsia/social-domain/moderation"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS } from "@antsia/social-domain/pagePresentation"
 import type { PageAssociationType, PageCompanySector } from "@antsia/social-domain/pagePresentation"
@@ -88,6 +90,34 @@ export type SharedPostView =
       readonly publishedAt: number
     }
 
+/**
+ * Le DIRECT annoncé par une publication (lot A5), tel que le moteur le relit À CHAQUE LECTURE : une
+ * référence, son statut (programmé, en direct, terminé) et son titre, rien d'autre. L'audience de la
+ * session est celle de la publication, dans le même réseau : voir l'annonce, c'est avoir le droit de
+ * savoir que le direct existe — la page du direct rejoue ses propres gardes.
+ */
+export interface PostLiveView {
+  readonly sessionId: string
+  readonly status: DirectStatus
+  readonly title: string
+}
+
+/**
+ * L'ÉVÈNEMENT annoncé par une publication (lot A5), relu à chaque lecture : annulé après l'annonce,
+ * la carte le dit. Les heures sont des instants ; la carte les affiche dans la langue et le fuseau
+ * du lecteur. `myParticipation` est MA réponse (`null` pour l'organisateur ou un non-invité).
+ */
+export interface PostEventView {
+  readonly eventId: string
+  readonly title: string
+  readonly startAt: number
+  readonly endAt: number
+  /** Le fuseau de l'évènement, tel que l'organisateur l'a posé ; l'affichage suit celui du lecteur. */
+  readonly timeZone: string
+  readonly status: PersonalEventStatus
+  readonly myParticipation: PersonalEventParticipationStatus | null
+}
+
 export interface PostView {
   readonly id: string
   /** Galerie collective événementielle ; l'éditeur des posts de page ordinaires ne s'applique pas. */
@@ -122,6 +152,10 @@ export interface PostView {
   readonly pinned?: boolean
   /** FD-10 : le lecteur reçoit un avis à chaque nouveau commentaire (bascule privée) ; absent des anciens fournisseurs. */
   readonly notifying?: boolean
+  /** Lot A5 : le direct que la publication annonce ; absent sinon (la démonstration n'en sert jamais). */
+  readonly live?: PostLiveView
+  /** Lot A5 : l'évènement que la publication annonce ; absent sinon, ou s'il ne mène plus nulle part. */
+  readonly event?: PostEventView
 }
 
 /** Curseur opaque du fil : l'instant seul ne départage pas deux publications. */

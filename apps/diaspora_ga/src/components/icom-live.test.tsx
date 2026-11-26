@@ -14,8 +14,12 @@ import { IcomIsland } from "./icom"
  * communication (hôte du direct), le lecteur des actus (directs en cours) et le lancement d'une
  * conférence depuis un appel. Personne fictive.
  */
-const mocks = vi.hoisted(() => ({ liveOpen: false }))
-vi.mock("@/lib/live", () => ({ liveIsOpen: () => mocks.liveOpen }))
+// `null` : l'interrupteur réel, la position du dépôt (ouvert depuis le 26/11/2026) ; un test le force.
+const mocks = vi.hoisted(() => ({ liveOpen: null as boolean | null }))
+vi.mock("@/lib/live", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/live")>()
+  return { ...actual, liveIsOpen: () => mocks.liveOpen ?? actual.liveIsOpen() }
+})
 vi.mock("@antsia/social-features/shell", () => ({ CommunicationShell: () => null }))
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn(), prefetch: vi.fn() }),
@@ -41,19 +45,25 @@ function mount() {
 }
 
 beforeEach(() => {
-  mocks.liveOpen = false
+  mocks.liveOpen = null
 })
 afterEach(cleanup)
 
 describe("iCom — l'interrupteur du direct déclaré au moteur (liveAvailable)", () => {
-  it("fermé : le moteur le lit fermé, aucun direct n'est monté", () => {
+  it("la position du dépôt (ouvert le 26/11/2026) : le moteur le lit ouvert", () => {
     mount()
-    expect(screen.getByTestId("live-available")).toHaveTextContent("false")
+    expect(screen.getByTestId("live-available")).toHaveTextContent("true")
   })
 
   it("ouvert : le moteur le lit ouvert", () => {
     mocks.liveOpen = true
     mount()
     expect(screen.getByTestId("live-available")).toHaveTextContent("true")
+  })
+
+  it("refermé : le moteur le lit fermé, aucun direct n'est monté", () => {
+    mocks.liveOpen = false
+    mount()
+    expect(screen.getByTestId("live-available")).toHaveTextContent("false")
   })
 })
