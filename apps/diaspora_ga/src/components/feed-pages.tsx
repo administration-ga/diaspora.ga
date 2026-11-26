@@ -504,7 +504,7 @@ function PageMediaCard(props: { post: PostView; kind: PageMediaKind }) {
   const media = props.post.media.filter((item) => props.kind === "all" || item.kind === props.kind)
   return (
     <Card className="flex min-w-0 flex-col overflow-hidden">
-      <PostMediaGrid media={media} />
+      <PostMediaGrid media={media} bleed />
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 p-4">
         <time dateTime={new Date(props.post.createdAt).toISOString()} className="text-sm text-muted-foreground">
           {t("pageMedia.publishedAt", { date: formatDate(props.post.createdAt, locale) })}

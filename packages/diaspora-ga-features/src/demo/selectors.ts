@@ -68,6 +68,7 @@ import { COMMENT_REPLIES_PAGE, COMMENT_REPLIES_PREVIEW, COMMENTS_PAGE, MEMBER_SE
 import { maskDestination } from "../data/mask"
 import { PAGE_DIRECTORY_QUERY_MIN_LENGTH, type HubPagesView, type PageDirectoryEntry, type PageDirectoryRequest } from "../data/pages-port"
 import type { DemoAccountView } from "../data/port"
+import { demoIllustrationUrl } from "./illustrations"
 import type { DemoComment, DemoNotification, DemoPage, DemoPost, DemoState } from "./state"
 
 /** Les champs gardés pour soi ne sont jamais une projection d'acteur public. */
@@ -425,7 +426,15 @@ export function canRemoveDemoComment(state: DemoState, post: DemoPost, comment: 
 }
 
 function mediaViews(post: DemoPost): PostMediaView[] {
-  return (post.media ?? []).map((item) => ({ kind: item.kind, url: item.url, withheld: null, altText: item.altText, width: item.width, height: item.height }))
+  return (post.media ?? []).map((item) => ({
+    kind: item.kind,
+    // A6 : une illustration fictive se dessine à la lecture, aux couleurs du thème affiché.
+    url: item.illustration === undefined ? item.url : demoIllustrationUrl(item.illustration, item.width, item.height),
+    withheld: null,
+    altText: item.altText,
+    width: item.width,
+    height: item.height,
+  }))
 }
 
 /** L'original cité, re-gardé pour CE lecteur : retiré ou hors de sa portée, il est « indisponible ». */

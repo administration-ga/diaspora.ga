@@ -80,6 +80,7 @@ import enReportEmergency from "./locales/en/report-emergency.json"
 import enMessagesUnread from "./locales/en/messages-unread.json"
 import enIdnEntry from "./locales/en/idn-entry.json"
 import enPostVideos from "./locales/en/post-videos.json"
+import enFeedMedia from "./locales/en/feed-media.json"
 import enEntryReliability from "./locales/en/entry-reliability.json"
 import enWelcomeOneScreen from "./locales/en/welcome-one-screen.json"
 import enSponsorshipRequest from "./locales/en/sponsorship-request.json"
@@ -168,6 +169,7 @@ import frReportEmergency from "./locales/fr/report-emergency.json"
 import frMessagesUnread from "./locales/fr/messages-unread.json"
 import frIdnEntry from "./locales/fr/idn-entry.json"
 import frPostVideos from "./locales/fr/post-videos.json"
+import frFeedMedia from "./locales/fr/feed-media.json"
 import frEntryReliability from "./locales/fr/entry-reliability.json"
 import frWelcomeOneScreen from "./locales/fr/welcome-one-screen.json"
 import frSponsorshipRequest from "./locales/fr/sponsorship-request.json"
@@ -266,6 +268,8 @@ export const LOCALE_PARTS = {
     "messages-unread": frMessagesUnread,
     "idn-entry": frIdnEntry,
     "post-videos": frPostVideos,
+    // Médias du fil (lots A1, A6, A2, A3 du 25/11) : états vrais, grille, visionneuse, vidéo, entrée Photo et Vidéo.
+    "feed-media": frFeedMedia,
     "entry-reliability": frEntryReliability,
     "welcome-one-screen": frWelcomeOneScreen,
     "sponsorship-request": frSponsorshipRequest,
@@ -365,6 +369,7 @@ export const LOCALE_PARTS = {
     "messages-unread": enMessagesUnread,
     "idn-entry": enIdnEntry,
     "post-videos": enPostVideos,
+    "feed-media": enFeedMedia,
     "entry-reliability": enEntryReliability,
     "welcome-one-screen": enWelcomeOneScreen,
     "sponsorship-request": enSponsorshipRequest,

@@ -116,6 +116,8 @@
   --color-thumb: var(--dg-thumb);
   --color-ink-subtle: var(--ink-500);
   --color-scrim: var(--dg-scrim);
+  --color-media-scrim: var(--dg-media-scrim);
+  --color-media-ink: var(--dg-media-ink);
   --color-avatar-foreground: var(--esp-on-avatar);
   --color-avatar-1: var(--esp-ava-1);
   --color-avatar-2: var(--esp-ava-2);

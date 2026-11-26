@@ -1,0 +1,45 @@
+{
+  "post": {
+    "media": {
+      "scanUnavailable": "Unavailable for now",
+      "photoFailed": "Photo unavailable",
+      "videoFailed": "This video can’t be played here.",
+      "moreCount": "+{{count}}",
+      "openMore_one": "See {{count}} more photo, from photo {{position}} of {{total}}",
+      "openMore_other": "See {{count}} more photos, from photo {{position}} of {{total}}",
+      "viewer": {
+        "positionShort": "{{position}} / {{total}}",
+        "carousel": "carousel",
+        "slideRole": "slide",
+        "slide": "{{position}} of {{total}}"
+      },
+      "playback": {
+        "play": "Play the video",
+        "pause": "Pause the video",
+        "unmute": "Turn the sound on",
+        "mute": "Mute"
+      }
+    }
+  },
+  "composer": {
+    "mediaAfterCheck": "Post sent: your photos or video will appear once their security check is done.",
+    "mediaAfterCheckDetail": "Photos and videos will appear once their security check is done.",
+    "mediaAddPhotos": "Photos",
+    "mediaAddVideo": "Video",
+    "mediaLimits": "Up to {{postMediaMaxCount}} photos of {{postImageMaxMegabytes}} MB each, or a single video of up to {{postVideoMaxMegabytes}} MB and {{postVideoMaxMinutes}} min.",
+    "mediaUploadingPercent": "Uploading: {{percent}}",
+    "mediaUploadProgressLabel": "Uploading {{name}}",
+    "mediaRetry": "Retry",
+    "mediaRetryLabel": "Retry uploading {{name}}"
+  },
+  "feed": {
+    "shortcutsLabel": "Post a photo or a video",
+    "shortcutPhoto": "Photo",
+    "shortcutVideo": "Video"
+  },
+  "errors": {
+    "media_video_too_large_to_convert": "This video is too heavy to be prepared in this browser: above {{postVideoConvertMaxGigabytes}} GB it can’t be converted here. It isn’t sent. Shorten it or export it at a lower resolution, then choose it again.",
+    "media_video_too_heavy_to_compress": "This video is over {{postVideoMaxMegabytes}} MB: it has to be compressed here, in real time, and beyond {{postVideoConvertMaxMinutes}} min the wait would be too long. It isn’t sent. Shorten it, then choose it again.",
+    "media_video_cannot_compress": "This video is over {{postVideoMaxMegabytes}} MB and this browser can’t compress it: it isn’t sent. Shorten it, or try an up-to-date browser."
+  }
+}

@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { webcrypto } from "node:crypto"
+import { POST_MEDIA_MAX_COUNT } from "@antsia/social-domain/content"
 import { ASSOCIATION_EVENT_WAITLIST_BATCH_SIZE, LIGHT_ACCOUNT_GROUNDS } from "@diaspora-ga/domain"
 import { act, cleanup, renderHook } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -1146,7 +1147,8 @@ describe("DG-023 — galerie collective après événement de démonstration", (
     clock = NOW + 26 * HOUR
     const first = photo(context, "  Vue fictive  ")
     const second = photo(context)
-    const tooMany = Array.from({ length: 5 }, () => photo(context))
+    // M3 : une photo de plus que la borne du moteur.
+    const tooMany = Array.from({ length: POST_MEDIA_MAX_COUNT + 1 }, () => photo(context))
     expect(await gallery.publish({ eventId, body: "", media: [], idempotencyKey: "empty" })).toEqual({ ok: false, code: "association_event_gallery_media_required" })
     expect(await gallery.publish({ eventId, body: "", media: tooMany, idempotencyKey: "too-many" })).toEqual({ ok: false, code: "media_too_many" })
     expect(await gallery.publish({ eventId, body: "", media: [first, first], idempotencyKey: "duplicate" })).toEqual({ ok: false, code: "media_upload_failed" })

@@ -4,6 +4,7 @@ import { POST_VIDEO_MAX_BYTES } from "@antsia/social-domain/content"
 import { jpegHasGpsMetadata, listImageMetadata } from "@antsia/social-domain/imageMetadata"
 import { prepareVideoForUpload, type PrepareVideo, type VideoRuntime } from "@antsia/social-features/features/video-upload/video-preparation"
 import { TRANSCODE_ABORTED } from "@antsia/social-features/features/video-upload/video-upload-probe"
+import { VIDEO_TRANSCODE_MAX_SOURCE_BYTES } from "@antsia/social-features/features/video-upload/video-upload-policy"
 import { isPreparedImage } from "@antsia/social-features/media-upload"
 import { TEST_JPEG_WITH_GPS_BYTES, testPrepareImage } from "@antsia/social-features/tests/image-runtime"
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
@@ -1083,6 +1084,15 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       height: null,
     })
     expect(toPostMediaView({ url: null, withheld: "fileQuarantined", kind: "image", mimeType: "image/png" } as never).withheld).toBe("quarantined")
+    // A1 (25/11) : une analyse impossible n'est ni un verdict ni un média délivré ; elle garde sa raison, sans adresse.
+    expect(toPostMediaView({ url: "https://f.test/jamais", withheld: "fileScanUnavailable", kind: "image", mimeType: "image/png" } as never)).toEqual({
+      kind: "image",
+      url: null,
+      withheld: "scan_unavailable",
+      altText: null,
+      width: null,
+      height: null,
+    })
   })
 
   it("un dépôt déclaré à la publication : texte alternatif nettoyé, absent s'il est vide ; seules les mesures connues partent", () => {
@@ -1131,7 +1141,8 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
       expect(sent).not.toBe(file)
       expect(isPreparedImage(sent as File)).toBe(true)
       const sentSize = (sent as File).size
-      expect(uploaded.value).toEqual({ ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800 })
+      // A1 : le dépôt dit que la garde des fichiers l'analysera à la publication (le composeur ne dira pas « Publié. »).
+      expect(uploaded.value).toEqual({ ref: "kg-photo", kind: "image", mimeType: "image/jpeg", sizeBytes: sentSize, width: 1200, height: 800, pendingCheck: true })
       expect(deposit).toHaveBeenCalledWith("https://depot.test/televersement", { method: "POST", headers: { "Content-Type": "image/jpeg" }, body: sent })
       expect(
         await actions.publish({ body: "", reach: "local", country: "FR", audience: "public", alsoOnRoot: false, media: [{ upload: uploaded.value, altText: " Le fleuve " }] }),
@@ -1150,6 +1161,29 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  it("A3 : l'envoi dit son avancement au pour cent près, garde l'annulation, et ne montre jamais la réponse du serveur", async () => {
+    const { convex } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
+    const controller = new AbortController()
+    const uploadTransport = vi.fn(async (request: { url: string; file: File; signal?: AbortSignal; onProgress?: (fraction: number) => void }) => {
+      request.onProgress?.(0.25)
+      request.onProgress?.(1)
+      return { status: 200, body: JSON.stringify({ storageId: "kg-progression" }) }
+    })
+    const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage({ width: 800, height: 600 }), uploadTransport })
+    const phases: MediaUploadPhase[] = []
+    const uploaded = await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }), { signal: controller.signal, onPhase: (phase) => phases.push(phase) })
+    expect(uploaded).toMatchObject({ ok: true, value: { ref: "kg-progression", pendingCheck: true } })
+    expect(phases).toEqual([{ phase: "uploading" }, { phase: "uploading", progress: 0.25 }, { phase: "uploading", progress: 1 }])
+    expect(uploadTransport.mock.calls[0]?.[0]).toMatchObject({ url: "https://depot.test/televersement", signal: controller.signal })
+    // Un refus du dépôt se dit par son code fermé, jamais par la réponse du serveur.
+    uploadTransport.mockResolvedValueOnce({ status: 500, body: "panne interne" })
+    expect(await actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }))).toEqual({ ok: false, code: "media_upload_failed" })
+    uploadTransport.mockRejectedValueOnce(new DOMException("annulé", "AbortError"))
+    const cancelled = new AbortController()
+    const pending = actions.uploadMedia(new File(["photo"], "fleuve.jpg", { type: "image/jpeg" }), { signal: cancelled.signal, onPhase: (phase) => { if (phase.phase === "uploading") cancelled.abort() } })
+    expect(await pending).toEqual({ ok: false, code: "media_cancelled" })
   })
 
   it("FD-01 : une photo portant sa position GPS part sans aucun segment EXIF ; l'original ne quitte jamais le navigateur", async () => {
@@ -1191,16 +1225,27 @@ describe("médias des publications par le moteur (EXF-DG-10)", () => {
     }
   })
 
-  it("FD-02 : une vidéo plus lourde que la borne du moteur est refusée avant l'envoi", async () => {
+  it("A4 (M2 du moteur) : un MP4 plus lourd que la borne d'envoi est compressé, puis le converti part ; au-delà du plafond de conversion, refusé avant toute URL", async () => {
     const { convex, calls } = fakeConvex({ ...NETWORK, "modules/media/media:generateUploadUrl": () => "https://depot.test/televersement" })
-    const deposit = vi.fn()
+    const deposit = vi.fn(async (_url: string, _init: RequestInit) => new Response(JSON.stringify({ storageId: "kg-compressee" }), { status: 200 }))
     vi.stubGlobal("fetch", deposit)
     try {
-      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage() })
+      const browser = simulatedBrowser()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client, prepareImage: testPrepareImage(), prepareVideo: browser.prepareVideo })
       const heavy = new File(["v"], "lourde.mp4", { type: "video/mp4" })
       Object.defineProperty(heavy, "size", { value: POST_VIDEO_MAX_BYTES + 1 })
-      expect(await actions.uploadMedia(heavy)).toEqual({ ok: false, code: "media_too_large" })
-      expect(calls.some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
+      const uploaded = await actions.uploadMedia(heavy)
+      expect(uploaded).toMatchObject({ ok: true, value: { ref: "kg-compressee", kind: "video", mimeType: "video/mp4", durationMs: 8_960, pendingCheck: true } })
+      const sent = deposit.mock.calls[0]?.[1].body as File
+      expect(sent).not.toBe(heavy)
+      expect(sent.size).toBeLessThanOrEqual(POST_VIDEO_MAX_BYTES)
+
+      const before = calls.length
+      deposit.mockClear()
+      const enormous = new File(["v"], "enorme.mp4", { type: "video/mp4" })
+      Object.defineProperty(enormous, "size", { value: VIDEO_TRANSCODE_MAX_SOURCE_BYTES + 1 })
+      expect(await actions.uploadMedia(enormous)).toEqual({ ok: false, code: "media_video_too_large_to_convert" })
+      expect(calls.slice(before).some((call) => call.name === "modules/media/media:generateUploadUrl")).toBe(false)
       expect(deposit).not.toHaveBeenCalled()
     } finally {
       vi.unstubAllGlobals()

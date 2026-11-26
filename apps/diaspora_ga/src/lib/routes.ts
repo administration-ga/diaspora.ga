@@ -454,6 +454,15 @@ export const ROUTE_FILTER_KEYS = [
   NOTIFICATION_REFERENCE_PARAM,
 ] as const
 
+/**
+ * A6 et A2 (25/11/2026) : les fichiers FICTIFS que l'application sert à la démonstration
+ * (`public/medias-demo/`), pour la vitrine des médias du fil. Jamais lus par le moteur.
+ */
+export const DEMO_MEDIA_ASSETS = {
+  /** Un clip abstrait de six secondes (bandes de couleur, bruit de vagues), sans personne ni lieu réels. */
+  clip: "/medias-demo/clip-fictif.mp4",
+} as const
+
 /** Ancres internes de la vitrine, des textes du site et des réglages. */
 export const anchors = {
   howToEnter: "#comment-entrer",

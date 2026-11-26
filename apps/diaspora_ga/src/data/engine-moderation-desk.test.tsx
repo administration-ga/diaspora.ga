@@ -244,6 +244,11 @@ describe("Guichet — file par pays", () => {
       available: true, title: null, body: "Texte signalé",
       media: [{ kind: "image", url: null, withheld: "quarantined", altText: null, width: null, height: null }],
     })
+    // A1 (25/11) : l'analyse impossible garde sa raison au bureau aussi, sans adresse.
+    expect(toPreviewView({
+      kind: "post", available: true, title: null, body: "Texte signalé",
+      media: [{ url: "https://exemple.test/b", withheld: "fileScanUnavailable", kind: "video", mimeType: "video/mp4" }],
+    } as never)).toMatchObject({ media: [{ kind: "video", url: null, withheld: "scan_unavailable" }] })
   })
 
   it("MC-01 du moteur : un groupe et un message personnel se projettent tels quels, l'aperçu du message sans rien de plus", () => {
