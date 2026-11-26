@@ -388,6 +388,7 @@ export function toWall(wall: { readonly items: readonly FeedItem[]; readonly pin
 export function toSponsorDashboardView(dashboard: SponsorDashboard): SponsorDashboardView {
   return {
     eligible: dashboard.eligible,
+    code: dashboard.code,
     refusal: dashboard.refusal,
     remaining: dashboard.remaining,
     windowDays: dashboard.windowDays,

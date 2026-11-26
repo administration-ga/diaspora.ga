@@ -1205,6 +1205,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         return null
       }),
 
+    redeemSponsorCode: (code) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.diaspora.membership.redeemSponsorCode, { networkId: await diasporaGa(), code })
+        return null
+      }),
+
     revokeSponsorship: (sponsorshipId) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.diaspora.membership.revokeSponsorship, {
