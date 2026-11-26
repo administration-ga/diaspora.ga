@@ -36,6 +36,22 @@
       "cardBody": "Vous êtes ici @{{handle}}.",
       "back": "Revenir à consulat.ga",
       "notMe": "Ce n’est pas moi"
+    },
+    "passage": {
+      "failed": "Le passage n’a pas abouti",
+      "opening": "Ouverture de DIASPORA.GA…",
+      "retryInfo": "Revenez dans votre espace consulaire pour relancer le passage avec votre session en cours.",
+      "retry": "Réessayer",
+      "home": "Accueil DIASPORA.GA",
+      "continueConsulate": "Continuer avec CONSULAT.GA",
+      "checking": "Vérification de votre session en cours.",
+      "downloadIntro": "Retrouvez votre communauté dans l’application ou continuez dans votre navigateur avec votre session consulaire.",
+      "ios": "Télécharger sur l’App Store",
+      "android": "Télécharger sur Google Play",
+      "later": "Les applications seront proposées ici dès leur publication.",
+      "laterIos": "La version iOS sera proposée ici dès sa publication.",
+      "laterAndroid": "La version Android sera proposée ici dès sa publication.",
+      "continueWeb": "Continuer sur le web"
     }
   }
 }
