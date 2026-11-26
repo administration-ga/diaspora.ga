@@ -6,8 +6,8 @@
  *
  *  · `calls` — les gestes qui LANCENT un appel (interrupteur `CALLS_SWITCH` de diaspora.ga,
  *    `apps/diaspora_ga/src/lib/calls.ts`, déclaré au moteur par `callsAvailable`) : fermé ;
- *  · `live` — le direct (conférences du moteur) : la page `routes.conference`, l'entrée « Une
- *    conférence » de « Créer », le lien des annonces de direct dans le fil et la déclaration
+ *  · `live` — le live (le direct du moteur) : la page `routes.conference`, l'entrée « Un live » de
+ *    « Créer » et le raccourci « Live » du fil, le lien des annonces de direct dans le fil et la déclaration
  *    `liveAvailable` au moteur. Sa valeur ci-dessous EST l'interrupteur (CH-817) : diaspora.ga la
  *    lit par `apps/diaspora_ga/src/lib/live.ts`, le menu des membres ci-contre aussi (`codeSwitch`),
  *    la carte de publication aussi. OUVERT le 26/11/2026 : le serveur vidéo du moteur tourne sur le

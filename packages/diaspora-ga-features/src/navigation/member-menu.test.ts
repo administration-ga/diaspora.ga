@@ -61,8 +61,8 @@ describe("menu des membres — le socle, modules tous fermés", () => {
     expect(ids(closed.personal)).toEqual(["relations", "bookmarks", "sponsor"])
     expect(ids(closed.account)).toEqual(["profile", "settings", "relations", "bookmarks", "sponsor", "myData"])
     expect(ids(closed.information)).toEqual(["legalNotice", "privacy", "terms", "communityRules", "contact", "charte"])
-    // La conférence n'est pas un module : le direct ouvert par le code (CH-817), elle reste au socle.
-    expect(ids(closed.create)).toEqual(["story", "live"])
+    // Le live n'est pas un module : le direct ouvert par le code (CH-817), il reste au socle, en tête.
+    expect(ids(closed.create)).toEqual(["live", "story"])
   })
 
   it("chaque entrée porte la clé de son adresse et de son libellé, telles que la table les déclare", () => {
@@ -88,10 +88,10 @@ describe("menu des membres — la conférence, derrière l'interrupteur de code 
     for (const features of ALL_FEATURE_SETS) expect(ids(memberMenu({ ...MEMBER_MENU_WIDEST_SITUATION, openFeatures: features, codeSwitches: LIVE_CLOSED }).create), features.join(",")).not.toContain("live")
   })
 
-  it("ouvert : offerte juste après l'actu, au même public (publier ET iCom), sans adresse ni module", () => {
+  it("ouvert : offert en tête (comme la conférence du réseau de l'administration), au même public que l'actu (publier ET iCom), sans adresse ni module", () => {
     const open = (situation: MemberMenuSituation, features: readonly NetworkFeature[] = ["pages"]) => ids(memberMenu({ ...situation, openFeatures: features }).create)
-    expect(open(MEMBER)).toEqual(["story", "live", "association", "company"])
-    expect(open(MEMBER, [])).toEqual(["story", "live"])
+    expect(open(MEMBER)).toEqual(["live", "story", "association", "company"])
+    expect(open(MEMBER, [])).toEqual(["live", "story"])
     expect(open({ ...MEMBER, canPublish: false })).toEqual(["association", "company"])
     expect(open({ ...MEMBER, icom: false })).toEqual(["association", "company"])
     expect(MEMBER_CREATE_RULES.live).toMatchObject({ routeKey: null, pageKind: null, feature: null, audience: MEMBER_CREATE_RULES.story.audience, codeSwitch: "live" })

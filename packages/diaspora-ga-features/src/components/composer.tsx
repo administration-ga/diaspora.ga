@@ -28,6 +28,7 @@ import type { PostView } from "../data/types"
 import { useDiasporaGaT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { countryName } from "../lib/countries"
+import { MEMBER_CREATE_ICONS } from "../navigation/icons"
 import { Button } from "../primitives/button"
 import { Checkbox } from "../primitives/checkbox"
 import { Field, Input, Label, Textarea } from "../primitives/field"
@@ -209,6 +210,14 @@ export function PostComposerSheet(props: {
    * carte « Quoi de neuf ? ») ; joints une fois par `id`, jugés comme un choix fait ici.
    */
   incomingFiles?: { readonly id: number; readonly files: readonly File[] } | null
+  /**
+   * Lancer un live depuis la feuille (26/11/2026) : au téléphone, « + » ouvre directement ce
+   * composeur, qui offre donc le live à côté des photos et de la vidéo. Le geste ferme la feuille,
+   * puis demande la création du live (`onGoLive`, le même geste que « Créer → Un live »). Absent : le
+   * live n'est pas offert (démonstration, interrupteur du direct fermé) ; jamais dans un partage ni
+   * pour une page.
+   */
+  onGoLive?: () => void
   /** Une page parle sous sa propre identité, avec ses abonnés et sa règle collective. */
   page?: {
     readonly id: string
@@ -239,6 +248,15 @@ export function PostComposerSheet(props: {
   const fixedScope = page?.fixedScope
   const hasFixedScope = fixedScope !== undefined
   const share = page ? null : props.share ?? null
+  const goLive = page || share ? undefined : props.onGoLive
+  // Le live demandé : la feuille se ferme d'abord, et la création du live ne s'ouvre qu'une fois la
+  // feuille partie (à la restitution du focus, que la feuille cède alors au dialogue du live).
+  const goLiveRequested = useRef(false)
+  // Une demande restée sans fermeture ne survit pas à la réouverture : seul le geste de CETTE ouverture compte.
+  useEffect(() => {
+    if (props.open) goLiveRequested.current = false
+  }, [props.open])
+  const LiveIcon = MEMBER_CREATE_ICONS.live
   const defaults: ComposerValues = { ...DEFAULTS, reach: fixedScope || (page && !page.country) ? "diaspora" : "local", sharing: share !== null }
   const schema = useMemo(() => composerSchemaFor(fixedScope?.requireMedia === true), [fixedScope?.requireMedia])
   const form = useForm<ComposerValues>({ resolver: zodResolver(schema), defaultValues: defaults })
@@ -567,6 +585,12 @@ export function PostComposerSheet(props: {
         description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
         hideDescription={!fixedScope}
         closeLabel={t("common.close")}
+        onCloseAutoFocus={(event) => {
+          if (!goLiveRequested.current) return
+          goLiveRequested.current = false
+          event.preventDefault()
+          goLive?.()
+        }}
       >
         <form onSubmit={onSubmit} className="flex flex-col gap-5" aria-busy={form.formState.isSubmitting} noValidate>
           {/* Le succès ne doit effacer que le contenu effectivement envoyé.
@@ -759,6 +783,29 @@ export function PostComposerSheet(props: {
               </p>
             ) : null}
           </fieldset>
+
+          {/* Le live, à côté des photos et de la vidéo (comme UDB et le réseau de l'administration) : il ne
+              joint rien, il ferme la feuille et ouvre la création du live, le brouillon gardé. */}
+          {goLive ? (
+            <div role="group" aria-labelledby={`${ids}-live`} className="flex flex-col gap-2">
+              <p id={`${ids}-live`} className="text-sm font-medium">{t("composer.liveLegend")}</p>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  aria-describedby={`${ids}-live-aide`}
+                  onClick={() => {
+                    goLiveRequested.current = true
+                    changeOpen(false)
+                  }}
+                >
+                  <LiveIcon aria-hidden />
+                  {t("composer.goLive")}
+                </Button>
+                <p id={`${ids}-live-aide`} className="min-w-0 flex-1 basis-48 text-[13px] text-muted-foreground">{t("composer.liveHint")}</p>
+              </div>
+            </div>
+          ) : null}
 
           {fixedScope ? <p className="rounded-lg bg-muted p-3 text-sm font-medium">{fixedScope.audienceLabel}</p> : <>
           <fieldset className="flex flex-col gap-2">

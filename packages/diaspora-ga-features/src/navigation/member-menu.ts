@@ -40,8 +40,12 @@ export const MEMBER_ACCOUNT_ENTRIES = ["profile", "settings"] as const
 export const MEMBER_DATA_ENTRY = "myData" as const
 /** Le groupe « Informations » du menu du compte : les textes du site. */
 export const MEMBER_INFORMATION_ENTRIES = ["legalNotice", "privacy", "terms", "communityRules", "contact", "charte"] as const
-/** Les formats de « Créer », dans l'ordre : une actu, une conférence (le direct), puis les deux inscriptions. */
-export const MEMBER_CREATE_FORMATS = ["story", "live", "association", "company"] as const
+/**
+ * Les formats de « Créer », dans l'ordre : un live, une actu, puis les deux inscriptions. Le live
+ * passe en tête comme la conférence du réseau de l'administration, juste après la publication
+ * (`creationEntries` du socle : publication, conférence, actu) ; « Publier » a ici son bouton à part.
+ */
+export const MEMBER_CREATE_FORMATS = ["live", "story", "association", "company"] as const
 
 export type MemberBarEntryId = (typeof MEMBER_BAR_ENTRIES)[number]
 export type MemberMenuEntryId =
@@ -177,12 +181,12 @@ export interface MemberCreateFormatRule {
 }
 
 /**
- * Une actu ; une conférence (le direct) quand l'interrupteur de code `live` est ouvert ; puis
+ * Un live (le direct du moteur) quand l'interrupteur de code `live` est ouvert ; une actu ; puis
  * l'inscription d'une association et d'une entreprise (AS-05) quand les pages sont ouvertes. Les
- * groupes thématiques n'y sont pas (décision 3 du plan 07). La conférence suit le public de l'actu
+ * groupes thématiques n'y sont pas (décision 3 du plan 07). Le live suit le public de l'actu
  * (`publisher` : publier ET iCom ouvert) : sans iCom, l'hôte du direct du moteur n'est pas monté et
- * le geste ne mènerait à rien. Libellé et icône, ceux de « Créer → Conférence » du moteur
- * (`creation-controller`, icône `video`).
+ * le geste ne mènerait à rien. Il ouvre en place la création du moteur, comme « Créer → Conférence »
+ * du moteur (`creation-controller`) ; « live » est le mot de DIASPORA.GA (décision du 26/11/2026).
  */
 export const MEMBER_CREATE_RULES: Readonly<Record<MemberCreateFormatId, MemberCreateFormatRule>> = {
   story: { routeKey: "newStory", pageKind: null, labelKey: "nav.create.story", hintKey: "nav.create.storyHint", feature: CORE, audience: "publisher", codeSwitch: null },

@@ -46,7 +46,7 @@ const mocks = vi.hoisted(() => ({
   reportUnread: null as ((total: number) => void) | null,
   /** CH-817 : le direct refermé par le code, posé par un test (la position du dépôt est ouverte depuis le 26/11/2026). */
   liveClosed: false,
-  /** La demande de création d'une conférence, posée au magasin du moteur. */
+  /** La demande de création d'un live, posée au magasin du moteur. */
   launch: vi.fn(),
 }))
 
@@ -152,9 +152,17 @@ const Link: LinkComponent = ({ href, children, ...rest }) => (
 function ComposerProbe() {
   const composer = useComposer()
   return (
-    <button type="button" onClick={composer.open} disabled={!composer.canPublish}>
-      Quoi de neuf ?
-    </button>
+    <>
+      <button type="button" onClick={composer.open} disabled={!composer.canPublish}>
+        Quoi de neuf ?
+      </button>
+      {/* Le raccourci Live d'un écran (carte « Quoi de neuf ? ») : seulement quand la coque l'offre. */}
+      {composer.goLive === null ? null : (
+        <button type="button" onClick={composer.goLive}>
+          Live
+        </button>
+      )}
+    </>
   )
 }
 
@@ -1226,7 +1234,7 @@ describe("coque — le contexte pays", () => {
 })
 
 describe("coque — « Créer », le menu de création (modèle du réseau de l'administration)", () => {
-  it("au bureau, sous « Publier » : une actu et une conférence quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
+  it("au bureau, sous « Publier » : un live et une actu quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true })
     // « Publier » garde son bouton à part : le menu ne le double pas (vu avant l'ouverture, le menu étant modal).
@@ -1234,9 +1242,10 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
     await user.click(screen.getByRole("button", { name: "Créer" }))
     const menu = await screen.findByRole("menu")
     const items = within(menu).getAllByRole("menuitem")
-    // La conférence (direct ouvert par le code, CH-817) est un geste sans adresse, juste après l'actu.
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null, routes.newPage("association"), routes.newPage("company")])
-    expect(items[1]).toHaveTextContent("Une conférence")
+    // Le live (direct ouvert par le code, CH-817) est un geste sans adresse, en tête comme la conférence du
+    // réseau de l'administration (juste après la publication, qui a son bouton à part).
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory(), routes.newPage("association"), routes.newPage("company")])
+    expect(items[0]).toHaveTextContent("Un live")
     expect(items[2]).toHaveTextContent("Inscrire une association")
     expect(items[2]).toHaveTextContent("Sa page, ses adhérents, son groupe et ses évènements.")
     await user.keyboard("{Escape}")
@@ -1267,16 +1276,16 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
   })
 })
 
-describe("coque — « Créer → Une conférence » (CH-817), derrière l'interrupteur du direct", () => {
-  it("ouvert par le code (la position du dépôt), au bureau : un geste du menu après l'actu, sans adresse, qui demande au moteur la création d'une conférence", async () => {
+describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur du direct", () => {
+  it("ouvert par le code (la position du dépôt), au bureau : le premier geste du menu, sans adresse, qui demande au moteur la création d'un live", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null, routes.newPage("association"), routes.newPage("company")])
-    expect(items[1]).toHaveTextContent("Une conférence")
-    expect(items[1]).toHaveTextContent("Préparer un direct dans le réseau, et le lancer quand vous êtes prêt.")
-    await user.click(items[1]!)
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory(), routes.newPage("association"), routes.newPage("company")])
+    expect(items[0]).toHaveTextContent("Un live")
+    expect(items[0]).toHaveTextContent("Passer en direct devant vos relations, tout le réseau ou vos invités, quand vous êtes prêt.")
+    await user.click(items[0]!)
     expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
     expect(screen.queryByRole("menu")).toBeNull()
   })
@@ -1287,29 +1296,118 @@ describe("coque — « Créer → Une conférence » (CH-817), derrière l'inter
     renderShell({ icom: true, features: ["pages"] })
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    await user.click(within(within(sheet).getByRole("navigation", { name: "Créer" })).getByRole("button", { name: "Une conférence" }))
+    await user.click(within(within(sheet).getByRole("navigation", { name: "Créer" })).getByRole("button", { name: "Un live" }))
     expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
   })
 
-  it("ouvert, sans iCom (démonstration, membre qui n'écrit pas) : aucune conférence, l'hôte du direct n'étant pas monté", async () => {
+  it("ouvert, sans iCom (démonstration, membre qui n'écrit pas) : aucun live, l'hôte du direct n'étant pas monté", async () => {
     const user = userEvent.setup()
     renderShell({ features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
     expect(within(await screen.findByRole("menu")).getAllByRole("menuitem").map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
   })
 
-  it("refermé par le code : aucune conférence, au bureau comme au téléphone", async () => {
+  it("refermé par le code : aucun live, au bureau comme au téléphone", async () => {
     mocks.liveClosed = true
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
-    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Une conférence/ })).toBeNull()
+    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Un live/ })).toBeNull()
     await user.keyboard("{Escape}")
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    expect(within(sheet).queryByRole("button", { name: "Une conférence" })).toBeNull()
+    expect(within(sheet).queryByRole("button", { name: "Un live" })).toBeNull()
     expect(mocks.launch).not.toHaveBeenCalled()
+  })
+})
+
+describe("coque — le live offert aux écrans et au composeur (26/11/2026), par la même règle que « Créer »", () => {
+  /** Les propriétés du composeur principal (pas celui d'un partage) au dernier rendu. */
+  const lastComposerProps = () => {
+    const calls = mocks.composer.mock.calls.map(([props]) => props as { share?: unknown; onGoLive?: () => void })
+    return calls.filter((props) => props.share === undefined).at(-1)
+  }
+
+  it("ouvert, iCom ouvert : les écrans reçoivent le geste (`useComposer().goLive`) et le composeur aussi (`onGoLive`) ; chacun demande la création d'un live", async () => {
+    const user = userEvent.setup()
+    renderShell({ icom: true, features: ["pages"] })
+    await user.click(screen.getByRole("button", { name: "Live" }))
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    const onGoLive = lastComposerProps()?.onGoLive
+    expect(onGoLive).toBeTypeOf("function")
+    onGoLive?.()
+    expect(mocks.launch).toHaveBeenCalledTimes(2)
+    // Le composeur d'un partage n'offre jamais le live.
+    expect(mocks.composer.mock.calls.map(([props]) => props as { share?: unknown; onGoLive?: unknown }).filter((props) => props.share !== undefined).every((props) => props.onGoLive === undefined)).toBe(true)
+  })
+
+  it.each([
+    ["démonstration ou iCom fermé", { icom: false }, false],
+    ["direct refermé par le code", { icom: true }, true],
+  ] as const)("%s : aucun live, ni pour les écrans ni dans le composeur", (_name, options, closed) => {
+    mocks.liveClosed = closed
+    renderShell({ ...options, features: ["pages"] })
+    expect(screen.queryByRole("button", { name: "Live" })).toBeNull()
+    expect(lastComposerProps()).toBeDefined()
+    expect(lastComposerProps()).not.toHaveProperty("onGoLive")
+  })
+})
+
+describe("coque — le rail du bureau, une carte détachée (26/11/2026)", () => {
+  it("une carte collante dans une gouttière : surface des cartes, arrondie, la carte du compte en bas, dedans", () => {
+    renderShell({ icom: true })
+    const gutter = document.querySelector<HTMLElement>("[data-desktop-rail]")!
+    expect(gutter).toHaveClass("sticky", "top-0", "h-dvh", "py-3.5", "pl-3.5", "hidden", "min-[960px]:block")
+    const card = gutter.firstElementChild as HTMLElement
+    expect(card.tagName).toBe("ASIDE")
+    expect(card).toHaveClass("h-full", "rounded-xl", "bg-card", "text-card-foreground", "shadow-card")
+    // Plus de filet collé au contenu : la carte se détache par sa surface.
+    expect(card).not.toHaveClass("border-r")
+    const { rail } = mainNavigations()
+    expect(card).toContainElement(rail)
+    // La carte du compte ferme la carte du rail, à l'intérieur, sur un creux du fond (pas une carte sur une carte).
+    const account = within(card).getByRole("button", { name: t("nav.account.open", { name: MEMBER.displayName }) })
+    expect(account).toHaveClass("mt-auto", "bg-background")
+    expect(account).not.toHaveClass("shadow-card")
+  })
+})
+
+describe("coque — une page large (`layout=\"wide\"`) : la page d'un live", () => {
+  function wideTree() {
+    mocks.pathname = routes.conference("sessions_1")
+    mocks.icom = NETWORK
+    mocks.network = NETWORK
+    return (
+      <I18nProvider locale="fr">
+        <DataSourceProvider source={createDemoDataSource(new DemoStore(null, () => NOW, 0))}>
+          <RoutingProvider routes={featureRoutes} Link={Link}>
+            <AppShell membership={MEMBER} layout="wide">
+              <p>Scène du live</p>
+            </AppShell>
+          </RoutingProvider>
+        </DataSourceProvider>
+      </I18nProvider>
+    )
+  }
+
+  it("le document défile comme un flux, le contenu prend la colonne du rail droit, le rail droit reste monté mais caché, la navigation reste", () => {
+    render(wideTree())
+    const root = document.querySelector<HTMLElement>("[data-layout]")!
+    expect(root).toHaveAttribute("data-layout", "wide")
+    expect(root).not.toHaveClass("tall:h-dvh")
+    const main = document.getElementById("contenu")!
+    expect(main).toHaveClass("min-[960px]:pb-10")
+    const column = main.firstElementChild as HTMLElement
+    expect(column).toHaveClass("xl:col-span-2")
+    expect(column).not.toHaveClass("max-w-[792px]", "tall:min-h-0")
+    const aside = main.querySelector("aside")!
+    expect(within(aside).getByRole("region", { name: "Carte iCom" })).toBeInTheDocument()
+    expect(aside).toHaveClass("hidden")
+    expect(aside).not.toHaveClass("xl:flex")
+    // Le rail du bureau et la barre basse du téléphone entourent la page.
+    expect(mainNavigations().rail).toBeInTheDocument()
+    expect(screen.getByText("Scène du live")).toBeInTheDocument()
   })
 })
 
@@ -1345,13 +1443,13 @@ describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les module
     expect(bar.querySelector('[class*="grid-cols"]')).toBeNull()
   })
 
-  it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation (l'actu et la conférence restent, elles ne sont pas des modules)", async () => {
+  it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation (le live et l'actu restent, ils ne sont pas des modules)", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: [] })
     await user.click(screen.getByRole("button", { name: "Créer" }))
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newStory(), null])
-    expect(items[1]).toHaveTextContent("Une conférence")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory()])
+    expect(items[0]).toHaveTextContent("Un live")
   })
 
   it("un module ouvert retrouve ses entrées, les autres restent fermés", async () => {
@@ -1400,7 +1498,7 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
 
   const entryLink = (entry: MemberMenuEntry) => [t(entry.labelKey), memberMenuHref(entry, MEMBER.handle)]
   const createHrefs = (entries: readonly MemberCreateEntry[]) => entries.map((entry) => memberCreateHref(entry))
-  /** Les formats de la feuille, liens et gestes (la conférence n'a pas d'adresse), dans l'ordre. */
+  /** Les formats de la feuille, liens et gestes (le live n'a pas d'adresse), dans l'ordre. */
   const sheetCreateHrefs = (container: HTMLElement) => Array.from(container.querySelectorAll("a, button")).map((item) => item.getAttribute("href"))
 
   it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation, liveOpen) => {

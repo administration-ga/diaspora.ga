@@ -20,6 +20,7 @@ import { PAGE_SLEEP_DAYS } from "@antsia/social-domain/pages"
 import { PUBLISHER_TEXT_VARIABLES } from "@diaspora-ga/domain"
 import type { i18n as I18nInstance } from "i18next"
 
+import { DIASPORA_GA_ENGINE_RESOURCES } from "./engine-overrides"
 import { registerFrenchFormats } from "./french-elision"
 import { MEDIA_LIMIT_VARIABLES } from "./media-limits"
 import { DIASPORA_GA_LOCALES } from "./resources"
@@ -55,11 +56,15 @@ export const diasporaGaResources: AppResources = {
  * synchrone, aucun écart d'hydratation. Les bornes des médias y entrent comme
  * variables par défaut, tirées du domaine du moteur (`MEDIA_LIMIT_VARIABLES`) ;
  * l'élision de « de » devant un nom, comme format (`{{name, de}}`, `french-elision`).
+ *
+ * Les espaces de noms du moteur que DIASPORA.GA dit autrement (le « live » plutôt que la
+ * « conférence », `engine-overrides`) passent avant ceux de l'application : le moteur les reçoit
+ * recomposés et les sert à ses surfaces (création d'un live, page du live, carte flottante).
  */
 export function createAppI18n(options: { locale: Locale; appResources?: AppResources; defaultNS?: string }): I18nInstance {
   const appResources = {} as AppResources
   for (const locale of SUPPORTED_LOCALES) {
-    appResources[locale] = { ...diasporaGaResources[locale], ...options.appResources?.[locale] }
+    appResources[locale] = { ...DIASPORA_GA_ENGINE_RESOURCES[locale], ...diasporaGaResources[locale], ...options.appResources?.[locale] }
   }
   // Le format `de` des phrases françaises (« au nom d’Amicale ») : inscrit sur chaque instance.
   return registerFrenchFormats(createEngineI18n({

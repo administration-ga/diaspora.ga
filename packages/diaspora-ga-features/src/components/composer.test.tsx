@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
+import { act, cleanup as cleanupComposer, fireEvent, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { useState } from "react"
 import { POST_IMAGE_MAX_BYTES, POST_MEDIA_MAX_COUNT, POST_VIDEO_MAX_BYTES, POST_VIDEO_MAX_DURATION_MS } from "@antsia/social-domain/content"
@@ -450,6 +450,53 @@ describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel e
     view.rerender(<IncomingComposer incoming={{ id: 2, files: [new File(["photo"], "seconde.png", { type: "image/png" })] }} />)
     await waitFor(() => expect(uploadMedia).toHaveBeenCalledTimes(2))
     expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(2)
+  })
+})
+
+describe("Composeur — le live, à côté des photos et de la vidéo (26/11/2026)", () => {
+  function LiveComposer(props: { readonly onGoLive?: () => void; readonly page?: boolean }) {
+    const [open, setOpen] = useState(true)
+    return <I18nProvider locale="fr"><DataSourceProvider source={source}>
+      <button onClick={() => setOpen(true)}>Reprendre</button>
+      <PostComposerSheet
+        open={open}
+        onOpenChange={(next) => { setOpen(next); if (!next) onClose() }}
+        memberCountry="FR"
+        openCountries={["FR"]}
+        draftKey="recette:composeur-live"
+        {...(props.onGoLive ? { onGoLive: props.onGoLive } : {})}
+        {...(props.page ? { page: { id: "page-1", name: "Association de recette", country: "FR", publish: pagePublish } } : {})}
+      />
+    </DataSourceProvider></I18nProvider>
+  }
+
+  it("« Lancer un live » ferme la feuille, PUIS demande la création du live, le brouillon gardé", async () => {
+    const goLive = vi.fn()
+    const user = userEvent.setup()
+    render(<LiveComposer onGoLive={goLive} />)
+    const sheet = screen.getByRole("dialog", { name: t("composer.title") })
+    const group = within(sheet).getByRole("group", { name: t("composer.liveLegend") })
+    const button = within(group).getByRole("button", { name: t("composer.goLive") })
+    expect(button).toHaveAccessibleDescription(t("composer.liveHint"))
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Un brouillon gardé")
+    await user.click(button)
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(goLive).toHaveBeenCalledOnce()
+    expect(publish).not.toHaveBeenCalled()
+    // Une fermeture ordinaire, plus tard, ne relance pas le live.
+    await user.click(screen.getByRole("button", { name: "Reprendre" }))
+    await user.click(await screen.findByRole("button", { name: t("common.cancel") }))
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
+    expect(goLive).toHaveBeenCalledOnce()
+  })
+
+  it("sans `onGoLive` (démonstration, direct fermé) ni pour une page : aucune entrée Live", () => {
+    render(<LiveComposer />)
+    expect(screen.queryByRole("button", { name: t("composer.goLive") })).toBeNull()
+    cleanupComposer()
+    render(<LiveComposer onGoLive={vi.fn()} page />)
+    expect(screen.queryByRole("button", { name: t("composer.goLive") })).toBeNull()
   })
 })
 

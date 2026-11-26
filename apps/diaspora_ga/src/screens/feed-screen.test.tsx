@@ -29,6 +29,8 @@ const mocks = vi.hoisted(() => ({
   // A3 : le composeur de la coque, ouvert et nourri par les raccourcis Photo et Vidéo.
   composerOpen: vi.fn(),
   composerAttach: vi.fn(),
+  // Le live offert par la coque (`goLive`) : `null` sauf dans les scénarios du live.
+  goLive: null as (() => void) | null,
   // CH-816 (P2) : la déclaration de l'application ; les scénarios de la découverte la basculent.
   discoveryOffered: false,
 }))
@@ -53,7 +55,7 @@ vi.mock("@/components/gate", () => ({
 }))
 vi.mock("@/components/app-shell", () => ({
   AppShell: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach }),
+  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach, goLive: mocks.goLive }),
 }))
 vi.mock("@/components/feed-pages", () => ({
   FeedPages: (props: FeedPagesProps) => {
@@ -107,6 +109,7 @@ function tree(locale: "fr" | "en" = "fr") {
 }
 const lastDiscovery = () => mocks.discovery.mock.lastCall![0] as FeedDiscoveryProps
 beforeEach(() => {
+  mocks.goLive = null
   mocks.search = ""
   mocks.showEmpty = false
   mocks.listPost = null
@@ -493,6 +496,26 @@ describe("/fil — raccourcis Photo et Vidéo de la carte « Quoi de neuf ? » (
   it("sans publication possible, aucun raccourci", () => {
     render(tree())
     expect(screen.queryByRole("group", { name: "Publier une photo ou une vidéo" })).toBeNull()
+  })
+
+  it("le live offert par la coque : « Live » à côté de Photo et Vidéo, le même geste que « Créer → Un live »", () => {
+    publisher()
+    const goLive = vi.fn()
+    mocks.goLive = goLive
+    render(tree())
+    const group = screen.getByRole("group", { name: "Publier une photo, une vidéo, ou lancer un live" })
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual(["Photo", "Vidéo", "Live"])
+    fireEvent.click(within(group).getByRole("button", { name: "Live" }))
+    expect(goLive).toHaveBeenCalledOnce()
+    // Le live n'ouvre pas le composeur : il ouvre en place la création du live du moteur.
+    expect(mocks.composerOpen).not.toHaveBeenCalled()
+  })
+
+  it("le live non offert (démonstration, direct fermé) : Photo et Vidéo seulement", () => {
+    publisher()
+    render(tree())
+    const group = screen.getByRole("group", { name: "Publier une photo ou une vidéo" })
+    expect(within(group).queryByRole("button", { name: "Live" })).toBeNull()
   })
 })
 

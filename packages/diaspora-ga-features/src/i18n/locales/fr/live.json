@@ -1,5 +1,14 @@
 {
   "live": {
-    "title": "Conférence en direct"
+    "title": "Live"
+  },
+  "composer": {
+    "liveLegend": "Live",
+    "goLive": "Lancer un live",
+    "liveHint": "Passez en direct devant vos relations ou tout le réseau ; vous vérifiez votre micro et votre caméra avant."
+  },
+  "feed": {
+    "shortcutLive": "Live",
+    "shortcutsLabelLive": "Publier une photo, une vidéo, ou lancer un live"
   }
 }

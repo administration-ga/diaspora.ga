@@ -150,12 +150,12 @@
       "openByCode": "Ouvert par le code",
       "names": {
         "calls": "Appels",
-        "live": "Direct",
+        "live": "Live (direct)",
         "icomPro": "iCom Pro"
       },
       "descriptions": {
         "calls": "Les appels audio et vidéo d’iCom, à deux et en groupe.",
-        "live": "Les directs et les conférences.",
+        "live": "Les lives des membres : passer en direct devant ses relations, le réseau ou ses invités.",
         "icomPro": "L’espace professionnel d’iCom : boutiques et mises en relation."
       }
     },

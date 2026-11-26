@@ -1,5 +1,14 @@
 {
   "live": {
-    "title": "Live conference"
+    "title": "Live"
+  },
+  "composer": {
+    "liveLegend": "Live",
+    "goLive": "Go live",
+    "liveHint": "Go live in front of your connections or the whole network; you check your microphone and camera first."
+  },
+  "feed": {
+    "shortcutLive": "Live",
+    "shortcutsLabelLive": "Post a photo or a video, or go live"
   }
 }

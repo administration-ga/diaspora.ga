@@ -84,9 +84,14 @@ interface ComposerControl {
   /** A3 : des fichiers choisis hors de la feuille (raccourcis Photo et Vidéo du fil) ; la feuille s'ouvre et les joint. */
   readonly attach: (files: readonly File[]) => void
   readonly canPublish: boolean
+  /**
+   * Lancer un live (le même geste que « Créer → Un live ») ; `null` quand le live n'est pas offert
+   * à ce membre : interrupteur du direct fermé, démonstration, iCom fermé ou publication fermée.
+   */
+  readonly goLive: (() => void) | null
 }
 
-const ComposerContext = createContext<ComposerControl>({ open: () => {}, attach: () => {}, canPublish: false })
+const ComposerContext = createContext<ComposerControl>({ open: () => {}, attach: () => {}, canPublish: false, goLive: null })
 
 /** Ouvre le composeur de la coque depuis un écran (« Quoi de neuf ? »). */
 export function useComposer(): ComposerControl {
@@ -302,12 +307,15 @@ function publishRefusal(status: MembershipStatus): PublishRefusal {
 // ═══════════════════════════════════════════════════════════════
 
 /**
- * Une page de flux (`stream`, par défaut : le document défile, rail droit dès 1 280 px) ou une vue
- * (`view`) : une vue ne porte pas de rail droit, sa colonne revient au contenu.
+ * Une page de flux (`stream`, par défaut : le document défile, rail droit dès 1 280 px), une vue
+ * (`view`) : une vue ne porte pas de rail droit, sa colonne revient au contenu ; ou une page large
+ * (`wide`) : le document défile comme un flux, mais sans rail droit, le contenu prend sa colonne
+ * (la page d'un live : la scène et sa discussion côte à côte).
  */
 type AppShellProps = { readonly membership: MembershipView; readonly children: ReactNode } & (
   | { readonly layout?: "stream"; readonly rail?: ReactNode }
   | { readonly layout: "view"; readonly rail?: never }
+  | { readonly layout: "wide"; readonly rail?: never }
 )
 
 /**
@@ -362,6 +370,7 @@ export function AppShell(props: AppShellProps) {
   const [messagesUnread, setMessagesUnread] = useState(0)
   const { membership } = props
   const view = props.layout === "view"
+  const wide = props.layout === "wide"
   const canPublish = membership.canPublish
   // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
   const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
@@ -401,8 +410,11 @@ export function AppShell(props: AppShellProps) {
   // La page personnelle courante (amendement 5 b) : la carte de l'avatar du rail la dit, puisque le
   // rail n'a plus d'entrée pour elle.
   const accountCurrent = [...account, ...information].find((entry) => entry.active) ?? null
-  // Le menu « Créer » (modèle du réseau de l'administration) : les actus suivent iCom, l'inscription la règle partagée.
+  // Le menu « Créer » (modèle du réseau de l'administration) : le live et les actus suivent iCom, l'inscription la règle partagée.
   const create = menu.create.map(createFormatOf)
+  // Le live, offert par la même règle que « Créer → Un live » (interrupteur du direct, publication et iCom
+  // ouverts — iCom ne l'est qu'avec le moteur) : la carte « Quoi de neuf ? » et le composeur le proposent aussi.
+  const goLive = create.some((format) => format.id === "live") ? launchConference : null
   // La garde des adresses : un module fermé dit « introuvable », comme une page qui n'existe pas.
   const feature = featureOfPath(pathname)
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
@@ -433,7 +445,7 @@ export function AppShell(props: AppShellProps) {
 
   return (
     <PostShareProvider value={canPublish ? startShare : null}>
-      <div data-layout={view ? "view" : "stream"} className={cn("min-h-dvh", view && "tall:flex tall:h-dvh tall:min-h-0 tall:flex-col")}>
+      <div data-layout={props.layout ?? "stream"} className={cn("min-h-dvh", view && "tall:flex tall:h-dvh tall:min-h-0 tall:flex-col")}>
         <div className={cn("mx-auto flex w-full max-w-[1400px]", view && "tall:min-h-0 tall:flex-1")}>
           <DesktopRail
             membership={membership}
@@ -465,10 +477,10 @@ export function AppShell(props: AppShellProps) {
                 view ? "min-[960px]:pb-6 tall:min-h-0 tall:flex-1 tall:grid-rows-[minmax(0,1fr)]" : "min-[960px]:pb-10",
               )}
             >
-              <ComposerContext.Provider value={{ open: openComposer, attach: attachToComposer, canPublish }}>
+              <ComposerContext.Provider value={{ open: openComposer, attach: attachToComposer, canPublish, goLive }}>
                 <InformationReaderContext.Provider value={{ available: information.length > 0, open: openInformation }}>
                   {/* En vue, les avis prennent leur hauteur et le `ViewFrame` de l'écran le reste. */}
-                  <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : "max-w-[792px]")}>
+                  <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : wide ? "xl:col-span-2" : "max-w-[792px]")}>
                     {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
                     <NetworkStatusNotice />
                     <ZoneNotice pathname={pathname} membership={membership} />
@@ -478,10 +490,10 @@ export function AppShell(props: AppShellProps) {
               </ComposerContext.Provider>
               {/* Le rail droit (dès 1 280 px). Sa première place revient à la carte iCom ; montée dès 960 px,
                   elle reste disponible entre 960 et 1 280 px, rail retiré : une adresse de messagerie l'ouvre
-                  détachée, en carte flottante (même doctrine que la page réseau du moteur). En vue, il
-                  reste monté mais caché à toute largeur : sa colonne revient au contenu. */}
+                  détachée, en carte flottante (même doctrine que la page réseau du moteur). En vue et en page
+                  large, il reste monté mais caché à toute largeur : sa colonne revient au contenu. */}
               {props.rail || (icom && desktop) ? (
-                <aside className={cn("hidden flex-col gap-4", !view && "xl:flex")}>
+                <aside className={cn("hidden flex-col gap-4", !view && !wide && "xl:flex")}>
                   {icom && desktop ? (
                     <IcomIsland network={icom}>
                       <Suspense fallback={null}>
@@ -513,6 +525,7 @@ export function AppShell(props: AppShellProps) {
             openCountries={open}
             draftKey={`diaspora-ga:brouillon:${membership.personId}`}
             incomingFiles={composerFiles}
+            {...(goLive === null ? {} : { onGoLive: goLive })}
           />
         ) : null}
         {canPublish ? (
@@ -573,6 +586,12 @@ function FeatureLoading() {
  * Le rail du bureau : le pays, la barre, Publier, Créer, puis la carte de l'avatar. Plus de
  * groupe « Mon espace » (CH-816) : les entrées personnelles sont dans le menu du compte, qui
  * les montrait déjà ; le rail ne double plus ce menu.
+ *
+ * Une CARTE détachée (demande du propriétaire du 26/11/2026), comme la barre de l'espace personnel
+ * d'administration.ga (`PersonalSpaceLanding` du socle) : posée dans une gouttière de 14 px, arrondie,
+ * sur la surface des cartes — celle de la carte iCom du rail droit —, collante sur la hauteur de la
+ * fenêtre, la carte du compte en bas, à l'intérieur. Ni filet ni ombre : la charte détache une carte
+ * par l'écart de clarté entre la carte et le fond, dans les deux modes.
  */
 function DesktopRail(props: {
   membership: MembershipView
@@ -587,7 +606,8 @@ function DesktopRail(props: {
 }) {
   const { t } = useDiasporaGaT()
   return (
-    <aside className="sticky top-0 hidden h-dvh w-[240px] shrink-0 flex-col gap-4 overflow-y-auto overscroll-contain border-r border-border px-4 py-5 min-[960px]:flex">
+    <div data-desktop-rail="" className="sticky top-0 hidden h-dvh shrink-0 py-3.5 pl-3.5 min-[960px]:block">
+    <aside className="flex h-full w-[240px] flex-col gap-4 overflow-y-auto overscroll-contain rounded-xl bg-card px-3 py-4 text-card-foreground shadow-card">
       <div className="flex flex-wrap items-center gap-2 px-2">
         <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
           <Wordmark />
@@ -611,6 +631,7 @@ function DesktopRail(props: {
         onInformation={props.onInformation}
       />
     </aside>
+    </div>
   )
 }
 
@@ -732,7 +753,7 @@ function AccountMenu(props: {
       <DropdownMenu.Trigger
         ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
-        className="mt-auto flex w-full min-w-0 shrink-0 flex-col gap-2 rounded-xl bg-card p-3 text-left text-card-foreground shadow-card transition-colors hover:bg-muted focus-visible:shadow-focus data-[state=open]:bg-muted"
+        className="mt-auto flex w-full min-w-0 shrink-0 flex-col gap-2 rounded-xl bg-background p-3 text-left text-foreground transition-colors hover:bg-muted focus-visible:shadow-focus data-[state=open]:bg-muted"
       >
         <span className="flex w-full min-w-0 items-center gap-3">
           <Avatar id={membership.personId} name={membership.displayName} />
@@ -896,10 +917,12 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
 }
 
 /**
- * « Créer → Une conférence » (CH-817) : la même demande que « Créer → Conférence » du moteur
+ * « Créer → Un live » (CH-817) : la même demande que « Créer → Conférence » du moteur
  * (`use-creation-controller`), sans adresse ni réseau à faire descendre. L'hôte du direct, monté
  * une fois dans la couche de communication d'iCom quand le direct est ouvert (`liveAvailable`), la
- * consomme et ouvre le dialogue de création du moteur ; la conférence créée, il mène à sa page.
+ * consomme et ouvre le dialogue de création du moteur (« Lancer un live », textes surchargés par
+ * DIASPORA.GA) ; le live créé, il mène à sa page. Le raccourci « Live » de la carte « Quoi de neuf ? »
+ * et l'entrée Live du composeur font la même demande.
  */
 function launchConference(): void {
   requestConferenceLaunch({ userIds: [] })
@@ -910,7 +933,7 @@ const CREATE_MENU_ITEM_CLASS = "flex min-h-14 cursor-pointer items-start gap-3 r
 /**
  * « Créer » au bureau, sous « Publier » : un menu de formats, chacun dit en une ligne
  * (comme le menu de création du réseau de l'administration). Flèches, Échap et focus rendu par Radix.
- * Un format sans adresse (la conférence) est un geste du menu, pas un lien.
+ * Un format sans adresse (le live) est un geste du menu, pas un lien.
  */
 function CreateMenu(props: { formats: readonly CreateFormat[] }) {
   const { t } = useDiasporaGaT()
@@ -962,7 +985,7 @@ function CreateMenu(props: { formats: readonly CreateFormat[] }) {
 
 const CREATE_SHEET_ITEM_CLASS = "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
 
-/** Un format de « Créer » dans la feuille du compte : un lien, ou, sans adresse (la conférence), un bouton qui referme la feuille. */
+/** Un format de « Créer » dans la feuille du compte : un lien, ou, sans adresse (le live), un bouton qui referme la feuille. */
 function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) {
   const { t } = useDiasporaGaT()
   const Icon = MEMBER_CREATE_ICONS[props.format.id]
