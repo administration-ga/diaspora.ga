@@ -110,3 +110,20 @@ code 0 :
 - aucun écart dans les fichiers suivis.
 
 `engine-compat.json` inscrit ce couple.
+
+## Seconde vérification de l'assemblage, avec la passerelle consulat.ga (26/11/2026)
+
+`main` a reçu #144 (passerelle consulat.ga, CH-863), qui demande le moteur `728aaa49`, publié sur la démonstration à
+13 h 07. Je l'ai fusionné dans la branche. Deux conflits : un import dans `app-shell.tsx`, où les deux imports sont
+gardés, et `engine-compat.json`.
+
+Vérification complète sous le verrou commun, le 26/11 de 13 h 07 à 13 h 22, poste s11, sur le moteur `728aaa49`
+avec DIASPORA.GA `8a3a69e`. Résultat **vert**, code 0 :
+
+- moteur : 4 283 tests sur 274 fichiers ;
+- typecheck : 13 paquets ;
+- tests : 13 paquets, dont 2 922 pour l'application ;
+- lint : 12 paquets ;
+- aucun écart.
+
+Couple inscrit dans `engine-compat.json`.
