@@ -379,7 +379,7 @@ export interface AccountView {
   /** Porte d'entrée : IDN (niveau de garantie) ou compte léger (adresse masquée). */
   readonly idn: { readonly loa: number } | null
   readonly local: { readonly kind: "email" | "phone"; readonly masked: string } | null
-  /** Prénom et nom reçus d'IDN — servent aux SUGGESTIONS de handle, jamais recopiés d'office. */
+  /** Prénom et nom reçus d'IDN — servent aux propositions de nom et d'identifiant de l'accueil (25/11/2026), publiés seulement au geste de la personne, jamais d'office. */
   readonly nameHints: { readonly firstName?: string; readonly lastName?: string }
   /**
    * Le thème enregistré sur le compte, absent tant que la personne n'en a choisi aucun. Le
@@ -435,6 +435,32 @@ export interface OwnProfileView {
   readonly headline: string | null
   readonly published: boolean
   readonly private: boolean
+}
+
+/** Un identifiant proposé à l'entrée d'après IDN, et s'il est libre pour la personne de la session. */
+export interface EntryPrefillHandle {
+  readonly handle: string
+  readonly available: boolean
+}
+
+/**
+ * Le pré-remplissage de l'accueil en un écran (décision du 25/11/2026, lot A4) : ce que le moteur
+ * propose d'après le retour d'IDN, pour la seule personne de la session, gardé 24 heures au plus
+ * et effacé dès que son profil naît (lot M1 du moteur). Rien n'y est écrit d'office : l'écran le
+ * MONTRE, modifiable, et le profil ne naît qu'au geste « Créer mon profil et entrer ».
+ *
+ *  · `displayName` : le nom civil déjà composé côté serveur (« NOM Prénoms »), ou `null` ;
+ *  · `handles` : six propositions au plus, dans l'ordre de préférence ; l'écran présélectionne la
+ *    première libre ;
+ *  · `residence` : le pays (ISO 3166-1 alpha-2) et la ville de résidence, ou `null` — toujours
+ *    `null` avant le lot M2 du moteur. Ni rue, ni code postal, ni position.
+ *
+ * Aucune donnée consulaire, aucune date de naissance, aucun NIP n'y figure.
+ */
+export interface EntryPrefillView {
+  readonly displayName: string | null
+  readonly handles: readonly EntryPrefillHandle[]
+  readonly residence: { readonly country: string; readonly city: string | null } | null
 }
 
 /** Une image de profil déjà jugée par la garde des fichiers du moteur. */

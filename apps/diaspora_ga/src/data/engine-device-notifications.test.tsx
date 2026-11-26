@@ -172,6 +172,13 @@ describe("Notifications de cet appareil — le geste « Activer »", () => {
     ])
   })
 
+  it("depuis l'invite de première visite : le même geste, l'accord porte l'origine `prompt`", async () => {
+    const { browser } = fakeBrowser(READY_BROWSER)
+    const { capability, writes } = setup(browser)
+    expect(await capability.enable(PERSON._id, { origin: "prompt" })).toEqual({ ok: true, value: null })
+    expect(writes()[0]).toMatchObject({ name: "modules/people/consents:recordConsent", args: { networkId: NETWORK._id, purpose: "notifications", origin: "prompt" } })
+  })
+
   it("refusée dans le navigateur : aucun accord, aucun abonnement", async () => {
     const { browser } = fakeBrowser(READY_BROWSER, "denied")
     const { capability, writes } = setup(browser)

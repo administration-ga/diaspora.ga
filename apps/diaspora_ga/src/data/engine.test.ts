@@ -365,7 +365,7 @@ describe("écritures de la source « moteur »", () => {
     expect(await refused.requestCode({ kind: "email", value: "ada@exemple.test" })).toEqual({ ok: false, code: "rate_limited" })
   })
 
-  it("entrer : profil, consentements accordés seulement, puis l'adhésion par la tranche", async () => {
+  it("entrer : le consentement au profil social AVANT la naissance du profil, puis les accords donnés, puis l'adhésion (décision du 25/11/2026)", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
       ...NEW_PERSON,
@@ -385,16 +385,17 @@ describe("écritures de la source « moteur »", () => {
     expect(calls.map((call) => call.name)).toEqual([
       "modules/networks/networks:getBySlug",
       "modules/people/persons:getMyPerson",
-      "modules/people/profile:publishMyProfile",
       "modules/people/consents:recordConsent",
+      "modules/people/profile:publishMyProfile",
       "modules/people/consents:recordConsent",
       "modules/diaspora/membership:joinDiasporaGa",
     ])
-    // Un compte neuf : le profil naît de l'accueil, avec le nom et l'identifiant choisis.
-    expect(calls[2]?.args).toEqual({ handle: "ada", displayName: "Ada" })
-    // Le profil social vaut pour la personne ; les notifications, pour le réseau EXACT que le
-    // moteur relit avant tout envoi (`notificationConsent`).
-    expect(calls[3]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
+    // Le clic est le consentement : il est enregistré avant que le profil n'existe, jamais après.
+    // Le profil social vaut pour la personne entière.
+    expect(calls[2]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
+    // Un compte neuf : le profil naît de l'accueil, avec le nom et l'identifiant montrés avant le clic.
+    expect(calls[3]?.args).toEqual({ handle: "ada", displayName: "Ada" })
+    // Les notifications valent pour le réseau EXACT que le moteur relit avant tout envoi (`notificationConsent`).
     expect(calls[4]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diaspora-ga" })
     // Sans consentement à l'annuaire, aucun niveau visible n'est demandé.
     expect(calls[5]?.args).toMatchObject({ networkId: "n-diaspora-ga", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
@@ -508,6 +509,7 @@ describe("écritures de la source « moteur »", () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
       ...NEW_PERSON,
+      "modules/people/consents:recordConsent": () => null,
       "modules/people/profile:publishMyProfile": () => {
         throw engineError({ code: "handleUnavailable" })
       },
@@ -600,6 +602,18 @@ describe("écritures de la source « moteur »", () => {
         ])
       },
     )
+
+    it("un accord donné depuis l'invite de première visite porte l'origine `prompt` ; un retrait n'en a pas", async () => {
+      const { convex, calls } = consentConvex()
+      const actions = createEngineActions({ convex, authClient: fakeAuth().client })
+      expect(await actions.setConsent("directory", true, "prompt")).toEqual({ ok: true, value: null })
+      expect(await actions.setConsent("directory", false, "prompt")).toEqual({ ok: true, value: null })
+      expect(calls.filter((call) => call.name.startsWith("modules/people/consents")).map((call) => call.args)).toEqual([
+        { purpose: "directory", origin: "prompt", networkId: "n-diaspora-ga" },
+        { purpose: "directory", networkId: "n-diaspora-ga" },
+        { purpose: "directory" },
+      ])
+    })
 
     it("le profil social vaut pour la personne : posé et retiré sans réseau", async () => {
       const { convex, calls } = consentConvex()

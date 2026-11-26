@@ -5,10 +5,6 @@
     "resendReady": "Le code n'est pas arrivé ? Vous pouvez en redemander un.",
     "resent": "Nouveau code envoyé. Utilisez le plus récent."
   },
-  "welcomeArrival": {
-    "label": "Année d'arrivée dans ce pays",
-    "hint": "Facultative, par exemple 2016. Elle n'est visible que de vous et se change dans vos réglages."
-  },
   "welcomeHandle": {
     "checking": "Vérification de l'identifiant…",
     "available": "@{{handle}} est libre.",

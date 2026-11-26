@@ -15,6 +15,7 @@
 import type { VideoPreparationPhase } from "@antsia/social-features/features/video-upload/video-preparation"
 import type {
   AttestationOutcome,
+  ConsentOrigin,
   ConsentPurpose,
   ContentModerationState,
   CountryCode,
@@ -38,6 +39,7 @@ import type {
   CommentView,
   CountryHubView,
   ConsentView,
+  EntryPrefillView,
   FeedPageQuery,
   FeedPageRequest,
   Loadable,
@@ -93,6 +95,9 @@ export type ActionResult<T = null> =
   | { readonly ok: true; readonly value: T }
   | { readonly ok: false; readonly code: ActionErrorCode }
 
+/** Les origines d'un geste fait hors de l'accueil : les réglages, ou l'invite de première visite. */
+export type ConsentGestureOrigin = Extract<ConsentOrigin, "settings" | "prompt">
+
 /** Images du profil commun aux réseaux ; la personne authentifiée est seule propriétaire. */
 export type ProfileImageUsage = "avatar" | "cover"
 
@@ -110,6 +115,16 @@ export interface ProfilePublication {
   setPrivacy(personId: string, isPrivate: boolean): Promise<ActionResult>
   withdraw(personId: string): Promise<ActionResult>
   republish(personId: string): Promise<ActionResult>
+}
+
+/**
+ * Lot A4 de l'accueil en un écran (décision du 25/11/2026) : ce que le moteur propose d'après le
+ * retour d'IDN (`EntryPrefillView`). Capacité FACULTATIVE : un fournisseur qui ne la sert pas, ou
+ * un moteur qui n'a pas encore la fonction, laisse l'écran à la saisie ordinaire, sans erreur.
+ * `null` : rien à proposer (compte par code, profil déjà né, pré-remplissage échu, refus ou panne).
+ */
+export interface EntryPrefillCapability {
+  useEntryPrefill(): Loadable<EntryPrefillView | null>
 }
 
 /** Choix privés du lecteur dans DIASPORA.GA, sans effet sur ses relations. */
@@ -177,7 +192,9 @@ export interface CodeDestination {
 }
 
 /**
- * Les trois écrans de l'onboarding (EXF-DG-02).
+ * L'entrée en un écran (EXF-DG-02, amendé par la décision du 25/11/2026) : identité, résidence,
+ * une phrase qui dit ce que les membres verront, un bouton. Le clic est le consentement au profil
+ * social ; l'écran envoie l'annuaire et les notifications à « non » (proposés après l'entrée).
  *
  * L'identité commune (EA-04) : `handle` et `displayName` ne servent qu'à une personne qui n'a
  * encore aucun profil. Un profil déjà publié (membre d'ANTSIA, retour après un départ) n'est ni
@@ -398,7 +415,11 @@ export interface DiasporaGaActions {
   sponsor(handle: string): Promise<ActionResult>
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
-  setConsent(purpose: ConsentPurpose, granted: boolean): Promise<ActionResult>
+  /**
+   * Accorder ou retirer une finalité. `origin` : d'où vient le geste — les réglages (par défaut)
+   * ou l'invite de première visite (`prompt`) ; un retrait n'a pas d'origine dans le journal.
+   */
+  setConsent(purpose: ConsentPurpose, granted: boolean, origin?: ConsentGestureOrigin): Promise<ActionResult>
   /**
    * EA-03 : faire relire son statut quand ses faits ont changé hors de DIASPORA.GA ; à
    * n'appeler que si l'adhésion le signale (`statusOutdated`). Capacité facultative du
@@ -435,6 +456,8 @@ export interface DiasporaGaDataSource {
   /** Disponible seulement si le fournisseur sait gérer les images du profil commun. */
   readonly profileImages?: ProfileImagesActions | null
   readonly profilePublication?: ProfilePublication
+  /** Le pré-remplissage de l'accueil d'après IDN (lot A4) ; absent : la saisie ordinaire. */
+  readonly entryPrefill?: EntryPrefillCapability
   readonly contentPreferences?: ContentPreferences
   /** Pages : fiche réelle, abonnement, annuaire (DG-007, `pages-port.ts`). */
   readonly pages?: PagesCapability

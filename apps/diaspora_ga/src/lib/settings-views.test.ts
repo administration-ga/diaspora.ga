@@ -33,6 +33,9 @@ describe("sous-vues des réglages — la table des ancres", () => {
     expect(Object.fromEntries(SETTINGS_ROUTES.map(([key, href]) => [key, settingsViewOfAnchor(anchorOf(href))]))).toEqual({
       settingsFeed: "fil",
       settingsImages: "profil",
+      settingsDirectory: "fil",
+      settingsConsents: "consentements",
+      settingsDeviceNotifications: "affichage",
       settingsData: "donnees",
       settingsReports: "donnees",
       settingsDecisions: "donnees",

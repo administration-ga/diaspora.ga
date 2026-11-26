@@ -299,6 +299,21 @@ describe("consentements, annuaire, départ et effacement", () => {
     expect(membershipView(store.getState(), me(), T0)?.directoryVisibility).toBe("hidden")
   })
 
+  it("un accord donné depuis l'invite de première visite garde son origine (`prompt`) ; un retrait vient des réglages", async () => {
+    const { store, advance } = demo()
+    await store.signInWithIdn(AWA)
+    await store.join(joinInput())
+    advance(1000)
+    await store.setConsent("directory", true, "prompt")
+    expect(store.getState().consents.at(-1)).toMatchObject({ purpose: "directory", granted: true, origin: "prompt" })
+    advance(1000)
+    await store.setConsent("directory", false, "prompt")
+    expect(store.getState().consents.at(-1)).toMatchObject({ purpose: "directory", granted: false, origin: "settings" })
+    advance(1000)
+    await store.setConsent("notifications", true)
+    expect(store.getState().consents.at(-1)).toMatchObject({ purpose: "notifications", granted: true, origin: "settings" })
+  })
+
   it("révoquer le consentement social ne simule ni départ ni retrait du profil", async () => {
     const { store, me } = demo()
     await store.signInWithIdn(AWA)

@@ -1,0 +1,25 @@
+{
+  "welcomeEntry": {
+    "title": "Bienvenue dans DIASPORA.GA",
+    "lead": "Vérifiez ce que les membres verront de vous, puis entrez : un seul geste suffit.",
+    "identityHeading": "Votre profil",
+    "residenceHeading": "Où vous vivez",
+    "edit": "Modifier",
+    "editIdentity": "Modifier le nom affiché et l'identifiant",
+    "editResidence": "Modifier le pays et la ville",
+    "fromIdn": "Proposé d'après votre identité IDN.",
+    "consent": "En créant votre profil, votre nom affiché, votre identifiant et votre pays deviennent visibles des membres de DIASPORA.GA ; l'annuaire et les notifications restent désactivés tant que vous ne les activez pas.",
+    "submit": "Créer mon profil et entrer",
+    "submitKept": "Entrer dans DIASPORA.GA"
+  },
+  "firstChoices": {
+    "title": "À vous de choisir, maintenant ou plus tard",
+    "lead": "Rien n'a été activé pour vous. Chaque choix est un geste à part, que vous retrouvez dans vos réglages.",
+    "dismiss": "Fermer, je choisirai plus tard",
+    "settingsLead": "Dans vos réglages :",
+    "settingsDirectory": "Annuaire",
+    "settingsConsents": "Consentements",
+    "settingsDevice": "Notifications de l'appareil",
+    "directorySaved": "Votre visibilité dans l'annuaire est enregistrée."
+  }
+}

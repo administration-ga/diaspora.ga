@@ -308,9 +308,19 @@ le plan de prompts (`docs/01`) couvre 100 % des exigences. **V1** = lots D1 ; **
 
 - **EXF-DG-01** Connexion par IDN (OIDC, PKCE, `/userinfo` : `loa`, `nationality`), affichée en
   premier ; compte léger par code à usage unique e-mail ou SMS ; jamais de mot de passe.
-- **EXF-DG-02** Onboarding en trois écrans : pays de résidence et ville, handle (suggestions
-  `prenom.nom` / `nom.prenom`, aucun présélectionné) et nom affiché, consentements
-  explicites (profil social, annuaire opt-in, notifications) — jamais de case précochée.
+- **EXF-DG-02** Entrée en un seul écran (amendée le 25/11/2026, décision
+  `DOCUMENTATION/DIASPORA_GA/Accueil_un_ecran_2026-11-25/`, validée par le propriétaire) :
+  identité (nom affiché et identifiant), résidence (pays, ville), une phrase qui dit ce que
+  les membres verront (nom affiché, identifiant, pays), un bouton « Créer mon profil et
+  entrer ». Ce qu'IDN fournit (nom civil complet, identifiants proposés, premier libre
+  présélectionné) s'affiche en ligne de rappel, modifiable ; ce qui manque reste un champ du
+  même écran. Rien n'est écrit avant le clic ; le clic est le consentement au profil social,
+  enregistré avant la naissance du profil. L'annuaire reste masqué et les notifications
+  coupées : une invite de première visite les propose après l'entrée, chacun par son geste
+  (origine `prompt`), et les mêmes choix restent aux réglages ; l'année d'arrivée aussi.
+  *Version d'origine (14/10/2026) : trois écrans — pays et ville, identifiant (suggestions
+  `prenom.nom` / `nom.prenom`, aucune présélectionnée) et nom affiché, puis trois
+  consentements à cocher, jamais précochés.*
 - **EXF-DG-03** Attestation consulaire à la demande : la personne déclenche « Vérifier mon
   inscription consulaire », consent à la requête, le moteur interroge consulat.ga
   (`DIASPORA-ATTESTATION-V1`) et pose le statut `verifiee`, le pays et le poste ; le refus ou

@@ -365,6 +365,12 @@ export const routes = {
   settingsFeed: () => "/parametres#mon-fil",
   /** Images du profil commun, sans commandes de retrait global de profil. */
   settingsImages: () => "/parametres#images",
+  /** L'annuaire des membres : qui peut me trouver (invite de première visite, accueil en un écran). */
+  settingsDirectory: () => "/parametres#annuaire",
+  /** Le registre des consentements, chacun retirable d'un geste. */
+  settingsConsents: () => "/parametres#consentements",
+  /** Les notifications de cet appareil (DS-14, volet push). */
+  settingsDeviceNotifications: () => "/parametres#notifications-appareil",
   /** Mes données : export, effacement, décisions et recours (DG-026). */
   settingsData: () => "/parametres#mes-donnees",
   /** Mes signalements : accusé de réception, échéance légale et issue (SU01d du moteur). */

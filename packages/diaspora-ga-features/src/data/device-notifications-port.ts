@@ -12,7 +12,7 @@
  * explicitement ; il se retire dans « Consentements », ce qui coupe tout envoi, sur tous les
  * appareils. « Désactiver » ne retire que CET appareil.
  */
-import type { ActionResult } from "./port"
+import type { ActionResult, ConsentGestureOrigin } from "./port"
 import type { Loadable } from "./types"
 
 /**
@@ -68,9 +68,11 @@ export interface DeviceNotificationsCapability {
   useDevice(personId: string): Loadable<DeviceNotificationsView>
   /**
    * Le geste « Activer » : demande l'autorisation du navigateur, pose l'accord « notifications »
-   * du réseau, puis abonne CET appareil. Rien n'est écrit si le navigateur refuse.
+   * du réseau, puis abonne CET appareil. Rien n'est écrit si le navigateur refuse. `origin` : d'où
+   * vient le geste dans le journal des consentements — les réglages (par défaut) ou l'invite de
+   * première visite (`prompt`).
    */
-  enable(personId: string): Promise<ActionResult>
+  enable(personId: string, options?: { readonly origin?: ConsentGestureOrigin }): Promise<ActionResult>
   /** Retire CET appareil (serveur, puis navigateur) ; l'accord reste, retirable dans « Consentements ». */
   disable(personId: string): Promise<ActionResult>
 }

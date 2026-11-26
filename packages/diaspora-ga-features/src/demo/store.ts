@@ -44,7 +44,7 @@ import type { ActionErrorCode } from "../data/errors"
 import { postMediaRefusal } from "../data/media"
 import type { ManagedPageDetailView } from "../data/page-admin-port"
 import type { PagePublicationInput } from "../data/page-publications-port"
-import type { ActionResult, CodeDestination, CommentInput, ContentPreferenceKind, IdnSignInInput, JoinInput, JoinedView, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
+import type { ActionResult, CodeDestination, CommentInput, ConsentGestureOrigin, ContentPreferenceKind, IdnSignInInput, JoinInput, JoinedView, PublishInput, PublishMediaInput, PublishOutcome, ReportInput, UploadedMedia } from "../data/port"
 import { COMMENT_MAX_LENGTH, REPORT_NOTE_MAX, type CommunityNoticeView, type ReactionKind } from "../data/types"
 import { handleRefusal, handleToken, normalizeHandle } from "../lib/handle"
 import { emailHash, fakeConsularAttestation } from "./attestation-provider"
@@ -1477,7 +1477,7 @@ export class DemoStore {
     return OK
   }
 
-  async setConsent(purpose: ConsentPurpose, granted: boolean): Promise<ActionResult> {
+  async setConsent(purpose: ConsentPurpose, granted: boolean, origin: ConsentGestureOrigin = "settings"): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
     if (!viewer?.membership) return fail("not_member")
@@ -1487,7 +1487,8 @@ export class DemoStore {
     this.commit({
       ...this.state,
       memberships: { ...this.state.memberships, [viewer.person.id]: membership },
-      consents: [...this.state.consents, { ...consentRecord(purpose, granted, now, "settings"), personId: viewer.person.id }],
+      // L'origine du geste (réglages ou invite de première visite) ; un retrait vient toujours des réglages.
+      consents: [...this.state.consents, { ...consentRecord(purpose, granted, now, granted ? origin : "settings"), personId: viewer.person.id }],
     })
     return OK
   }

@@ -14,7 +14,7 @@
 - `withheld` prime sur toute URL incohérente, dans la grille comme dans le lecteur ; aucune image/vidéo retenue n’est montée. Une mise à jour des autorisations/médias ou un changement de lecteur/source ferme l’ancienne lecture. Éviter tout cache d’URL distinct du DTO vivant.
 - Édition via `engagement.editComment`, avec `networkId = diasporale`. Capacité optionnelle du port pour préserver les fournisseurs existants. Réserver le geste à l’auteur et au droit de commenter ; les gardes du moteur décident toujours. Validation trim, texte non vide et limite commune. Aucun changement des compteurs, de la parenté ou de l’audience.
 - Éditeurs et commandes : verrou immédiat contre les doubles envois, fermeture/réinitialisation lors d’un changement de contexte, retours tardifs sans effet dans un autre compte, refus traduit et brouillon conservé dans le contexte courant.
-- Identité sociale : API globale personnelle, sans `networkId`, jamais obtenue d’un état civil. Ne pas réutiliser `publishMyProfile` pour une simple sauvegarde. Le contrat nouveau éventuel est coordonné avec ANTSIA avant édition de ses chemins.
+- Identité sociale : API globale personnelle, sans `networkId`, jamais obtenue d’un état civil sans le geste de la personne (amendé le 25/11/2026 : l’accueil en un écran propose le nom civil reçu d’IDN, publié seulement au clic, modifiable ensuite). Ne pas réutiliser `publishMyProfile` pour une simple sauvegarde. Le contrat nouveau éventuel est coordonné avec ANTSIA avant édition de ses chemins.
 - Parité moteur/démonstration, persistance existante conservée sans purge. Textes FR/EN ; charte en jetons ; fichiers source réels.
 
 ## Découpage et propriété

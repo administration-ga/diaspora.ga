@@ -77,6 +77,7 @@ import { createDemoModerationDesk } from "./moderation-desk"
 import { createDemoPageDecisions } from "./page-decisions"
 import { createDemoCallSettings } from "./call-settings"
 import { createDemoDeviceNotifications } from "./device-notifications"
+import { createDemoEntryPrefill } from "./entry-prefill"
 import { createDemoNetworkFeatures } from "./network-features"
 import { createDemoMemberBrowse } from "./member-browse"
 import { createDemoPostSearch } from "./post-search"
@@ -163,6 +164,8 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
       republish: (personId) => store.republishProfile(personId),
       updateIdentity: (personId, input) => store.updateProfileIdentity(personId, input),
     },
+    // Lot A4 (accueil en un écran) : le pré-remplissage tiré de l'identité IDN simulée, fictive.
+    entryPrefill: createDemoEntryPrefill(store),
     contentPreferences: {
       usePage({ personId, kind, cursor }: ContentPreferencesRequest): ContentPreferencesQuery {
         const version = useVersion()
@@ -553,7 +556,7 @@ export function createDemoDataSource(store: DemoStore): DiasporaGaDataSource {
       sponsor: (handle) => store.sponsor(handle),
       revokeSponsorship: (id) => store.revokeSponsorship(id),
       requestAttestation: () => store.requestAttestation(),
-      setConsent: (purpose, granted) => store.setConsent(purpose, granted),
+      setConsent: (purpose, granted, origin) => store.setConsent(purpose, granted, origin),
       leaveDiasporaGa: () => store.leaveDiasporaGa(),
       updateFacet: (input) => store.updateFacet(input),
       setDirectoryVisibility: (level) => store.setDirectoryVisibility(level),

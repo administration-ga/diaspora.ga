@@ -136,7 +136,7 @@ describe("IDN de démonstration — présentation des noms civils", () => {
     await user.click(screen.getByRole("combobox", { name: t("welcome.countryLabel") }))
     await user.type(screen.getByRole("searchbox"), "France")
     await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /France/ }))
-    await user.click(screen.getByRole("button", { name: new RegExp(t("common.next")) }))
+    // L'accueil en un écran (25/11/2026) : sans pré-remplissage, le nom affiché se saisit sur le même écran.
     const displayName = await screen.findByRole("textbox", { name: t("welcome.displayNameLabel") })
     const alias = "l’Atelier éCHO-Monde"
     await user.type(displayName, alias)

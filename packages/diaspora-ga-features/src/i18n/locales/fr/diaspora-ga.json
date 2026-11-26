@@ -14,7 +14,6 @@
     "back": "Retour",
     "cancel": "Annuler",
     "close": "Fermer",
-    "next": "Continuer",
     "pleaseWait": "Un instant…",
     "save": "Enregistrer"
   },
@@ -121,13 +120,6 @@
   },
   "welcome": {
     "metaTitle": "Bienvenue",
-    "stepOf": "Étape {{step}} sur {{total}}",
-    "step1Title": "Où vivez-vous ?",
-    "step1Lead": "Votre pays de résidence est le contexte de tout ce que vous verrez. Vous pourrez le changer plus tard.",
-    "step2Title": "Comment vous appeler ?",
-    "step2Lead": "Votre nom affiché et votre identifiant sont les mêmes dans DIASPORA.GA et dans ANTSIA.",
-    "step3Title": "Vos choix",
-    "step3Lead": "Chaque consentement est séparé, révocable à tout moment dans vos réglages.",
     "countryLabel": "Pays de résidence",
     "countryHint": "Le Gabon n'est pas proposé : DIASPORA.GA est le réseau des Gabonais de l'étranger.",
     "countrySheetTitle": "Votre pays de résidence",
@@ -136,34 +128,20 @@
     "cityLabel": "Ville",
     "cityHint": "Facultative. Par défaut, seules vos relations la voient.",
     "displayNameLabel": "Nom affiché",
-    "displayNameHint": "Le nom que les membres verront. Il n'est jamais recopié d'un document officiel.",
+    "displayNameHint": "Le nom que les membres verront. Avec IDN, il est proposé d'après votre identité ; vous pouvez le modifier.",
     "handleLegend": "Votre identifiant",
-    "handleHint": "Il vous désigne sur le réseau (@identifiant). Aucune proposition n'est choisie pour vous.",
+    "handleHint": "Il vous désigne sur le réseau (@identifiant). Avec IDN, le premier identifiant libre est proposé ; vous pouvez en choisir un autre.",
     "handleOther": "Un autre identifiant",
     "handleOtherLabel": "Identifiant",
     "handleRules": "3 à 30 caractères : lettres sans accent, chiffres, point, tiret ou souligné.",
-    "consentsLegend": "Consentements",
-    "consentsFooter": "Vous pourrez retirer chaque consentement d'un geste dans vos réglages.",
-    "submit": "Entrer dans DIASPORA.GA",
     "joined": "Bienvenue dans DIASPORA.GA.",
     "notYourAccount": "Ce n'est pas votre compte, ou vous voulez en changer ?"
   },
   "consent": {
-    "required": "Requis",
-    "socialProfile": {
-      "title": "Créer mon profil social",
-      "body": "Votre nom affiché, votre identifiant et votre pays sont visibles des membres de DIASPORA.GA. Sans ce consentement, il n'y a pas de membre."
-    },
     "directory": {
       "title": "Apparaître dans l'annuaire des membres",
       "body": "Masqué par défaut. Si vous l'acceptez, vous choisissez qui peut vous trouver, par votre nom ou en parcourant les membres de votre pays ou de votre ville. On vous contacte seulement par la messagerie.",
-      "levelLabel": "Qui peut vous trouver dans l'annuaire",
-      "country": "Les membres de mon pays de résidence",
-      "network": "Tous les membres de DIASPORA.GA"
-    },
-    "notifications": {
-      "title": "Recevoir des notifications",
-      "body": "Les réponses à vos publications et la vie de votre pays. Jamais le contenu d'un message dans la notification."
+      "levelLabel": "Qui peut vous trouver dans l'annuaire"
     }
   },
   "consentPurpose": {
@@ -261,8 +239,8 @@
       "r1": {
         "title": "R1 — Une personne inscrite entre par IDN",
         "step1": "Entrer, puis « Identité numérique IDN » ; choisir Awa Ogooué et autoriser.",
-        "step2": "Choisir « France », saisir « Lyon ».",
-        "step3": "Choisir un identifiant proposé, puis cocher le profil social.",
+        "step2": "Vérifier le nom et l'identifiant proposés d'après IDN, puis choisir « France » et saisir « Lyon ».",
+        "step3": "Appuyer sur « Créer mon profil et entrer » ; l'annuaire et les notifications se proposent ensuite, chacun par son geste.",
         "step4": "Constater : compte déclaré, hub France, adhésion ANTSIA dérivée dans les réglages."
       },
       "r2": {

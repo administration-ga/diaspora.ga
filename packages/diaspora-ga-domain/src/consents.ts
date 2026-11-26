@@ -26,7 +26,12 @@ export const CONSENT_PURPOSES = [
 ] as const
 export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number]
 
-/** Les trois consentements de l'onboarding, dans l'ordre d'affichage (E12, étape 3). */
+/**
+ * Les trois finalités que l'entrée enregistre, accord comme refus. Depuis l'accueil en un écran
+ * (décision du 25/11/2026), le bouton « Créer mon profil et entrer » est le geste du profil
+ * social ; l'annuaire et les notifications partent à « non » et sont proposés APRÈS l'entrée,
+ * chacun par son geste (origine `prompt`).
+ */
 export const ONBOARDING_CONSENT_PURPOSES = ["social_profile", "directory", "notifications"] as const
 export type OnboardingConsentPurpose = (typeof ONBOARDING_CONSENT_PURPOSES)[number]
 
@@ -82,7 +87,11 @@ export function canCompleteOnboarding(choices: OnboardingConsentChoices): boolea
   return missingRequiredConsents(choices).length === 0
 }
 
-export const CONSENT_ORIGINS = ["onboarding", "settings", "attestation_request", "talents_editor"] as const
+/**
+ * D'où vient un geste. `prompt` : l'invite de première visite, montée par la coque après l'entrée
+ * (annuaire, notifications de l'appareil) ; le moteur l'accepte déjà (`CONSENT_ORIGINS` du domaine social).
+ */
+export const CONSENT_ORIGINS = ["onboarding", "settings", "prompt", "attestation_request", "talents_editor"] as const
 export type ConsentOrigin = (typeof CONSENT_ORIGINS)[number]
 
 export interface ConsentRecord {

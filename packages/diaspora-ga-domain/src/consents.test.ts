@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
+  CONSENT_ORIGINS,
   CONSENT_PURPOSES,
   CONSENT_SCOPES,
   CONSENT_TEXT_VERSIONS,
@@ -24,6 +25,14 @@ describe("contrat « aucune case précochée »", () => {
 
   test("chaque appel rend un objet neuf (aucun état partagé entre deux personnes)", () => {
     expect(initialConsentChoices()).not.toBe(initialConsentChoices())
+  })
+})
+
+describe("origine d'un geste (accueil en un écran, 25/11/2026)", () => {
+  test("l'invite de première visite a sa propre origine, `prompt`, celle que le moteur accepte déjà", () => {
+    expect(CONSENT_ORIGINS).toContain("prompt")
+    const record = consentRecord("directory", true, NOW, "prompt")
+    expect(record).toEqual({ purpose: "directory", granted: true, textVersion: CONSENT_TEXT_VERSIONS.directory, recordedAt: NOW, origin: "prompt" })
   })
 })
 

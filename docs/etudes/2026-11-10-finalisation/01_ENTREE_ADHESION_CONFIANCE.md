@@ -490,7 +490,7 @@ Règle commune à tous les lots nouveaux : le fournisseur de démonstration sert
 
 | Étape | Geste | Résultat attendu |
 |---|---|---|
-| 1 | Compte neuf : code, accueil en trois écrans, France | Adhésion « en attente », racine « déclarée », Publier fermé avec ses deux chemins |
+| 1 | Compte neuf : code, accueil en un écran (trois écrans avant le 25/11/2026), France | Adhésion « en attente », racine « déclarée », Publier fermé avec ses deux chemins |
 | 2 | `verifie` parraine le compte neuf par son identifiant | « Déclarée » sans rechargement ; avis « parrainage reçu » ; quota 9 sur 10 |
 | 3 | `verifie` retire le parrainage | Retour à « en attente » ; avis ; journal à deux lignes |
 | 4 | `exterieur`, profil ANTSIA avec accroche, entre dans DIASPORALE | Avant EA-04 : constat de la réécriture ; après : identité inchangée |

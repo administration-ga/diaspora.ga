@@ -87,6 +87,7 @@ import { isPlainClick } from "@/lib/plain-click"
 import { routes } from "@/lib/routes"
 
 import { ConsulateGatewaySheet } from "./consulate-gateway-sheet"
+import { FirstChoicesPrompt } from "./first-choices-prompt"
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
 import { InformationSheet } from "./information-sheet"
 import { MessagesUnreadReader } from "./messages-unread"
@@ -558,6 +559,10 @@ export function AppShell(props: AppShellProps) {
                     {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
                     <NetworkStatusNotice />
                     <ZoneNotice pathname={pathname} membership={membership} />
+                    {/* L'invite de première visite (accueil en un écran, 25/11/2026) : annuaire et notifications,
+                        proposés après l'entrée, quelle que soit la page d'arrivée. Pas dans une vue : elle tient
+                        l'écran, et les réglages (une vue) portent déjà ces choix. */}
+                    {view ? null : <FirstChoicesPrompt membership={membership} />}
                     {content}
                   </div>
                 </InformationReaderContext.Provider>
