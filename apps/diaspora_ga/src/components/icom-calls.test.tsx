@@ -70,7 +70,7 @@ describe("iCom — l'interrupteur des appels déclaré au moteur (callsAvailable
     expect(screen.getByRole("button", { name: "Appel vidéo" })).toBeInTheDocument()
   })
 
-  it("admin.diaspora.ga dit vrai : direct et iCom Pro, fermés par le code, sont ce que l'îlot déclare au moteur (CH-815 A5)", () => {
+  it("admin.diaspora.ga dit vrai : le direct, ouvert par le code, et iCom Pro, fermé, sont ce que l'îlot déclare au moteur (CH-815 A5)", () => {
     function Declared() {
       const network = useNetwork()
       return <output data-testid="declared">{JSON.stringify({ live: network.liveAvailable, icomPro: network.icomPro })}</output>
@@ -86,5 +86,7 @@ describe("iCom — l'interrupteur des appels déclaré au moteur (callsAvailable
       live: MEMBERS_APP_CODE_SWITCH_STATES.live === "open",
       icomPro: MEMBERS_APP_CODE_SWITCH_STATES.icomPro === "open",
     })
+    // La position du dépôt depuis le 26/11/2026 : direct ouvert, iCom Pro fermé.
+    expect(JSON.parse(screen.getByTestId("declared").textContent ?? "")).toEqual({ live: true, icomPro: false })
   })
 })

@@ -153,3 +153,22 @@ describe("Textes du site rendus côté serveur, sans attendre la session", () =>
     expect(html).not.toContain(SESSION_LOADING)
   })
 })
+
+describe("Feuille de la trousse d'espace du moteur", () => {
+  const espaceKitSheets = () => document.head.querySelectorAll('style[data-href="espace-kit"]')
+
+  it("sur le moteur, la feuille est montée même pendant l'ouverture de la session (fenêtres du direct)", () => {
+    navigation.pathname = "/fil"
+    render(<Providers locale="fr"><p>page</p></Providers>)
+    expect(screen.getByRole("status").textContent).toBe(SESSION_LOADING)
+    expect(espaceKitSheets()).toHaveLength(1)
+    expect(espaceKitSheets()[0]?.textContent).toContain(".esk-dialog")
+  })
+
+  it("en démonstration aussi, et une seule fois", () => {
+    env.dataSource = "demo"
+    navigation.pathname = "/fil"
+    render(<Providers locale="fr"><p>page de démonstration</p></Providers>)
+    expect(espaceKitSheets()).toHaveLength(1)
+  })
+})

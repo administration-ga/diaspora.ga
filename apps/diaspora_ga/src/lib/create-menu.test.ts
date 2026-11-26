@@ -6,10 +6,10 @@ import { LIVE_SWITCH } from "./live"
 import { routes } from "./routes"
 
 describe("menu « Créer » de la coque", () => {
-  it("un membre qui publie, actus servies : une actu, puis les deux inscriptions", () => {
+  it("un membre qui publie, actus servies : un live (direct ouvert par le code), une actu, puis les deux inscriptions", () => {
     const formats = createFormats({ canPublish: true, stories: true, status: "verifiee", pages: true })
-    expect(formats.map((format) => format.id)).toEqual(["story", "association", "company"])
-    expect(formats.map((format) => format.href)).toEqual([routes.newStory(), routes.newPage("association"), routes.newPage("company")])
+    expect(formats.map((format) => format.id)).toEqual(["live", "story", "association", "company"])
+    expect(formats.map((format) => format.href)).toEqual([null, routes.newStory(), routes.newPage("association"), routes.newPage("company")])
   })
 
   it("sans actus servies (démonstration), seulement les inscriptions", () => {
@@ -29,28 +29,28 @@ describe("menu « Créer » de la coque", () => {
     }
   })
 
-  it("pages fermées sur le réseau (ADR-0041 du moteur) : ni association ni entreprise, l'actu reste", () => {
-    expect(createFormats({ canPublish: true, stories: true, status: "verifiee", pages: false }).map((format) => format.id)).toEqual(["story"])
+  it("pages fermées sur le réseau (ADR-0041 du moteur) : ni association ni entreprise, le live et l'actu restent", () => {
+    expect(createFormats({ canPublish: true, stories: true, status: "verifiee", pages: false }).map((format) => format.id)).toEqual(["live", "story"])
     expect(createFormats({ canPublish: false, stories: true, status: "en_attente", pages: false })).toEqual([])
   })
 
-  describe("la conférence (CH-817), derrière l'interrupteur du direct", () => {
-    const LIVE_OPEN = { ...MEMBERS_APP_CODE_SWITCH_STATES, live: "open" } as const
+  describe("le live (CH-817), derrière l'interrupteur du direct", () => {
+    const LIVE_CLOSED = { ...MEMBERS_APP_CODE_SWITCH_STATES, live: "closed" } as const
 
-    it("fermé par le code (la position du dépôt) : jamais offerte", () => {
-      expect(LIVE_SWITCH).toBe("closed")
-      expect(createFormats({ canPublish: true, stories: true, status: "verifiee", pages: true }).map((format) => format.id)).not.toContain("live")
-    })
-
-    it("ouvert : après l'actu, sans adresse (elle ouvre en place la création du direct), avec son titre et sa ligne d'aide", () => {
-      const formats = createFormats({ canPublish: true, stories: true, status: "verifiee", pages: true, codeSwitches: LIVE_OPEN })
-      expect(formats.map((format) => format.id)).toEqual(["story", "live", "association", "company"])
-      expect(formats[1]).toEqual({ id: "live", href: null, labelKey: "nav.create.live", hintKey: "nav.create.liveHint" })
+    it("ouvert par le code (la position du dépôt depuis le 26/11/2026) : en tête, sans adresse (il ouvre en place la création du live), avec son titre et sa ligne d'aide", () => {
+      expect(LIVE_SWITCH).toBe("open")
+      const formats = createFormats({ canPublish: true, stories: true, status: "verifiee", pages: true })
+      expect(formats.map((format) => format.id)).toEqual(["live", "story", "association", "company"])
+      expect(formats[0]).toEqual({ id: "live", href: null, labelKey: "nav.create.live", hintKey: "nav.create.liveHint" })
     })
 
     it("ouvert : comme l'actu, seulement pour qui publie avec iCom ouvert (jamais en démonstration)", () => {
-      expect(createFormats({ canPublish: false, stories: true, status: "en_attente", pages: true, codeSwitches: LIVE_OPEN }).map((format) => format.id)).toEqual(["association", "company"])
-      expect(createFormats({ canPublish: true, stories: false, status: "declaree", pages: true, codeSwitches: LIVE_OPEN }).map((format) => format.id)).toEqual(["association", "company"])
+      expect(createFormats({ canPublish: false, stories: true, status: "en_attente", pages: true }).map((format) => format.id)).toEqual(["association", "company"])
+      expect(createFormats({ canPublish: true, stories: false, status: "declaree", pages: true }).map((format) => format.id)).toEqual(["association", "company"])
+    })
+
+    it("refermé par le code : jamais offert", () => {
+      expect(createFormats({ canPublish: true, stories: true, status: "verifiee", pages: true, codeSwitches: LIVE_CLOSED }).map((format) => format.id)).toEqual(["story", "association", "company"])
     })
   })
 })

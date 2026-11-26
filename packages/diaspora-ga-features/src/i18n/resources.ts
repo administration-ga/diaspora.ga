@@ -100,6 +100,7 @@ import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
 import enPostSharing from "./locales/en/post-sharing.json"
 import enPostSearch from "./locales/en/post-search.json"
 import enDemoGate from "./locales/en/demo-gate.json"
+import enPostAnnouncements from "./locales/en/post-announcements.json"
 import frAppearanceThemes from "./locales/fr/appearance-themes.json"
 import frAccountMenu from "./locales/fr/account-menu.json"
 import frAppErrors from "./locales/fr/app-errors.json"
@@ -189,6 +190,7 @@ import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
 import frPostSharing from "./locales/fr/post-sharing.json"
 import frPostSearch from "./locales/fr/post-search.json"
 import frDemoGate from "./locales/fr/demo-gate.json"
+import frPostAnnouncements from "./locales/fr/post-announcements.json"
 
 export interface LocaleTree {
   readonly [key: string]: string | LocaleTree
@@ -286,7 +288,7 @@ export const LOCALE_PARTS = {
     "feed-rail": frFeedRail,
     // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
     "member-browse": frMemberBrowse,
-    // CH-817 : la page du direct (conférences du moteur), fermée par le code.
+    // CH-817 : la page du direct (conférences du moteur), ouverte par le code le 26/11/2026.
     live: frLive,
     // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
     "post-author-gestures": frPostAuthorGestures,
@@ -296,6 +298,8 @@ export const LOCALE_PARTS = {
     "post-search": frPostSearch,
     // CH-817 (lot A1) : la pastille « Compte démo » et la porte des comptes de démonstration (numéro, code, acteurs).
     "demo-gate": frDemoGate,
+    // Lot A5 : le direct et l’évènement annoncés dans la carte de publication.
+    "post-announcements": frPostAnnouncements,
   },
   en: {
     "diaspora-ga": enDiasporaGa,
@@ -394,6 +398,8 @@ export const LOCALE_PARTS = {
     "post-search": enPostSearch,
     // CH-817 (lot A1) : la pastille « Compte démo » et la porte des comptes de démonstration (numéro, code, acteurs).
     "demo-gate": enDemoGate,
+    // Lot A5 : le direct et l’évènement annoncés dans la carte de publication.
+    "post-announcements": enPostAnnouncements,
   },
 } as const satisfies Record<"fr" | "en", Record<string, LocaleTree>>
 

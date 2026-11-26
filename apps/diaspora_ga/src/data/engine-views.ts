@@ -36,6 +36,8 @@ import {
   type MembershipView,
   type OpenCountryView,
   type OwnProfileView,
+  type PostEventView,
+  type PostLiveView,
   type PostMediaView,
   type PostMediaWithheld,
   type PostView,
@@ -45,6 +47,7 @@ import {
   ASSOCIATION_EVENT_NOTIFICATION_KINDS,
   COMMUNITY_NOTIFICATION_KINDS,
   CONTEXTUAL_NOTIFICATION_KINDS,
+  LIVE_NOTIFICATION_KINDS,
   NOTIFICATION_KINDS,
   PAGE_GOVERNANCE_NOTIFICATION_KINDS,
   SERVICE_NOTIFICATION_KINDS,
@@ -314,6 +317,28 @@ export function toPublishOutcome(result: { readonly postId: string; readonly mod
   return { moderation: result.moderation ?? null }
 }
 
+/** Lot A5 : le direct annoncé, tel que le moteur le relit à chaque lecture — sa référence, son statut, son titre. */
+export function toPostLiveView(live: NonNullable<FeedItem["live"]>): PostLiveView {
+  return { sessionId: live.sessionId, status: live.status, title: live.title }
+}
+
+/**
+ * Lot A5 : l'évènement annoncé, relu à chaque lecture (statut, MA réponse). L'identifiant de ma
+ * ligne d'invitation (`myParticipationId`) n'est pas repris : la carte de DIASPORA.GA ne répond pas
+ * depuis le fil.
+ */
+export function toPostEventView(event: NonNullable<FeedItem["event"]>): PostEventView {
+  return {
+    eventId: event.eventId,
+    title: event.title,
+    startAt: event.startAt,
+    endAt: event.endAt,
+    timeZone: event.timeZone,
+    status: event.status,
+    myParticipation: event.myParticipation,
+  }
+}
+
 export function toPostView(item: FeedItem): PostView {
   return {
     id: item._id,
@@ -337,6 +362,9 @@ export function toPostView(item: FeedItem): PostView {
     notifying: item.viewer.notifying,
     edited: item.editedAt !== null,
     editedAt: item.editedAt,
+    // Lot A5 : le direct et l'évènement annoncés, relus par le moteur ; absents (ou `null`), la carte reste ordinaire.
+    ...(item.live ? { live: toPostLiveView(item.live) } : {}),
+    ...(item.event ? { event: toPostEventView(item.event) } : {}),
   }
 }
 
@@ -521,7 +549,7 @@ function toCommunityNoticeView(notice: EngineNotification["communityNotice"]): C
  * (groupe thématique, évènement personnel ; PG-01 : signer pour une page). Comparées comme
  * chaînes : un genre que ce moteur ne déclare pas encore ne casse pas le typage.
  */
-const RESOLVED_INVITE_KINDS: ReadonlySet<string> = new Set(["thematic_group_invite", "event_invite", "page_signatory_invite", "group_added"])
+const RESOLVED_INVITE_KINDS: ReadonlySet<string> = new Set(["thematic_group_invite", "event_invite", "page_signatory_invite", "group_added", "live_invite", "live_antenna_invite"])
 
 /** IM-04 : les avis d'un groupe de discussion d'iCom (message, invitation) — le fil est leur seul sujet. */
 const GROUP_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["group_message", "group_added"])
@@ -535,6 +563,18 @@ const PAGE_GOVERNANCE_NOTICE_KINDS: ReadonlySet<string> = new Set(PAGE_GOVERNANC
  * pas le typage, et l'avis ne s'y présente simplement jamais.
  */
 const PERSONAL_THREAD_NOTICE_KINDS: ReadonlySet<string> = new Set(["personal_message"])
+
+/**
+ * Lot `live` du moteur : les avis d'un live (démarrage, invitations, replay publié) désignent la
+ * SESSION (sujet `liveSession`), relue avec sa garde par la page du live. Le moteur ne sert pas son
+ * titre dans l'avis : la vue n'en porte pas.
+ */
+const LIVE_NOTICE_KINDS: ReadonlySet<string> = new Set(LIVE_NOTIFICATION_KINDS)
+
+/** La session d'un avis de live : seulement un sujet `liveSession` ; tout autre sujet, aucune. */
+function liveSessionOf(subject: { readonly kind: string; readonly id: string } | null): string | null {
+  return subject?.kind === "liveSession" && subject.id !== "" ? subject.id : null
+}
 
 /** L'issue d'une invitation d'après la résolution du serveur ; annulée ou expirée, elle n'est plus d'actualité. */
 function resolutionOutcome(resolution: EngineNotification["resolution"]): InviteOutcome | null {
@@ -621,6 +661,8 @@ export function toNotificationView(item: EngineNotification): NotificationView {
     ...(GROUP_THREAD_NOTICE_KINDS.has(item.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
     // IC-09 : la conversation à deux de l'expéditeur, relue pour le destinataire (jamais le message).
     ...(PERSONAL_THREAD_NOTICE_KINDS.has(item.kind) ? { personalThreadId: personalThreadTarget(item.target) } : {}),
+    // Lot `live` : la session du live, que sa page relit avec sa garde (direct ou replay) ; jamais son titre.
+    ...(LIVE_NOTICE_KINDS.has(item.kind) ? { liveSessionId: liveSessionOf(subject) } : {}),
   }
 }
 
@@ -638,7 +680,7 @@ function openedModerationDecision(target: EngineOpenTarget): NoticeTarget["moder
  * DS-14 (ouverture) : la destination d'une notification poussée, relue par le moteur à l'instant
  * (`notifications/open:resolveOpenTarget`), dans la forme qu'un lien d'avis lit (`NoticeTarget`).
  * Mêmes sujets que la ligne de la cloche ; les destinations typées relues pour le lecteur (mise en
- * relation, vie communautaire, décisions, page, message à deux). Un avis d'évènement d'association
+ * relation, vie communautaire, décisions, page, message à deux) ; la session d'un live. Un avis d'évènement d'association
  * n'y porte pas l'adresse de sa page : il retombe sur le repli neutre. `null` reste `null`.
  */
 export function toNotificationOpeningView(opening: EngineOpening): NotificationOpeningView | null {
@@ -665,6 +707,7 @@ export function toNotificationOpeningView(opening: EngineOpening): NotificationO
     ...(PAGE_GOVERNANCE_NOTICE_KINDS.has(opening.kind) ? { governancePageHandle: pageTargetHandle(target) } : {}),
     ...(GROUP_THREAD_NOTICE_KINDS.has(opening.kind) ? { groupThreadId: subject?.kind === "groupThread" ? subject.id : null } : {}),
     ...(PERSONAL_THREAD_NOTICE_KINDS.has(opening.kind) ? { personalThreadId: personalThreadTarget(target) } : {}),
+    ...(LIVE_NOTICE_KINDS.has(opening.kind) ? { liveSessionId: liveSessionOf(subject) } : {}),
   }
   return { channel: "notice", notice }
 }

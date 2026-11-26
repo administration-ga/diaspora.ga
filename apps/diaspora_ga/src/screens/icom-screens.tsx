@@ -80,24 +80,46 @@ function StoriesPageBody(props: { membership: MembershipView; openCreate: boolea
 }
 
 /**
- * `/direct/<id>` — la page d'un direct du moteur (CH-817), montée telle quelle, comme la page
- * de conférence d'antsia.ga (`DirectPage`) : studio et antenne pour l'hôte, salle et discussion
- * pour le spectateur, rediffusion après la fin. La page de route ne la sert que l'interrupteur du
- * direct ouvert et le moteur branché (`conferenceRouteServed`).
+ * `/direct/<id>` — la page d'un live du moteur (CH-817), montée telle quelle, comme la page de
+ * conférence d'antsia.ga (`DirectPage`) : studio et antenne pour l'hôte, salle et discussion pour le
+ * spectateur, replay après la fin. La page de route ne la sert que l'interrupteur du direct ouvert
+ * et le moteur branché (`conferenceRouteServed`).
  *
- * Sans coque, comme le lecteur des actus : la salle prend la page (le moteur retire de même sa
- * navigation sur la page d'un direct). Les conditions sont celles d'iCom (`IcomPage`) : une adhésion
- * qui peut écrire, car l'hôte du direct qui tient la salle vit dans la couche de communication
- * d'iCom (`EngineIcom`) ; sinon la page dit pourquoi. Une session inconnue, d'un autre réseau ou
- * hors audience reçoit du moteur le même refus indistinct.
+ * DANS la coque (26/11/2026), comme administration.ga, qui monte sa page de conférence sous le
+ * gabarit de l'espace (`(app)/espace/conference/[id]`, rail de bureau gardé), et antsia.ga, sous sa
+ * page de membre (rail et barre basse gardés) : la navigation reste à un geste, et quitter la page
+ * garde le live dans sa carte flottante (hôte du direct de la couche de communication d'iCom, monté
+ * une fois à la racine). Mise en page large (`wide`) : la scène et sa discussion se tiennent côte à
+ * côte, sans rail droit ; le document défile.
+ *
+ * Les conditions sont celles d'iCom : une adhésion qui peut écrire, car l'hôte du direct qui tient
+ * la salle vit dans la couche de communication d'iCom (`EngineIcom`) ; sinon la page dit pourquoi,
+ * dans la même coque. Une session inconnue, d'un autre réseau ou hors audience reçoit du moteur le
+ * même refus indistinct.
  */
 export function ConferenceScreen(props: { sessionId: string }) {
   return (
-    <IcomPage titleKey="live.title">
-      <main id="contenu" className="mx-auto min-h-dvh w-full max-w-7xl bg-background px-4 py-6 sm:px-5">
-        <DirectPage sessionId={props.sessionId as Id<"liveSessions">} />
-      </main>
-    </IcomPage>
+    <Gate require="member">
+      {(session) =>
+        session.membership ? <ConferenceBody membership={session.membership} sessionId={props.sessionId} /> : null
+      }
+    </Gate>
+  )
+}
+
+function ConferenceBody(props: { membership: MembershipView; sessionId: string }) {
+  const icom = useIcomState()
+  if (icom.status === "loading") return <GateSkeleton />
+  return (
+    <AppShell membership={props.membership} layout="wide">
+      {icom.status === "off" ? (
+        <IcomUnavailable titleKey="live.title" reason={icom.reason} />
+      ) : (
+        <IcomIsland network={icom.network}>
+          <DirectPage sessionId={props.sessionId as Id<"liveSessions">} />
+        </IcomIsland>
+      )}
+    </AppShell>
   )
 }
 

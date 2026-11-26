@@ -4,6 +4,7 @@ import { hasCapability, parseFeedScope, parseResidenceCountry, type CounterPrese
 import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
 import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT, useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
+import { MEMBER_CREATE_ICONS } from "@diaspora-ga/features/navigation"
 import { ArrowRightIcon, Building2Icon, FilmIcon, GalleryVerticalEndIcon, HandshakeIcon, ImagePlusIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -11,6 +12,7 @@ import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObj
 
 import { AppShell, useComposer } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
+import { FeedLives } from "@/components/feed-lives"
 import { FeedPages } from "@/components/feed-pages"
 import { FeedStories } from "@/components/feed-stories"
 import { countryEventsReader, RailCountryEvents } from "@/components/hub-events"
@@ -181,6 +183,10 @@ function Feed(props: { membership: MembershipView }) {
 
           <FeedStories now={now} />
 
+          {/* Les lives en cours, sous le bandeau des actus, là où le rail droit est retiré (sous 1 280 px) ;
+              dès 1 280 px, la même carte vit au rail droit (`FeedRail`) : jamais deux exemplaires à l'écran. */}
+          <FeedLives now={now} className="xl:hidden" />
+
           {/* La carte d'identité du fil, comme celle du réseau de l'administration : elle porte les gestes
               de création — publier, et inscrire son organisation (AS-05) — à la même place sur chaque visite. */}
           {composer.canPublish ? (
@@ -195,7 +201,7 @@ function Feed(props: { membership: MembershipView }) {
                   {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
                 </button>
               </div>
-              <ComposerMediaShortcuts open={composer.open} attach={composer.attach} />
+              <ComposerMediaShortcuts open={composer.open} attach={composer.attach} goLive={composer.goLive} />
               {/* Qui publie est en règle (`declaree` ou `verifiee`) : l'inscription lui est proposée ici ; un membre en
                   attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. Pages fermées
                   sur le réseau (ADR-0041 du moteur) : aucune inscription proposée. */}
@@ -238,9 +244,15 @@ function Feed(props: { membership: MembershipView }) {
  * Un seul geste ouvre la feuille de publication ET le sélecteur de fichiers : le sélecteur
  * est appelé dans le geste même (un navigateur de téléphone refuse de l'ouvrir plus tard),
  * puis les fichiers choisis rejoignent le composeur, qui les juge comme un choix fait chez lui.
+ *
+ * Live (26/11/2026) : à côté de Photo et Vidéo, comme « Lancer une conférence » à côté de « Publier »
+ * dans la carte d'identité du réseau de l'administration (`ReseauAgentPage` du socle). Le même geste
+ * que « Créer → Un live » (la création du moteur s'ouvre en place), offert seulement quand la coque
+ * l'offre (`goLive`) : jamais en démonstration, jamais l'interrupteur du direct fermé.
  */
-function ComposerMediaShortcuts(props: { open: () => void; attach: (files: readonly File[]) => void }) {
+function ComposerMediaShortcuts(props: { open: () => void; attach: (files: readonly File[]) => void; goLive: (() => void) | null }) {
   const { t } = useDiasporaGaT()
+  const LiveIcon = MEMBER_CREATE_ICONS.live
   const photoInput = useRef<HTMLInputElement>(null)
   const videoInput = useRef<HTMLInputElement>(null)
   const pick = (input: HTMLInputElement | null) => {
@@ -253,7 +265,7 @@ function ComposerMediaShortcuts(props: { open: () => void; attach: (files: reado
     if (files.length > 0) props.attach(files)
   }
   return (
-    <div role="group" aria-label={t("feed.shortcutsLabel")} className="flex flex-wrap gap-2">
+    <div role="group" aria-label={props.goLive === null ? t("feed.shortcutsLabel") : t("feed.shortcutsLabelLive")} className="flex flex-wrap gap-2">
       <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={() => pick(photoInput.current)}>
         <ImagePlusIcon aria-hidden />
         {t("feed.shortcutPhoto")}
@@ -262,6 +274,12 @@ function ComposerMediaShortcuts(props: { open: () => void; attach: (files: reado
         <FilmIcon aria-hidden />
         {t("feed.shortcutVideo")}
       </Button>
+      {props.goLive === null ? null : (
+        <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={props.goLive}>
+          <LiveIcon aria-hidden />
+          {t("feed.shortcutLive")}
+        </Button>
+      )}
       <input ref={photoInput} type="file" accept={POST_PHOTO_ACCEPT} multiple hidden onChange={chosen} />
       <input ref={videoInput} type="file" accept={POST_VIDEO_ACCEPT} hidden onChange={chosen} />
     </div>
@@ -319,7 +337,9 @@ function railCounterShown(counter: CounterPresentation): boolean {
  * Rail droit (≥ 1 280 px), dans l'ordre de la fiche de lancement (CH-816, P2) : des membres à
  * rencontrer, la carte de mon pays, les pages du pays (AS-05 : les officielles d'abord, les
  * institutions à suivre), les prochains évènements (module des groupes et évènements ouvert,
- * HB-02), puis le rappel du parrainage. Un compteur à zéro ne s'affiche pas ; le nombre des
+ * HB-02), les lives en cours (26/11/2026, à la place que leur donnent antsia.ga et
+ * administration.ga : après les évènements ; rien sans live, ni en démonstration), puis le rappel
+ * du parrainage. Un compteur à zéro ne s'affiche pas ; le nombre des
  * évènements ne s'affiche que mesuré par le passage nocturne (EV-02) ; un fournisseur qui ne lit
  * pas les évènements d'un pays ne dit pas « aucun évènement » : il dit où ils se trouvent.
  */
@@ -387,6 +407,7 @@ export function FeedRail(props: { membership: MembershipView }) {
         )}
       </section>
       ) : null}
+      <FeedLives now={now} />
       <RailSponsorReminder membership={props.membership} />
     </>
   )

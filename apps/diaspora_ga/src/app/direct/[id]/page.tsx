@@ -12,9 +12,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * `routes.conference` — la page d'un direct (conférences du moteur, CH-817). Introuvable tant que
- * l'interrupteur du direct est fermé (`lib/live.ts`), et toujours avec la démonstration de ce
- * navigateur, qui n'a ni serveur vidéo ni session : rien n'y mène, rien n'y répond.
+ * `routes.conference` — la page d'un direct (conférences du moteur, CH-817). Servie depuis
+ * l'ouverture de l'interrupteur du direct (`lib/live.ts`, 26/11/2026) ; introuvable s'il est
+ * refermé, et toujours avec la démonstration de ce navigateur, qui n'a ni serveur vidéo ni
+ * session : rien n'y mène, rien n'y répond.
  */
 export default async function ConferencePage(props: { params: Promise<{ id: string }> }) {
   if (!conferenceRouteServed(publicEnv.dataSource)) notFound()

@@ -23,6 +23,8 @@ const mocks = vi.hoisted(() => ({
   viewer: vi.fn(),
   messages: vi.fn(),
   direct: vi.fn(),
+  /** La mise en page demandée à la coque (`stream` par défaut). */
+  shell: vi.fn(),
 }))
 
 vi.mock("next/navigation", () => ({
@@ -40,7 +42,10 @@ vi.mock("@/components/gate", () => ({
   GateSkeleton: () => <div role="status" aria-label="Chargement du réseau" />,
 }))
 vi.mock("@/components/app-shell", () => ({
-  AppShell: (props: { children: ReactNode }) => <>{props.children}</>,
+  AppShell: (props: { children: ReactNode; layout?: string }) => {
+    mocks.shell(props.layout ?? "stream")
+    return <>{props.children}</>
+  },
 }))
 
 // L'îlot réseau reste réel ; les surfaces lourdes servent seulement de sondes
@@ -232,16 +237,18 @@ describe("Les statuts en pages — lecture et création distinctes", () => {
   })
 })
 
-describe("La page d'un direct (CH-817) — l'écran du moteur, aux conditions d'iCom, sans coque", () => {
+describe("La page d'un live (CH-817) — l'écran du moteur, aux conditions d'iCom, dans la coque", () => {
   function conferenceTree(sessionId = "sessions_1") {
     return <I18nProvider locale="fr"><ConferenceScreen sessionId={sessionId} /></I18nProvider>
   }
 
-  it("un membre qui écrit : la page du direct du moteur, sur la session et le réseau de DIASPORA.GA", () => {
+  it("un membre qui écrit : la page du live du moteur, dans la coque en pleine largeur, sur la session et le réseau de DIASPORA.GA", () => {
     render(conferenceTree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")
-    expect(screen.getByRole("main")).toHaveAttribute("id", "contenu")
+    // Comme administration.ga et antsia.ga : la navigation reste autour du live ; la coque porte le `main`.
+    expect(mocks.shell).toHaveBeenLastCalledWith("wide")
+    expect(screen.queryByRole("main")).toBeNull()
     expect(screen.getByRole("region", { name: "Page du direct du moteur" })).toBeInTheDocument()
     expect(mocks.direct).toHaveBeenLastCalledWith({
       sessionId: "sessions_1",
@@ -253,12 +260,13 @@ describe("La page d'un direct (CH-817) — l'écran du moteur, aux conditions d'
   it.each([
     ["membre en attente", { status: "off", reason: "not_allowed" }],
     ["démonstration", { status: "off", reason: "demo" }],
-  ] as const)("iCom fermé (%s) : la page dit pourquoi, sans monter le direct", (_name, icom) => {
+  ] as const)("iCom fermé (%s) : la page dit pourquoi, dans la même coque, sans monter le direct", (_name, icom) => {
     mocks.icom = icom
     if (icom.reason === "not_allowed") mocks.membership = { ...membership, status: "en_attente", canPublish: false }
     render(conferenceTree())
 
-    expect(screen.getByRole("heading", { level: 1, name: "Conférence en direct" })).toBeInTheDocument()
+    expect(mocks.shell).toHaveBeenLastCalledWith("wide")
+    expect(screen.getByRole("heading", { level: 1, name: "Live" })).toBeInTheDocument()
     expect(screen.getByText("Messagerie indisponible")).toBeInTheDocument()
     expect(mocks.direct).not.toHaveBeenCalled()
   })
@@ -270,5 +278,6 @@ describe("La page d'un direct (CH-817) — l'écran du moteur, aux conditions d'
     expect(screen.getByRole("status", { name: "Chargement du réseau" })).toBeInTheDocument()
     expect(screen.queryByText("Messagerie indisponible")).not.toBeInTheDocument()
     expect(mocks.direct).not.toHaveBeenCalled()
+    expect(mocks.shell).not.toHaveBeenCalled()
   })
 })

@@ -1,5 +1,32 @@
 {
   "live": {
-    "title": "Conférence en direct"
+    "title": "Live"
+  },
+  "composer": {
+    "liveLegend": "Live",
+    "goLive": "Lancer un live",
+    "liveHint": "Passez en direct devant vos relations ou tout le réseau ; vous vérifiez votre micro et votre caméra avant."
+  },
+  "feed": {
+    "shortcutLive": "Live",
+    "shortcutsLabelLive": "Publier une photo, une vidéo, ou lancer un live",
+    "lives": {
+      "title": "En direct",
+      "since": "{{host}} · en direct depuis {{minutes}} min",
+      "justStarted": "{{host}} · vient de commencer",
+      "someone": "Membre du réseau",
+      "emptyWindow": "Aucun live accessible dans cette fenêtre. Poursuivez avec « Voir plus ».",
+      "more": "Voir plus"
+    }
+  },
+  "bell": {
+    "openLive": "Voir le live",
+    "openLiveReplay": "Voir le replay",
+    "kind": {
+      "live_started": "est en direct.",
+      "live_invite": "vous invite à son live.",
+      "live_antenna_invite": "vous invite à prendre la parole dans son live.",
+      "live_replay_published": "a publié le replay de son live."
+    }
   }
 }

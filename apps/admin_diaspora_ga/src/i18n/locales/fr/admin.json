@@ -144,18 +144,18 @@
       "rehearsal": "La recette du module est faite en démonstration."
     },
     "code": {
-      "title": "Fermés par le code",
-      "lead": "Ces fonctions de l’application des membres ne sont pas des modules du réseau : elles s’ouvrent dans le code de diaspora.ga, jamais depuis cette application.",
+      "title": "Réglés dans le code",
+      "lead": "Ces fonctions de l’application des membres ne sont pas des modules du réseau : elles s’ouvrent et se ferment dans le code de diaspora.ga, jamais depuis cette application.",
       "closedByCode": "Fermé par le code",
       "openByCode": "Ouvert par le code",
       "names": {
         "calls": "Appels",
-        "live": "Direct",
+        "live": "Live (direct)",
         "icomPro": "iCom Pro"
       },
       "descriptions": {
         "calls": "Les appels audio et vidéo d’iCom, à deux et en groupe.",
-        "live": "Les directs et les conférences.",
+        "live": "Les lives des membres : passer en direct devant ses relations, le réseau ou ses invités.",
         "icomPro": "L’espace professionnel d’iCom : boutiques et mises en relation."
       }
     },

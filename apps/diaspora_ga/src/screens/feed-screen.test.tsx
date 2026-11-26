@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   feed: vi.fn(),
   discovery: vi.fn(),
   stories: vi.fn(),
+  // Les lives en cours : la carte est éprouvée à part (`feed-lives.test.tsx`) ; ici, sa place.
+  lives: vi.fn(),
   gate: vi.fn(),
   push: vi.fn(),
   membership: null as MembershipView | null,
@@ -29,6 +31,8 @@ const mocks = vi.hoisted(() => ({
   // A3 : le composeur de la coque, ouvert et nourri par les raccourcis Photo et Vidéo.
   composerOpen: vi.fn(),
   composerAttach: vi.fn(),
+  // Le live offert par la coque (`goLive`) : `null` sauf dans les scénarios du live.
+  goLive: null as (() => void) | null,
   // CH-816 (P2) : la déclaration de l'application ; les scénarios de la découverte la basculent.
   discoveryOffered: false,
 }))
@@ -53,7 +57,7 @@ vi.mock("@/components/gate", () => ({
 }))
 vi.mock("@/components/app-shell", () => ({
   AppShell: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach }),
+  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach, goLive: mocks.goLive }),
 }))
 vi.mock("@/components/feed-pages", () => ({
   FeedPages: (props: FeedPagesProps) => {
@@ -70,7 +74,13 @@ vi.mock("@/components/feed-pages", () => ({
     )
   },
 }))
-vi.mock("@/components/feed-stories", () => ({ FeedStories: () => { mocks.stories(); return null } }))
+vi.mock("@/components/feed-stories", () => ({ FeedStories: () => { mocks.stories(); return <div data-testid="bandeau-actus" /> } }))
+vi.mock("@/components/feed-lives", () => ({
+  FeedLives: (props: { className?: string }) => {
+    mocks.lives(props)
+    return <section aria-label="Lives en cours" className={props.className} />
+  },
+}))
 vi.mock("@/components/status-banner", () => ({ StatusBanner: () => null }))
 vi.mock("@diaspora-ga/features", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@diaspora-ga/features")>()
@@ -107,6 +117,7 @@ function tree(locale: "fr" | "en" = "fr") {
 }
 const lastDiscovery = () => mocks.discovery.mock.lastCall![0] as FeedDiscoveryProps
 beforeEach(() => {
+  mocks.goLive = null
   mocks.search = ""
   mocks.showEmpty = false
   mocks.listPost = null
@@ -232,6 +243,24 @@ describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascul
     expect(screen.queryByRole("navigation", { name: "Affichage du fil" })).toBeNull()
     // Les portées mènent à la liste : l'adresse de découverte ne se propage pas.
     expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
+  })
+})
+
+describe("/fil — les lives en cours, sous le bandeau des actus (26/11/2026)", () => {
+  const follows = (first: Element, second: Element) => (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+
+  it("la carte des lives suit le bandeau des actus et précède la liste ; retirée dès 1 280 px, où le rail droit la porte", () => {
+    render(tree())
+    const lives = screen.getByRole("region", { name: "Lives en cours" })
+    expect(follows(screen.getByTestId("bandeau-actus"), lives)).toBe(true)
+    expect(follows(lives, screen.getByLabelText("Fil autorisé"))).toBe(true)
+    expect(lives).toHaveClass("xl:hidden")
+    expect(mocks.lives).toHaveBeenCalledTimes(1)
+  })
+
+  it("le rail droit porte la même carte, sans classe de placement (il n'est visible que dès 1 280 px)", () => {
+    render(<I18nProvider locale="fr"><FeedRail membership={MEMBER} /></I18nProvider>)
+    expect(screen.getByRole("region", { name: "Lives en cours" })).not.toHaveAttribute("class")
   })
 })
 
@@ -493,6 +522,26 @@ describe("/fil — raccourcis Photo et Vidéo de la carte « Quoi de neuf ? » (
   it("sans publication possible, aucun raccourci", () => {
     render(tree())
     expect(screen.queryByRole("group", { name: "Publier une photo ou une vidéo" })).toBeNull()
+  })
+
+  it("le live offert par la coque : « Live » à côté de Photo et Vidéo, le même geste que « Créer → Un live »", () => {
+    publisher()
+    const goLive = vi.fn()
+    mocks.goLive = goLive
+    render(tree())
+    const group = screen.getByRole("group", { name: "Publier une photo, une vidéo, ou lancer un live" })
+    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual(["Photo", "Vidéo", "Live"])
+    fireEvent.click(within(group).getByRole("button", { name: "Live" }))
+    expect(goLive).toHaveBeenCalledOnce()
+    // Le live n'ouvre pas le composeur : il ouvre en place la création du live du moteur.
+    expect(mocks.composerOpen).not.toHaveBeenCalled()
+  })
+
+  it("le live non offert (démonstration, direct fermé) : Photo et Vidéo seulement", () => {
+    publisher()
+    render(tree())
+    const group = screen.getByRole("group", { name: "Publier une photo ou une vidéo" })
+    expect(within(group).queryByRole("button", { name: "Live" })).toBeNull()
   })
 })
 

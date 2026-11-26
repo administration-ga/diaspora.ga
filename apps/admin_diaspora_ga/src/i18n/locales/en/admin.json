@@ -144,8 +144,8 @@
       "rehearsal": "The module has been rehearsed in the demo."
     },
     "code": {
-      "title": "Closed in the code",
-      "lead": "These features of the members’ app are not network modules: they are opened in the diaspora.ga code, never from this app.",
+      "title": "Set in the code",
+      "lead": "These features of the members’ app are not network modules: they are opened and closed in the diaspora.ga code, never from this app.",
       "closedByCode": "Closed in the code",
       "openByCode": "Open in the code",
       "names": {
@@ -155,7 +155,7 @@
       },
       "descriptions": {
         "calls": "iCom audio and video calls, one-to-one and in groups.",
-        "live": "Live streams and conferences.",
+        "live": "Members’ lives: going live in front of their connections, the network or their guests.",
         "icomPro": "iCom’s professional space: shops and introductions."
       }
     },

@@ -57,6 +57,8 @@ import { NetworkAdminProvider } from "./network-admin-context"
 
 const i18n = createAppI18n({ locale: "fr", appResources, defaultNS: APP_NAMESPACE })
 const t = i18n.getFixedT("fr", APP_NAMESPACE)
+/** Le texte tel que Testing Library le compare : espaces insécables de la typographie française ramenées à l'espace. */
+const n = (text: string) => text.replace(/\s+/gu, " ")
 const members = i18n.getFixedT("fr", "diaspora-ga")
 const moduleName = (feature: NetworkFeature) => members(`networkFeatures.names.${feature}`)
 
@@ -228,13 +230,14 @@ describe("section Modules — les cartes", () => {
     expect(card("pages").queryByText(t("modules.card.prerequisites"))).toBeNull()
   })
 
-  it("appels, direct et iCom Pro : en lecture seule, « fermé par le code », sans aucun geste", () => {
+  it("appels, direct et iCom Pro : en lecture seule, sans aucun geste ; le direct « ouvert par le code » (26/11/2026), les deux autres « fermé par le code »", () => {
     mount()
     const section = within(screen.getByRole("heading", { level: 2, name: t("modules.code.title") }).closest("section")!)
+    const expected = { calls: "modules.code.closedByCode", live: "modules.code.openByCode", icomPro: "modules.code.closedByCode" } as const
     for (const key of ["calls", "live", "icomPro"] as const) {
       const item = within(section.getByRole("heading", { level: 3, name: t(`modules.code.names.${key}`) }).closest("li")!)
-      expect(item.getByText(t("modules.code.closedByCode"))).toBeInTheDocument()
-      expect(item.getByText(t(`modules.code.descriptions.${key}`))).toBeInTheDocument()
+      expect(item.getByText(t(expected[key]))).toBeInTheDocument()
+      expect(item.getByText(n(t(`modules.code.descriptions.${key}`)))).toBeInTheDocument()
     }
     expect(section.queryByRole("button")).toBeNull()
   })

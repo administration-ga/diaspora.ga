@@ -1,0 +1,234 @@
+{
+  "direct": {
+    "back": "Back to the feed",
+    "failed": "This live is unavailable. Try again shortly.",
+    "loading": "Loading lives…",
+    "start": "Go live",
+    "join": "Join the live",
+    "leave": "Leave the live",
+    "end": "End live",
+    "cancel": "Cancel live",
+    "endConfirm": "End this live for all participants?",
+    "keep": "Continue the live",
+    "waiting": "The live has not started yet.",
+    "joinDescription": "Enter the live to watch it. A viewer's microphone and camera stay off.",
+    "anotherRoom": "You are already in another live. Leave it before joining a new one.",
+    "returnToRoom": "Return to the live",
+    "ongoing": "Live in progress",
+    "stage": "Live stage",
+    "recording": "This live is being recorded. The host will decide whether to publish the replay afterwards.",
+    "recordingConsent": {
+      "notice": "This live is being recorded. On stage, your image, your voice and your screen share will be part of the recording.",
+      "where": "After the live, the host decides whether to publish the replay, never beyond the live's audience; it is kept for {{days}} days at most.",
+      "withdraw": "You can leave the stage at any time: what follows is no longer recorded, but what has already been recorded stays in the replay, which the host decides on.",
+      "accept": "I agree that my image and voice are recorded on the stage of this live",
+      "given": "You have accepted the recording of this live.",
+      "proposedSpeaker": "The host invites you to speak. Accept the recording to go on stage as soon as the live starts.",
+      "hostNotice": "This live is being recorded: a person only goes on stage after accepting the recording."
+    },
+    "status": {
+      "scheduled": "Scheduled",
+      "live": "Live now",
+      "ended": "Ended"
+    },
+    "create": {
+      "title": "Go live",
+      "description": "Prepare your live, then go live when your microphone and camera are ready.",
+      "networkOnly": "This live stays in this network, even with the “Whole network” audience.",
+      "record": "Record this live",
+      "recordDescription": "Participants are informed about recording, and each speaker will have to accept it before going on stage; by ticking, you accept it for yourself. It will remain private until you decide to publish it after the live.",
+      "announce": "Announce the live in the feed",
+      "submit": "Prepare the live",
+      "guestsDescription": "Choose guests and their proposed roles. Access is checked again when creating the live and when going live. Up to 200 guests, including seven speakers.",
+      "guestsChanged": "Some guests are no longer eligible. Remove them before preparing the live.",
+      "noPageAnnouncement": "A page live limited to your connections cannot be announced as the page."
+    },
+    "directory": {
+      "title": "Lives",
+      "filters": "Show lives",
+      "live": "Live now",
+      "replays": "Replays",
+      "mine": "My lives",
+      "empty": {
+        "live": "No live right now.",
+        "replays": "No published replay right now.",
+        "mine": "You have not started a live yet."
+      }
+    },
+    "replay": {
+      "none": "No replay is available for this live.",
+      "ready": "Replay ready",
+      "expired": "This replay has reached the end of its retention period.",
+      "player": "Play the replay",
+      "publish": "Publish the replay",
+      "publication": {
+        "published": "The replay is published for the authorised audience.",
+        "private": "The replay is kept for you."
+      },
+      "management": "Replay and retention",
+      "egress": {
+        "processing": "Replay being prepared",
+        "ready": "Replay available",
+        "failed": "Replay not produced",
+        "expired": "Replay withdrawn or retention ended"
+      },
+      "playbackFailed": "The replay could not be played. Try again.",
+      "published": "Replay published for its permitted audience.",
+      "keptPrivate": "Replay kept for you.",
+      "visibility": "Replay audience",
+      "fixedAudience": "The replay remains restricted to: {{audience}}."
+    },
+    "coexistence": {
+      "microphoneMuted": "Call in progress: the live's microphone is off and its sound is lowered.",
+      "volumeReduced": "Call in progress: the live's sound is lowered."
+    },
+    "management": {
+      "title": "Live studio and management",
+      "panels": "Live panels"
+    },
+    "antenna": {
+      "consent": "A stage role lets you speak. Your microphone and camera remain your choice when you rejoin the room. If the live is being recorded, you will first have to accept the recording."
+    },
+    "participants": {
+      "exclude": "Exclude from the live",
+      "keep": "Keep in the live"
+    },
+    "delegations": {
+      "flags": {
+        "canEndOrTransfer": "End the live"
+      }
+    },
+    "guests": {
+      "description": "Named invitees gain access within the live's audience. Proposed speakers must join the room themselves to publish."
+    },
+    "discussion": {
+      "reactions": "React to the live"
+    },
+    "floating": {
+      "label": "Live: {{title}} — window",
+      "move": "Move the live with arrow keys; Shift for larger steps, Home and End for corners, double-click to reset",
+      "preview": "Live preview",
+      "leaveTitle": "Leave the live?",
+      "hostLeaveDescription": "Ending closes the live for everyone. Leaving without ending turns off your microphone and camera; your absence may then interrupt the live.",
+      "speakerLeaveDescription": "Your microphone and camera will turn off and you will leave the stage. The live continues."
+    },
+    "reception": {
+      "controls": "Live reception",
+      "qualityHint": "Data saver requests the lightest picture the live offers; Automatic lets the on-screen size and your network decide. Your choice is remembered on this device."
+    },
+    "rail": {
+      "title": "Live now",
+      "emptyWindow": "No accessible live in this window. Continue with “Show more”."
+    },
+    "replayFailure": {
+      "ended_before_start": "The live ended before recording started."
+    }
+  },
+  "stories": {
+    "storiesViewer": {
+      "label": {
+        "direct": "Live by {{host}}: {{title}}"
+      }
+    },
+    "liveDirectSlide": {
+      "live": "Live now",
+      "resumeMine": "Resume my live"
+    },
+    "storiesViewerPage": {
+      "empty": {
+        "text": "Stories from your connections appear here for twenty-four hours, and lives come first. Post the first one."
+      },
+      "pagerLabel": "Stories and lives",
+      "pagerLabelWithItem": "Stories and lives — {{item}}"
+    }
+  },
+  "reseau": {
+    "shared": {
+      "notification": {
+        "liveStarted": "{{actor}} is live.",
+        "liveInvite": "{{actor}} invites you to their live.",
+        "liveAntennaInvite": "{{actor}} invites you to speak in their live.",
+        "liveReplayPublished": "{{actor}} published the replay of a live."
+      },
+      "resolution": {
+        "liveEnded": "This live has ended."
+      }
+    },
+    "reseauAgentNav": {
+      "tabs": {
+        "conferences": {
+          "label": "Lives",
+          "shortLabel": "Lives",
+          "description": "Lives happening now, and replays of what you missed."
+        }
+      }
+    },
+    "creationController": {
+      "entries": {
+        "conference": {
+          "label": "Live",
+          "description": "Go live in this network."
+        }
+      }
+    },
+    "emptyStates": {
+      "text": {
+        "conferencesEnDirectAvecRediffusions": "No live right now; replays are further down."
+      }
+    }
+  },
+  "iappel": {
+    "conferenceHint": {
+      "launch": "Go live",
+      "t1": {
+        "body": "A group call brings together at most {{capacity}} people, you included. Choose up to {{others}} people, or bring {{audience}} together in a live."
+      },
+      "t2": {
+        "body": "To talk to more people at once, a live welcomes {{audience}}."
+      },
+      "t3": {
+        "body": "To bring more people together, go live."
+      }
+    },
+    "conferenceLaunchStore": {
+      "refusal": {
+        "personalElsewhere": "A live is started from your network."
+      }
+    }
+  },
+  "messagerie": {
+    "groupCallInviteePicker": {
+      "convoke": "Go live"
+    }
+  },
+  "rules": {
+    "LIVE_TITLE_REQUIRED": "A live must have a title.",
+    "LIVE_TITLE_TOO_LONG": "A live title is limited to {{max}} characters.",
+    "LIVE_FOLLOWERS_REQUIRES_PAGE": "A live reserved for followers is held on behalf of a page.",
+    "LIVE_INVITEES_NOT_ANNOUNCED": "A live reserved for its guests is not announced in the feed.",
+    "LIVE_ENDED": "This live has ended.",
+    "LIVE_NOT_LIVE": "This live is not in progress.",
+    "LIVE_FULL": "This live is full.",
+    "LIVE_EXCLUDED": "You have been removed from this live.",
+    "LIVE_INVITEES_TOO_MANY": "A live has at most {{max}} guests.",
+    "LIVE_INVITEE_NOT_ELIGIBLE": "This person cannot be invited to the live.",
+    "LIVE_JOIN_AS_VIEWER_FIRST": "Join this live as a viewer first.",
+    "LIVE_HOST_STAYS_ON_STAGE": "The host does not leave the stage: they end the live.",
+    "LIVE_TARGET_EXCLUDED": "This person has been removed from this live.",
+    "LIVE_RECORDING_CONSENT_REQUIRED": "This live is being recorded: each speaker must accept the recording before going on stage.",
+    "LIVE_CHAT_CLOSED": "The chat of this live is closed.",
+    "LIVE_SELF_EXCLUDE": "You cannot remove yourself from your own live.",
+    "LIVE_HOST_NOT_MODERATABLE": "The host of the live cannot be moderated.",
+    "LIVE_REPLAY_VISIBILITY_WIDENS": "A replay's audience can only restrict that of the live.",
+    "LIVE_REPLAY_VISIBILITY_FOLLOWERS": "A replay's audience is not set to a page's followers: it follows that of the live.",
+    "LIVE_REPLAY_VISIBILITY_INVITEES": "A replay's audience is not set to guests: it follows that of the live.",
+    "LIVE_REPLAY_DECISION_AFTER_END": "What happens to the recording is decided once the live has ended.",
+    "LIVE_NO_RECORDING": "This live has no recording.",
+    "LIVE_REPLAY_RETRY_AFTER_END": "The live must have ended to retry its replay.",
+    "LIVE_REPLAY_NOTHING_TO_RETRY": "There is no replay to retry for this live.",
+    "LIVE_REPLAY_UNAVAILABLE": "This live has no replay available."
+  },
+  "errors": {
+    "liveRoleRequired": "Your role in this live does not allow this action."
+  }
+}
