@@ -1,6 +1,7 @@
 "use client"
 
 import { AppearanceProvider } from "@antsia/social-features/shell/appearance"
+import { EspaceKitStyles } from "@antsia/ui/espace-kit"
 import { RoutingProvider, type FeatureRoutes, type LinkComponent } from "@diaspora-ga/features"
 import { GatedDataSourceProvider } from "@diaspora-ga/features/data"
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
@@ -154,11 +155,19 @@ function useStaticPublicEntry(): boolean {
  * celui du compte (`AccountTheme`, sous la source de données qui le lit et l'écrit), et
  * la langue aussi (`AccountLocale`). Une arrivée directe sur un texte du site se rend sans
  * source de données (`useStaticPublicEntry`).
+ *
+ * La feuille de la trousse d'espace du moteur (`EspaceKitStyles` : fenêtres, cartes, onglets `esk-*`)
+ * est montée ici, une fois pour tout le site. Chaque surface du moteur est censée la monter elle-même,
+ * mais celles du direct (« Créer une conférence », sortie du studio) ne le font pas : sur diaspora.ga,
+ * leur fenêtre s'affichait sans mise en forme, au bas de la page (constaté le 26/11/2026). React 19
+ * hisse la feuille dans `<head>` et la dédoublonne par son `href` : la monter ici en plus des surfaces
+ * qui la montent déjà ne la duplique jamais.
  */
 export function Providers(props: { locale: Locale; children: ReactNode }) {
   const staticEntry = useStaticPublicEntry()
   return (
     <AppearanceProvider storagePrefix={APPEARANCE.storagePrefix} themes={APPEARANCE.themes}>
+      <EspaceKitStyles />
       <I18nProvider locale={props.locale}>
         {staticEntry ? (
           <RoutingProvider routes={featureRoutes} Link={AppLink}>
