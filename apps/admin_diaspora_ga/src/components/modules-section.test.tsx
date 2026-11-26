@@ -57,6 +57,8 @@ import { NetworkAdminProvider } from "./network-admin-context"
 
 const i18n = createAppI18n({ locale: "fr", appResources, defaultNS: APP_NAMESPACE })
 const t = i18n.getFixedT("fr", APP_NAMESPACE)
+/** Le texte tel que Testing Library le compare : espaces insécables de la typographie française ramenées à l'espace. */
+const n = (text: string) => text.replace(/\s+/gu, " ")
 const members = i18n.getFixedT("fr", "diaspora-ga")
 const moduleName = (feature: NetworkFeature) => members(`networkFeatures.names.${feature}`)
 
@@ -235,7 +237,7 @@ describe("section Modules — les cartes", () => {
     for (const key of ["calls", "live", "icomPro"] as const) {
       const item = within(section.getByRole("heading", { level: 3, name: t(`modules.code.names.${key}`) }).closest("li")!)
       expect(item.getByText(t(expected[key]))).toBeInTheDocument()
-      expect(item.getByText(t(`modules.code.descriptions.${key}`))).toBeInTheDocument()
+      expect(item.getByText(n(t(`modules.code.descriptions.${key}`)))).toBeInTheDocument()
     }
     expect(section.queryByRole("button")).toBeNull()
   })
