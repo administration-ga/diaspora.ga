@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   feed: vi.fn(),
   discovery: vi.fn(),
   stories: vi.fn(),
+  // Les lives en cours : la carte est éprouvée à part (`feed-lives.test.tsx`) ; ici, sa place.
+  lives: vi.fn(),
   gate: vi.fn(),
   push: vi.fn(),
   membership: null as MembershipView | null,
@@ -72,7 +74,13 @@ vi.mock("@/components/feed-pages", () => ({
     )
   },
 }))
-vi.mock("@/components/feed-stories", () => ({ FeedStories: () => { mocks.stories(); return null } }))
+vi.mock("@/components/feed-stories", () => ({ FeedStories: () => { mocks.stories(); return <div data-testid="bandeau-actus" /> } }))
+vi.mock("@/components/feed-lives", () => ({
+  FeedLives: (props: { className?: string }) => {
+    mocks.lives(props)
+    return <section aria-label="Lives en cours" className={props.className} />
+  },
+}))
 vi.mock("@/components/status-banner", () => ({ StatusBanner: () => null }))
 vi.mock("@diaspora-ga/features", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@diaspora-ga/features")>()
@@ -235,6 +243,24 @@ describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascul
     expect(screen.queryByRole("navigation", { name: "Affichage du fil" })).toBeNull()
     // Les portées mènent à la liste : l'adresse de découverte ne se propage pas.
     expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
+  })
+})
+
+describe("/fil — les lives en cours, sous le bandeau des actus (26/11/2026)", () => {
+  const follows = (first: Element, second: Element) => (first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0
+
+  it("la carte des lives suit le bandeau des actus et précède la liste ; retirée dès 1 280 px, où le rail droit la porte", () => {
+    render(tree())
+    const lives = screen.getByRole("region", { name: "Lives en cours" })
+    expect(follows(screen.getByTestId("bandeau-actus"), lives)).toBe(true)
+    expect(follows(lives, screen.getByLabelText("Fil autorisé"))).toBe(true)
+    expect(lives).toHaveClass("xl:hidden")
+    expect(mocks.lives).toHaveBeenCalledTimes(1)
+  })
+
+  it("le rail droit porte la même carte, sans classe de placement (il n'est visible que dès 1 280 px)", () => {
+    render(<I18nProvider locale="fr"><FeedRail membership={MEMBER} /></I18nProvider>)
+    expect(screen.getByRole("region", { name: "Lives en cours" })).not.toHaveAttribute("class")
   })
 })
 

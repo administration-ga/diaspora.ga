@@ -9,7 +9,15 @@
   },
   "feed": {
     "shortcutLive": "Live",
-    "shortcutsLabelLive": "Post a photo or a video, or go live"
+    "shortcutsLabelLive": "Post a photo or a video, or go live",
+    "lives": {
+      "title": "Live now",
+      "since": "{{host}} · live for {{minutes}} min",
+      "justStarted": "{{host}} · just started",
+      "someone": "Network member",
+      "emptyWindow": "No accessible live in this window. Continue with “Show more”.",
+      "more": "Show more"
+    }
   },
   "bell": {
     "openLive": "Watch the live",
