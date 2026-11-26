@@ -93,3 +93,20 @@ remis à zéro ; identité IDN simulée d'Awa OGOOUÉ ; 1280×800.
 - La résidence venant d'IDN (lots I et M2) n'existe pas encore : le pays reste un champ.
 - Lecteur d'écran et téléphone réel non essayés.
 - Le geste unique (entrer et consentir au profil) est soumis à la relecture juridique de la proposition v1.1.
+
+## Vérification de l'assemblage avant fusion (26/11/2026)
+
+Depuis la première vérification, `main` a reçu les médias du fil (#139) puis les lives (#142, #143). Je les ai
+fusionnés dans la branche : un seul conflit, dans `engine-compat.json`.
+
+`bun run --cwd ../ANTSIA verify`, sous le verrou commun, le 26/11 de 12 h 52 à 13 h 05, poste s11, sur le moteur
+`547b80bc` (le `main` publié sur la démonstration, qui contient M1) avec DIASPORA.GA `c33ea4e`. Résultat **vert**,
+code 0 :
+
+- moteur : 4 244 tests sur 274 fichiers ;
+- typecheck : 13 paquets ;
+- tests : 13 paquets, dont 2 855 pour l'application ;
+- lint : 12 paquets ;
+- aucun écart dans les fichiers suivis.
+
+`engine-compat.json` inscrit ce couple.
