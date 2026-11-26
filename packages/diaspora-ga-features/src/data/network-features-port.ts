@@ -3,9 +3,12 @@
  *
  * DIASPORA.GA sert d'emblée son socle : la porte et l'accueil, le fil (publier,
  * commenter, réagir, partager), les pays et leurs actus, les personnes, iCom, les
- * notifications, le compte, la confiance et les pages légales. Huit modules restent
+ * notifications, le compte, la confiance et les pages légales. Neuf modules restent
  * dans le code, FERMÉS tant que l'administration du réseau ne les a pas ouverts :
- * le moteur les refuse (refus indistinct) et l'application ne les monte pas.
+ * le moteur les refuse (refus indistinct) et l'application ne les monte pas. Le
+ * neuvième, `consulateGateway` (CH-863), est un module d'AFFICHAGE : il ne garde
+ * aucune fonction du moteur ni aucune capacité de la source, il règle la seule
+ * entrée « consulat.ga » du menu du compte (`@diaspora-ga/features/navigation`).
  *
  * L'application n'invente rien : un module fermé est une CAPACITÉ ABSENTE de la
  * source (`gateSource`). Les écrans qui lisent une capacité facultative s'en
@@ -44,6 +47,8 @@ export const FEATURE_CAPABILITIES = {
   arrivalKit: ["arrivalKit"],
   // La mesure du pilote ne sert plus rien au site des membres (fiche CH-815, lot A6) : elle se lit dans l'administration.
   pilotMetrics: [],
+  // CH-863 : un module d'affichage (le lien sortant « consulat.ga » du menu du compte) — aucune capacité, aucune adresse.
+  consulateGateway: [],
 } as const satisfies Readonly<Record<NetworkFeature, readonly (keyof DiasporaGaDataSource)[]>>
 
 /** Une liste lue (moteur, démonstration) ramenée aux clés connues, dans l'ordre des clés. */

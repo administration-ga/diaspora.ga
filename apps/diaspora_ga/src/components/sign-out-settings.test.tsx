@@ -4,6 +4,7 @@ import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { EXPLICIT_SIGN_OUT_KEY, explicitSignOutHappened } from "@/lib/explicit-sign-out"
 import { routes } from "@/lib/routes"
 import { OFFLINE_CACHE_PREFIX, offlineCacheName } from "@/lib/service-worker"
 
@@ -176,5 +177,22 @@ describe("SignOutSettings — la sortie partout vide les réserves du script de 
 
     await waitFor(() => expect(mocks.signOut).toHaveBeenCalledOnce())
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+  })
+})
+
+describe("CH-863 D2 — la déconnexion explicite est retenue dans ce navigateur", () => {
+  beforeEach(() => window.localStorage.removeItem(EXPLICIT_SIGN_OUT_KEY))
+
+  it("le repère est posé AVANT la sortie de la source (donc avant sa purge), et reste après elle", async () => {
+    let markedBeforeExit: boolean | null = null
+    mocks.signOut.mockImplementationOnce(async () => {
+      markedBeforeExit = explicitSignOutHappened()
+      // La purge du moteur : elle retire les clés `antsia:`, jamais le repère.
+      for (const key of Object.keys(window.localStorage)) if (key.startsWith("antsia:")) window.localStorage.removeItem(key)
+    })
+    render(tree())
+    await act(async () => { fireEvent.click(screen.getByRole("button", { name: t("settings.signOutEverywhere") })) })
+    expect(markedBeforeExit).toBe(true)
+    expect(explicitSignOutHappened()).toBe(true)
   })
 })

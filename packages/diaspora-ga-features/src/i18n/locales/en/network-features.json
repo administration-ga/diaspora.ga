@@ -8,7 +8,8 @@
       "mutualAid": "Mutual aid",
       "mentoring": "Mentoring",
       "arrivalKit": "Arrival kit",
-      "pilotMetrics": "Pilot metrics"
+      "pilotMetrics": "Pilot metrics",
+      "consulateGateway": "Consular procedures (consulat.ga)"
     },
     "descriptions": {
       "pages": "Association and business pages: directory, profiles, registration, memberships, posts on behalf of a page.",
@@ -18,7 +19,8 @@
       "mutualAid": "Mutual aid questions between members and volunteer missions.",
       "mentoring": "The network's mentors and mentoring requests.",
       "arrivalKit": "Practical guides for settling in a country.",
-      "pilotMetrics": "The pilot metrics: aggregated counts, with no private content, read in the administration’s “Metrics” section. It changes nothing in the members’ menu."
+      "pilotMetrics": "The pilot metrics: aggregated counts, with no private content, read in the administration’s “Metrics” section. It changes nothing in the members’ menu.",
+      "consulateGateway": "Adds the “consulat.ga — Administrative procedures” entry to the members’ account menu. It takes them to their consulat.ga space in the same tab; DIASPORA.GA sends nothing to consulat.ga."
     }
   }
 }

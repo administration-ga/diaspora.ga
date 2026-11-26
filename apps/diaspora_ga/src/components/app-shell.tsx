@@ -28,6 +28,7 @@ import {
   useModerationDesk,
   useOpenCountries,
   usePageAdmin,
+  useSession,
   NETWORK_FEATURES,
   type AssociationListPage,
   type AssociationsCapability,
@@ -41,6 +42,8 @@ import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import {
   MEMBER_CREATE_ICONS,
   MEMBER_DATA_ENTRY,
+  MEMBER_GATEWAY_GROUP_LABEL_KEY,
+  MEMBER_GATEWAY_ICONS,
   MEMBER_INFORMATION_ENTRIES,
   MEMBER_INFORMATION_ICON,
   MEMBER_MENU_ICONS,
@@ -51,6 +54,7 @@ import {
 import {
   ArrowLeftIcon,
   ArrowRightIcon,
+  ArrowUpRightIcon,
   ChevronRightIcon,
   ChevronsUpDownIcon,
   LogOutIcon,
@@ -62,15 +66,27 @@ import {
 import NextLink from "next/link"
 import { usePathname } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
-import { createContext, Suspense, useContext, useEffect, useId, useRef, useState, type ReactNode } from "react"
+import { createContext, Suspense, useContext, useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react"
 import { toast } from "sonner"
 
+import {
+  configuredConsulateGateway,
+  CONSULATE_LINK_ATTRIBUTES,
+  consulateGatewaySeen,
+  consulateGatewayState,
+  interceptsConsulateClick,
+  rememberConsulateGatewaySeen,
+  type ConsulateGatewayLinks,
+} from "@/lib/consulate-gateway"
 import { createFormatOf, type CreateFormat } from "@/lib/create-menu"
+import { publicEnv } from "@/lib/env"
 import { memberMenuHref } from "@/lib/member-menu"
 import { navDestinationOf, type NavDestination } from "@/lib/nav-destinations"
 import { featureOfPath } from "@/lib/network-features"
+import { isPlainClick } from "@/lib/plain-click"
 import { routes } from "@/lib/routes"
 
+import { ConsulateGatewaySheet } from "./consulate-gateway-sheet"
 import { FirstChoicesPrompt } from "./first-choices-prompt"
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
 import { InformationSheet } from "./information-sheet"
@@ -150,6 +166,29 @@ interface AccountGroups {
   readonly own: readonly NavEntry[]
   readonly personal: readonly NavEntry[]
   readonly data: readonly NavEntry[]
+}
+
+/**
+ * La passerelle « consulat.ga » telle que la coque la monte (CH-863) : un VRAI lien vers l'espace
+ * consulat.ga, dans le même onglet, sans ouvreur ni référent. Elle n'existe que si le menu partagé
+ * l'offre (le module du réseau `consulateGateway`, fermé par défaut, ouvert dans admin.diaspora.ga)
+ * ET que l'adresse de consulat.ga est configurée.
+ */
+interface ConsulateGateway {
+  readonly links: ConsulateGatewayLinks
+  readonly icon: LucideIcon
+  /** Le libellé du menu du compte : « consulat.ga », ou « Mon espace consulat.ga » pour un inscrit attesté. */
+  readonly labelKey: string
+  /** Le libellé du lien au pied du rail du bureau. */
+  readonly railLabelKey: string
+  /** « Autre application, dans cet onglet » : annoncé avec chaque lien de la passerelle. */
+  readonly hintKey: string
+  /**
+   * Un clic sur un de ses liens. La première fois, un clic SIMPLE ouvre la feuille d'information à
+   * la place de la navigation (rend `true`, le focus reviendra à `returnFocus`) ; un clic avec une
+   * touche de modification, les fois suivantes, ou un inscrit attesté : le lien mène à consulat.ga.
+   */
+  readonly intercept: (event: MouseEvent<HTMLAnchorElement>, returnFocus: HTMLElement | null) => boolean
 }
 
 /**
@@ -438,6 +477,39 @@ export function AppShell(props: AppShellProps) {
     setInformationAt(pathname)
   }
 
+  // La passerelle « consulat.ga » (CH-863) : offerte par le menu partagé quand son module est ouvert
+  // sur le réseau (`menu.gateways` : les modules servis ci-dessus), composée sur l'adresse configurée ;
+  // la feuille d'information s'ouvre au premier clic simple, puis plus jamais dans ce navigateur.
+  // L'état de la personne vient des vues du port (adhésion, compte).
+  const session = useSession()
+  const [gatewayOpen, setGatewayOpen] = useState(false)
+  const gatewayReturn = useRef<HTMLElement | null>(null)
+  const consulateLinks = configuredConsulateGateway()
+  const consulateEntry = menu.gateways.find((entry) => entry.id === "consulate")
+  const consulateState = consulateGatewayState({
+    attestation: membership.attestation.outcome,
+    hasIdn: session.status === "ready" && session.data.status === "signed_in" && session.data.account.idn !== null,
+    status: membership.status,
+  })
+  const consulate: ConsulateGateway | null =
+    consulateLinks === null || consulateEntry === undefined
+      ? null
+      : {
+          links: consulateLinks,
+          icon: MEMBER_GATEWAY_ICONS.consulate,
+          labelKey: consulateState === "attested" ? "consulateGateway.entry.attestedLabel" : consulateEntry.labelKey,
+          railLabelKey: consulateState === "attested" ? "consulateGateway.entry.attestedLabel" : "consulateGateway.rail",
+          hintKey: consulateEntry.hintKey,
+          intercept: (event, returnFocus) => {
+            if (!isPlainClick(event) || !interceptsConsulateClick(consulateState, consulateGatewaySeen())) return false
+            event.preventDefault()
+            rememberConsulateGatewaySeen()
+            gatewayReturn.current = returnFocus
+            setGatewayOpen(true)
+            return true
+          },
+        }
+
   const startShare = (post: PostView) => {
     setShareTarget(post)
     setShareSession((session) => session + 1)
@@ -456,6 +528,7 @@ export function AppShell(props: AppShellProps) {
             accountCurrent={accountCurrent}
             information={information}
             create={create}
+            consulate={consulate}
             onPublish={openComposer}
             onInformation={openInformation}
           />
@@ -467,6 +540,7 @@ export function AppShell(props: AppShellProps) {
               account={accountGroups}
               information={information}
               create={create}
+              consulate={consulate}
               onPublish={openComposer}
               onInformation={openInformation}
             />
@@ -551,6 +625,16 @@ export function AppShell(props: AppShellProps) {
             returnFocus={() => informationReturn.current}
           />
         ) : null}
+        {consulateLinks !== null && consulateEntry !== undefined && consulateState !== "attested" ? (
+          <ConsulateGatewaySheet
+            open={gatewayOpen}
+            onOpenChange={setGatewayOpen}
+            links={consulateLinks}
+            state={consulateState}
+            idnPortalUrl={publicEnv.idnPortalUrl}
+            returnFocus={() => gatewayReturn.current}
+          />
+        ) : null}
       </div>
     </PostShareProvider>
   )
@@ -606,6 +690,7 @@ function DesktopRail(props: {
   accountCurrent: NavEntry | null
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
+  consulate: ConsulateGateway | null
   onPublish: () => void
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
@@ -633,10 +718,42 @@ function DesktopRail(props: {
         groups={props.account}
         current={props.accountCurrent}
         information={props.information}
+        consulate={props.consulate}
         onInformation={props.onInformation}
       />
+      {props.consulate !== null ? <RailConsulateLink gateway={props.consulate} /> : null}
     </aside>
     </div>
+  )
+}
+
+/**
+ * La passerelle « consulat.ga » au pied de la carte du rail (CH-863) : un lien discret, visible sans
+ * ouvrir le menu du compte. Son nom est son libellé ; « Autre application, dans cet onglet » le
+ * décrit. La première fois, la feuille d'information s'ouvre et lui rend le focus à la fermeture.
+ */
+function RailConsulateLink(props: { gateway: ConsulateGateway }) {
+  const { t } = useDiasporaGaT()
+  const ids = useId()
+  const Icon = props.gateway.icon
+  return (
+    <a
+      href={props.gateway.links.mySpace}
+      {...CONSULATE_LINK_ATTRIBUTES}
+      aria-labelledby={`${ids}-libelle`}
+      aria-describedby={`${ids}-aide`}
+      onClick={(event) => void props.gateway.intercept(event, event.currentTarget)}
+      className="-mt-2 flex min-h-9 min-w-0 shrink-0 items-center gap-2 rounded-[var(--esp-r-chrome)] px-3 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
+    >
+      <Icon className="size-4 shrink-0" aria-hidden />
+      <span id={`${ids}-libelle`} className="min-w-0 flex-1 truncate">
+        {t(props.gateway.railLabelKey)}
+      </span>
+      <ArrowUpRightIcon className="size-3.5 shrink-0" aria-hidden />
+      <span id={`${ids}-aide`} className="sr-only">
+        {t(props.gateway.hintKey)}
+      </span>
+    </a>
   )
 }
 
@@ -709,6 +826,31 @@ function useAccountSignOut() {
 /** Le titre d'une famille du menu ou de la feuille du compte (« Mon espace », « Créer ») : 13 px au moins. */
 const FAMILY_TITLE_CLASS = "px-3 pb-1 pt-2 text-[13px] font-semibold text-muted-foreground"
 
+/**
+ * Le contenu d'un lien de la passerelle « consulat.ga » dans le menu ou la feuille du compte :
+ * l'icône, le libellé (le nom du lien, `aria-labelledby`), la ligne qui dit qu'il ouvre une autre
+ * application (sa description, `aria-describedby`), la flèche de sortie.
+ */
+function ConsulateLinkBody(props: { gateway: ConsulateGateway; labelId: string; hintId: string; size: "menu" | "sheet" }) {
+  const { t } = useDiasporaGaT()
+  const Icon = props.gateway.icon
+  const icon = props.size === "menu" ? "size-4" : "size-5"
+  return (
+    <>
+      <Icon className={cn(icon, "shrink-0")} aria-hidden />
+      <span className="min-w-0 flex-1">
+        <span id={props.labelId} className="block truncate">
+          {t(props.gateway.labelKey)}
+        </span>
+        <span id={props.hintId} className="block truncate text-[13px] font-normal text-muted-foreground">
+          {t(props.gateway.hintKey)}
+        </span>
+      </span>
+      <ArrowUpRightIcon className={cn(icon, "shrink-0 text-muted-foreground")} aria-hidden />
+    </>
+  )
+}
+
 function MenuLink(props: { entry: NavEntry }) {
   const { t } = useDiasporaGaT()
   const { entry } = props
@@ -742,6 +884,7 @@ function AccountMenu(props: {
   /** La page personnelle courante, que la carte de l'avatar dit (amendement 5 b). */
   current: NavEntry | null
   information: readonly NavEntry[]
+  consulate: ConsulateGateway | null
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
@@ -750,11 +893,15 @@ function AccountMenu(props: {
   const trigger = useRef<HTMLButtonElement>(null)
   const handingOff = useRef(false)
   const spaceId = useId()
+  const gatewayIds = useId()
+  // Ouvert ou fermé par la coque aussi : un clic intercepté sur la passerelle (feuille d'information)
+  // annule le lien, donc la fermeture que Radix fait au choix d'une entrée.
+  const [open, setOpen] = useState(false)
   const InformationIcon = MEMBER_INFORMATION_ICON
   const CurrentIcon = current?.icon
   const informationCurrent = props.information.some((entry) => entry.active)
   return (
-    <DropdownMenu.Root>
+    <DropdownMenu.Root open={open} onOpenChange={setOpen}>
       <DropdownMenu.Trigger
         ref={trigger}
         aria-label={t("nav.account.open", { name: membership.displayName })}
@@ -818,6 +965,34 @@ function AccountMenu(props: {
               </DropdownMenu.Group>
             </>
           ) : null}
+          {/* « Démarches administratives » (CH-863) : la passerelle vers consulat.ga, une autre application. */}
+          {props.consulate !== null ? (
+            <>
+              <DropdownMenu.Separator className="my-1 h-px bg-border" />
+              <DropdownMenu.Group aria-labelledby={`${gatewayIds}-groupe`}>
+                <DropdownMenu.Label id={`${gatewayIds}-groupe`} className={FAMILY_TITLE_CLASS}>
+                  {t(MEMBER_GATEWAY_GROUP_LABEL_KEY)}
+                </DropdownMenu.Label>
+                <DropdownMenu.Item asChild>
+                  <a
+                    href={props.consulate.links.mySpace}
+                    {...CONSULATE_LINK_ATTRIBUTES}
+                    aria-labelledby={`${gatewayIds}-libelle`}
+                    aria-describedby={`${gatewayIds}-aide`}
+                    onClick={(event) => {
+                      if (!props.consulate?.intercept(event, trigger.current)) return
+                      // Passage de focus : la feuille d'information qui s'ouvre le prend, puis le rend à l'avatar.
+                      handingOff.current = true
+                      setOpen(false)
+                    }}
+                    className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 py-1.5 text-sm font-medium outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"
+                  >
+                    <ConsulateLinkBody gateway={props.consulate} labelId={`${gatewayIds}-libelle`} hintId={`${gatewayIds}-aide`} size="menu" />
+                  </a>
+                </DropdownMenu.Item>
+              </DropdownMenu.Group>
+            </>
+          ) : null}
           <DropdownMenu.Separator className="my-1 h-px bg-border" />
           {groups.data.map((entry) => (
             <MenuLink key={entry.id} entry={entry} />
@@ -870,6 +1045,7 @@ function MobileHeader(props: {
   account: AccountGroups
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
+  consulate: ConsulateGateway | null
   onPublish: () => void
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
@@ -893,7 +1069,14 @@ function MobileHeader(props: {
         <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
-        <AccountSheet membership={props.membership} groups={props.account} information={props.information} create={props.create} onInformation={props.onInformation} />
+        <AccountSheet
+          membership={props.membership}
+          groups={props.account}
+          information={props.information}
+          create={props.create}
+          consulate={props.consulate}
+          onInformation={props.onInformation}
+        />
       </div>
     </header>
   )
@@ -1032,12 +1215,14 @@ function AccountSheet(props: {
   groups: AccountGroups
   information: readonly NavEntry[]
   create: readonly CreateFormat[]
+  consulate: ConsulateGateway | null
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   const [open, setOpen] = useState(false)
   const createId = useId()
   const spaceId = useId()
+  const gatewayIds = useId()
   const exit = useAccountSignOut()
   const { membership, groups } = props
   const trigger = useRef<HTMLButtonElement>(null)
@@ -1095,6 +1280,33 @@ function AccountSheet(props: {
                 {groups.personal.map((entry) => (
                   <SheetLink key={entry.id} entry={entry} onFollow={close} />
                 ))}
+              </ul>
+            </div>
+          ) : null}
+          {/* « Démarches administratives » (CH-863) : la passerelle vers consulat.ga, une autre application. */}
+          {props.consulate !== null ? (
+            <div role="group" aria-labelledby={`${gatewayIds}-groupe`} className="mt-3 border-t border-border pt-1">
+              <p id={`${gatewayIds}-groupe`} className={FAMILY_TITLE_CLASS}>
+                {t(MEMBER_GATEWAY_GROUP_LABEL_KEY)}
+              </p>
+              <ul className="flex flex-col gap-0.5">
+                <li>
+                  <a
+                    href={props.consulate.links.mySpace}
+                    {...CONSULATE_LINK_ATTRIBUTES}
+                    aria-labelledby={`${gatewayIds}-libelle`}
+                    aria-describedby={`${gatewayIds}-aide`}
+                    onClick={(event) => {
+                      if (!props.consulate?.intercept(event, trigger.current)) return
+                      // Passage de focus : la feuille du compte se ferme, celle d'information le prend.
+                      handingOff.current = true
+                      close()
+                    }}
+                    className="flex min-h-12 min-w-0 items-center gap-3 rounded-lg px-3 py-1.5 text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
+                  >
+                    <ConsulateLinkBody gateway={props.consulate} labelId={`${gatewayIds}-libelle`} hintId={`${gatewayIds}-aide`} size="sheet" />
+                  </a>
+                </li>
               </ul>
             </div>
           ) : null}

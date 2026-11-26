@@ -227,6 +227,11 @@ export const routes = {
   home: () => "/",
   enter: () => "/entrer",
   register: () => "/entrer?inscription=1",
+  /**
+   * La porte d'arrivée de qui vient de consulat.ga (contrat DIASPORA-PASSERELLE-V1, CH-863) : un
+   * repère d'origine fermé, rien de personnel (`lib/arrival.ts`). L'adresse que consulat.ga publie.
+   */
+  enterFromConsulate: () => "/entrer?depuis=consulat",
   /** Résultat de déconnexion, sans masquer un échec de révocation des autres sessions. */
   enterAfterSignOut: (incomplete: boolean) => incomplete ? "/entrer?deconnexion=incomplete" : "/entrer",
   enterIdn: () => "/entrer/idn",

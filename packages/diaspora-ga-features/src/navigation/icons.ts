@@ -19,6 +19,7 @@ import {
   HeartHandshakeIcon,
   HouseIcon,
   InfoIcon,
+  LandmarkIcon,
   LockKeyholeIcon,
   MessageCircleIcon,
   PaletteIcon,
@@ -34,7 +35,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 
-import type { MemberCreateFormatId, MemberMenuEntryId } from "./member-menu"
+import type { MemberCreateFormatId, MemberGatewayId, MemberMenuEntryId } from "./member-menu"
 
 export const MEMBER_MENU_ICONS: Readonly<Record<MemberMenuEntryId, LucideIcon>> = {
   feed: HouseIcon,
@@ -75,4 +76,12 @@ export const MEMBER_CREATE_ICONS: Readonly<Record<MemberCreateFormatId, LucideIc
   live: RadioIcon,
   association: UsersRoundIcon,
   company: Building2Icon,
+}
+
+/**
+ * Les passerelles vers une autre application (CH-863) : consulat.ga, le bâtiment public à
+ * colonnes (lucide `Landmark`), distinct de l'entreprise (`Building2`) et des pages.
+ */
+export const MEMBER_GATEWAY_ICONS: Readonly<Record<MemberGatewayId, LucideIcon>> = {
+  consulate: LandmarkIcon,
 }

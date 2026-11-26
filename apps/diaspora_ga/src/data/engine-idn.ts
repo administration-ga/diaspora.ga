@@ -23,7 +23,7 @@
  * - Aucun nom civil ne part ni ne revient par ici : le moteur ne recopie aucun état civil.
  */
 import { api } from "@convex/_generated/api"
-import type { ActionErrorCode, ActionResult, EntryDoorsView, Loadable } from "@diaspora-ga/features/data"
+import type { ActionErrorCode, ActionResult, EntryDoorsView, IdnStartOptions, Loadable } from "@diaspora-ga/features/data"
 
 import { routes } from "@/lib/routes"
 
@@ -32,6 +32,12 @@ import { type EngineSourceDeps, failed, LOADING, ready, useLoaded } from "./engi
 
 /** Le fournisseur IDN déclaré par le moteur (`genericOAuth`, client central). */
 export const IDN_PROVIDER_ID = "idn"
+
+/**
+ * La seule intention d'entrée que le moteur admet (`IDN_ENTRY_SSO` de `convex/betterAuth/settings.ts`,
+ * ADR-0045) : recopiée ici, aucun import d'un fichier du serveur dans l'application.
+ */
+export const IDN_ENTRY_SSO = "sso"
 
 /** Ce que la configuration publique du moteur dit des portes, réduit à ce que la porte lit. */
 export function toEntryDoorsView(configuration: { readonly idn: boolean; readonly emailOtp: boolean }): EntryDoorsView {
@@ -55,18 +61,31 @@ function here(path: string): string {
   return new URL(path, window.location.origin).href
 }
 
+/** Le refus FERMÉ du moteur pour une intention d'entrée qu'il n'admet pas (ADR-0045 : 400 `idnEntryInvalid`). */
+function isEntryIntentRefusal(error: AuthError): boolean {
+  return error?.status === 400 && error.code === "idnEntryInvalid"
+}
+
+type StartResponse = { readonly data?: unknown; readonly error?: AuthError }
+
 /**
  * Part chez IDN. `ok` : le client du moteur a reçu l'adresse d'IDN et y mène le navigateur ;
  * sinon, un refus fermé, et la personne reste sur la porte.
+ *
+ * `options.reuseIdnSession` (CH-863 D2, porte d'arrivée depuis consulat.ga) : le même départ, avec
+ * la seule intention fermée `additionalData: { antsiaEntry: "sso" }` — le moteur ôte alors
+ * `prompt=login` et identite.ga accepte sa session tant qu'elle vit. Rien d'autre dans
+ * `additionalData`, aucune adresse de retour vers une autre application. Si le moteur refuse
+ * l'intention (400 `idnEntryInvalid` : origine ou application qu'il n'admet pas), UN seul nouvel
+ * essai, aussitôt, par le départ ordinaire, plutôt qu'un « IDN indisponible » qui ne serait pas vrai.
  */
-export async function startIdnSignIn(deps: Pick<EngineSourceDeps, "authClient">): Promise<ActionResult> {
+export async function startIdnSignIn(deps: Pick<EngineSourceDeps, "authClient">, options: IdnStartOptions = {}): Promise<ActionResult> {
   if (typeof window === "undefined") return { ok: false, code: "idn_unavailable" }
+  const ordinary = { providerId: IDN_PROVIDER_ID, callbackURL: here(routes.welcome()), errorCallbackURL: here(routes.enter()) }
+  const reuse = options.reuseIdnSession === true
   try {
-    const started = (await deps.authClient.signIn.oauth2({
-      providerId: IDN_PROVIDER_ID,
-      callbackURL: here(routes.welcome()),
-      errorCallbackURL: here(routes.enter()),
-    })) as { readonly data?: unknown; readonly error?: AuthError }
+    let started = (await deps.authClient.signIn.oauth2(reuse ? { ...ordinary, additionalData: { antsiaEntry: IDN_ENTRY_SSO } } : ordinary)) as StartResponse
+    if (reuse && isEntryIntentRefusal(started.error)) started = (await deps.authClient.signIn.oauth2(ordinary)) as StartResponse
     if (started.error) return { ok: false, code: idnStartErrorCode(started.error) }
     const data = started.data
     const leaves = typeof data === "object" && data !== null && "url" in data && typeof data.url === "string" && "redirect" in data && data.redirect === true

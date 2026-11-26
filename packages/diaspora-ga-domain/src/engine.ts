@@ -50,9 +50,10 @@ export type EngineFacetVisibility = (typeof ENGINE_FACET_VISIBILITIES)[number]
  * Miroir de `NETWORK_FEATURES` du moteur (`@antsia/social-domain/networkFeatures`) : les
  * modules qu'un réseau gouverné ouvre un à un, le socle (fil, profils, relations,
  * messagerie, modération) restant toujours servi. Le test relit la liste du moteur et
- * échoue si les deux divergent.
+ * échoue si les deux divergent. La dernière, `consulateGateway` (CH-863), est un module
+ * d'affichage : l'entrée « consulat.ga » du menu des membres, sans aucune fonction du moteur.
  */
-export const ENGINE_NETWORK_FEATURES = ["pages", "groupsAndEvents", "services", "jobs", "mutualAid", "mentoring", "arrivalKit", "pilotMetrics"] as const
+export const ENGINE_NETWORK_FEATURES = ["pages", "groupsAndEvents", "services", "jobs", "mutualAid", "mentoring", "arrivalKit", "pilotMetrics", "consulateGateway"] as const
 export type EngineNetworkFeature = (typeof ENGINE_NETWORK_FEATURES)[number]
 
 /** Miroir de `PERSONAL_REACTION_KINDS` du moteur (`@antsia/social-domain/content`). */

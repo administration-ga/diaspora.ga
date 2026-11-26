@@ -39,10 +39,12 @@ describe("ce que la page d'entrée annonce (CH-816)", () => {
     expect(ids(["arrivalKit", "jobs", "pages"])).toEqual(["country", "people", "pages", "jobs", "arrivalKit", "contact"])
   })
 
-  it("chaque module, sauf les mesures du pilote, a exactement une carte ; le socle a les siennes", () => {
+  it("chaque module, sauf les mesures du pilote et la passerelle consulat.ga, a exactement une carte ; le socle a les siennes", () => {
+    // Sans carte : la mesure (réservée à l'équipe) et la passerelle (CH-863 : un lien du menu du compte, pas une offre du réseau).
+    const WITHOUT_CARD: readonly NetworkFeature[] = ["pilotMetrics", "consulateGateway"]
     for (const feature of NETWORK_FEATURES) {
       const cards = OFFER_CARDS.filter((card) => card.feature === feature)
-      expect(cards, feature).toHaveLength(feature === "pilotMetrics" ? 0 : 1)
+      expect(cards, feature).toHaveLength(WITHOUT_CARD.includes(feature) ? 0 : 1)
     }
     expect(OFFER_CARDS.filter((card) => card.feature === null).map((card) => card.id)).toEqual(["country", "people", "contact"])
     expect(new Set(OFFER_CARDS.map((card) => card.id)).size).toBe(OFFER_CARDS.length)
@@ -50,6 +52,11 @@ describe("ce que la page d'entrée annonce (CH-816)", () => {
 
   it("les mesures du pilote (réservées à l'équipe) n'ajoutent aucune carte", () => {
     expect(ids(["pages", "pilotMetrics"])).toEqual(ids(["pages"]))
+  })
+
+  it("la passerelle consulat.ga (CH-863) n'ajoute aucune carte : la page d'entrée n'annonce pas un lien vers une autre application", () => {
+    expect(ids(["pages", "consulateGateway"])).toEqual(ids(["pages"]))
+    expect(ids(["consulateGateway"])).toEqual(ids([]))
   })
 
   it("un module inconnu ou cité deux fois ne change rien", () => {

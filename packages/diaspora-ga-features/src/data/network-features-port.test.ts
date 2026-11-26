@@ -62,4 +62,21 @@ describe("fonctionnalités activables du réseau — port (ADR-0041 du moteur)",
   it("la mesure du pilote ne gouverne aucune capacité du site des membres (CH-815, lot A6)", () => {
     expect(FEATURE_CAPABILITIES.pilotMetrics).toEqual([])
   })
+
+  it("la passerelle consulat.ga (CH-863) : un module d'affichage, sans capacité ; fermé ou ouvert, la source montée garde les mêmes capacités et ne dit que la clé", () => {
+    expect(FEATURE_CAPABILITIES.consulateGateway).toEqual([])
+    const source = createDemoDataSource(new DemoStore(null, () => 0, 0))
+    const closed = gateSource(source, ["pages"])
+    const open = gateSource(source, ["consulateGateway", "pages"])
+    expect(closed.openFeatures).toEqual(["pages"])
+    expect(open.openFeatures).toEqual(["pages", "consulateGateway"])
+    expect(Object.keys(open).sort()).toEqual(Object.keys(closed).sort())
+    for (const key of Object.keys(closed) as (keyof typeof closed)[]) {
+      if (key !== "openFeatures") expect(open[key], key).toBe(closed[key])
+    }
+    // La garde que lit la coque : fermée sans décision, comme tout module.
+    expect(featureGateOf(gateSource(source, [])).isOpen("consulateGateway")).toBe(false)
+    expect(featureGateOf(open).isOpen("consulateGateway")).toBe(true)
+    expect(knownFeatures(["consulateGateway", "inconnu"])).toEqual(["consulateGateway"])
+  })
 })

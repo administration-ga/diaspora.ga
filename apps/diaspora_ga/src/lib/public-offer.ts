@@ -3,7 +3,7 @@
  *
  * Décision du propriétaire du 22/11/2026 : « accorder la page d'entrée aux modules ouverts, en
  * retirant ce qui est fermé ». Le réseau démarre simple (ADR-0041 du moteur) : le socle (le fil,
- * la recherche des membres, la messagerie iCom, les actus des pays) est servi d'emblée ; les huit
+ * la recherche des membres, la messagerie iCom, les actus des pays) est servi d'emblée ; les neuf
  * modules activables restent fermés tant que l'administration du réseau ne les a pas ouverts. Au
  * lancement, seules les pages le sont.
  *
@@ -16,7 +16,9 @@
  *
  * Rien n'est retiré : les cartes des modules fermés restent écrites (textes fr et en) et citées par
  * la vision sous la porte, qui ne les rend pas. Chaque carte relève du socle (`null`) ou d'UN seul
- * module ; la mesure du pilote, lue dans l'application d'administration, n'en a aucune.
+ * module ; la mesure du pilote, lue dans l'application d'administration, n'en a aucune, ni la
+ * passerelle consulat.ga (CH-863) : un lien du menu du compte vers une autre application, pas une
+ * offre du réseau à annoncer.
  *
  * Qui lit cette déclaration : la vision sous la porte (`components/door-vision.tsx`) et la carte
  * d'inscription de la porte (`screens/landing-screen.tsx`).

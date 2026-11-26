@@ -1,0 +1,41 @@
+{
+  "consulateGateway": {
+    "group": "Démarches administratives",
+    "entry": {
+      "label": "consulat.ga",
+      "attestedLabel": "Mon espace consulat.ga",
+      "hint": "Autre application, dans cet onglet"
+    },
+    "rail": "Mes démarches sur consulat.ga",
+    "sheet": {
+      "title": "Vos démarches sur consulat.ga",
+      "separate": "consulat.ga est une autre application, avec sa propre connexion : DIASPORA.GA ne lui transmet rien.",
+      "close": "Fermer",
+      "sameTab": "Ces liens ouvrent consulat.ga dans cet onglet.",
+      "idnLead": "Votre compte est relié à votre identité numérique : elle vous permet aussi de vous connecter à consulat.ga.",
+      "openMySpace": "Ouvrir mon espace consulat.ga",
+      "register": "M’inscrire au consulat",
+      "stepsLead": "Pour faire vos démarches sur consulat.ga, trois étapes :",
+      "steps": {
+        "identityTitle": "Identité numérique",
+        "identityBody": "Elle prouve qui vous êtes, sur identite.ga.",
+        "registrationTitle": "Inscription consulaire",
+        "registrationBody": "Vous vous inscrivez auprès du consulat de votre pays de résidence.",
+        "accessTitle": "Accès à consulat.ga",
+        "accessBody": "Vous suivez ensuite vos démarches dans votre espace consulat.ga."
+      },
+      "registerCreatesIdentity": "L’inscription au consulat crée votre identité numérique en même temps.",
+      "alreadyRegistered": "J’ai déjà un compte",
+      "idnPortal": "Ouvrir identite.ga"
+    },
+    "arrival": {
+      "door": "Vous arrivez de consulat.ga.",
+      "doorHint": "Entrez avec la même identité numérique, ou avec un code reçu par e-mail.",
+      "continueIdn": "Continuer avec mon identité numérique",
+      "cardTitle": "Vous arrivez de consulat.ga",
+      "cardBody": "Vous êtes ici @{{handle}}.",
+      "back": "Revenir à consulat.ga",
+      "notMe": "Ce n’est pas moi"
+    }
+  }
+}

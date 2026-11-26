@@ -100,6 +100,63 @@ describe("EA-02 — départ vers IDN par le client du moteur", () => {
   })
 })
 
+describe("CH-863 D2 — la porte d'arrivée demande l'entrée sans ressaisie (ADR-0045 du moteur)", () => {
+  const BASE = () => ({
+    providerId: IDN_PROVIDER_ID,
+    callbackURL: `${window.location.origin}${routes.welcome()}`,
+    errorCallbackURL: `${window.location.origin}${routes.enter()}`,
+  })
+  /** Le refus fermé du moteur pour une intention qu'il n'admet pas (origine, application). */
+  const ENTRY_REFUSED = async () => ({ data: null, error: { status: 400, code: "idnEntryInvalid" } })
+
+  it("avec l'intention : l'appel exact, `additionalData: { antsiaEntry: \"sso\" }` et rien d'autre", async () => {
+    const auth = fakeAuth(LEAVES)
+    expect(await startIdnSignIn({ authClient: auth.client }, { reuseIdnSession: true })).toEqual({ ok: true, value: null })
+    expect(auth.oauth2).toHaveBeenCalledExactlyOnceWith({ ...BASE(), additionalData: { antsiaEntry: "sso" } })
+    expect(auth.oauth2.mock.calls[0]?.[0]).not.toHaveProperty("newUserCallbackURL")
+  })
+
+  it("sans l'intention : l'appel ordinaire, inchangé", async () => {
+    const auth = fakeAuth(LEAVES)
+    await startIdnSignIn({ authClient: auth.client }, { reuseIdnSession: false })
+    await startIdnSignIn({ authClient: auth.client })
+    expect(auth.oauth2.mock.calls.map((call) => call[0])).toEqual([BASE(), BASE()])
+  })
+
+  it("refus fermé `idnEntryInvalid` : un seul nouvel essai, aussitôt, par le départ ordinaire", async () => {
+    const answers = [ENTRY_REFUSED, LEAVES]
+    const auth = fakeAuth(async () => answers.shift()!())
+    expect(await startIdnSignIn({ authClient: auth.client }, { reuseIdnSession: true })).toEqual({ ok: true, value: null })
+    expect(auth.oauth2.mock.calls.map((call) => call[0])).toEqual([{ ...BASE(), additionalData: { antsiaEntry: "sso" } }, BASE()])
+  })
+
+  it("le départ ordinaire refusé lui aussi : son refus fermé, sans troisième essai", async () => {
+    const auth = fakeAuth(ENTRY_REFUSED)
+    expect(await startIdnSignIn({ authClient: auth.client }, { reuseIdnSession: true })).toEqual({ ok: false, code: "idn_unavailable" })
+    expect(auth.oauth2).toHaveBeenCalledTimes(2)
+  })
+
+  it("un autre refus (débit, statut 400 sans ce code) ne relance rien ; sans intention, `idnEntryInvalid` ne relance rien non plus", async () => {
+    const limited = fakeAuth(async () => ({ data: null, error: { code: "rateLimited", status: 429 } }))
+    expect(await startIdnSignIn({ authClient: limited.client }, { reuseIdnSession: true })).toEqual({ ok: false, code: "rate_limited" })
+    expect(limited.oauth2).toHaveBeenCalledTimes(1)
+    const other = fakeAuth(async () => ({ data: null, error: { code: "invalidArgument", status: 400 } }))
+    await startIdnSignIn({ authClient: other.client }, { reuseIdnSession: true })
+    expect(other.oauth2).toHaveBeenCalledTimes(1)
+    const ordinary = fakeAuth(ENTRY_REFUSED)
+    expect(await startIdnSignIn({ authClient: ordinary.client })).toEqual({ ok: false, code: "idn_unavailable" })
+    expect(ordinary.oauth2).toHaveBeenCalledTimes(1)
+  })
+
+  it("la source moteur transmet l'option de la porte au départ", async () => {
+    const auth = fakeAuth(LEAVES)
+    const actions = createEngineActions({ convex: {} as never, authClient: auth.client })
+    await actions.signInWithIdn(undefined, { reuseIdnSession: true })
+    await actions.signInWithIdn()
+    expect(auth.oauth2.mock.calls.map((call) => call[0])).toEqual([{ ...BASE(), additionalData: { antsiaEntry: "sso" } }, BASE()])
+  })
+})
+
 describe("EA-02 — les portes ouvertes, lues dans la configuration publique du moteur", () => {
   it("réduit la configuration à ce que la porte lit, sans origine ni application", () => {
     expect(toEntryDoorsView({ idn: true, emailOtp: false })).toEqual({ idn: true, emailCode: false })

@@ -2,7 +2,15 @@
 
 import { cn } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { MEMBER_CREATE_ICONS, MEMBER_MENU_ICONS, type MemberMenu, type MemberMenuChange, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
+import {
+  MEMBER_CREATE_ICONS,
+  MEMBER_GATEWAY_GROUP_LABEL_KEY,
+  MEMBER_GATEWAY_ICONS,
+  MEMBER_MENU_ICONS,
+  type MemberMenu,
+  type MemberMenuChange,
+  type MemberMenuEntry,
+} from "@diaspora-ga/features/navigation"
 import { Minus, Plus } from "lucide-react"
 import { useId, type ReactNode } from "react"
 import { useTranslation } from "react-i18next"
@@ -12,9 +20,10 @@ import { APP_NAMESPACE } from "@/i18n/resources"
 /**
  * Le menu des membres de diaspora.ga, dessiné tel que la fonction partagée le rend
  * (`@diaspora-ga/features/navigation`, fiche CH-815 § 5) : le rail du bureau (et « Créer »), la
- * barre du téléphone, le menu du compte et ses informations. Les libellés et les icônes sont
- * ceux de l'application des membres (espace `diaspora-ga`, table d'icônes partagée) ; rien
- * n'est cliquable : c'est une image du menu, pas une navigation.
+ * barre du téléphone, le menu du compte, ses passerelles vers une autre application (CH-863 :
+ * présentes seulement quand leur module est ouvert, ou coché dans l'aperçu) et ses informations.
+ * Les libellés et les icônes sont ceux de l'application des membres (espace `diaspora-ga`, table
+ * d'icônes partagée) ; rien n'est cliquable : c'est une image du menu, pas une navigation.
  */
 export function MemberMenuPreview(props: { menu: MemberMenu; className?: string }) {
   const { t } = useTranslation(APP_NAMESPACE)
@@ -45,6 +54,28 @@ export function MemberMenuPreview(props: { menu: MemberMenu; className?: string 
       </PreviewPanel>
       <PreviewPanel title={t("preview.account")}>
         <EntryList entries={menu.account} dense />
+        {/* CH-863 : les passerelles vers une autre application (« Démarches administratives »), chacune
+            réglée par son module du réseau (fermé par défaut) ; l'application des membres les monte
+            avant « Mes données », si l'adresse de l'autre application est configurée. */}
+        {menu.gateways.length > 0 ? (
+          <PreviewGroup label={members(MEMBER_GATEWAY_GROUP_LABEL_KEY)}>
+            <ul className="flex flex-col gap-1">
+              {menu.gateways.map((entry) => {
+                const Icon = MEMBER_GATEWAY_ICONS[entry.id]
+                return (
+                  <li key={entry.id} className="flex min-w-0 items-start gap-3 rounded-lg px-3 py-2">
+                    <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{members(entry.labelKey)}</span>
+                      <span className="block text-[13px] leading-snug text-muted-foreground">{members(entry.hintKey)}</span>
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="px-3 text-[13px] leading-snug text-muted-foreground">{t("preview.gatewayNote")}</p>
+          </PreviewGroup>
+        ) : null}
         <PreviewGroup label={t("preview.information")}>
           <EntryList entries={menu.information} dense />
         </PreviewGroup>
@@ -111,6 +142,8 @@ function EntryList(props: { entries: readonly MemberMenuEntry[]; dense?: boolean
 const PLACEMENT_KEYS: Readonly<Record<MemberMenuChange["placement"], string>> = {
   bar: "menuChange.placement.bar",
   account: "menuChange.placement.account",
+  // CH-863 : le groupe des passerelles du menu du compte, nommé par son titre de membre (`group`).
+  gateways: "menuChange.placement.gateways",
   create: "menuChange.placement.create",
 }
 
@@ -139,7 +172,7 @@ export function MenuChangeList(props: { changes: readonly MemberMenuChange[]; to
             <span className="font-semibold">{members(change.labelKey)}</span>
             <span className="text-muted-foreground">
               {" · "}
-              {t(PLACEMENT_KEYS[change.placement])}
+              {t(PLACEMENT_KEYS[change.placement], { group: members(MEMBER_GATEWAY_GROUP_LABEL_KEY) })}
               {change.audience === "everyone" ? null : <>{" · "}{t(AUDIENCE_KEYS[change.audience])}</>}
             </span>
           </span>
