@@ -18,7 +18,7 @@
     "system": {
       "page_post": "A page you follow has posted.",
       "file_withheld": "A file you uploaded is being held by the security scan: it is not shown to anyone.",
-      "membership_changed": "Your status in DIASPORA.GA has changed.",
+      "membership_changed": "Your status in DIASPORA has changed.",
       "badge_changed": "Your trust badges have changed.",
       "page_signatory_invite": "You are invited to join the team that signs for a page.",
       "page_claim_decided": "Your claim to a page has been reviewed."
@@ -26,7 +26,7 @@
   },
   "notificationsCenter": {
     "title": "Notifications",
-    "lead": "Everything that happened for you in DIASPORA.GA, newest first. A notification never shows content: it leads to what it refers to.",
+    "lead": "Everything that happened for you in DIASPORA, newest first. A notification never shows content: it leads to what it refers to.",
     "filterLabel": "Filter notifications",
     "filter": {
       "all": "All",

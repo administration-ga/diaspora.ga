@@ -2,7 +2,7 @@
   "hubAbout": {
     "summary": "About the hub — {{country}}",
     "statusLabel": "Status",
-    "statusOpen": "Open country: members who live there can post in this hub. Every DIASPORA.GA member can read it, wherever they live.",
+    "statusOpen": "Open country: members who live there can post in this hub. Every DIASPORA member can read it, wherever they live.",
     "statusNotOpen": "Not open yet: every member can read this hub. Those who live there can post for the whole diaspora; posting in this hub waits for the country to open.",
     "openingLabel": "Opening a country",
     "openingRule": "A country is opened by the network administration, once a moderation team of that country has at least {{moderators}} active moderator, which the app checks, and {{relays}} relay associations have committed, which the administration attests.",

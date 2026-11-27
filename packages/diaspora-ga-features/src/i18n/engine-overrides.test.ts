@@ -42,7 +42,7 @@ function liveTexts(locale: "fr" | "en"): Map<string, string> {
   return all
 }
 
-describe("textes du moteur — le « live » de DIASPORA.GA", () => {
+describe("textes du moteur — le « live » de DIASPORA", () => {
   it("l'instance de l'application sert le live aux surfaces du moteur, en français et en anglais", () => {
     const fr = createAppI18n({ locale: "fr" })
     const direct = fr.getFixedT("fr", "direct")

@@ -8,7 +8,7 @@
     "cancelled": "The gallery is closed for this cancelled event.",
     "refresh": "Refresh the gallery",
     "associationAudience": "Gallery for association members currently allowed to view the event.",
-    "networkAudience": "Gallery for DIASPORA.GA members currently allowed to view the event.",
+    "networkAudience": "Gallery for DIASPORA members currently allowed to view the event.",
     "add": "Add photos or a video",
     "composeDescription": "Add up to {{postMediaMaxCount}} photos or one video for “{{title}}”. The publication keeps the association’s identity and the event audience.",
     "empty": "No accessible media in this gallery yet.",

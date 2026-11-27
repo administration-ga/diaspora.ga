@@ -149,7 +149,7 @@ describe("FeedStories — le bandeau des actus du moteur dans le fil", () => {
     expect(screen.queryByTestId("stories-styles")).not.toBeInTheDocument()
   })
 
-  it("transmet au bandeau le réseau DIASPORA.GA, sa charte, ses routes et l'horloge du fil", () => {
+  it("transmet au bandeau le réseau DIASPORA, sa charte, ses routes et l'horloge du fil", () => {
     mocks.network = network
     render(<FeedStories now={123_000} />)
 

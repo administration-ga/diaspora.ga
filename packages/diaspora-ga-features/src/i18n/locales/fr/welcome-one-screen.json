@@ -1,6 +1,6 @@
 {
   "welcomeEntry": {
-    "title": "Bienvenue dans DIASPORA.GA",
+    "title": "Bienvenue dans DIASPORA",
     "lead": "Vérifiez ce que les membres verront de vous, puis entrez : un seul geste suffit.",
     "identityHeading": "Votre profil",
     "residenceHeading": "Où vous vivez",
@@ -8,9 +8,9 @@
     "editIdentity": "Modifier le nom affiché et l'identifiant",
     "editResidence": "Modifier le pays et la ville",
     "fromIdn": "Proposé d'après votre identité IDN.",
-    "consent": "En créant votre profil, votre nom affiché, votre identifiant et votre pays deviennent visibles des membres de DIASPORA.GA ; l'annuaire et les notifications restent désactivés tant que vous ne les activez pas.",
+    "consent": "En créant votre profil, votre nom affiché, votre identifiant et votre pays deviennent visibles des membres de DIASPORA ; l'annuaire et les notifications restent désactivés tant que vous ne les activez pas.",
     "submit": "Créer mon profil et entrer",
-    "submitKept": "Entrer dans DIASPORA.GA"
+    "submitKept": "Entrer dans DIASPORA"
   },
   "firstChoices": {
     "title": "À vous de choisir, maintenant ou plus tard",

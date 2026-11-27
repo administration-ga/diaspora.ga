@@ -1,6 +1,6 @@
 {
   "welcomeEntry": {
-    "title": "Welcome to DIASPORA.GA",
+    "title": "Welcome to DIASPORA",
     "lead": "Check what members will see about you, then enter: one step is enough.",
     "identityHeading": "Your profile",
     "residenceHeading": "Where you live",
@@ -8,9 +8,9 @@
     "editIdentity": "Edit display name and handle",
     "editResidence": "Edit country and city",
     "fromIdn": "Suggested from your IDN identity.",
-    "consent": "When you create your profile, your display name, your handle and your country become visible to DIASPORA.GA members; the directory and notifications stay off until you turn them on.",
+    "consent": "When you create your profile, your display name, your handle and your country become visible to DIASPORA members; the directory and notifications stay off until you turn them on.",
     "submit": "Create my profile and enter",
-    "submitKept": "Enter DIASPORA.GA"
+    "submitKept": "Enter DIASPORA"
   },
   "firstChoices": {
     "title": "Your choice, now or later",

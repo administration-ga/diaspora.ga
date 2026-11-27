@@ -3,10 +3,10 @@
     "title": "Functional health",
     "lead": "The state of the service at the time of the request, as reported by the health probe. No personal data.",
     "summary": {
-      "engineReachable": "diaspora.ga is responding and reaches the ANTSIA engine.",
-      "engineUnreachable": "The ANTSIA engine is not responding. diaspora.ga cannot serve its data.",
-      "engineMissing": "The ANTSIA engine address is missing. diaspora.ga cannot serve its data.",
-      "demo": "diaspora.ga is responding with its demonstration data, which is fictitious. The engine is not queried."
+      "engineReachable": "DIASPORA is responding and reaches the ANTSIA engine.",
+      "engineUnreachable": "The ANTSIA engine is not responding. DIASPORA cannot serve its data.",
+      "engineMissing": "The ANTSIA engine address is missing. DIASPORA cannot serve its data.",
+      "demo": "DIASPORA is responding with its demonstration data, which is fictitious. The engine is not queried."
     },
     "label": {
       "application": "Application",

@@ -25,7 +25,7 @@
     "create": {
       "metaTitle": "Register an organisation",
       "title": "Register an organisation",
-      "lead": "Your association or business gets its page on DIASPORA.GA: it posts, recruits, welcomes its members or offers its services. It speaks through its signatories, never on behalf of the State.",
+      "lead": "Your association or business gets its page on DIASPORA: it posts, recruits, welcomes its members or offers its services. It speaks through its signatories, never on behalf of the State.",
       "kindLegend": "What would you like to register?",
       "kindHint": {
         "association": "A registered association, or one being registered.",
@@ -63,7 +63,7 @@
       },
       "next": "Continue",
       "back": "Back",
-      "natureClosed": "During the pilot, DIASPORA.GA registers associations and businesses. An informal collective meets in a group; media outlets await their label.",
+      "natureClosed": "During the pilot, DIASPORA registers associations and businesses. An informal collective meets in a group; media outlets await their label.",
       "natureOffer": {
         "association": "Members, a private group, events, job offers and services.",
         "company": "Job offers, services by appointment and customer reviews."
@@ -117,7 +117,7 @@
         },
         "jobs": {
           "title": "Post a job offer",
-          "hint": "It appears in DIASPORA.GA jobs, on behalf of the page."
+          "hint": "It appears in DIASPORA jobs, on behalf of the page."
         },
         "services": {
           "title": "Offer your services",
@@ -140,7 +140,7 @@
       "how": {
         "title": "How a claim works",
         "evidence": "Attach one to five documents: statutes, registration receipt, appointment minutes, company registration extract.",
-        "private": "Your documents stay private: only DIASPORA.GA moderation and you can see them. They are never published.",
+        "private": "Your documents stay private: only DIASPORA moderation and you can see them. They are never published.",
         "decision": "Moderation rules with a reasoned decision. If approved, you become an administrator and the page gets the “Verified” badge.",
         "notOfficial": "“Verified” is not “Official”: no claim grants official authority, which is reserved for institutions.",
         "withdraw": "While it is pending, you can withdraw your request: its documents are then erased."
@@ -166,7 +166,7 @@
       "detailsHint": "Role, date and appointing body ({{max}} characters at most). No civil-status data.",
       "noteMandate": "Declared mandate: {{mandate}}.",
       "noteWithDetails": "Declared mandate: {{mandate}}. {{details}}",
-      "consent": "I declare that I am mandated by this organisation and I agree that DIASPORA.GA moderation may consult these documents to review my request.",
+      "consent": "I declare that I am mandated by this organisation and I agree that DIASPORA moderation may consult these documents to review my request.",
       "submit": "Send my claim",
       "submitVerify": "Send my verification request",
       "sending": "Sending documents…",
@@ -261,7 +261,7 @@
       "left": "You left the team.",
       "roleChanged": "Role updated.",
       "inviteTitle": "Invite a member",
-      "inviteLead": "Enter the handle of a DIASPORA.GA member: they will receive an invitation to accept.",
+      "inviteLead": "Enter the handle of a DIASPORA member: they will receive an invitation to accept.",
       "handle": "Member handle",
       "handleHint": "For example firstname.lastname, without the @.",
       "role": "Proposed role",
@@ -288,7 +288,7 @@
         "promoted": "{{name}} is an administrator from now on.",
         "invited": "Invitation sent: the person will become an administrator by accepting it.",
         "leave": "Step down",
-        "leaveReady": "Another administrator has accepted their role. You can step down if they are still an active member of DIASPORA.GA: the platform checks it when you step down.",
+        "leaveReady": "Another administrator has accepted their role. You can step down if they are still an active member of DIASPORA: the platform checks it when you step down.",
         "leaveBlocked": "To step down, the page must keep another administrator: name one and wait until they have accepted their role.",
         "leaveConfirmTitle": "Step down from the page?",
         "leaveConfirmBody": "You immediately lose your role on the page; its other administrators keep managing it.",
@@ -299,7 +299,7 @@
       "title": "Page verification",
       "state": {
         "official": "Official page: its authority comes from the institution it represents, not from a claim.",
-        "verified": "Verified page: a claim was approved by DIASPORA.GA moderation. This is not an official authority.",
+        "verified": "Verified page: a claim was approved by DIASPORA moderation. This is not an official authority.",
         "community": "Community page: it has not been verified yet."
       },
       "request": "Request verification",
@@ -316,7 +316,7 @@
     },
     "myPages": {
       "title": "My pages",
-      "lead": "The pages whose team you belong to in DIASPORA.GA.",
+      "lead": "The pages whose team you belong to in DIASPORA.",
       "emptyTitle": "You do not manage any page yet",
       "emptyBody": "Register your association or business, or claim its page if it already exists.",
       "onlyAsleep": "For now, none of your pages is online: the sleeping ones are listed below. You can also register another organisation.",
@@ -361,11 +361,11 @@
     "page_country_invalid": "This country is not recognised.",
     "page_post_country_required": "To publish locally, the page must first declare its country (Manage the page, Identity tab).",
     "page_role_required": "You do not have, or no longer have, the required role on this page.",
-    "page_last_admin": "The page must keep at least one active administrator: name another one, an active member of DIASPORA.GA, before leaving or changing this role.",
+    "page_last_admin": "The page must keep at least one active administrator: name another one, an active member of DIASPORA, before leaving or changing this role.",
     "page_signatories_full": "A page team has 50 members at most.",
     "page_signatory_identity_required": "Being part of the team of an official page requires an IDN identity of level 2.",
     "page_signatory_self": "You cannot invite yourself.",
-    "page_member_not_found": "No DIASPORA.GA member matches this handle.",
+    "page_member_not_found": "No DIASPORA member matches this handle.",
     "page_member_handle_required": "Enter the member's handle.",
     "page_invitation_gone": "This invitation no longer exists.",
     "page_not_claimable": "This page cannot be claimed.",

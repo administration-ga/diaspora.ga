@@ -110,14 +110,14 @@ vi.mock("@/lib/calls", () => ({ callsAreOpen: () => mocks.callsOpen }))
 vi.mock("@/components/feed-pages", () => ({
   ProfilePostPages: (props: ProfilePostPagesProps) => {
     mocks.posts(props)
-    return <section aria-label="Mur paginé DIASPORA.GA" />
+    return <section aria-label="Mur paginé DIASPORA" />
   },
 }))
 
 vi.mock("@/components/profile-albums", () => ({
   ProfileAlbums: (props: ComponentProps<typeof ProfileAlbums>) => {
     mocks.albums(props)
-    return <section aria-label="Albums DIASPORA.GA" />
+    return <section aria-label="Albums DIASPORA" />
   },
 }))
 
@@ -184,14 +184,14 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-describe("ProfileScreen — mur et confidentialité du profil DIASPORA.GA", () => {
+describe("ProfileScreen — mur et confidentialité du profil DIASPORA", () => {
   it("monte le mur prêt avec le handle canonique et l'adhésion du lecteur", () => {
     render(tree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")
     expect(mocks.shell).toHaveBeenLastCalledWith(membership)
     expect(mocks.read).toHaveBeenLastCalledWith("awa.demo")
-    expect(screen.getByRole("region", { name: "Mur paginé DIASPORA.GA" })).toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Mur paginé DIASPORA" })).toBeInTheDocument()
     expect(mocks.posts).toHaveBeenLastCalledWith(expect.objectContaining({ membership, handle: profile.handle, now: expect.any(Number), emptyFallback: expect.anything() }))
     expect(screen.getByText("Ville confidentielle")).toBeInTheDocument()
     expect(screen.getByText("Poste confidentiel")).toBeInTheDocument()
@@ -291,7 +291,7 @@ describe("ProfileScreen — mur et confidentialité du profil DIASPORA.GA", () =
     mocks.search = "onglet=albums"
     render(tree())
 
-    expect(screen.getByRole("region", { name: "Albums DIASPORA.GA" })).toBeInTheDocument()
+    expect(screen.getByRole("region", { name: "Albums DIASPORA" })).toBeInTheDocument()
     expect(mocks.posts).not.toHaveBeenCalled()
     expect(mocks.albums).toHaveBeenLastCalledWith(expect.objectContaining({ handle: profile.handle, isSelf: true, canPublish: true, preview: false, variant: "albums" }))
   })

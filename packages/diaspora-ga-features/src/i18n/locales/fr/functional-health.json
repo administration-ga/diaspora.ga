@@ -3,10 +3,10 @@
     "title": "Santé fonctionnelle",
     "lead": "L’état du service au moment de la requête, tel que le dit la sonde de santé. Aucune donnée personnelle.",
     "summary": {
-      "engineReachable": "diaspora.ga répond et joint le moteur ANTSIA.",
-      "engineUnreachable": "Le moteur ANTSIA ne répond pas. diaspora.ga ne peut pas servir ses données.",
-      "engineMissing": "L’adresse du moteur ANTSIA manque. diaspora.ga ne peut pas servir ses données.",
-      "demo": "diaspora.ga répond avec ses données de démonstration, fictives. Le moteur n’est pas interrogé."
+      "engineReachable": "DIASPORA répond et joint le moteur ANTSIA.",
+      "engineUnreachable": "Le moteur ANTSIA ne répond pas. DIASPORA ne peut pas servir ses données.",
+      "engineMissing": "L’adresse du moteur ANTSIA manque. DIASPORA ne peut pas servir ses données.",
+      "demo": "DIASPORA répond avec ses données de démonstration, fictives. Le moteur n’est pas interrogé."
     },
     "label": {
       "application": "Application",

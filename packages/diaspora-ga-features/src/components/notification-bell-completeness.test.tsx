@@ -110,8 +110,8 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe("cloche — le repli d'un genre que DIASPORA.GA ne connaît pas", () => {
-  it("dit « Nouvelle activité dans DIASPORA.GA », garde la date et le marquage, sans lien inventé", async () => {
+describe("cloche — le repli d'un genre que DIASPORA ne connaît pas", () => {
+  it("dit « Nouvelle activité dans DIASPORA », garde la date et le marquage, sans lien inventé", async () => {
     const unknown: NotificationView = { id: "avis-inconnu", kind: "other", actor: null, createdAt: NOW - 60_000, read: false, pendingConnectionId: null, inviteOutcome: null, postId: null }
     renderWithI18n(
       <DataSourceProvider source={source([unknown])}>

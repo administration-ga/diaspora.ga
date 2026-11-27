@@ -82,15 +82,15 @@
       },
       "administrateur": {
         "title": "Network administration",
-        "description": "Administrator of the DIASPORA.GA network."
+        "description": "Administrator of the DIASPORA network."
       },
       "suspendu": {
         "title": "Suspended member",
-        "description": "Suspended in DIASPORA.GA only: can no longer post."
+        "description": "Suspended in DIASPORA only: can no longer post."
       },
       "suspendu-racine": {
         "title": "Root suspension",
-        "description": "Suspended on ANTSIA: the suspension applies everywhere, DIASPORA.GA included."
+        "description": "Suspended on ANTSIA: the suspension applies everywhere, DIASPORA included."
       },
       "bloque": {
         "title": "Blocked member",
@@ -98,7 +98,7 @@
       },
       "exterieur": {
         "title": "Outside the network",
-        "description": "ANTSIA account with no DIASPORA.GA membership: lands on the welcome page."
+        "description": "ANTSIA account with no DIASPORA membership: lands on the welcome page."
       }
     }
   }

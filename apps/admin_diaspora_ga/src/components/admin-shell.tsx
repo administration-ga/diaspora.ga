@@ -12,7 +12,7 @@ import { APP_NAMESPACE } from "@/i18n/resources"
 import { publicEnv } from "@/lib/env"
 import { anchors } from "@/lib/routes"
 
-import type { NetworkAdminView } from "./network-admin-context"
+import { networkDisplayName, type NetworkAdminView } from "./network-admin-context"
 import { SectionNav } from "./section-nav"
 import { SignOutEverywhereButton } from "./sign-out-button"
 
@@ -67,7 +67,7 @@ function MenuSheet(props: { admin: NetworkAdminView }) {
       <SheetContent side="left" closeLabel={t("shell.closeMenu")} className="w-[min(320px,88vw)] gap-0 p-0">
         <SheetHeader>
           <SheetTitle className="font-display text-lg font-bold">{t("shell.menuTitle")}</SheetTitle>
-          <SheetDescription>{props.admin.networkName}</SheetDescription>
+          <SheetDescription>{networkDisplayName(props.admin.networkName)}</SheetDescription>
         </SheetHeader>
         <SheetBody className="px-2 pb-4">
           <SectionNav onFollow={() => setOpen(false)} />
@@ -105,7 +105,7 @@ export function AdminShell(props: { admin: NetworkAdminView; children: ReactNode
           <BrandLogo variant="symbol" decorative className="w-9" />
           <div className="min-w-0 flex-1">
             <p className="text-xs font-semibold text-muted-foreground min-[834px]:hidden">{t("brand.eyebrow")}</p>
-            <p className="truncate font-display text-lg font-bold">{props.admin.networkName}</p>
+            <p className="truncate font-display text-lg font-bold">{networkDisplayName(props.admin.networkName)}</p>
           </div>
           <div className="hidden min-w-0 items-center gap-3 min-[834px]:flex">
             <AdminName admin={props.admin} className="max-w-[16rem]" />

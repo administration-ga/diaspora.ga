@@ -226,7 +226,7 @@ describe("inscrire une organisation (AS-05)", () => {
     expect(screen.queryByRole("heading", { name: named("pageAdmin.register.done.title", { name: "Amicale de Lille" }) })).not.toBeInTheDocument()
   })
 
-  it("une nature que DIASPORA.GA n'inscrit pas ramène au choix de la nature, sans écriture", async () => {
+  it("une nature que DIASPORA n'inscrit pas ramène au choix de la nature, sans écriture", async () => {
     const manage = provide(management())!
     const user = userEvent.setup()
     wrap(<NewPageScreen kind="media" />)

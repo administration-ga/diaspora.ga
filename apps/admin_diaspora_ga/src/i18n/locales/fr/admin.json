@@ -49,7 +49,7 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
     "menuTitle": "Menu de l’administration",
-    "membersSite": "Ouvrir diaspora.ga",
+    "membersSite": "Ouvrir DIASPORA",
     "newTab": "(nouvel onglet)",
     "signedInAs": "Connecté en tant que {{name}}"
   },
@@ -99,17 +99,17 @@
     "decisionBy": "{{name}}, le {{date}}",
     "decisionsLink": "Ouvrir le journal",
     "desk": {
-      "title": "Bureau de modération de diaspora.ga",
+      "title": "Bureau de modération de DIASPORA",
       "lead": "Les modérateurs y traitent chaque jour la file de modération et les pages à vérifier ; ces deux files restent sur l’application des membres.",
       "queue": "File de modération",
       "pages": "Pages à vérifier",
-      "unconfigured": "L’adresse de diaspora.ga n’est pas configurée pour cette application : les liens vers son bureau ne s’affichent pas."
+      "unconfigured": "L’adresse de DIASPORA n’est pas configurée pour cette application : les liens vers son bureau ne s’affichent pas."
     },
     "notCounted": "Le moteur ne tient encore aucun compte des membres par statut, des admissions en attente, des signalements et recours ouverts ni des pages à vérifier : aucun chiffre n’est affiché à leur place."
   },
   "modules": {
     "title": "Modules",
-    "lead": "Les volets du menu des membres de diaspora.ga. Le réseau sert d’emblée l’essentiel : le fil, les membres, les pays, iCom et le compte. Chaque module s’ouvre ou se ferme ici, motif à l’appui, et la décision est inscrite au journal. Fermer un module ne supprime aucune donnée : le rouvrir les retrouve.",
+    "lead": "Les volets du menu des membres de DIASPORA. Le réseau sert d’emblée l’essentiel : le fil, les membres, les pays, iCom et le compte. Chaque module s’ouvre ou se ferme ici, motif à l’appui, et la décision est inscrite au journal. Fermer un module ne supprime aucune donnée : le rouvrir les retrouve.",
     "previewLink": "Voir l’aperçu du menu",
     "loading": "Lecture des modules du réseau…",
     "empty": "Ce réseau n’a aucun module à ouvrir.",
@@ -146,7 +146,7 @@
     },
     "code": {
       "title": "Réglés dans le code",
-      "lead": "Ces fonctions de l’application des membres ne sont pas des modules du réseau : elles s’ouvrent et se ferment dans le code de diaspora.ga, jamais depuis cette application.",
+      "lead": "Ces fonctions de l’application des membres ne sont pas des modules du réseau : elles s’ouvrent et se ferment dans le code de DIASPORA, jamais depuis cette application.",
       "closedByCode": "Fermé par le code",
       "openByCode": "Ouvert par le code",
       "names": {
@@ -205,7 +205,7 @@
   },
   "preview": {
     "title": "Aperçu du menu",
-    "lead": "Le menu exact des membres de diaspora.ga pour les modules cochés, calculé par la même règle que l’application des membres. Rien n’est enregistré : ouvrir un module se fait dans « Modules ».",
+    "lead": "Le menu exact des membres de DIASPORA pour les modules cochés, calculé par la même règle que l’application des membres. Rien n’est enregistré : ouvrir un module se fait dans « Modules ».",
     "modulesLink": "Aller aux modules",
     "loading": "Lecture des modules du réseau…",
     "modulesLegend": "Modules cochés",
@@ -356,7 +356,7 @@
   },
   "team": {
     "title": "Équipe et responsables",
-    "lead": "Les responsables du réseau, puis les équipes qui traitent la file de modération de diaspora.ga. Chaque nomination, chaque ajout et chaque retrait est motivé et inscrit au journal des décisions.",
+    "lead": "Les responsables du réseau, puis les équipes qui traitent la file de modération de DIASPORA. Chaque nomination, chaque ajout et chaque retrait est motivé et inscrit au journal des décisions.",
     "countryNote": "Le pays d’une équipe ouvre la porte de ce pays (section « Pays ouverts ») et délimite sa file : un contenu de ce pays va d’abord à l’équipe de ce pays et de sa nature, puis à l’équipe générale de ce pays, puis aux équipes sans pays. Un contenu sans pays ne va jamais à l’équipe d’un pays.",
     "scopeAll": "Toutes les natures de contenu",
     "scopeOne": "Nature traitée : {{surface}}",
@@ -402,7 +402,7 @@
   },
   "responsibles": {
     "title": "Responsables du réseau",
-    "lead": "L’administration du réseau décide ici : recours, équipes, responsables, règles et modules. La modération du réseau lit et tranche toute la file sur diaspora.ga. Chaque nomination, chaque changement et chaque retrait est motivé et inscrit au journal des décisions du moteur ; il vaut dès le geste suivant de la personne.",
+    "lead": "L’administration du réseau décide ici : recours, équipes, responsables, règles et modules. La modération du réseau lit et tranche toute la file sur DIASPORA. Chaque nomination, chaque changement et chaque retrait est motivé et inscrit au journal des décisions du moteur ; il vaut dès le geste suivant de la personne.",
     "role": {
       "network_admin": "Administration du réseau",
       "network_moderator": "Modération du réseau"
@@ -447,7 +447,7 @@
       "source": "Ce sont les défauts du moteur ANTSIA, lus tels qu’il les applique. Ils valent pour toute rubrique sans réglage, sauf les contenus relus d’office, listés à part, et les rubriques de l’entraide, du mentorat, du kit d’arrivée et de l’emploi, publiées sans règle tant qu’aucun réglage n’est posé pour elles."
     },
     "held": {
-      "title": "Relus d’office dans DIASPORA.GA",
+      "title": "Relus d’office dans DIASPORA",
       "lead": "Tant qu’aucun réglage n’est posé pour leur rubrique, ces contenus attendent un modérateur avant de paraître :",
       "associationEvents": "les évènements d’association (rubrique « Évènement ») ;",
       "reviews": "les avis sur une prestation (rubrique « Avis sur une prestation ») ;",
@@ -474,7 +474,7 @@
     },
     "surfaces": {
       "title": "Par rubrique",
-      "lead": "Les rubriques de DIASPORA.GA. Un réglage remplace, pour sa rubrique, la règle sans réglage ; il ne se retire pas, il se change."
+      "lead": "Les rubriques de DIASPORA. Un réglage remplace, pour sa rubrique, la règle sans réglage ; il ne se retire pas, il se change."
     },
     "policy": {
       "since": "Réglage en vigueur depuis le {{date}}.",
@@ -794,7 +794,7 @@
   },
   "institutions": {
     "title": "Institutions et pages officielles",
-    "lead": "Les pages d’institution portant le badge « Officiel » dans ce réseau, leur signataire et leur état. Le badge ne vaut que dans DIASPORA.GA : ces pages ne se lisent pas depuis ANTSIA. Chaque création, chaque désignation et chaque mise en sommeil est motivée et inscrite au journal des décisions ; le retrait du badge reste à la plateforme.",
+    "lead": "Les pages d’institution portant le badge « Officiel » dans ce réseau, leur signataire et leur état. Le badge ne vaut que dans DIASPORA : ces pages ne se lisent pas depuis ANTSIA. Chaque création, chaque désignation et chaque mise en sommeil est motivée et inscrite au journal des décisions ; le retrait du badge reste à la plateforme.",
     "closed": {
       "title": "Le module « Pages » est fermé",
       "body": "Tant que le module « Pages » n’est pas ouvert, le moteur ne rend ni ne crée aucune page officielle : les membres n’en verraient d’ailleurs aucune. Ouvrez-le dans la section « Modules », motif à l’appui.",
@@ -848,7 +848,7 @@
     "wakeConfirm": "Réveiller la page",
     "woken": "{{name}} est de nouveau active.",
     "createTitle": "Créer une page officielle",
-    "createLead": "Une page d’institution « Officiel » de ce réseau, visible des seuls membres de DIASPORA.GA. Choisissez d’abord son signataire, puis nommez la page.",
+    "createLead": "Une page d’institution « Officiel » de ce réseau, visible des seuls membres de DIASPORA. Choisissez d’abord son signataire, puis nommez la page.",
     "name": "Nom de l’institution",
     "nameLength": "Le nom compte de 1 à {{nameMax}} caractères.",
     "handle": "Adresse de la page (facultative)",
@@ -873,7 +873,7 @@
   },
   "founders": {
     "title": "Fondateurs",
-    "lead": "La cohorte fondatrice de DIASPORA.GA, plafonnée : des membres déjà entrés dans le réseau, admis par une décision motivée pour amorcer la confiance, avec ou sans dispense d’ancienneté pour parrainer. Personne n’est admis d’office ; chaque admission et chaque retrait est inscrit au journal des décisions.",
+    "lead": "La cohorte fondatrice de DIASPORA, plafonnée : des membres déjà entrés dans le réseau, admis par une décision motivée pour amorcer la confiance, avec ou sans dispense d’ancienneté pour parrainer. Personne n’est admis d’office ; chaque admission et chaque retrait est inscrit au journal des décisions.",
     "cohortTitle": "Cohorte fondatrice",
     "count_one": "{{shown}} fondateur sur {{max}}",
     "count_other": "{{shown}} fondateurs sur {{max}}",

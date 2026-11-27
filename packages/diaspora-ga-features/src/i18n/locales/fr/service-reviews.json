@@ -16,7 +16,7 @@
       "completionDeclared": "Réalisation déclarée par le professionnel — sans vérification indépendante."
     },
     "moderation": {
-      "published": "Publié dans DIASPORA.GA",
+      "published": "Publié dans DIASPORA",
       "pending": "En attente de modération. Ce contenu n’est pas encore publié.",
       "removed": "Ce contenu a été retiré par la modération."
     },
@@ -35,7 +35,7 @@
       "ratingChoice": "{{rating}} sur 5",
       "body": "Votre expérience",
       "hint": "Décrivez la prestation. Ne publiez ni numéro, ni e-mail, ni adresse de domicile.",
-      "consent": "J’accepte de publier cet avis et mon nom social dans DIASPORA.GA, après modération.",
+      "consent": "J’accepte de publier cet avis et mon nom social dans DIASPORA, après modération.",
       "save": "Enregistrer les modifications",
       "publish": "Soumettre mon avis",
       "saved": "Votre avis a été enregistré. Son état de modération est indiqué dans votre demande."

@@ -117,13 +117,13 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-describe("AlbumScreen — reprise d'un album dans DIASPORA.GA", () => {
+describe("AlbumScreen — reprise d'un album dans DIASPORA", () => {
   it("compose une adresse de reprise avec l'identifiant échappé une seule fois", () => {
     expect(routes.editAlbum("awa.demo", "album publié/1?x=%"))
       .toBe("/@awa.demo/albums/album%20publi%C3%A9%2F1%3Fx%3D%25?modifier=1")
   })
 
-  it("monte la galerie propriétaire avec le réseau, la charte et les routes DIASPORA.GA", () => {
+  it("monte la galerie propriétaire avec le réseau, la charte et les routes DIASPORA", () => {
     render(tree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")

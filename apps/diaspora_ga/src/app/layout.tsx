@@ -12,11 +12,11 @@ import "./globals.css"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getAppT()
-  const image = { url: "/identite/partage-envol.png", width: 1200, height: 630, alt: t("brand.name") }
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${t("brand.name").toLowerCase()}`
+  const image = { url: "/identite/partage-envol.png", width: 1200, height: 630, alt: t("brand.shareName") }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${t("brand.shareName").toLowerCase()}`
   return {
     metadataBase: new URL(siteUrl),
-    openGraph: { type: "website", siteName: t("brand.name"), images: [image] },
+    openGraph: { type: "website", siteName: t("brand.shareName"), images: [image] },
     twitter: { card: "summary_large_image", images: [image] },
     title: { default: t("meta.title"), template: t("meta.titleTemplate") },
     description: t("meta.description"),

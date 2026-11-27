@@ -30,7 +30,7 @@ import { routes } from "@/lib/routes"
 
 import { dateTime } from "./decision-parts"
 import { journalActionLabel, journalActorName } from "./journal-section"
-import { useNetworkAdmin } from "./network-admin-context"
+import { networkDisplayName, useNetworkAdmin } from "./network-admin-context"
 import { SectionBoundary, SectionFailure } from "./section-boundary"
 
 /** Les décisions montrées au tableau de bord : les plus récentes de la première fenêtre du journal. */
@@ -52,7 +52,7 @@ export function DashboardSection() {
         <h1 id={titleId} className="font-display text-3xl font-bold">
           {admin.displayName ? t("dashboard.greeting", { name: admin.displayName }) : t("dashboard.greetingWithoutName")}
         </h1>
-        <p className="text-muted-foreground">{t("dashboard.lead", { network: admin.networkName })}</p>
+        <p className="text-muted-foreground">{t("dashboard.lead", { network: networkDisplayName(admin.networkName) })}</p>
       </header>
       <Overview />
       <div className="grid min-w-0 gap-6 min-[1024px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">

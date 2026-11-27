@@ -312,7 +312,7 @@ describe("ProfilePostPages — le même chaînage pour le mur personnel", () => 
   })
 })
 
-describe("FeedPages — abonnements réactifs du fil DIASPORA.GA", () => {
+describe("FeedPages — abonnements réactifs du fil DIASPORA", () => {
   it("attend le geste Voir plus, conserve la première page et clôt la seconde", () => {
     setPage(null, [post("première")], second)
     setPage(second, [post("seconde")], null)

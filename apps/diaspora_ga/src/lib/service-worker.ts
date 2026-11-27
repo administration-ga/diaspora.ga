@@ -13,7 +13,7 @@
 import { routes } from "./routes"
 
 /** À relever à chaque changement de la logique ou de la réserve du script : nouvelle réserve, l'ancienne est effacée. */
-export const SERVICE_WORKER_VERSION = 2
+export const SERVICE_WORKER_VERSION = 3
 
 /** Préfixe des réserves du script : seules celles-ci sont créées, purgées et effacées. */
 export const OFFLINE_CACHE_PREFIX = "diaspora-ga-hors-ligne-v"

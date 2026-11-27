@@ -49,7 +49,7 @@
     "openMenu": "Open the menu",
     "closeMenu": "Close the menu",
     "menuTitle": "Administration menu",
-    "membersSite": "Open diaspora.ga",
+    "membersSite": "Open DIASPORA",
     "newTab": "(new tab)",
     "signedInAs": "Signed in as {{name}}"
   },
@@ -99,17 +99,17 @@
     "decisionBy": "{{name}}, on {{date}}",
     "decisionsLink": "Open the journal",
     "desk": {
-      "title": "diaspora.ga moderation desk",
+      "title": "DIASPORA moderation desk",
       "lead": "Moderators handle the moderation queue and the pages to verify there every day; both queues stay on the members’ app.",
       "queue": "Moderation queue",
       "pages": "Pages to verify",
-      "unconfigured": "diaspora.ga’s address is not configured for this app: links to its desk are not shown."
+      "unconfigured": "DIASPORA’s address is not configured for this app: links to its desk are not shown."
     },
     "notCounted": "The engine does not count members by status, pending admissions, open reports and appeals or pages to verify yet: no number is shown in their place."
   },
   "modules": {
     "title": "Modules",
-    "lead": "The sections of the diaspora.ga members’ menu. The network serves the essentials from the start: the feed, members, countries, iCom and the account. Each module is opened or closed here, with a reason, and the decision is recorded in the log. Closing a module deletes no data: reopening it brings everything back.",
+    "lead": "The sections of the DIASPORA members’ menu. The network serves the essentials from the start: the feed, members, countries, iCom and the account. Each module is opened or closed here, with a reason, and the decision is recorded in the log. Closing a module deletes no data: reopening it brings everything back.",
     "previewLink": "See the menu preview",
     "loading": "Reading the network modules…",
     "empty": "This network has no module to open.",
@@ -146,7 +146,7 @@
     },
     "code": {
       "title": "Set in the code",
-      "lead": "These features of the members’ app are not network modules: they are opened and closed in the diaspora.ga code, never from this app.",
+      "lead": "These features of the members’ app are not network modules: they are opened and closed in the DIASPORA code, never from this app.",
       "closedByCode": "Closed in the code",
       "openByCode": "Open in the code",
       "names": {
@@ -205,7 +205,7 @@
   },
   "preview": {
     "title": "Menu preview",
-    "lead": "The exact diaspora.ga members’ menu for the ticked modules, computed by the same rule as the members’ app. Nothing is saved: opening a module happens in “Modules”.",
+    "lead": "The exact DIASPORA members’ menu for the ticked modules, computed by the same rule as the members’ app. Nothing is saved: opening a module happens in “Modules”.",
     "modulesLink": "Go to modules",
     "loading": "Reading the network modules…",
     "modulesLegend": "Ticked modules",
@@ -356,7 +356,7 @@
   },
   "team": {
     "title": "Team and leads",
-    "lead": "The network's leads, then the teams handling the diaspora.ga moderation queue. Every appointment, addition and removal carries a reason and is written to the decision log.",
+    "lead": "The network's leads, then the teams handling the DIASPORA moderation queue. Every appointment, addition and removal carries a reason and is written to the decision log.",
     "countryNote": "A team’s country opens the door to that country (“Open countries” section) and defines its queue: content from that country goes first to that country’s team for its content type, then to that country’s general team, then to teams without a country. Content without a country never goes to a country’s team.",
     "scopeAll": "All content types",
     "scopeOne": "Content type handled: {{surface}}",
@@ -402,7 +402,7 @@
   },
   "responsibles": {
     "title": "Network leads",
-    "lead": "The network administration decides here: appeals, teams, leads, rules and modules. The network moderation reads and decides the whole queue on diaspora.ga. Every appointment, change and removal carries a reason and is written to the engine’s decision log; it applies from the person’s next action.",
+    "lead": "The network administration decides here: appeals, teams, leads, rules and modules. The network moderation reads and decides the whole queue on DIASPORA. Every appointment, change and removal carries a reason and is written to the engine’s decision log; it applies from the person’s next action.",
     "role": {
       "network_admin": "Network administration",
       "network_moderator": "Network moderation"
@@ -447,7 +447,7 @@
       "source": "These are the defaults of the ANTSIA engine, read as it applies them. They apply to every section without a setting, except the content reviewed by default, listed separately, and the mutual aid, mentoring, arrival kit and jobs sections, published without any rule until a setting is set for them."
     },
     "held": {
-      "title": "Reviewed by default in DIASPORA.GA",
+      "title": "Reviewed by default in DIASPORA",
       "lead": "Until a setting is set for their section, this content waits for a moderator before it appears:",
       "associationEvents": "association events (section “Event”);",
       "reviews": "reviews of a service (section “Review of a service”);",
@@ -474,7 +474,7 @@
     },
     "surfaces": {
       "title": "By section",
-      "lead": "The sections of DIASPORA.GA. A setting replaces, for its section, the rule without a setting; it cannot be removed, only changed."
+      "lead": "The sections of DIASPORA. A setting replaces, for its section, the rule without a setting; it cannot be removed, only changed."
     },
     "policy": {
       "since": "Setting in force since {{date}}.",
@@ -794,7 +794,7 @@
   },
   "institutions": {
     "title": "Institutions and official pages",
-    "lead": "Institution pages with the “Official” badge in this network, their signatory and their state. The badge only counts in DIASPORA.GA: these pages cannot be read from ANTSIA. Every creation, designation and sleep is justified and written to the decision journal; removing the badge stays with the platform.",
+    "lead": "Institution pages with the “Official” badge in this network, their signatory and their state. The badge only counts in DIASPORA: these pages cannot be read from ANTSIA. Every creation, designation and sleep is justified and written to the decision journal; removing the badge stays with the platform.",
     "closed": {
       "title": "The “Pages” module is closed",
       "body": "Until the “Pages” module is open, the engine neither returns nor creates any official page: members would not see any anyway. Open it in the “Modules” section, with a reason.",
@@ -848,7 +848,7 @@
     "wakeConfirm": "Wake the page up",
     "woken": "{{name}} is active again.",
     "createTitle": "Create an official page",
-    "createLead": "An “Official” institution page of this network, visible to DIASPORA.GA members only. Choose its signatory first, then name the page.",
+    "createLead": "An “Official” institution page of this network, visible to DIASPORA members only. Choose its signatory first, then name the page.",
     "name": "Institution name",
     "nameLength": "The name has 1 to {{nameMax}} characters.",
     "handle": "Page address (optional)",
@@ -873,7 +873,7 @@
   },
   "founders": {
     "title": "Founders",
-    "lead": "DIASPORA.GA’s founding cohort, capped: members who already joined the network, admitted by a justified decision to seed trust, with or without a seniority waiver for sponsoring. Nobody is admitted automatically; every admission and withdrawal is written to the decision journal.",
+    "lead": "DIASPORA’s founding cohort, capped: members who already joined the network, admitted by a justified decision to seed trust, with or without a seniority waiver for sponsoring. Nobody is admitted automatically; every admission and withdrawal is written to the decision journal.",
     "cohortTitle": "Founding cohort",
     "count_one": "{{shown}} founder out of {{max}}",
     "count_other": "{{shown}} founders out of {{max}}",

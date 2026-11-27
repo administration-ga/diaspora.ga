@@ -15,7 +15,7 @@
   },
   "withdrawFromRoot": {
     "title": "Remove this post from ANTSIA?",
-    "description": "It stays readable in DIASPORA.GA, for the same audience, but is no longer shown in ANTSIA.",
+    "description": "It stays readable in DIASPORA, for the same audience, but is no longer shown in ANTSIA.",
     "irreversible": "This cannot be undone: to show it in ANTSIA again, you will have to publish it again.",
     "close": "Close",
     "cancel": "Cancel",

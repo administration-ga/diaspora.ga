@@ -188,11 +188,11 @@ describe("script de fond — seule la page hors-ligne est mise en réserve", () 
 const payload = { version: 1, networkId: "network-current", reference: "delivery_opaque", count: 1, locale: "fr", url: "https://external.example/ignored" }
 
 describe("script de fond — notifications : référence opaque et origine fermée", () => {
-  it("affiche le titre DIASPORA.GA et un texte neutre, et ne garde que la référence pour le clic", async () => {
+  it("affiche le titre DIASPORA et un texte neutre, et ne garde que la référence pour le clic", async () => {
     const subject = worker(serviceWorkerScript(CONFIG))
     await subject.fire("push", { data: { json: () => payload } })
-    expect(CONFIG.title).toBe("DIASPORA.GA")
-    expect(subject.showNotification).toHaveBeenCalledWith("DIASPORA.GA", { body: CONFIG.messages.fr, icon: routes.appIcon("192"), tag: "diaspora-ga-notification-delivery_opaque", data: { reference: payload.reference } })
+    expect(CONFIG.title).toBe("DIASPORA")
+    expect(subject.showNotification).toHaveBeenCalledWith("DIASPORA", { body: CONFIG.messages.fr, icon: routes.appIcon("192"), tag: "diaspora-ga-notification-delivery_opaque", data: { reference: payload.reference } })
     expect(subject.openWindow).not.toHaveBeenCalled()
   })
 

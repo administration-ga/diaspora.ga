@@ -271,13 +271,14 @@ describe("Porte — une seule pour l'accueil, /entrer et leurs étapes (principe
     expect(screen.getByRole("link", { name: t("nav.home") })).toHaveAttribute("href", routes.home())
   })
 
-  it("montre le mot-symbole réel, sans canevas, quand WebGL2 et le mouvement ne sont pas disponibles", () => {
+  it("présente la signature verticale DIASPORA dans les deux thèmes, sans dépendre de WebGL", () => {
     const { mount } = setup()
     mount()
 
     const brand = screen.getByRole("link", { name: t("nav.home") })
     expect(brand).toHaveTextContent(t("brand.name"))
-    expect(brand.querySelector("[data-liquid]")).toHaveAttribute("data-liquid", "off")
+    expect(brand.querySelector('img[src*="diaspora-vertical.svg"]')).not.toBeNull()
+    expect(brand.querySelector('img[src*="diaspora-vertical-inverse.svg"]')).not.toBeNull()
     expect(brand.querySelector("canvas")).toBeNull()
   })
 

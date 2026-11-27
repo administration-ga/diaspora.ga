@@ -104,7 +104,7 @@ describe("« Demander ce service »", () => {
     fireEvent.click(screen.getByRole("button", { name: "Demander ce service" }))
     const dialog = screen.getByRole("dialog")
     expect(within(dialog).getByText("Demander « Tresses africaines »")).toBeTruthy()
-    expect(within(dialog).getByText(/Aucun paiement ne passe par DIASPORA.GA et aucune adresse exacte/)).toBeTruthy()
+    expect(within(dialog).getByText(/Aucun paiement ne passe par DIASPORA et aucune adresse exacte/)).toBeTruthy()
     fillValid()
     await submit()
     expect(screen.getByText(/Trop de demandes d'affilée/)).toBeTruthy()

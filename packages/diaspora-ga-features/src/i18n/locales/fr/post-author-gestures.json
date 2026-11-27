@@ -15,7 +15,7 @@
   },
   "withdrawFromRoot": {
     "title": "Retirer cette publication d’ANTSIA ?",
-    "description": "Elle reste lisible dans DIASPORA.GA, pour la même audience, mais n’est plus lue dans ANTSIA.",
+    "description": "Elle reste lisible dans DIASPORA, pour la même audience, mais n’est plus lue dans ANTSIA.",
     "irreversible": "Ce geste ne se défait pas : pour qu’elle soit de nouveau lue dans ANTSIA, il faudra la publier à nouveau.",
     "close": "Fermer",
     "cancel": "Annuler",

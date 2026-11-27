@@ -13,10 +13,10 @@
       "removed": "The officers removed you from this association.",
       "readmissionAllowed": "They allow you to submit a new request.",
       "left": "You left this association.",
-      "notManaged": "This association has no team on DIASPORA.GA yet: no request can be handled for now.",
+      "notManaged": "This association has no team on DIASPORA yet: no request can be handled for now.",
       "rejoinBlocked": "A new request is only possible with the agreement of the association's officers.",
       "tooSoon": "You can submit a new request from {{date}}.",
-      "statusInsufficient": "To ask to join, your DIASPORA.GA membership must first be declared.",
+      "statusInsufficient": "To ask to join, your DIASPORA membership must first be declared.",
       "manage": "Manage members",
       "myAssociations": "My associations"
     },
@@ -25,7 +25,7 @@
       "description": "Your request goes to the association's officers. They see your published profile and your note, never your contact details.",
       "message": "A note for the officers (optional)",
       "messageHint": "{{max}} characters at most.",
-      "free": "Joining on DIASPORA.GA is free. Any membership fee is settled directly with the association and never opens paid access to the network.",
+      "free": "Joining on DIASPORA is free. Any membership fee is settled directly with the association and never opens paid access to the network.",
       "submit": "Send my request"
     },
     "cancelRequest": "Cancel my request",
@@ -145,7 +145,7 @@
     }
   },
   "errors": {
-    "association_not_managed": "This association has no team on DIASPORA.GA yet: no request can be handled for now.",
+    "association_not_managed": "This association has no team on DIASPORA yet: no request can be handled for now.",
     "association_request_pending": "Your request is already pending.",
     "association_already_member": "You are already a member of this association.",
     "association_rejoin_blocked": "After a removal, a new request is only possible with the officers' agreement.",

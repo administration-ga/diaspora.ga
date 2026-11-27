@@ -15,7 +15,7 @@
     "emptyCityTitle": "Aucun membre visible dans cette ville pour l’instant.",
     "emptyVerifiedTitle": "Aucun membre vérifié visible ici pour l’instant.",
     "emptyBody": "Seuls les membres qui ont choisi d’apparaître dans l’annuaire, et dont le niveau vous inclut, sont visibles.",
-    "noOpenCountry": "Aucun pays n’est encore ouvert dans DIASPORA.GA : la recherche par nom reste possible.",
+    "noOpenCountry": "Aucun pays n’est encore ouvert dans DIASPORA : la recherche par nom reste possible.",
     "notYet": "L’annuaire se consulte dès que votre adhésion est déclarée ou vérifiée."
   }
 }

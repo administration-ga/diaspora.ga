@@ -242,7 +242,7 @@ describe("La page d'un live (CH-817) — l'écran du moteur, aux conditions d'iC
     return <I18nProvider locale="fr"><ConferenceScreen sessionId={sessionId} /></I18nProvider>
   }
 
-  it("un membre qui écrit : la page du live du moteur, dans la coque en pleine largeur, sur la session et le réseau de DIASPORA.GA", () => {
+  it("un membre qui écrit : la page du live du moteur, dans la coque en pleine largeur, sur la session et le réseau de DIASPORA", () => {
     render(conferenceTree())
 
     expect(mocks.gate).toHaveBeenLastCalledWith("member")

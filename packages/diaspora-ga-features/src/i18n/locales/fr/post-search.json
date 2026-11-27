@@ -1,7 +1,7 @@
 {
   "postSearch": {
     "title": "Chercher dans les publications",
-    "lead": "Un mot, un nom ou un #mot-dièse : seules les publications que vous pouvez lire dans DIASPORA.GA sont cherchées.",
+    "lead": "Un mot, un nom ou un #mot-dièse : seules les publications que vous pouvez lire dans DIASPORA sont cherchées.",
     "label": "Mots à chercher dans les publications",
     "placeholder": "Chercher dans les publications",
     "hint": "Saisissez au moins deux caractères.",
