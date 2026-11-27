@@ -39,9 +39,8 @@ function Browser() {
   function loading() {
     return (
       <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
-        <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.brand} accessible={false} />
-        <Image source={require("./assets/wordmark.png")} resizeMode="contain"
-          style={[styles.lettering, { tintColor: dark ? colors.color : "#082645" }]} accessibilityLabel="DIASPORA" />
+        <Image source={dark ? require("./assets/diaspora-horizontal-inverse.png") : require("./assets/diaspora-horizontal.png")}
+          resizeMode="contain" style={styles.signature} accessible accessibilityLabel="DIASPORA" />
         <ActivityIndicator accessibilityLabel="Ouverture de DIASPORA" />
       </View>
     )
@@ -88,7 +87,7 @@ function Browser() {
 export default function App() { return <SafeAreaProvider><Browser /></SafeAreaProvider> }
 const styles = StyleSheet.create({
   fill: { flex: 1 }, overlay: { ...StyleSheet.absoluteFill, padding: 24, gap: 16, alignItems: "center", justifyContent: "center" },
-  lettering: { width: 160, height: 21 },
+  signature: { width: "100%", maxWidth: 320, aspectRatio: 1430 / 211, height: undefined },
   brand: { width: 144, height: 96 },
   title: { fontSize: 22, fontWeight: "600" },
 })

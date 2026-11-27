@@ -88,14 +88,16 @@ L’hirondelle s’élance vers la droite. Les deux ailes et la queue effilée �
 
 | Support | Signature et usage |
 |---|---|
-| iPhone, iPad et Android | **DIASPORA** sous l’icône système. Hirondelle seule dans l’icône et composition verticale sur la carte de téléchargement. Android dispose des versions adaptative et monochrome. |
+| iPhone, iPad et Android | **DIASPORA** sous l’icône système. Hirondelle seule dans l’icône et signature horizontale sur la carte de téléchargement et à l’ouverture de l’application. Android dispose des versions adaptative et monochrome. |
 | Site et application de bureau installée | **DIASPORA.GA** en horizontal dans la navigation, lettrage seul en pied de page. Le manifeste fournit les icônes standard et masquable. |
 | Carte iProfil et passage depuis consulat.ga | Hirondelle et lettrage **DIASPORA.GA** sur le badge latéral. Le panneau d’ouverture reprend l’hirondelle. |
 | Liens partagés | La carte Open Graph et X utilise l’image **DIASPORA.GA** de 1 200 × 630 px. Elle accompagne également les liens de publication. |
 
 Laisser au moins la hauteur d’une capitale autour de la signature. Utiliser le dessin seul quand la largeur disponible ne permet plus de lire les lettres. Sur fond sombre, employer le lettrage clair. Le contraste des actions et des statuts relève de la palette d’interface ci-dessous.
 
-Le composant `BrandLogo` de `@diaspora-ga/features/brand/logo` propose les variantes `symbol`, `wordmark`, `horizontal` et `stacked`. Une marque à côté d’un libellé déjà annoncé utilise `decorative`. Le navigateur de composants à `/charte#logo` montre les quatre compositions.
+La signature horizontale **DIASPORA** (image 2) associe l’hirondelle à gauche au nom en bleu nuit `#082645` sur fond clair. Son tracé conserve les proportions de la référence. La signature **DIASPORA.GA** (image 1) identifie le site et les liens partagés.
+
+Le composant `BrandLogo` de `@diaspora-ga/features/brand/logo` propose les variantes `symbol`, `wordmark`, `horizontal` et `stacked`. Une marque à côté d’un libellé déjà annoncé utilise `decorative`. Le navigateur de composants à `/charte#logo` présente les deux signatures horizontales, la verticale, le mot seul et l’hirondelle.
 
 [Kit de l’identité visuelle, SVG et PNG](./identite-visuelle/Kit_DIASPORA_Envol.zip)
 

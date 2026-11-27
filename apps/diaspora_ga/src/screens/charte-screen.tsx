@@ -330,16 +330,17 @@ export function CharteScreen() {
         </header>
 
         <Section spec={SECTIONS.brand}>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 sm:grid-cols-6">
             {([
-              ["symbol", "DIASPORA", "charte.brand.symbol"],
-              ["stacked", "DIASPORA", "charte.brand.app"],
-              ["horizontal", "DIASPORA.GA", "charte.brand.web"],
-              ["wordmark", "DIASPORA.GA", "charte.brand.wordmark"],
-            ] as const).map(([variant, name, caption]) => (
-              <figure key={variant} className="flex flex-col rounded-2xl bg-card p-4 text-card-foreground">
+              ["horizontal", "DIASPORA.GA", "charte.brand.web", "[&>img]:w-14 [&>span>span:first-child]:w-44"],
+              ["horizontal", "DIASPORA", "charte.brand.app", "w-60"],
+              ["symbol", "DIASPORA", "charte.brand.symbol", "w-24"],
+              ["stacked", "DIASPORA", "charte.brand.stacked", ""],
+              ["wordmark", "DIASPORA.GA", "charte.brand.wordmark", ""],
+            ] as const).map(([variant, name, caption, size]) => (
+              <figure key={caption} className={cn("flex min-w-0 flex-col rounded-2xl bg-card p-4 text-card-foreground", variant === "horizontal" ? "sm:col-span-3" : "sm:col-span-2")}>
                 <div className="grid min-h-32 place-items-center">
-                  <BrandLogo variant={variant} name={name} className={variant === "symbol" ? "w-24" : undefined} />
+                  <BrandLogo variant={variant} name={name} className={size} />
                 </div>
                 <figcaption className="mt-3 text-sm text-muted-foreground">{t(caption)}</figcaption>
               </figure>

@@ -836,7 +836,8 @@
     "tocLabel": "Sommaire de la charte",
     "brand": {
       "symbol": "Icône et badge consulaire",
-      "app": "Application mobile",
+      "app": "DIASPORA · signature horizontale de l’application",
+      "stacked": "DIASPORA · signature verticale",
       "web": "Site et partage de lien",
       "wordmark": "Signature typographique",
       "spacing": "Autour du logo, laisser au minimum la hauteur d’une lettre. Sur fond sombre, le lettrage devient clair et l’hirondelle conserve ses couleurs."
