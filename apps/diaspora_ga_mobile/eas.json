@@ -30,7 +30,8 @@
         "sku": "diaspora-ga-mobile",
         "language": "fr-FR",
         "appName": "DIASPORA.GA",
-        "bundleIdentifier": "ga.diaspora.mobile"
+        "bundleIdentifier": "ga.diaspora.mobile",
+        "ascAppId": "6839771667"
       }
     }
   }
