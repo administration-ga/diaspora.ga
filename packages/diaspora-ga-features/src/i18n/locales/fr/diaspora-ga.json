@@ -1,6 +1,7 @@
 {
   "brand": {
-    "name": "DIASPORA.GA"
+    "name": "DIASPORA.GA",
+    "shortName": "DIASPORA"
   },
   "meta": {
     "title": "DIASPORA.GA — le réseau des Gabonais de l'étranger",
@@ -829,11 +830,23 @@
   },
   "charte": {
     "title": "Charte « Sable de la diaspora »",
-    "eyebrow": "Charte graphique · version 4 · 20 octobre 2026",
+    "eyebrow": "Charte graphique · version 5 · 27 novembre 2026",
     "heading": "Sable de la diaspora",
     "lead": "Les composants de DIASPORA.GA, montés avec des données fictives, pour relire et recetter l'interface dans les deux thèmes.",
     "tocLabel": "Sommaire de la charte",
+    "brand": {
+      "symbol": "Icône et badge consulaire",
+      "app": "DIASPORA · signature horizontale de l’application",
+      "stacked": "DIASPORA · signature verticale",
+      "web": "Site et partage de lien",
+      "wordmark": "Signature typographique",
+      "spacing": "Autour du logo, laisser au minimum la hauteur d’une lettre. Sur fond sombre, le lettrage devient clair et l’hirondelle conserve ses couleurs."
+    },
     "section": {
+      "brand": {
+        "title": "L’envol",
+        "lead": "Les deux ailes et la queue effilée évoquent le départ et la possibilité du retour au Gabon. Le vert et l’or des ailes accompagnent le passage du bleu profond au bleu vif."
+      },
       "color": {
         "title": "Couleur",
         "lead": "Six couleurs nommées pour les surfaces et le texte, une seule teinte chaude par thème : rien ne vire au beige ni au brun. S'y ajoute une couleur par famille d'actions : bleu pour publier et écrire, sarcelle pour suivre, sable doré pour réagir et acheter. En clair, le fond papier porte les cartes sable ; en sombre, les cartes s'éclaircissent sur le fond nuit."

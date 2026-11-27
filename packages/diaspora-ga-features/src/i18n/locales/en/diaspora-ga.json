@@ -1,6 +1,7 @@
 {
   "brand": {
-    "name": "DIASPORA.GA"
+    "name": "DIASPORA.GA",
+    "shortName": "DIASPORA"
   },
   "meta": {
     "title": "DIASPORA.GA — the network of Gabonese people abroad",
@@ -829,11 +830,23 @@
   },
   "charte": {
     "title": "“Diaspora sand” charter",
-    "eyebrow": "Design charter · version 4 · 20 October 2026",
+    "eyebrow": "Design charter · version 5 · 27 November 2026",
     "heading": "Diaspora sand",
     "lead": "DIASPORA.GA's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
+    "brand": {
+      "symbol": "App icon and consular badge",
+      "app": "DIASPORA · horizontal app logo",
+      "stacked": "DIASPORA · stacked logo",
+      "web": "Website and shared links",
+      "wordmark": "Wordmark",
+      "spacing": "Leave at least one capital letter’s height around the logo. On dark backgrounds the lettering becomes light and the swallow keeps its colours."
+    },
     "section": {
+      "brand": {
+        "title": "Taking flight",
+        "lead": "The two wings and tapered tail evoke departure and the possibility of returning to Gabon. The green and gold wings complement the transition from deep blue to bright blue."
+      },
       "color": {
         "title": "Colour",
         "lead": "Six named colours for surfaces and text, a single warm hue per theme: nothing turns beige or brown. On top of that, one colour per family of actions: blue to publish and write, teal to follow, golden sand to react and buy. In light mode, sand cards sit on a paper background; in dark mode, lighter cards sit on the night background."

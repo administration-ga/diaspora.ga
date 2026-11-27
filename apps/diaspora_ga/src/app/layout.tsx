@@ -12,14 +12,19 @@ import "./globals.css"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getAppT()
+  const image = { url: "/identite/partage-envol.png", width: 1200, height: 630, alt: t("brand.name") }
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${t("brand.name").toLowerCase()}`
   return {
+    metadataBase: new URL(siteUrl),
+    openGraph: { type: "website", siteName: t("brand.name"), images: [image] },
+    twitter: { card: "summary_large_image", images: [image] },
     title: { default: t("meta.title"), template: t("meta.titleTemplate") },
     description: t("meta.description"),
-    applicationName: t("brand.name"),
+    applicationName: t("brand.shortName"),
     robots: { index: false, follow: false },
     // Ajouté à l'écran d'accueil de l'iPhone (MO-02) : ouverture en plein écran, nom de la marque
     // sous l'icône, barre d'état sur le fond de la page.
-    appleWebApp: { capable: true, title: t("brand.name"), statusBarStyle: "default" },
+    appleWebApp: { capable: true, title: t("brand.shortName"), statusBarStyle: "default" },
   }
 }
 

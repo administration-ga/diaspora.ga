@@ -10,6 +10,7 @@ export interface ServiceWorkerConfiguration {
   readonly offlinePath: string
   readonly title: string
   readonly messages: { readonly fr: string; readonly en: string }
+  readonly icon: string
   readonly tagPrefix: string
   /** Porte d'ouverture d'une notification (DS-14, MO-06). Absente : le clic ouvre `fallbackPath`. */
   readonly openPath: string | null
@@ -62,7 +63,7 @@ self.addEventListener('push',event=>{event.waitUntil((async()=>{
  const reference=referenceOf(payload.reference);
  if(payload.version!==1||!reference||typeof payload.networkId!=='string'||typeof payload.url!=='string')return;
  if(!Number.isInteger(payload.count)||payload.count<1||payload.count>100||(payload.locale!=='fr'&&payload.locale!=='en'))return;
- await self.registration.showNotification(config.title,{body:config.messages[payload.locale],tag:config.tagPrefix+reference,data:{reference}});
+ await self.registration.showNotification(config.title,{body:config.messages[payload.locale],icon:config.icon,tag:config.tagPrefix+reference,data:{reference}});
 })())});
 self.addEventListener('notificationclick',event=>{event.notification.close();event.waitUntil((async()=>{
  const reference=referenceOf(event.notification.data?.reference);

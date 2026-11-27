@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { rememberArrival } from "@/lib/arrival"
 import { authClient } from "@/lib/auth-client"
@@ -42,7 +43,7 @@ export function ConsulatePassage({ returning = false }: { returning?: boolean })
   }, [returning])
 
   return <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 px-6">
-    <p className="text-sm font-semibold"><span className="uppercase">{t("consulateGateway.entry.label")}</span> → {t("brand.name")}</p>
+    <p className="flex flex-wrap items-center gap-2 text-sm font-semibold"><span className="uppercase">{t("consulateGateway.entry.label")}</span> → <BrandLogo /></p>
     <h1 className="text-2xl font-semibold">{failed ? t("consulateGateway.passage.failed") : t("consulateGateway.passage.opening")}</h1>
     {failed ? <><p>{t("consulateGateway.passage.retryInfo")}</p>
       <a className="underline" href={retry}>{t("consulateGateway.passage.retry")}</a><a className="underline" href={routes.enter()}>{t("consulateGateway.passage.home")}</a></>
