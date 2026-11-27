@@ -1,8 +1,8 @@
 ---
 title: "DIASPORA.GA — Charte graphique « Sable de la diaspora »"
-version: "4"
-date: "2026-10-20"
-statut: "Charte de travail v3 — arbitrage A7 (famille Consulaire / Sable) ; refonte demandée par le propriétaire le 15/10/2026 : épurée, contraste renforcé, couches du sombre renforcées (le fond reste le plus sombre), rayons resserrés, sans drapeau, avis en cartes flottantes ; v3 : palette confort (une teinte par thème, chroma basse, texte sans éblouissement, focus plein) ; v3.1 : avatars, teintes de statut, aplats ; v3.2 : bleu Gabon légèrement foncé (`#0167A8`, décision du propriétaire), sable posé, sélection sans contour"
+version: "5"
+date: "2026-11-27"
+statut: "Charte de référence de DIASPORA.GA avec la signature L’envol."
 projet: "DIASPORA.GA"
 jetons: "ANTSIA/packages/ui/src/themes/diaspora-ga.css (contrat) + packages/diaspora-ga-features/src/styles/extras.css (rôles propres) — [data-charte=\"diaspora-ga\"]"
 ---
@@ -81,6 +81,23 @@ jetons: "ANTSIA/packages/ui/src/themes/diaspora-ga.css (contrat) + packages/dias
 - **Registre** : institutionnel mais habité. « L'interface cesse d'être un guichet et
   devient un espace où l'on reste » : c'est la raison d'être de Sable, et celle de
   DIASPORA.GA.
+
+### L’envol · identité visuelle
+
+L’hirondelle s’élance vers la droite. Les deux ailes et la queue effilée évoquent le départ et la possibilité du retour au Gabon. Le dessin conserve sa silhouette et ses transitions de couleur en deux dimensions. Le bleu va du profond `#061B6B` au vif `#206FE4` en passant par `#0645AC`.
+
+| Support | Signature et usage |
+|---|---|
+| iPhone, iPad et Android | **DIASPORA** sous l’icône système. Hirondelle seule dans l’icône et composition verticale sur la carte de téléchargement. Android dispose des versions adaptative et monochrome. |
+| Site et application de bureau installée | **DIASPORA.GA** en horizontal dans la navigation, lettrage seul en pied de page. Le manifeste fournit les icônes standard et masquable. |
+| Carte iProfil et passage depuis consulat.ga | Hirondelle et lettrage **DIASPORA.GA** sur le badge latéral. Le panneau d’ouverture reprend l’hirondelle. |
+| Liens partagés | La carte Open Graph et X utilise l’image **DIASPORA.GA** de 1 200 × 630 px. Elle accompagne également les liens de publication. |
+
+Laisser au moins la hauteur d’une capitale autour de la signature. Utiliser le dessin seul quand la largeur disponible ne permet plus de lire les lettres. Sur fond sombre, employer le lettrage clair. Le contraste des actions et des statuts relève de la palette d’interface ci-dessous.
+
+Le composant `BrandLogo` de `@diaspora-ga/features/brand/logo` propose les variantes `symbol`, `wordmark`, `horizontal` et `stacked`. Une marque à côté d’un libellé déjà annoncé utilise `decorative`. Le navigateur de composants à `/charte#logo` montre les quatre compositions.
+
+[Kit de l’identité visuelle, SVG et PNG](./identite-visuelle/Kit_DIASPORA_Envol.zip)
 
 ## 2. Palette
 
@@ -285,9 +302,7 @@ Le squelette se duplique avec le code (cahier §15). Seuls les jetons changent.
   bouton flottant : la pile des cartes flottantes occupe déjà le bas de l'écran.
 - **Format téléphone unique** (A6) : 440 × 956, plancher 375. Il sert à la carte iCom
   détachée et aux cartes flottantes.
-- **Mot-symbole** : « DIASPORA.GA » en Plex Condensed 700, interlettrage +0,04 em.
-  L'œillet de l'étiquette sert de point d'ancrage à gauche. Aucun logo ne reprend les
-  armoiries ou le drapeau.
+- **Mot-symbole**. Les signatures de navigation et de téléchargement utilisent les tracés vectoriels de L’envol (voir §1).
 
 ## 9. Mouvement
 

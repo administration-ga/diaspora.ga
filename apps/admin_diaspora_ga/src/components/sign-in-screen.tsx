@@ -1,8 +1,7 @@
 // Dupliqué de ANTSIA/apps/admin_antsia_ga/src/components/sign-in-screen.tsx @ c9006352 — adaptations : textes de l'espace `admin` d'admin.diaspora.ga et bouton de la charte DIASPORA.GA ; les trois adresses de retour d'IDN sont `/entrer` nu de CETTE origine (revue A1, F2) ; une session ouverte reprend la section retenue dans l'onglet, relue contre le registre ; aucun lien vers l'accueil (gardé) ; mise en page de la porte de diaspora.ga (24/11/2026, demande du propriétaire) : marque et accroche à gauche dès 960 px, carte d'accès à droite, bascule clair/sombre en haut.
 "use client"
 
-import bird from "@diaspora-ga/features/brand/hirondelle.svg"
-import Image from "next/image"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 
 import { isSigningOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import { CONSOLE_MIN_LOA } from "@antsia/social-domain/badges"
@@ -216,10 +215,7 @@ export function SignInScreen() {
       <main id={anchors.contentId} className="flex flex-1 items-center">
         <div className="mx-auto grid w-full max-w-[1060px] items-center gap-6 px-5 pb-10 pt-2 min-[960px]:grid-cols-[minmax(0,1fr)_420px] min-[960px]:gap-16 min-[960px]:pb-20 min-[960px]:pt-12">
           <section aria-labelledby={showcaseTitleId} className="mx-auto w-full max-w-[480px] text-center min-[960px]:-mt-12 min-[960px]:text-left">
-            <p translate="no" className="font-display text-[38px] font-bold leading-none tracking-[-0.025em] text-primary min-[960px]:text-[76px]">
-              <Image src={bird} width={1032} height={682} unoptimized alt="" className="mx-auto mb-1 h-auto w-20 min-[960px]:w-36" />
-              {t("signIn.wordmark")}
-            </p>
+            <BrandLogo variant="stacked" className="text-foreground [&>img]:w-24 min-[960px]:[&>img]:w-36 [&>span>span:first-child]:w-44 min-[960px]:[&>span>span:first-child]:w-64" />
             <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-semibold text-muted-foreground min-[960px]:mt-6">
               <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
               {t("brand.eyebrow")}

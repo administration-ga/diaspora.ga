@@ -51,6 +51,7 @@ import type {
   PostView,
   TalentView,
 } from "@diaspora-ga/features/data"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { CalendarDaysIcon, PlayIcon, RotateCcwIcon } from "lucide-react"
 import NextLink from "next/link"
@@ -63,7 +64,7 @@ import { contrastLevel, contrastRatio, type ContrastLevel } from "@/lib/contrast
 import { routes } from "@/lib/routes"
 
 /**
- * `/charte` — la charte « Sable de la diaspora », version 4 (20/10/2026) : chaque
+ * `/charte` — la charte « Sable de la diaspora », version 5 (27/11/2026) : chaque
  * composant de `@diaspora-ga/features` monté avec des données d'EXEMPLE (fictives),
  * pour la relecture `web-design-guidelines` et la vérification réelle (320 px,
  * 375 px, 1 280 px, clair et sombre). Les contrastes sont MESURÉS sur la page,
@@ -76,6 +77,7 @@ const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 
 const SECTIONS = {
+  brand: { id: "logo", title: "charte.section.brand.title", lead: "charte.section.brand.lead" },
   color: { id: "couleur", title: "charte.section.color.title", lead: "charte.section.color.lead" },
   contrast: { id: "contraste", title: "charte.section.contrast.title", lead: "charte.section.contrast.lead" },
   type: { id: "typographie", title: "charte.section.type.title", lead: "charte.section.type.lead" },
@@ -326,6 +328,25 @@ export function CharteScreen() {
             ))}
           </nav>
         </header>
+
+        <Section spec={SECTIONS.brand}>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {([
+              ["symbol", "DIASPORA", "charte.brand.symbol"],
+              ["stacked", "DIASPORA", "charte.brand.app"],
+              ["horizontal", "DIASPORA.GA", "charte.brand.web"],
+              ["wordmark", "DIASPORA.GA", "charte.brand.wordmark"],
+            ] as const).map(([variant, name, caption]) => (
+              <figure key={variant} className="flex flex-col rounded-2xl bg-card p-4 text-card-foreground">
+                <div className="grid min-h-32 place-items-center">
+                  <BrandLogo variant={variant} name={name} className={variant === "symbol" ? "w-24" : undefined} />
+                </div>
+                <figcaption className="mt-3 text-sm text-muted-foreground">{t(caption)}</figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="max-w-prose text-sm text-muted-foreground">{t("charte.brand.spacing")}</p>
+        </Section>
 
         <Section spec={SECTIONS.color}>
           {/* Une scène neutre : le sable, la nuit, le papier et l'encre s'y lisent dans les deux thèmes. */}

@@ -15,6 +15,7 @@
     "./navigation": "./src/navigation/index.ts",
     "./demo": "./src/demo/index.ts",
     "./styles/*.css": "./src/styles/*.css",
+    "./brand/logo": "./src/brand/logo.tsx",
     "./brand/*": "./src/brand/*"
   },
   "scripts": {
