@@ -26,11 +26,11 @@ function documentTitle(root: Metadata, page: Metadata): string {
 describe("titre de l'onglet de /entrer", () => {
   it("dit le nom de l'application une seule fois", async () => {
     const title = documentTitle(await rootMetadata(), await signInMetadata())
-    expect(title).toBe("Administration de DIASPORA.GA")
+    expect(title).toBe("Administration de DIASPORA")
     expect(title.match(/Administration de/g)).toHaveLength(1)
   })
 
   it("une autre page garde « <Section> · Administration de … »", async () => {
-    expect(documentTitle(await rootMetadata(), { title: "Modules" })).toBe("Modules · Administration de DIASPORA.GA")
+    expect(documentTitle(await rootMetadata(), { title: "Modules" })).toBe("Modules · Administration de DIASPORA")
   })
 })
