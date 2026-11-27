@@ -18,6 +18,7 @@ export function serviceWorkerConfiguration(): ServiceWorkerConfiguration {
     cachePrefix: OFFLINE_CACHE_PREFIX,
     offlinePath: routes.offline(),
     title: fr("brand.name"),
+    icon: routes.appIcon("192"),
     messages: { fr: fr("installableApp.notificationBody"), en: en("installableApp.notificationBody") },
     tagPrefix: "diaspora-ga-notification-",
     openPath: routes.openNotification(),

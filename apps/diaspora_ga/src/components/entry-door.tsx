@@ -9,6 +9,7 @@ import { useId, useRef, type ReactNode } from "react"
 import { routes } from "@/lib/routes"
 
 import { DemoAccountsPill } from "./demo-accounts-panel"
+import { BrandBird } from "./wordmark"
 import { LiquidWordmark } from "./liquid-wordmark"
 import { OpenCountriesList, useHasOpenCountries } from "./open-countries"
 import { LanguageSwitch } from "./preferences"
@@ -67,6 +68,7 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
                 translate="no"
                 className="inline-block rounded-md font-display text-[38px] font-bold leading-none tracking-[-0.025em] text-primary focus-visible:shadow-focus min-[960px]:text-[76px]"
               >
+                <BrandBird className="mx-auto mb-1 w-20 min-[960px]:mb-3 min-[960px]:w-36" />
                 <LiquidWordmark text={t("brand.name")} areaRef={vitrine} />
               </NextLink>
               <h1 id="vitrine-titre" className="mt-3 whitespace-pre-line font-display text-[25px] font-semibold leading-[1.15] tracking-tight min-[960px]:mt-6 min-[960px]:text-[38px]">

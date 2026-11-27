@@ -192,7 +192,7 @@ describe("script de fond — notifications : référence opaque et origine ferm�
     const subject = worker(serviceWorkerScript(CONFIG))
     await subject.fire("push", { data: { json: () => payload } })
     expect(CONFIG.title).toBe("DIASPORA.GA")
-    expect(subject.showNotification).toHaveBeenCalledWith("DIASPORA.GA", { body: CONFIG.messages.fr, tag: "diaspora-ga-notification-delivery_opaque", data: { reference: payload.reference } })
+    expect(subject.showNotification).toHaveBeenCalledWith("DIASPORA.GA", { body: CONFIG.messages.fr, icon: routes.appIcon("192"), tag: "diaspora-ga-notification-delivery_opaque", data: { reference: payload.reference } })
     expect(subject.openWindow).not.toHaveBeenCalled()
   })
 

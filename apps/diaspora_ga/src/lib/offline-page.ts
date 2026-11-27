@@ -8,7 +8,7 @@ import type { CharteSurface, InstallPalette } from "./install-palette"
  * Elle ne dit rien de la personne (aucune donnée de session) : la mettre en réserve ne garde
  * rien de privé sur l'appareil.
  *
- *  · À la marque : le mot-symbole et son œillet, les couleurs lues dans la charte (clair et
+ *  · À la marque : le mot-symbole, les couleurs lues dans la charte (clair et
  *    sombre selon le téléphone) ; sans palette, les couleurs du système.
  *  · En français ET en anglais, la langue de la personne d'abord : la page est mise en réserve
  *    une fois, et doit rester lisible si la langue change ensuite.
@@ -39,7 +39,6 @@ function styles(palette: InstallPalette | null): string {
     "body{margin:0;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:max(24px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,sans-serif}",
     "main{width:100%;max-width:28rem}",
     ".mark{display:flex;align-items:center;gap:8px;margin:0 0 24px;color:var(--fg);font-weight:700;font-size:20px;letter-spacing:.04em;text-transform:uppercase}",
-    ".eyelet{width:10px;height:10px;border-radius:50%;background:var(--eyelet);box-shadow:0 0 0 2px var(--ink)}",
     "section+section{margin-top:24px;padding-top:24px;border-top:1px solid var(--rule)}",
     "h1,h2{margin:0 0 8px;font-size:22px;line-height:1.25}",
     "p{margin:0;color:var(--muted)}",
@@ -77,7 +76,7 @@ export function offlinePageHtml(input: { readonly locale: Locale; readonly palet
     `<style>${styles(input.palette)}</style>`,
     "</head>",
     "<body><main>",
-    `<p class="mark"><span class="eyelet" aria-hidden="true"></span>${escapeHtml(first("brand.name"))}</p>`,
+    `<p class="mark">${escapeHtml(first("brand.name"))}</p>`,
     sections,
     "</main></body>",
     "</html>",

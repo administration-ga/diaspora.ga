@@ -14,7 +14,9 @@
     "./data": "./src/data/index.ts",
     "./navigation": "./src/navigation/index.ts",
     "./demo": "./src/demo/index.ts",
-    "./styles/*.css": "./src/styles/*.css"
+    "./styles/*.css": "./src/styles/*.css",
+    "./brand/logo": "./src/brand/logo.tsx",
+    "./brand/*": "./src/brand/*"
   },
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",

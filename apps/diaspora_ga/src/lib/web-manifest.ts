@@ -21,7 +21,7 @@ export function webManifest(input: { readonly locale: Locale; readonly t: Transl
   return {
     id: routes.home(),
     name,
-    short_name: name,
+    short_name: input.t("brand.shortName"),
     description: input.t("meta.description"),
     lang: input.locale,
     dir: "ltr",
