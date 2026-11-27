@@ -89,15 +89,15 @@ L’hirondelle s’élance vers la droite. Les deux ailes et la queue effilée �
 | Support | Signature et usage |
 |---|---|
 | iPhone, iPad et Android | **DIASPORA** sous l’icône système. Hirondelle seule dans l’icône et signature horizontale sur la carte de téléchargement et à l’ouverture de l’application. Android dispose des versions adaptative et monochrome. |
-| Site et application de bureau installée | **DIASPORA.GA** en horizontal dans la navigation, lettrage seul en pied de page. Le manifeste fournit les icônes standard et masquable. |
-| Carte iProfil et passage depuis consulat.ga | Hirondelle et lettrage **DIASPORA.GA** sur le badge latéral. Le panneau d’ouverture reprend l’hirondelle. |
+| Site, console et application de bureau installée | **DIASPORA** en horizontal dans la navigation, en vertical sur la porte d’entrée et en lettrage seul en pied de page. |
+| Carte iProfil et passage depuis consulat.ga | Hirondelle et lettrage **DIASPORA** sur le badge latéral. |
 | Liens partagés | La carte Open Graph et X utilise l’image **DIASPORA.GA** de 1 200 × 630 px. Elle accompagne également les liens de publication. |
 
 Laisser au moins la hauteur d’une capitale autour de la signature. Utiliser le dessin seul quand la largeur disponible ne permet plus de lire les lettres. Sur fond sombre, employer le lettrage clair. Le contraste des actions et des statuts relève de la palette d’interface ci-dessous.
 
-La signature horizontale **DIASPORA** (image 2) associe l’hirondelle à gauche au nom en bleu nuit `#082645` sur fond clair. Son tracé conserve les proportions de la référence. La signature **DIASPORA.GA** (image 1) identifie le site et les liens partagés.
+La signature horizontale **DIASPORA** (image 2) associe l’hirondelle à gauche au nom en bleu nuit `#082645` sur fond clair. Son tracé conserve les proportions de la référence. La signature **DIASPORA.GA** (image 1) est réservée aux aperçus et aux messages de partage externe.
 
-Le composant `BrandLogo` de `@diaspora-ga/features/brand/logo` propose les variantes `symbol`, `wordmark`, `horizontal` et `stacked`. Une marque à côté d’un libellé déjà annoncé utilise `decorative`. Le navigateur de composants à `/charte#logo` présente les deux signatures horizontales, la verticale, le mot seul et l’hirondelle.
+Le composant `BrandLogo` de `@diaspora-ga/features/brand/logo` propose les variantes `symbol`, `wordmark`, `horizontal` et `stacked`. Une marque à côté d’un libellé déjà annoncé utilise `decorative`. Le navigateur de composants à `/charte#logo` présente les signatures horizontale et verticale de DIASPORA, le mot seul et l’hirondelle.
 
 [Kit de l’identité visuelle, SVG et PNG](./identite-visuelle/Kit_DIASPORA_Envol.zip)
 
@@ -315,17 +315,7 @@ Le mouvement est sobre et sert la compréhension :
 
 Pas d'animation sur une action au clavier. `prefers-reduced-motion` coupe tout.
 
-**Exception assumée — le mot-symbole de la porte** (demande du propriétaire, 19/10/2026,
-inspirée de « Sculpture Hero » publié sur 21st.dev). Sur la porte d'entrée (`/`, `/entrer`
-et ses étapes), le mot-symbole est fait de particules simulées sur le GPU (WebGL2). Une fois
-par session de navigation, elles s'assemblent depuis tous les côtés (la diaspora qui se
-rassemble), en 2,6 s, sans jamais montrer le texte net avant. Sous le curseur, ou sous un
-doigt qui glisse sur la vitrine, la matière devient liquide, puis reprend sa forme ; au
-repos, rien ne bouge et la boucle s'arrête. La couleur est lue dans le thème (Sable ou
-Gaboma, clair ou sombre), jamais écrite dans le code. Le texte réel reste dans le DOM et
-s'affiche seul sans WebGL2, en contraste forcé ou avec `prefers-reduced-motion` : la règle
-« coupe tout » s'applique aussi ici. Le clavier n'anime rien ; le défilement vertical et le
-zoom restent au navigateur. Moteur : `apps/diaspora_ga/src/lib/liquid-wordmark/`.
+**Porte d’entrée**. La signature verticale DIASPORA utilise le tracé approuvé de L’envol dans les deux thèmes.
 
 ## 10. Accessibilité — paires mesurées (WCAG 2.1)
 

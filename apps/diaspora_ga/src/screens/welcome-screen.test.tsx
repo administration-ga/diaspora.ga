@@ -97,7 +97,7 @@ const AWA_PREFILL: EntryPrefillView = { displayName: "OGOOUÉ Awa", handles: [{ 
 
 const NOW = Date.UTC(2026, 10, 10, 12)
 /** L'acteur `exterieur` (fictif) : un compte ANTSIA à profil publié, sans adhésion à DIASPORA.GA. */
-const OUTSIDER = { handle: "demo.exterieur", displayName: "Brice MOUNDOUNGA", headline: "Membre d'ANTSIA, hors de DIASPORA.GA (démonstration)" }
+const OUTSIDER = { handle: "demo.exterieur", displayName: "Brice MOUNDOUNGA", headline: "Membre d'ANTSIA, hors de DIASPORA (démonstration)" }
 
 /** Une démonstration dont la session est déjà ouverte : sur `personId`, ou sur l'acteur `exterieur`. */
 function demoSignedIn(options: { personId?: string; withdrawn?: boolean } = {}) {
@@ -125,7 +125,7 @@ async function chooseCountry(user: ReturnType<typeof userEvent.setup>, name: str
 }
 
 const SUBMIT = /Créer mon profil et entrer/
-const SUBMIT_KEPT = /Entrer dans DIASPORA\.GA/
+const SUBMIT_KEPT = /Entrer dans DIASPORA/
 
 /** La navigation de page (`window.location.assign`), que jsdom n'exécute pas. */
 function stubPageNavigation() {

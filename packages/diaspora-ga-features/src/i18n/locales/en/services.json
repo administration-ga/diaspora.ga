@@ -7,7 +7,7 @@
     },
     "catalog": {
       "title": "Diaspora services",
-      "lead": "Services offered by the network's businesses and associations. DIASPORA.GA puts people in touch: no payment goes through the platform.",
+      "lead": "Services offered by the network's businesses and associations. DIASPORA puts people in touch: no payment goes through the platform.",
       "offerYourServices": "Do you offer services? Manage your offers in My pages"
     },
     "search": {
@@ -41,7 +41,7 @@
       "emptyFilters": "Try without the city, without the delivery mode, or in another country: a remote service is listed under the provider's country.",
       "emptyBudget": "With a budget, offers above it are left out.",
       "unavailableTitle": "The services catalogue is not available here",
-      "unavailableBody": "This version of DIASPORA.GA does not serve services yet: nothing is made up in their place.",
+      "unavailableBody": "This version of DIASPORA does not serve services yet: nothing is made up in their place.",
       "retry": "Try again",
       "loadMore": "Show more",
       "loadingMore": "Loading…"
@@ -99,7 +99,7 @@
       "price": "Price announced by the provider",
       "updated": "Updated",
       "description": "The service",
-      "noPayment": "No payment on DIASPORA.GA: the provider invoices the service directly, on the terms they offer you.",
+      "noPayment": "No payment on DIASPORA: the provider invoices the service directly, on the terms they offer you.",
       "manageNote": "You manage this offer on behalf of the page.",
       "manage": "Manage the page's services",
       "statusNote": {
@@ -125,7 +125,7 @@
         "pages": "Pages"
       },
       "unavailableTitle": "Page management is not available here",
-      "unavailableBody": "This version of DIASPORA.GA cannot tell yet which pages you manage.",
+      "unavailableBody": "This version of DIASPORA cannot tell yet which pages you manage.",
       "pagePicker": "Page",
       "noPagesTitle": "No business or association in your name",
       "noPagesBody": "Services are offered on behalf of a business or association page you sign for.",
@@ -162,7 +162,7 @@
       "title": "Title",
       "titleHint": "{{min}} to {{max}} characters.",
       "description": "Description",
-      "descriptionHint": "What the service includes. No phone number, email address or link: contact goes through the request on DIASPORA.GA.",
+      "descriptionHint": "What the service includes. No phone number, email address or link: contact goes through the request on DIASPORA.",
       "category": "Category",
       "categoryHint": "Regulated professions (health, law, finance) do not go through this catalogue.",
       "delivery": "Delivery",
@@ -197,7 +197,7 @@
     "service_title_too_long": "The title has at most 100 characters.",
     "service_description_too_short": "Describe the service in at least 10 characters.",
     "service_description_too_long": "The description has at most 2,000 characters.",
-    "service_contact_details_forbidden": "Remove phone numbers, email addresses and links: contact goes through the request on DIASPORA.GA.",
+    "service_contact_details_forbidden": "Remove phone numbers, email addresses and links: contact goes through the request on DIASPORA.",
     "service_category_invalid": "Choose a category from the list.",
     "service_country_required": "Choose the country of the service area.",
     "service_country_unknown": "This country is not recognised.",

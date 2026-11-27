@@ -8,7 +8,7 @@
     },
     "unavailable": {
       "title": "L'emploi n'est pas disponible ici",
-      "body": "Cette version de DIASPORA.GA ne sert pas encore les offres d'emploi ni les talents : rien n'est inventé à leur place."
+      "body": "Cette version de DIASPORA ne sert pas encore les offres d'emploi ni les talents : rien n'est inventé à leur place."
     },
     "workMode": {
       "onsite": "Sur site",
@@ -110,7 +110,7 @@
       "noDeadline": "Sans date limite",
       "published": "Publiée le",
       "description": "L'offre",
-      "noContact": "Aucune coordonnée : vous candidatez sur DIASPORA.GA et l'équipe de la page vous répond ici.",
+      "noContact": "Aucune coordonnée : vous candidatez sur DIASPORA et l'équipe de la page vous répond ici.",
       "manageNote": "Vous gérez cette offre au nom de la page.",
       "manage": "Gérer les emplois de la page",
       "applied": "Vous avez candidaté. État : {{status}}.",
@@ -118,7 +118,7 @@
     },
     "fraud": {
       "title": "On ne paie jamais pour candidater",
-      "body": "Une vraie offre ne demande jamais d'argent : ni frais de dossier, ni formation payante, ni avance pour un visa, un billet ou un logement. Méfiez-vous d'une promesse de visa et de qui vous presse de poursuivre hors de DIASPORA.GA.",
+      "body": "Une vraie offre ne demande jamais d'argent : ni frais de dossier, ni formation payante, ni avance pour un visa, un billet ou un logement. Méfiez-vous d'une promesse de visa et de qui vous presse de poursuivre hors de DIASPORA.",
       "report": "Une offre vous semble fausse ? Signalez-la avec le motif « {{reason}} » : elle disparaît aussitôt pour vous.",
       "reportHint": "Argent réclamé, promesse de visa : choisissez le motif « {{reason}} »."
     },
@@ -132,7 +132,7 @@
       "profileHidden": "Votre profil de talent est masqué : réactivez-le dans Talents pour le joindre.",
       "noProfile": "Vous n'avez pas de profil de talent.",
       "createProfile": "En créer un",
-      "reminder": "Aucune coordonnée dans le message : l'équipe vous répondra par DIASPORA.GA. On ne vous demande ni âge, ni sexe, ni origine, ni situation familiale, ni photo.",
+      "reminder": "Aucune coordonnée dans le message : l'équipe vous répondra par DIASPORA. On ne vous demande ni âge, ni sexe, ni origine, ni situation familiale, ni photo.",
       "consent": "J’accepte que l’équipe {{page, de}} voie mon nom publié et ce message.",
       "submit": "Envoyer ma candidature",
       "sending": "Envoi…",
@@ -305,7 +305,7 @@
       "period": "Période",
       "deadline": "Date limite des candidatures (facultative)",
       "deadlineHint": "Jusqu'à la fin de ce jour, fuseau {{zone}}. Six mois au plus.",
-      "fairness": "N'exigez ni âge, ni sexe, ni origine, ni situation familiale, ni photo. Aucune coordonnée : les candidatures arrivent sur DIASPORA.GA.",
+      "fairness": "N'exigez ni âge, ni sexe, ni origine, ni situation familiale, ni photo. Aucune coordonnée : les candidatures arrivent sur DIASPORA.",
       "noFees": "Ne demandez jamais d'argent aux candidats : ni frais de dossier, ni formation payante, ni avance pour un visa ou un voyage. Une offre qui en demande peut être signalée par les membres et retirée par la modération.",
       "saveDraft": "Enregistrer le brouillon",
       "publish": "Publier",
@@ -345,7 +345,7 @@
     "job_title_too_long": "L'intitulé compte au plus 120 caractères.",
     "job_description_too_short": "La description compte au moins 30 caractères.",
     "job_description_too_long": "La description compte au plus 4 000 caractères.",
-    "job_contact_details_forbidden": "Retirez téléphone, adresse e-mail, lien et adresse exacte : le contact passe par DIASPORA.GA.",
+    "job_contact_details_forbidden": "Retirez téléphone, adresse e-mail, lien et adresse exacte : le contact passe par DIASPORA.",
     "job_contract_invalid": "Choisissez un contrat dans la liste.",
     "job_country_required": "Choisissez un pays.",
     "job_country_unknown": "Ce pays est inconnu.",

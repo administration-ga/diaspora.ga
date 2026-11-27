@@ -2,7 +2,7 @@
   "hubAbout": {
     "summary": "À propos du hub — {{country}}",
     "statusLabel": "Statut",
-    "statusOpen": "Pays ouvert : les membres qui y résident peuvent publier dans ce hub. Tout membre de DIASPORA.GA le lit, quel que soit son pays.",
+    "statusOpen": "Pays ouvert : les membres qui y résident peuvent publier dans ce hub. Tout membre de DIASPORA le lit, quel que soit son pays.",
     "statusNotOpen": "Pas encore ouvert : tout membre lit ce hub. Ceux qui y résident peuvent publier pour toute la diaspora ; la publication dans ce hub attend l'ouverture du pays.",
     "openingLabel": "Ouverture d'un pays",
     "openingRule": "Un pays est ouvert par l'administration du réseau, quand une équipe de modération de ce pays compte au moins {{moderators}} modérateur actif, ce que l'application vérifie, et que {{relays}} associations relais se sont engagées, ce que l'administration atteste.",

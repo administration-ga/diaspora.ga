@@ -1,7 +1,7 @@
 {
   "postSearch": {
     "title": "Search posts",
-    "lead": "A word, a name or a #hashtag: only the posts you can read in DIASPORA.GA are searched.",
+    "lead": "A word, a name or a #hashtag: only the posts you can read in DIASPORA are searched.",
     "label": "Words to search for in posts",
     "placeholder": "Search posts",
     "hint": "Type at least two characters.",

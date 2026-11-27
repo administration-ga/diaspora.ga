@@ -1,51 +1,43 @@
 import { cn } from "../lib/cn"
-import appHorizontal from "./diaspora-horizontal.svg"
-import appHorizontalInverse from "./diaspora-horizontal-inverse.svg"
 import bird from "./hirondelle.svg"
-import appWordmark from "./diaspora.svg"
-import webWordmark from "./diaspora-ga.svg"
+import horizontal from "./diaspora-horizontal.svg"
+import horizontalInverse from "./diaspora-horizontal-inverse.svg"
+import vertical from "./diaspora-vertical.svg"
+import verticalInverse from "./diaspora-vertical-inverse.svg"
+import lettering from "./diaspora.svg"
 
-type Signature = "DIASPORA" | "DIASPORA.GA"
-type Variant = "symbol" | "wordmark" | "horizontal" | "stacked"
+const signatures = {
+  horizontal: { light: horizontal, dark: horizontalInverse, width: 1430, height: 211 },
+  stacked: { light: vertical, dark: verticalInverse, width: 1080, height: 775 },
+}
 
 function assetUrl(asset: string | { src: string }) {
   return typeof asset === "string" ? asset : asset.src
 }
 
-/** Un dessin vectoriel commun au site et à la console. Les couleurs des ailes sont fixes. */
-export function BrandLogo({
-  name = "DIASPORA.GA", variant = "horizontal", decorative = false, className,
-}: {
-  name?: Signature
-  variant?: Variant
+export function BrandLogo({ variant = "horizontal", decorative = false, className }: {
+  variant?: keyof typeof signatures | "symbol" | "wordmark"
   decorative?: boolean
   className?: string
 }) {
   if (variant === "symbol") {
-    return <img src={assetUrl(bird)} alt={decorative ? "" : name} width={1032} height={682} className={cn("block h-auto w-10 shrink-0", className)} />
+    return <img src={assetUrl(bird)} alt={decorative ? "" : "DIASPORA"} width={1032} height={682} className={cn("block h-auto w-10 shrink-0", className)} />
   }
-  const app = name === "DIASPORA"
-  if (app && variant === "horizontal") {
+  if (variant === "wordmark") {
+    const mask = `url("${assetUrl(lettering)}") center / contain no-repeat`
     return (
-      <span className={cn("inline-block w-40 max-w-full align-middle", className)} translate="no" aria-hidden={decorative || undefined}>
-        <img src={assetUrl(appHorizontal)} width={1430} height={211} alt="" className="block h-auto w-full dark:hidden forced-colors:hidden" />
-        <img src={assetUrl(appHorizontalInverse)} width={1430} height={211} alt="" className="hidden h-auto w-full dark:block forced-colors:!hidden" />
-        <span className="sr-only forced-colors:not-sr-only">{name}</span>
+      <span translate="no" aria-hidden={decorative || undefined} className={cn("inline-block w-24 max-w-full", className)}>
+        <span aria-hidden="true" className="block aspect-[1080/136] bg-current forced-colors:hidden" style={{ mask, WebkitMask: mask }} />
+        <span className="sr-only forced-colors:not-sr-only">DIASPORA</span>
       </span>
     )
   }
-  const mask = `url("${assetUrl(app ? appWordmark : webWordmark)}") center / contain no-repeat`
+  const { light, dark, width, height } = signatures[variant]
   return (
-    <span translate="no" aria-hidden={decorative || undefined} className={cn(
-      "inline-flex items-center gap-2",
-      variant === "stacked" && "flex-col",
-      className,
-    )}>
-      {variant !== "wordmark" && <BrandLogo variant="symbol" decorative className={variant === "stacked" ? "w-20" : undefined} />}
-      <span className="relative inline-block">
-        <span aria-hidden="true" className={cn("block bg-current forced-colors:hidden", app ? "aspect-[1080/136] w-24" : "aspect-[1415/136] w-[7.75rem]")} style={{ mask, WebkitMask: mask }} />
-        <span className="sr-only forced-colors:not-sr-only">{name}</span>
-      </span>
+    <span translate="no" aria-hidden={decorative || undefined} className={cn("inline-block max-w-full align-middle", variant === "horizontal" ? "w-40" : "w-32", className)}>
+      <img src={assetUrl(light)} width={width} height={height} alt="" className="block h-auto w-full dark:hidden forced-colors:hidden" />
+      <img src={assetUrl(dark)} width={width} height={height} alt="" className="hidden h-auto w-full dark:block forced-colors:!hidden" />
+      <span className="sr-only forced-colors:not-sr-only">DIASPORA</span>
     </span>
   )
 }

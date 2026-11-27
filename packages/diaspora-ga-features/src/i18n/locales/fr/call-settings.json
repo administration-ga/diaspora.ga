@@ -3,7 +3,7 @@
     "calls": {
       "title": "Messages et appels",
       "lead": "Les réglages de votre compte : ils valent aussi dans ANTSIA. Ils décident si un appel qui vous est adressé sonne, et ce que vos relations voient de vous.",
-      "notOffered": "DIASPORA.GA ne propose pas encore d'appel : aucun bouton d'appel n'y apparaît. Ces réglages valent déjà pour les appels qu'on vous adresse dans ANTSIA.",
+      "notOffered": "DIASPORA ne propose pas encore d'appel : aucun bouton d'appel n'y apparaît. Ces réglages valent déjà pour les appels qu'on vous adresse dans ANTSIA.",
       "demoNotice": "Démonstration : aucun appel n'est passé ici. Ces réglages fictifs restent le temps de la page.",
       "who": "Qui peut vous appeler",
       "outside": {
@@ -15,7 +15,7 @@
       "readReceipts": "Accusés de lecture",
       "readReceiptsHint": "Dans les conversations à deux, ici comme dans ANTSIA. Ils sont réciproques : coupés, les autres ne voient plus quand vous lisez leurs messages, et vous ne voyez plus quand ils lisent les vôtres.",
       "voicemail": "Messagerie vocale",
-      "voicemailHint": "Quand vous ne répondez pas, l'appelant peut vous laisser un message vocal. Vous ne pouvez pas encore l'écouter dans DIASPORA.GA.",
+      "voicemailHint": "Quand vous ne répondez pas, l'appelant peut vous laisser un message vocal. Vous ne pouvez pas encore l'écouter dans DIASPORA.",
       "presence": "Montrer ma présence",
       "presenceHint": "Vos relations voient si vous êtes en ligne, en appel ou en « Ne pas déranger ». Désactivé, vous n'apparaissez plus du tout.",
       "callWaiting": "Double appel",

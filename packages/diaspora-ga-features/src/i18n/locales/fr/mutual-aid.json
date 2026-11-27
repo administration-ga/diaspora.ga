@@ -65,7 +65,7 @@
       "title": "Questions",
       "ask": "Poser une question",
       "askTitle": "Poser une question",
-      "askDescription": "Votre question est lue par les membres de DIASPORA.GA. Ils voient votre profil publié, jamais vos coordonnées.",
+      "askDescription": "Votre question est lue par les membres de DIASPORA. Ils voient votre profil publié, jamais vos coordonnées.",
       "viewLabel": "Afficher",
       "view": {
         "open": "Questions ouvertes",
@@ -147,11 +147,11 @@
         "confirm": "Retirer"
       },
       "closed": "Cette question est close : elle ne reçoit plus de réponse.",
-      "cannotAnswer": "Pour répondre, votre adhésion à DIASPORA.GA doit être déclarée ou vérifiée."
+      "cannotAnswer": "Pour répondre, votre adhésion à DIASPORA doit être déclarée ou vérifiée."
     },
     "missions": {
       "title": "Missions bénévoles",
-      "lead": "Des missions proposées par les associations de DIASPORA.GA. S'inscrire montre votre nom publié à l'équipe de l'association, avec votre accord.",
+      "lead": "Des missions proposées par les associations de DIASPORA. S'inscrire montre votre nom publié à l'équipe de l'association, avec votre accord.",
       "propose": "Proposer une mission",
       "proposeTitle": "Proposer une mission bénévole",
       "proposeDescription": "La mission est publiée au nom de l'association que vous gérez.",
@@ -286,7 +286,7 @@
     "aid_theme_invalid": "Choisissez un thème dans la liste.",
     "aid_country_required": "Choisissez un pays.",
     "aid_country_unknown": "Ce pays n'est pas reconnu.",
-    "aid_country_is_home": "L'entraide de DIASPORA.GA concerne les pays de résidence, hors du Gabon.",
+    "aid_country_is_home": "L'entraide de DIASPORA concerne les pays de résidence, hors du Gabon.",
     "aid_city_required": "Indiquez la ville.",
     "aid_city_invalid": "Ce nom de ville n'est pas lisible.",
     "aid_city_too_long": "Le nom de la ville est trop long.",

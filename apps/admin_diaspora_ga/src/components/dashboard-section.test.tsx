@@ -181,7 +181,7 @@ describe("tableau de bord — lectures réelles seulement", () => {
   })
 })
 
-describe("tableau de bord — le bureau de modération de diaspora.ga", () => {
+describe("tableau de bord — le bureau de modération de DIASPORA", () => {
   it("« File de modération » et « Pages à vérifier » mènent au bureau des membres, dans un nouvel onglet, sans compteur", () => {
     mocks.membersSiteUrl = "https://membres.exemple"
     mount()

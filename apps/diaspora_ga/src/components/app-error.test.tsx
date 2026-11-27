@@ -137,7 +137,7 @@ describe("page d'erreur de l'application (error.tsx)", () => {
     const onRetry = renderAppError("fr", chunkError())
 
     expect(screen.getByRole("heading", { level: 1, name: "Une nouvelle version du site est disponible." })).toHaveFocus()
-    expect(screen.getByText("DIASPORA.GA a été mis à jour pendant votre visite. Rechargez la page pour continuer.")).toBeInTheDocument()
+    expect(screen.getByText("DIASPORA a été mis à jour pendant votre visite. Rechargez la page pour continuer.")).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Réessayer" })).toBeNull()
     expect(screen.getByRole("link", { name: "Revenir au fil" })).toHaveAttribute("href", routes.feed())
 

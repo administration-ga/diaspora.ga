@@ -314,7 +314,7 @@ describe("/kit-arrivee/<id> — le lien externe de la source", () => {
     expect(screen.getByText("Adresse : https://www.exemple-public.fr/demarche")).toBeInTheDocument()
     expect(screen.getByText("Ressource portée par une page au badge Officiel.")).toBeInTheDocument()
     // Le relecteur au profil retiré : le nom neutre, jamais une devinette.
-    expect(screen.getByText("Membre de DIASPORA.GA")).toBeInTheDocument()
+    expect(screen.getByText("Membre de DIASPORA")).toBeInTheDocument()
   })
 
   it("une adresse qui n'est pas https n'est jamais cliquable", () => {

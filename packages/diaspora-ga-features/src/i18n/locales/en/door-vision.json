@@ -1,7 +1,7 @@
 {
   "landing": {
     "vision": {
-      "title": "What DIASPORA.GA is",
+      "title": "What DIASPORA is",
       "lead": "The closed social network of Gabonese people living abroad: your country, your community, and you always know who is posting.",
       "offerTitle": "What you will find",
       "offer": {
@@ -85,7 +85,7 @@
         "publish": "Read right away; post after the consular verification or a sponsorship.",
         "publishSponsored": "Read right away; post as soon as a verified member sponsors you."
       },
-      "join": "Join DIASPORA.GA"
+      "join": "Join DIASPORA"
     }
   }
 }

@@ -65,7 +65,7 @@
       "title": "Questions",
       "ask": "Ask a question",
       "askTitle": "Ask a question",
-      "askDescription": "Your question is read by DIASPORA.GA members. They see your published profile, never your contact details.",
+      "askDescription": "Your question is read by DIASPORA members. They see your published profile, never your contact details.",
       "viewLabel": "Show",
       "view": {
         "open": "Open questions",
@@ -147,11 +147,11 @@
         "confirm": "Withdraw"
       },
       "closed": "This question is closed: it no longer receives answers.",
-      "cannotAnswer": "To answer, your DIASPORA.GA membership must be declared or verified."
+      "cannotAnswer": "To answer, your DIASPORA membership must be declared or verified."
     },
     "missions": {
       "title": "Volunteer missions",
-      "lead": "Missions offered by DIASPORA.GA associations. Signing up shows your published name to the association's team, with your consent.",
+      "lead": "Missions offered by DIASPORA associations. Signing up shows your published name to the association's team, with your consent.",
       "propose": "Offer a mission",
       "proposeTitle": "Offer a volunteer mission",
       "proposeDescription": "The mission is published on behalf of the association you manage.",
@@ -286,7 +286,7 @@
     "aid_theme_invalid": "Choose a topic from the list.",
     "aid_country_required": "Choose a country.",
     "aid_country_unknown": "This country is not recognised.",
-    "aid_country_is_home": "DIASPORA.GA mutual aid is about countries of residence, outside Gabon.",
+    "aid_country_is_home": "DIASPORA mutual aid is about countries of residence, outside Gabon.",
     "aid_city_required": "Enter the city.",
     "aid_city_invalid": "This city name cannot be read.",
     "aid_city_too_long": "The city name is too long.",

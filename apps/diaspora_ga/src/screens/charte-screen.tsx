@@ -332,15 +332,14 @@ export function CharteScreen() {
         <Section spec={SECTIONS.brand}>
           <div className="grid gap-3 sm:grid-cols-6">
             {([
-              ["horizontal", "DIASPORA.GA", "charte.brand.web", "[&>img]:w-14 [&>span>span:first-child]:w-44"],
-              ["horizontal", "DIASPORA", "charte.brand.app", "w-60"],
-              ["symbol", "DIASPORA", "charte.brand.symbol", "w-24"],
-              ["stacked", "DIASPORA", "charte.brand.stacked", ""],
-              ["wordmark", "DIASPORA.GA", "charte.brand.wordmark", ""],
-            ] as const).map(([variant, name, caption, size]) => (
-              <figure key={caption} className={cn("flex min-w-0 flex-col rounded-2xl bg-card p-4 text-card-foreground", variant === "horizontal" ? "sm:col-span-3" : "sm:col-span-2")}>
+              ["horizontal", "charte.brand.app", "w-60"],
+              ["stacked", "charte.brand.stacked", "w-36"],
+              ["symbol", "charte.brand.symbol", "w-24"],
+              ["wordmark", "charte.brand.wordmark", "w-32"],
+            ] as const).map(([variant, caption, size]) => (
+              <figure key={caption} className="flex min-w-0 flex-col rounded-2xl bg-card p-4 text-card-foreground sm:col-span-3">
                 <div className="grid min-h-32 place-items-center">
-                  <BrandLogo variant={variant} name={name} className={size} />
+                  <BrandLogo variant={variant} className={size} />
                 </div>
                 <figcaption className="mt-3 text-sm text-muted-foreground">{t(caption)}</figcaption>
               </figure>

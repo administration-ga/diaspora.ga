@@ -20,7 +20,7 @@
       "mentoring": "Les mentors du réseau et les demandes de mentorat.",
       "arrivalKit": "Les fiches pratiques pour s'installer dans un pays.",
       "pilotMetrics": "La mesure du pilote : des comptes agrégés, sans contenu privé, lus dans la section « Mesure » de l’administration. Elle ne change rien au menu des membres.",
-      "consulateGateway": "Ajoute au menu du compte des membres l’entrée « consulat.ga — Démarches administratives ». Elle les mène à leur espace consulat.ga dans le même onglet ; DIASPORA.GA ne transmet rien à consulat.ga."
+      "consulateGateway": "Ajoute au menu du compte des membres l’entrée « consulat.ga — Démarches administratives ». Elle les mène à leur espace consulat.ga dans le même onglet ; DIASPORA ne transmet rien à consulat.ga."
     }
   }
 }

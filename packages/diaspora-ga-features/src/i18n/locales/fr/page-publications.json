@@ -4,7 +4,7 @@
     "composeTitle": "Publication de la page",
     "composeDescription": "Rédiger une publication au nom {{name, de}}.",
     "identity": "Vous publiez au nom {{name, de}}",
-    "networkNotice": "Cette publication suit les règles de visibilité de la page dans DIASPORA.GA.",
+    "networkNotice": "Cette publication suit les règles de visibilité de la page dans DIASPORA.",
     "placeholder": "Quelles nouvelles {{name, de}} ?",
     "followersAudience": "Abonnés de cette page uniquement",
     "noCountry": "Pour publier dans un pays, renseignez d’abord le pays de la page dans sa gestion.",

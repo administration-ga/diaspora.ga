@@ -4,13 +4,12 @@ import { AppearanceToggle } from "@antsia/social-features/shell/appearance"
 import { cn } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import NextLink from "next/link"
-import { useId, useRef, type ReactNode } from "react"
+import { useId, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
 import { DemoAccountsPill } from "./demo-accounts-panel"
-import { BrandBird } from "./wordmark"
-import { LiquidWordmark } from "./liquid-wordmark"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import { OpenCountriesList, useHasOpenCountries } from "./open-countries"
 import { LanguageSwitch } from "./preferences"
 import { AppDemoChip, SiteFooter } from "./site-chrome"
@@ -21,9 +20,6 @@ import { AppDemoChip, SiteFooter } from "./site-chrome"
  * l'accueil d'ANTSIA (`AccessHomeScreen`). La marque et la promesse à gauche dès
  * 960 px, la carte d'accès à droite ; au téléphone, une seule colonne. Le mode
  * sombre se bascule en un appui, avant même la connexion (ADR-0027 du moteur).
- * Le mot-symbole est en matière liquide (`LiquidWordmark`) ; la vitrine entière
- * est la zone où le curseur ou un doigt qui glisse la trouble, le défilement
- * vertical et le zoom restant au navigateur.
  *
  * `align="start"` sert les cartes longues (IDN) : la vitrine reste en haut, collée
  * au défilement sur ordinateur, au lieu d'être centrée sur la hauteur de la carte.
@@ -37,7 +33,6 @@ import { AppDemoChip, SiteFooter } from "./site-chrome"
  */
 export function EntryDoor(props: { children: ReactNode; align?: "center" | "start"; after?: ReactNode }) {
   const { t } = useDiasporaGaT()
-  const vitrine = useRef<HTMLElement>(null)
   const atStart = props.align === "start"
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
@@ -55,7 +50,6 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
             )}
           >
             <section
-              ref={vitrine}
               aria-labelledby="vitrine-titre"
               className={cn(
                 "relative isolate mx-auto w-full max-w-[480px] touch-pan-y touch-pinch-zoom text-center min-[960px]:text-left",
@@ -68,8 +62,7 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
                 translate="no"
                 className="inline-block rounded-md font-display text-[38px] font-bold leading-none tracking-[-0.025em] text-primary focus-visible:shadow-focus min-[960px]:text-[76px]"
               >
-                <BrandBird className="mx-auto mb-1 w-20 min-[960px]:mb-3 min-[960px]:w-36" />
-                <LiquidWordmark text={t("brand.name")} areaRef={vitrine} />
+                <BrandLogo variant="stacked" className="w-32 min-[960px]:w-48" />
               </NextLink>
               <h1 id="vitrine-titre" className="mt-3 whitespace-pre-line font-display text-[25px] font-semibold leading-[1.15] tracking-tight min-[960px]:mt-6 min-[960px]:text-[38px]">
                 {t("landing.title")}

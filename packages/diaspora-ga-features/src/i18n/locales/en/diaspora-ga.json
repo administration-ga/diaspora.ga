@@ -1,11 +1,12 @@
 {
   "brand": {
-    "name": "DIASPORA.GA",
-    "shortName": "DIASPORA"
+    "name": "DIASPORA",
+    "shortName": "DIASPORA",
+    "shareName": "DIASPORA.GA"
   },
   "meta": {
-    "title": "DIASPORA.GA — the network of Gabonese people abroad",
-    "titleTemplate": "%s · DIASPORA.GA",
+    "title": "DIASPORA — the network of Gabonese people abroad",
+    "titleTemplate": "%s · DIASPORA",
     "description": "The closed social network of the Gabonese diaspora: your country, your community, and you always know who is posting."
   },
   "a11y": {
@@ -20,7 +21,7 @@
   },
   "nav": {
     "label": "Main navigation",
-    "home": "DIASPORA.GA home",
+    "home": "DIASPORA home",
     "enter": "Sign in",
     "feed": "Feed",
     "hub": "My country",
@@ -33,7 +34,7 @@
   },
   "footer": {
     "label": "Information",
-    "publisher": "DIASPORA.GA is published by NTSAGUI Digital. The network is reserved for Gabonese people living abroad.",
+    "publisher": "DIASPORA is published by NTSAGUI Digital. The network is reserved for Gabonese people living abroad.",
     "legalNotice": "Legal notice",
     "privacy": "Privacy",
     "charte": "Design charter"
@@ -55,21 +56,21 @@
     "title": "Find your people,\nwherever you are.",
     "lead": "Connect with Gabonese people around the world, share your daily life and build your own network.",
     "eligibility": "The network for Gabonese people living abroad.",
-    "signInTitle": "Sign in to DIASPORA.GA",
+    "signInTitle": "Sign in to DIASPORA",
     "idnContinue": "Continue with IDN",
     "idnUnavailable": "IDN sign-in will be available soon.",
     "or": "or",
     "signIn": "Sign in",
     "createAccount": "Create an account",
-    "newHere": "New to DIASPORA.GA?",
+    "newHere": "New to DIASPORA?",
     "free": "Registration is free.",
     "privacy": "Your email stays private. Sign in with a code, without a password.",
     "boardTitle": "Your community, country by country."
   },
   "entry": {
     "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
-    "title": "Join DIASPORA.GA",
-    "signUpTitle": "Create your DIASPORA.GA account",
+    "title": "Join DIASPORA",
+    "signUpTitle": "Create your DIASPORA account",
     "signUpLead": "Light account: you read right away, you post after a sponsorship or the verification of your consular registration.",
     "signUpLeadSponsored": "Light account: you read right away, you post as soon as a verified member sponsors you.",
     "existingAccount": "I already have an account: sign in",
@@ -94,11 +95,11 @@
     "loaHint": "Level 2 gives the Verified badge.",
     "loaLevel": "Level {{level}}",
     "gabonese": "Gabonese nationality",
-    "receivesTitle": "DIASPORA.GA will receive",
+    "receivesTitle": "DIASPORA will receive",
     "receives": "Your IDN identifier, your assurance level, your nationality, and your first and last names to suggest a handle.",
-    "neverTitle": "DIASPORA.GA will never receive",
+    "neverTitle": "DIASPORA will never receive",
     "never": "Your identification number, your date and place of birth, your address.",
-    "consent": "I allow DIASPORA.GA to receive this information.",
+    "consent": "I allow DIASPORA to receive this information.",
     "submit": "Allow and continue"
   },
   "code": {
@@ -122,7 +123,7 @@
   "welcome": {
     "metaTitle": "Welcome",
     "countryLabel": "Country of residence",
-    "countryHint": "Gabon is not offered: DIASPORA.GA is the network of Gabonese people abroad.",
+    "countryHint": "Gabon is not offered: DIASPORA is the network of Gabonese people abroad.",
     "countrySheetTitle": "Your country of residence",
     "countrySheetDescription": "Search by name or by code.",
     "countryNotOpen": "This country isn't open yet: you can read everything and post to the whole diaspora. Posting in the country's hub waits until it opens.",
@@ -135,7 +136,7 @@
     "handleOther": "Another handle",
     "handleOtherLabel": "Handle",
     "handleRules": "3 to 30 characters: unaccented letters, digits, dot, hyphen or underscore.",
-    "joined": "Welcome to DIASPORA.GA.",
+    "joined": "Welcome to DIASPORA.",
     "notYourAccount": "Not your account, or want to switch?"
   },
   "consent": {
@@ -148,7 +149,7 @@
   "consentPurpose": {
     "social_profile": {
       "title": "Social profile",
-      "body": "Recorded when joining the shared profile. Withdrawing your profile and leaving DIASPORA.GA are separate actions, offered separately."
+      "body": "Recorded when joining the shared profile. Withdrawing your profile and leaving DIASPORA are separate actions, offered separately."
     },
     "directory": {
       "title": "Member directory",
@@ -372,10 +373,10 @@
     "reachDiaspora": "For the whole diaspora",
     "reviewNotice": "{{country}} isn't open yet: posting in its hub waits until it opens. Your post goes to the whole diaspora.",
     "audienceLegend": "Who can read",
-    "audiencePublic": "All DIASPORA.GA members",
+    "audiencePublic": "All DIASPORA members",
     "audienceConnections": "My connections",
     "alsoOnRoot": "Also post on ANTSIA",
-    "alsoOnRootHint": "It will also be read in ANTSIA, the public network, and will stay in DIASPORA.GA.",
+    "alsoOnRootHint": "It will also be read in ANTSIA, the public network, and will stay in DIASPORA.",
     "alsoOnRootDisabled": "Only possible for a post readable by all members.",
     "publish": "Post",
     "publishing": "Posting…",
@@ -568,7 +569,7 @@
       "groupes": "Groups"
     },
     "welcomeTitle": "Welcome, {{name}}.",
-    "welcomeBody": "You are also a member of ANTSIA, the public network, with the same profile. What you post here stays in DIASPORA.GA, unless you tick “Also post on ANTSIA”.",
+    "welcomeBody": "You are also a member of ANTSIA, the public network, with the same profile. What you post here stays in DIASPORA, unless you tick “Also post on ANTSIA”.",
     "emptyPosts": "No post in the {{country}} hub yet.",
     "emptyPostsBody": "Practical information, a question, a good tip: the first post launches the hub.",
     "emptyEvents": "No event planned — {{country}}.",
@@ -606,7 +607,7 @@
       "edit": "Edit my images",
       "title": "Photo and cover",
       "shared": "These images belong to your ANTSIA profile and are shared across your networks. Each reader’s permissions control their display.",
-      "readOnly": "Changing images requires an active DIASPORA.GA membership.",
+      "readOnly": "Changing images requires an active DIASPORA membership.",
       "unavailable": "Your images are currently unavailable.",
       "avatar": "Profile photo",
       "cover": "Cover image",
@@ -657,7 +658,7 @@
   "settings": {
     "contentPreferences": {
       "title": "My feed",
-      "lead": "Find your hidden posts and muted authors. These choices are private and apply only to your DIASPORA.GA feed.",
+      "lead": "Find your hidden posts and muted authors. These choices are private and apply only to your DIASPORA feed.",
       "hiddenTab": "Hidden posts",
       "mutedTab": "Muted authors",
       "emptyHidden": "You have no hidden posts.",
@@ -684,7 +685,7 @@
     },
     "profilePublication": {
       "title": "Profile publication",
-      "globalScope": "This profile is shared by ANTSIA and DIASPORA.GA. These settings apply in both applications; the DIASPORA.GA directory is configured separately.",
+      "globalScope": "This profile is shared by ANTSIA and DIASPORA. These settings apply in both applications; the DIASPORA directory is configured separately.",
       "loadError": "Your personal profile could not be loaded.",
       "reload": "Reload profile",
       "unavailable": "Profile settings are unavailable for this session.",
@@ -695,7 +696,7 @@
         "unpublished": "Your profile is not published."
       },
       "privateLead": "Private mode removes you from searches and suggestions and closes new incoming follows and connection requests. Your known profile link, posts and existing relationships keep their usual visibility rules.",
-      "withdrawLead": "Withdrawing your profile makes the public profile unavailable and your name neutral. Your account, memberships, media, content, relationships and consents are retained. You remain a DIASPORA.GA member.",
+      "withdrawLead": "Withdrawing your profile makes the public profile unavailable and your name neutral. Your account, memberships, media, content, relationships and consents are retained. You remain a DIASPORA member.",
       "republishLead": "Republishing uses your retained identity and headline, as well as your privacy and directory choices. Moderation may delay profile visibility.",
       "makePrivate": "Enable private mode",
       "privacyOn": "Private mode enabled.",
@@ -712,12 +713,12 @@
       "confirm": {
         "withdraw": {
           "title": "Withdraw the shared profile?",
-          "body": "Withdrawal applies to ANTSIA and DIASPORA.GA. Your public profile becomes unavailable and your name neutral; your data, content, relationships, memberships and consents are retained. You can republish from these settings.",
+          "body": "Withdrawal applies to ANTSIA and DIASPORA. Your public profile becomes unavailable and your name neutral; your data, content, relationships, memberships and consents are retained. You can republish from these settings.",
           "confirm": "Confirm withdrawal"
         },
         "republish": {
           "title": "Republish the shared profile?",
-          "body": "Republication is requested in ANTSIA and DIASPORA.GA using your retained identity and headline. Private mode and your directory choices are retained. Moderation may delay visibility.",
+          "body": "Republication is requested in ANTSIA and DIASPORA using your retained identity and headline. Private mode and your directory choices are retained. Moderation may delay visibility.",
           "confirm": "Confirm republication"
         }
       }
@@ -725,11 +726,11 @@
     "signingOut": "Signing out…",
     "title": "Settings",
     "memberships": "My networks",
-    "membershipsLead": "Joining DIASPORA.GA also made you a member of ANTSIA. Your contexts stay separate.",
+    "membershipsLead": "Joining DIASPORA also made you a member of ANTSIA. Your contexts stay separate.",
     "memberSince": "Member since {{date}}",
     "sponsoredBy": "Sponsored by {{name}} (@{{handle}})",
     "rootName": "ANTSIA",
-    "rootDerived": "Membership derived from DIASPORA.GA: same profile, same handle. Leaving DIASPORA.GA doesn't remove you from ANTSIA.",
+    "rootDerived": "Membership derived from DIASPORA: same profile, same handle. Leaving DIASPORA doesn't remove you from ANTSIA.",
     "attestationVerified": "Consular registration verified.",
     "attestationNotConfirmed": "We could not confirm your consular registration.",
     "attestationNone": "Consular registration not verified.",
@@ -751,11 +752,11 @@
     "consentRecorded": "Recorded on {{date}} — text of {{version}}",
     "consentGranted": "Consent given.",
     "consentRevoked": "Consent withdrawn.",
-    "leaveExplain": "Leaving DIASPORA.GA ends this membership. Your account, shared profile and ANTSIA membership remain.",
-    "leave": "Leave DIASPORA.GA",
-    "leaveConfirmTitle": "Leave DIASPORA.GA?",
-    "leaveConfirmBody": "Your DIASPORA.GA membership and received sponsorship end. Your shared profile and consents are retained. You can return; a new sponsorship may be needed.",
-    "left": "You have left DIASPORA.GA.",
+    "leaveExplain": "Leaving DIASPORA ends this membership. Your account, shared profile and ANTSIA membership remain.",
+    "leave": "Leave DIASPORA",
+    "leaveConfirmTitle": "Leave DIASPORA?",
+    "leaveConfirmBody": "Your DIASPORA membership and received sponsorship end. Your shared profile and consents are retained. You can return; a new sponsorship may be needed.",
+    "left": "You have left DIASPORA.",
     "sponsorHelp": "Sponsorship",
     "sponsorHelpLead": "A member verified for more than 30 days can sponsor a pending account using its handle.",
     "sponsorHelpPending": "To post: ask a member verified for more than 30 days to sponsor you. All they need is your handle.",
@@ -775,7 +776,7 @@
     "signOutEverywhere": "Sign out everywhere",
     "profileIdentity": {
       "title": "Name and headline",
-      "lead": "These texts are shared by ANTSIA and DIASPORA.GA. Saving them preserves your privacy choice and whether the profile is published or withdrawn.",
+      "lead": "These texts are shared by ANTSIA and DIASPORA. Saving them preserves your privacy choice and whether the profile is published or withdrawn.",
       "edit": "Edit name and headline",
       "name": "Display name",
       "nameHint": "A freely chosen name for your social profile. Your handle stays the same.",
@@ -786,7 +787,7 @@
   },
   "sponsor": {
     "title": "Sponsor",
-    "lead": "You admit into DIASPORA.GA a pending account you know. Every sponsorship is logged; you can withdraw it.",
+    "lead": "You admit into DIASPORA a pending account you know. Every sponsorship is logged; you can withdraw it.",
     "tooRecent": "You can sponsor from {{date}}: you need to have been verified for more than 30 days.",
     "quota": "{{remaining}} sponsorships left out of {{total}} (over the last {{days}} days)",
     "handleLabel": "Handle of the account to sponsor",
@@ -804,14 +805,14 @@
   },
   "attestation": {
     "title": "Verify my consular registration",
-    "lead": "Registered with a consular post? With your consent, DIASPORA.GA asks consulat.ga for a confirmation, and nothing else.",
+    "lead": "Registered with a consular post? With your consent, DIASPORA asks consulat.ga for a confirmation, and nothing else.",
     "askedTitle": "What is asked",
     "asked": "Whether an active consular registration exists for your digital identity or your verified address.",
-    "receivedTitle": "What DIASPORA.GA receives",
+    "receivedTitle": "What DIASPORA receives",
     "received": "Yes or no, the country, the consular post and the registration date.",
-    "neverTitle": "What DIASPORA.GA never receives",
+    "neverTitle": "What DIASPORA never receives",
     "never": "Your passport, your identification number, your civil status, your children, your file.",
-    "consent": "I agree that DIASPORA.GA asks consulat.ga for this confirmation.",
+    "consent": "I agree that DIASPORA asks consulat.ga for this confirmation.",
     "inProgress": "Verifying…",
     "success": "Consular registration confirmed: your account is verified.",
     "verifiedTitle": "Your consular registration is verified.",
@@ -832,13 +833,12 @@
     "title": "“Diaspora sand” charter",
     "eyebrow": "Design charter · version 5 · 27 November 2026",
     "heading": "Diaspora sand",
-    "lead": "DIASPORA.GA's components, mounted with fictitious data, to review and accept the interface in both themes.",
+    "lead": "DIASPORA's components, mounted with fictitious data, to review and accept the interface in both themes.",
     "tocLabel": "Charter contents",
     "brand": {
       "symbol": "App icon and consular badge",
       "app": "DIASPORA · horizontal app logo",
       "stacked": "DIASPORA · stacked logo",
-      "web": "Website and shared links",
       "wordmark": "Wordmark",
       "spacing": "Leave at least one capital letter’s height around the logo. On dark backgrounds the lettering becomes light and the swallow keeps its colours."
     },
@@ -1122,7 +1122,7 @@
     "accepted": "Request accepted. You are now connected.",
     "declined": "Request declined.",
     "unavailableTitle": "Connections are unavailable here",
-    "unavailableBody": "This list is available to active DIASPORA.GA members. In the demo, explore connection actions from profiles.",
+    "unavailableBody": "This list is available to active DIASPORA members. In the demo, explore connection actions from profiles.",
     "dismissedTab": "Hidden suggestions",
     "dismissed": {
       "title": "Hidden suggestions",
@@ -1164,7 +1164,7 @@
     "description": "The comments on this post.",
     "close": "Close comments",
     "emptyTitle": "No comments yet.",
-    "emptyBody": "Start the conversation: comments stay in DIASPORA.GA.",
+    "emptyBody": "Start the conversation: comments stay in DIASPORA.",
     "notAllowed": "You can comment once you are sponsored or your consular registration is verified.",
     "label": "Your comment",
     "placeholder": "Write a comment…",
@@ -1283,7 +1283,7 @@
     "openUnread_one": "Notifications, {{count}} unread",
     "openUnread_other": "Notifications, {{count}} unread",
     "title": "Notifications",
-    "description": "What happened for you in DIASPORA.GA.",
+    "description": "What happened for you in DIASPORA.",
     "close": "Close notifications",
     "emptyTitle": "No notifications yet.",
     "emptyBody": "Connection requests, sponsorships and replies to your posts will show up here.",
@@ -1299,14 +1299,14 @@
       "post_comment": "commented on your post.",
       "post_share": "shared your post.",
       "mention": "mentioned you in a post.",
-      "sponsorship_received": "is now sponsoring you in DIASPORA.GA.",
+      "sponsorship_received": "is now sponsoring you in DIASPORA.",
       "sponsorship_withdrawn": "withdrew their sponsorship."
     },
     "system": {
       "sponsorship_withdrawn": "Your sponsorship was withdrawn.",
       "attestation_verified": "Your consular registration is confirmed: your account is verified.",
       "attestation_not_confirmed": "We couldn't confirm your consular registration.",
-      "other": "New activity in DIASPORA.GA."
+      "other": "New activity in DIASPORA."
     },
     "outcome": {
       "accepted": "accepted",
@@ -1345,8 +1345,8 @@
     "unknown": "Something went wrong. Try again in a moment.",
     "not_found": "This item no longer exists.",
     "not_signed_in": "Your session has expired: please sign in again.",
-    "not_member": "You need to be a DIASPORA.GA member to do this.",
-    "already_member": "You are already a DIASPORA.GA member.",
+    "not_member": "You need to be a DIASPORA member to do this.",
+    "already_member": "You are already a DIASPORA member.",
     "idn_invalid": "The IDN identity is incomplete.",
     "idn_identity_required": "Choose an identity.",
     "idn_consent_required": "Tick the authorization to continue.",
@@ -1416,7 +1416,7 @@
     "too_many_attempts": "Too many attempts for this code: request a new one.",
     "delivery_unavailable": "The code couldn't be sent right now. Try again in a moment.",
     "feature_unavailable": "This feature isn't open yet.",
-    "network_unavailable": "DIASPORA.GA can't be reached right now. Try again in a moment.",
+    "network_unavailable": "DIASPORA can't be reached right now. Try again in a moment.",
     "status_insufficient": "Your status doesn't allow this yet: ask for a sponsorship or verify your consular registration.",
     "headline_too_long": "The headline is too long (160 characters maximum)."
   }

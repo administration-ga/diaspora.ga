@@ -1,7 +1,7 @@
 {
   "post": {
     "shareActions": {
-      "accessNotice": "Opened without a session, the link first leads to the DIASPORA.GA entrance, then to the post. Sharing it does not make the post public.",
+      "accessNotice": "Opened without a session, the link first leads to the DIASPORA entrance, then to the post. Sharing it does not make the post public.",
       "nativeShare": "More sharing options",
       "nativeTitle": "A post on DIASPORA.GA",
       "shareFailed": "Sharing did not go through. You can copy the post link."

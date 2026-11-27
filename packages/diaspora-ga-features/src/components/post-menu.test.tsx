@@ -157,7 +157,7 @@ describe("menu d'une publication — retirer d'ANTSIA (FD-10)", () => {
     expect(mocks.success).toHaveBeenCalledWith(t("withdrawFromRoot.done"))
   })
 
-  it("annuler ne retire rien ; une publication lue dans DIASPORA.GA seulement n'a pas l'entrée", async () => {
+  it("annuler ne retire rien ; une publication lue dans DIASPORA seulement n'a pas l'entrée", async () => {
     const actions = mount({ ...MINE, visibility: "root" })
     const user = await openMenu()
     await user.click(screen.getByRole("menuitem", { name: t("postMenu.withdrawFromRoot") }))

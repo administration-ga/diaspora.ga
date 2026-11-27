@@ -94,7 +94,7 @@ import { MessagesUnreadReader } from "./messages-unread"
 import { NetworkStatusNotice } from "./network-status"
 import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
-import { Wordmark } from "./wordmark"
+import { BrandBird, Wordmark } from "./wordmark"
 
 interface ComposerControl {
   readonly open: () => void
@@ -1061,7 +1061,8 @@ function MobileHeader(props: {
           étroit, la feuille du compte porte le pays (et « Communautés » quand elle est dans la barre). */}
       <div className="flex shrink-0 items-center gap-2 max-[420px]:[&_[data-slot=demo-chip]>span]:sr-only">
         <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
-          <Wordmark className={demo ? "max-[380px]:[&>span:last-child]:sr-only" : undefined} />
+          {demo && <BrandBird className="min-[381px]:hidden" />}
+          <Wordmark className={demo ? "max-[380px]:hidden" : undefined} />
         </NextLink>
         <AppDemoChip />
       </div>

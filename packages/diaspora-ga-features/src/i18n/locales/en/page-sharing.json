@@ -4,7 +4,7 @@
     "openPage": "Share the {{name}} page",
     "title": "Share this page",
     "description": "Copy its link or choose a sharing option.",
-    "accessNotice": "Access to this page requires DIASPORA.GA membership. Sharing its link does not make it public or grant access.",
+    "accessNotice": "Access to this page requires DIASPORA membership. Sharing its link does not make it public or grant access.",
     "link": "Page link",
     "copyLink": "Copy link",
     "copied": "Page link copied.",

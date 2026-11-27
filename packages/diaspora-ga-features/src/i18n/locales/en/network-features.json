@@ -20,7 +20,7 @@
       "mentoring": "The network's mentors and mentoring requests.",
       "arrivalKit": "Practical guides for settling in a country.",
       "pilotMetrics": "The pilot metrics: aggregated counts, with no private content, read in the administration’s “Metrics” section. It changes nothing in the members’ menu.",
-      "consulateGateway": "Adds the “consulat.ga — Administrative procedures” entry to the members’ account menu. It takes them to their consulat.ga space in the same tab; DIASPORA.GA sends nothing to consulat.ga."
+      "consulateGateway": "Adds the “consulat.ga — Administrative procedures” entry to the members’ account menu. It takes them to their consulat.ga space in the same tab; DIASPORA sends nothing to consulat.ga."
     }
   }
 }

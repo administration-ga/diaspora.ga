@@ -61,7 +61,7 @@ afterEach(() => {
 })
 
 describe("lecteur des non-lus de Messages (UX-06)", () => {
-  it("lit les deux décomptes du serveur dans le réseau de DIASPORA.GA et les réunit", () => {
+  it("lit les deux décomptes du serveur dans le réseau de DIASPORA et les réunit", () => {
     mocks.directs = { total: 4, capped: false }
     mocks.groups = { total: 2, capped: false }
     const { onTotal } = renderReader()

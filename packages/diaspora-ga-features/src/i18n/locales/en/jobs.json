@@ -8,7 +8,7 @@
     },
     "unavailable": {
       "title": "Jobs are not available here",
-      "body": "This version of DIASPORA.GA does not serve job offers or talents yet: nothing is made up in their place."
+      "body": "This version of DIASPORA does not serve job offers or talents yet: nothing is made up in their place."
     },
     "workMode": {
       "onsite": "On site",
@@ -110,7 +110,7 @@
       "noDeadline": "No deadline",
       "published": "Published on",
       "description": "The offer",
-      "noContact": "No contact details: you apply on DIASPORA.GA and the page's team answers you here.",
+      "noContact": "No contact details: you apply on DIASPORA and the page's team answers you here.",
       "manageNote": "You manage this offer on behalf of the page.",
       "manage": "Manage the page's jobs",
       "applied": "You applied. Status: {{status}}.",
@@ -118,7 +118,7 @@
     },
     "fraud": {
       "title": "You never pay to apply",
-      "body": "A real offer never asks for money: no application fee, no paid training, no advance for a visa, a ticket or housing. Be wary of a visa promise and of anyone who urges you to continue outside DIASPORA.GA.",
+      "body": "A real offer never asks for money: no application fee, no paid training, no advance for a visa, a ticket or housing. Be wary of a visa promise and of anyone who urges you to continue outside DIASPORA.",
       "report": "Does an offer look fake? Report it with the reason “{{reason}}”: it disappears for you right away.",
       "reportHint": "Money asked for, a visa promise: choose the reason “{{reason}}”."
     },
@@ -132,7 +132,7 @@
       "profileHidden": "Your talent profile is hidden: reactivate it in Talents to attach it.",
       "noProfile": "You don't have a talent profile.",
       "createProfile": "Create one",
-      "reminder": "No contact details in the message: the team will answer you through DIASPORA.GA. You are never asked for your age, sex, origin, family situation or a photo.",
+      "reminder": "No contact details in the message: the team will answer you through DIASPORA. You are never asked for your age, sex, origin, family situation or a photo.",
       "consent": "I agree that the team of {{page}} sees my published name and this message.",
       "submit": "Send my application",
       "sending": "Sending…",
@@ -305,7 +305,7 @@
       "period": "Period",
       "deadline": "Application deadline (optional)",
       "deadlineHint": "Until the end of that day, time zone {{zone}}. Six months at most.",
-      "fairness": "Do not require age, sex, origin, family situation or a photo. No contact details: applications arrive on DIASPORA.GA.",
+      "fairness": "Do not require age, sex, origin, family situation or a photo. No contact details: applications arrive on DIASPORA.",
       "noFees": "Never ask candidates for money: no application fee, no paid training, no advance for a visa or travel. An offer that does can be reported by members and removed by moderation.",
       "saveDraft": "Save draft",
       "publish": "Publish",
@@ -345,7 +345,7 @@
     "job_title_too_long": "The title has at most 120 characters.",
     "job_description_too_short": "The description has at least 30 characters.",
     "job_description_too_long": "The description has at most 4,000 characters.",
-    "job_contact_details_forbidden": "Remove phone numbers, email addresses, links and exact addresses: contact goes through DIASPORA.GA.",
+    "job_contact_details_forbidden": "Remove phone numbers, email addresses, links and exact addresses: contact goes through DIASPORA.",
     "job_contract_invalid": "Choose a contract from the list.",
     "job_country_required": "Choose a country.",
     "job_country_unknown": "This country is unknown.",
