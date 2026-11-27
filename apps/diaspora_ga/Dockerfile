@@ -63,6 +63,7 @@ WORKDIR /app
 
 COPY --from=builder --chown=node:node /src/DIASPORA_GA/apps/diaspora_ga/.next/standalone ./
 COPY --from=builder --chown=node:node /src/DIASPORA_GA/apps/diaspora_ga/.next/static ./DIASPORA_GA/apps/diaspora_ga/.next/static
+COPY --from=builder --chown=node:node /src/DIASPORA_GA/apps/diaspora_ga/public/identite ./DIASPORA_GA/apps/diaspora_ga/public/identite
 
 USER node
 EXPOSE 8080
