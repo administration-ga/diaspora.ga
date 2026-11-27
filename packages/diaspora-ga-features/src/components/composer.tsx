@@ -8,6 +8,7 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { BrandLogo } from "../brand/logo"
 import { useActions } from "../data/context"
 import type { ActionErrorCode } from "../data/errors"
 import {
@@ -581,6 +582,7 @@ export function PostComposerSheet(props: {
   return (
     <Sheet open={props.open} onOpenChange={changeOpen}>
       <SheetContent
+        leading={<BrandLogo variant="symbol" decorative className="w-8" />}
         title={page ? (fixedScope?.title ?? t("pagePublications.composeTitle")) : share ? t("composer.shareTitle") : t("composer.title")}
         description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
         hideDescription={!fixedScope}

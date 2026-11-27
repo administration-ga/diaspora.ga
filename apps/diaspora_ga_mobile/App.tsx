@@ -6,6 +6,7 @@ import { destination, feed, incoming, missingConsulateEntry } from "./navigation
 
 function Browser() {
   const dark = useColorScheme() === "dark"
+  const signature = dark ? require("./assets/diaspora-horizontal-inverse.png") : require("./assets/diaspora-horizontal.png")
   const colors = dark ? { backgroundColor: "#171411", color: "#eeeae3" } : { backgroundColor: "#faf8f4", color: "#262320" }
   const [consulate, setConsulate] = useState(false)
   const web = useRef<WebView>(null)
@@ -39,7 +40,7 @@ function Browser() {
   function loading() {
     return (
       <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
-        <Image source={dark ? require("./assets/diaspora-horizontal-inverse.png") : require("./assets/diaspora-horizontal.png")}
+        <Image source={signature}
           resizeMode="contain" style={styles.signature} accessible accessibilityLabel="DIASPORA" />
         <ActivityIndicator accessibilityLabel="Ouverture de DIASPORA" />
       </View>
@@ -84,14 +85,17 @@ function Browser() {
       renderError={() => <View />}
     />}
     {consulate && <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.backgroundColor }]}>
-      <Button title="Revenir à DIASPORA" onPress={() => setConsulate(false)} />
+      <View style={styles.returnBar}>
+        <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.returnMark} accessible={false} />
+        <Button title="Revenir à DIASPORA" onPress={() => setConsulate(false)} />
+      </View>
       <WebView source={{ uri: "https://consulat.ga/my-space" }} style={styles.fill}
         originWhitelist={["https://*"]} allowFileAccess={false} mixedContentMode="never"
         allowsBackForwardNavigationGestures />
     </View>}
     {!source && !error && loading()}
     {error && <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
-      <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.brand} accessible={false} />
+      <Image source={signature} resizeMode="contain" style={styles.signature} accessible={false} />
       <Text accessibilityRole="header" style={[styles.title, { color: colors.color }]}>DIASPORA est indisponible</Text>
       <Text style={{ color: colors.color }}>Vérifiez votre connexion puis réessayez.</Text>
       <Button title="Réessayer" onPress={() => { setError(false); web.current?.reload() }} />
@@ -103,6 +107,7 @@ export default function App() { return <SafeAreaProvider><Browser /></SafeAreaPr
 const styles = StyleSheet.create({
   fill: { flex: 1 }, overlay: { ...StyleSheet.absoluteFill, padding: 24, gap: 16, alignItems: "center", justifyContent: "center" },
   signature: { width: "100%", maxWidth: 320, aspectRatio: 1430 / 211, height: undefined },
-  brand: { width: 144, height: 96 },
+  returnBar: { minHeight: 44, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  returnMark: { width: 30, height: 24 },
   title: { fontSize: 22, fontWeight: "600" },
 })

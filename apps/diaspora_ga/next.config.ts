@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+
 import { createEngineNextConfig } from "@antsia/api/next-config"
 import type { NextConfig } from "next"
 import { PHASE_PRODUCTION_BUILD } from "next/constants"
@@ -26,6 +29,7 @@ const config: NextConfig = {
     // hors-ligne, LUES dans les jetons de la charte ici, une fois, puis inscrites dans le code
     // construit. Aucun fichier de charte n'est relu au service ; un jeton illisible fait échouer
     // la construction plutôt que d'inventer une couleur.
+    DIASPORA_GA_OFFLINE_ICON: readFileSync(join(process.cwd(), "public/identite/pwa-192.png")).toString("base64"),
     DIASPORA_GA_CHARTE_PALETTE: serializeInstallPalette(readInstallPalette(process.cwd())),
   },
   async rewrites() {

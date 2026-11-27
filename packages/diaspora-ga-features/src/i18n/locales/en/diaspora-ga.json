@@ -848,6 +848,8 @@
       "app": "DIASPORA · horizontal app logo",
       "stacked": "DIASPORA · stacked logo",
       "wordmark": "Wordmark",
+      "profile": "Official profile picture",
+      "downloadProfile": "Download the profile picture (PNG)",
       "spacing": "Leave at least one capital letter’s height around the logo. On dark backgrounds the lettering becomes light and the swallow keeps its colours."
     },
     "section": {

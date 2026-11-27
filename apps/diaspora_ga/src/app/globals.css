@@ -16,3 +16,13 @@
 @source "../../../../packages/diaspora-ga-features/src";
 @source "../../../../../ANTSIA/packages/ui/src";
 @source "../../../../../ANTSIA/packages/social-features/src";
+
+.esk-dialog:has([data-direct-setup]) .esk-dialog-title::before {
+  content: "";
+  display: inline-block;
+  width: 2rem;
+  height: 1.5rem;
+  margin-inline-end: 0.5rem;
+  vertical-align: middle;
+  background: url("../../../../packages/diaspora-ga-features/src/brand/hirondelle.svg") center / contain no-repeat;
+}

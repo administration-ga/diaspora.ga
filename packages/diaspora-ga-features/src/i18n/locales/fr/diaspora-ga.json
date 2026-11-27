@@ -848,6 +848,8 @@
       "app": "DIASPORA · signature horizontale de l’application",
       "stacked": "DIASPORA · signature verticale",
       "wordmark": "Signature typographique",
+      "profile": "Photo de profil officielle",
+      "downloadProfile": "Télécharger la photo de profil (PNG)",
       "spacing": "Autour du logo, laisser au minimum la hauteur d’une lettre. Sur fond sombre, le lettrage devient clair et l’hirondelle conserve ses couleurs."
     },
     "section": {

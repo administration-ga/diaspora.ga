@@ -1,4 +1,5 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 import { getFixedT, type Locale } from "@diaspora-ga/features/i18n"
@@ -51,8 +52,11 @@ describe("page hors-ligne", () => {
   })
 
   it("se suffit à elle-même : aucun script, aucune feuille, police ou image à charger", () => {
+    const icon = readFileSync(new URL("../../../public/identite/pwa-192.png", import.meta.url)).toString("base64")
+    vi.stubEnv("DIASPORA_GA_OFFLINE_ICON", icon)
     const html = offlinePageHtml({ locale: "en", palette })
-    expect(html).not.toMatch(/<script|<link|<img|src=|url\(|https?:/i)
+    expect(html).toContain(`src="data:image/png;base64,${icon}"`)
+    expect(html).not.toMatch(/<script|<link|src="(?!data:image\/png;base64,)|url\(|https?:/i)
   })
 
   it("sans palette, prend les couleurs du système plutôt que d'en inventer", () => {

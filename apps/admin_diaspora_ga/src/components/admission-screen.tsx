@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@diaspora-ga/features"
-import { ShieldCheck } from "lucide-react"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import NextLink from "next/link"
 import { useTranslation } from "react-i18next"
 
@@ -40,7 +40,7 @@ export function AdmissionScreen(props: { kind: AdmissionKind; connected?: boolea
     <main id={anchors.contentId} className="mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center gap-6 px-4 py-10">
       <header className="space-y-3">
         <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-          <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
+          <BrandLogo variant="symbol" decorative className="w-8" />
           {t("brand.eyebrow")}
         </p>
         <h1 className="font-display text-3xl font-bold">{refused ? t("access.refusedTitle") : t("brand.title")}</h1>
