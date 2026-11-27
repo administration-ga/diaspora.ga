@@ -8,6 +8,6 @@
       "@convex/*": ["../../../ANTSIA/convex/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
+  "include": ["../../packages/diaspora-ga-features/src/brand/assets.d.ts", "next-env.d.ts", "**/*.ts", "**/*.tsx", "**/*.mts", ".next/types/**/*.ts", ".next/dev/types/**/*.ts"],
   "exclude": ["node_modules", ".next"]
 }
