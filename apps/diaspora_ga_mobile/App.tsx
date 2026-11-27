@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react"
-import { ActivityIndicator, BackHandler, Button, Image, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
+import { ActivityIndicator, Alert, BackHandler, Button, Image, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { WebView } from "react-native-webview"
-import { destination, feed, incoming } from "./navigation"
+import { destination, feed, incoming, missingConsulateEntry } from "./navigation"
 
 function Browser() {
   const dark = useColorScheme() === "dark"
@@ -52,7 +52,7 @@ function Browser() {
       void Linking.openURL("consulatga:///").catch(() => setConsulate(true))
       return
     }
-    void Linking.openURL(url).catch(() => setError(true))
+    void Linking.openURL(url).catch(() => Alert.alert("Ouverture impossible", "Aucune application disponible pour ouvrir ce lien."))
   }
   return <SafeAreaView style={[styles.fill, { backgroundColor: colors.backgroundColor }]}>
     <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
@@ -76,7 +76,11 @@ function Browser() {
       onContentProcessDidTerminate={() => web.current?.reload()}
       onRenderProcessGone={() => setError(true)}
       onError={() => setError(true)}
-      onHttpError={e => { if (e.nativeEvent.statusCode >= 500) setError(true) }}
+      onHttpError={({ nativeEvent }) => {
+        const fallback = missingConsulateEntry(nativeEvent.statusCode, nativeEvent.url, source.uri)
+        if (fallback) setSource({ uri: fallback })
+        else if (nativeEvent.statusCode >= 500) setError(true)
+      }}
       renderError={() => <View />}
     />}
     {consulate && <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.backgroundColor }]}>

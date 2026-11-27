@@ -91,7 +91,7 @@ describe("carte d'arrivée — venue de consulat.ga", () => {
     expect(back).toHaveAttribute("href", consulateGatewayLinks(ORIGIN)!.mySpace)
     expect(back).toHaveAttribute("rel", "noopener noreferrer")
     expect(back).toHaveAttribute("referrerpolicy", "no-referrer")
-    expect(back).not.toHaveAttribute("target")
+    expect(back).toHaveAttribute("target", "_blank")
     expect(window.sessionStorage.getItem(ARRIVAL_KEY)).toBeNull()
   })
 

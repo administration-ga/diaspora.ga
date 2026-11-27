@@ -612,6 +612,9 @@ describe("Composeur — portée fixe de galerie, sans changer les pages ordinair
   it("une page sans portée fixe garde son choix abonnés et sa publication de texte seul", async () => {
     const user = userEvent.setup()
     render(<PageComposer fixed={false} />)
+    const summary = screen.getByText(/Visibilité · France/).closest("summary")!
+    expect(summary.parentElement).not.toHaveAttribute("open")
+    await user.click(summary)
     expect(screen.getByRole("radiogroup", { name: t("composer.reachLegend") })).toBeVisible()
     expect(screen.getByRole("radiogroup", { name: t("composer.audienceLegend") })).toBeVisible()
     await user.click(screen.getByRole("radio", { name: t("pagePublications.followersAudience") }))

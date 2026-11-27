@@ -4,14 +4,14 @@
     "entry": {
       "label": "consulat.ga",
       "attestedLabel": "My consulat.ga space",
-      "hint": "Another application, in this tab"
+      "hint": "Open the consular service"
     },
     "rail": "My procedures on consulat.ga",
     "sheet": {
       "title": "Your procedures on consulat.ga",
       "separate": "consulat.ga is another application, with its own sign-in: DIASPORA sends it nothing.",
       "close": "Close",
-      "sameTab": "These links open consulat.ga in this tab.",
+      "sameTab": "These links open your consular space on consulat.ga.",
       "idnLead": "Your account is linked to your digital identity: you can also use it to sign in to consulat.ga.",
       "openMySpace": "Open my consulat.ga space",
       "register": "Register with the consulate",
@@ -43,6 +43,7 @@
       "retryInfo": "Return to your consular account to try again with your current session.",
       "retry": "Try again",
       "home": "DIASPORA home",
+      "existingAccount": "Already registered with the consulate? Use your consular account to join DIASPORA.",
       "continueConsulate": "Continue with CONSULAT.GA",
       "downloadIntro": "Join your community in the app or continue in your browser with your consular session.",
       "ios": "Download on the App Store",

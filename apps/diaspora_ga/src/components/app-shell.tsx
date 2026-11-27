@@ -1121,7 +1121,7 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
  * et l'entrée Live du composeur font la même demande.
  */
 function launchConference(): void {
-  requestConferenceLaunch({ userIds: [] })
+  requestConferenceLaunch({ userIds: [], quickSetup: true })
 }
 
 const CREATE_MENU_ITEM_CLASS = "flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"

@@ -97,10 +97,16 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           {t("landing.signInTitle")}
         </h2>
       )}
-      {!props.signUp && source.kind === "engine" && configuredConsulateGateway() ? (
-        <Button asChild variant="outline" size="lg" className="mb-3 w-full">
-          <NextLink href={routes.enterFromConsulate()}>{t("consulateGateway.passage.continueConsulate")}</NextLink>
-        </Button>
+      {source.kind === "engine" && configuredConsulateGateway() ? (
+        <div className="mb-4">
+          <Button asChild size="lg" className="w-full">
+            <NextLink href={routes.enterFromConsulate()}>
+              <ArrivalIcon aria-hidden />
+              {t("consulateGateway.passage.continueConsulate")}
+            </NextLink>
+          </Button>
+          <p className="mt-1.5 text-sm text-muted-foreground">{t("consulateGateway.passage.existingAccount")}</p>
+        </div>
       ) : null}
       {props.signOutIncomplete ? (
         <p role="alert" className="mb-4 rounded-lg bg-muted p-4 text-sm">

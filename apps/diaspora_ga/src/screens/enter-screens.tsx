@@ -462,6 +462,8 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean; publicEnt
                 type={kind === "email" ? "email" : "tel"}
                 inputMode={kind === "email" ? "email" : "tel"}
                 autoComplete={kind === "email" ? "email" : "tel"}
+                enterKeyHint="go"
+                placeholder={kind === "phone" ? "+241 … / +33 …" : undefined}
                 spellCheck={false}
                 readOnly={sending}
                 disabled={codeClosed}
@@ -503,6 +505,7 @@ export function CodeForm(props: { compact?: boolean; signUp?: boolean; publicEnt
                 aria-invalid={control.invalid || undefined}
                 inputMode="numeric"
                 autoComplete="one-time-code"
+                enterKeyHint="done"
                 spellCheck={false}
                 readOnly={verifying}
                 maxLength={7}

@@ -1287,7 +1287,7 @@ describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur 
     expect(items[0]).toHaveTextContent("Un live")
     expect(items[0]).toHaveTextContent("Passer en direct devant vos relations, tout le réseau ou vos invités, quand vous êtes prêt.")
     await user.click(items[0]!)
-    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
     expect(screen.queryByRole("menu")).toBeNull()
   })
 
@@ -1298,7 +1298,7 @@ describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur 
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
     await user.click(within(within(sheet).getByRole("navigation", { name: "Créer" })).getByRole("button", { name: "Un live" }))
-    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
   })
 
@@ -1334,7 +1334,7 @@ describe("coque — le live offert aux écrans et au composeur (26/11/2026), par
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Live" }))
-    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [] })
+    expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
     const onGoLive = lastComposerProps()?.onGoLive
     expect(onGoLive).toBeTypeOf("function")
     onGoLive?.()
