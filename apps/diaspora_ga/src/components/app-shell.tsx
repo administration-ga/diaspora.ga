@@ -559,7 +559,7 @@ export function AppShell(props: AppShellProps) {
                   <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : wide ? "xl:col-span-2" : "max-w-[792px]")}>
                     {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
                     {consulate && pathname === routes.feed() && (
-                      <a href={consulate.links.mySpace} target="_blank" {...CONSULATE_LINK_ATTRIBUTES}
+                      <a href={consulate.links.mySpace} {...CONSULATE_LINK_ATTRIBUTES}
                         className="inline-flex min-h-11 items-center gap-2 self-end rounded-full bg-muted px-4 text-sm font-semibold text-foreground hover:underline focus-visible:outline-2">
                         <consulate.icon aria-hidden="true" size={16} /> <span className="uppercase">{t("consulateGateway.entry.label")}</span> <ArrowUpRightIcon aria-hidden="true" size={15} />
                       </a>

@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "DIASPORA",
+    "scheme": "diasporaga",
     "slug": "diaspora-ga-mobile",
     "version": "1.0.0",
     "icon": "./assets/icon.png",

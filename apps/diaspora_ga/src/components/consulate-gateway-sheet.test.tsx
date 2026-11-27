@@ -44,7 +44,7 @@ function expectOutbound(link: HTMLElement, href: string) {
   expect(link).toHaveAttribute("href", href)
   expect(link).toHaveAttribute("rel", "noopener noreferrer")
   expect(link).toHaveAttribute("referrerpolicy", "no-referrer")
-  expect(link).not.toHaveAttribute("target")
+  expect(link).toHaveAttribute("target", "_blank")
 }
 
 describe("feuille consulat.ga — ce qu'elle dit toujours", () => {

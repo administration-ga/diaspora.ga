@@ -7,6 +7,7 @@ import { destination, feed, incoming } from "./navigation"
 function Browser() {
   const dark = useColorScheme() === "dark"
   const colors = dark ? { backgroundColor: "#171411", color: "#eeeae3" } : { backgroundColor: "#faf8f4", color: "#262320" }
+  const [consulate, setConsulate] = useState(false)
   const web = useRef<WebView>(null)
   const canGoBack = useRef(false)
   const [source, setSource] = useState<{ uri: string } | null>(null)
@@ -16,6 +17,7 @@ function Browser() {
     let live = true
     let received = false
     const go = (url: string) => {
+      setConsulate(false)
       setError(false)
       setSource({ uri: url })
     }
@@ -45,6 +47,11 @@ function Browser() {
   }
 
   function openExternal(url: string) {
+    const target = new URL(url)
+    if (target.origin === "https://consulat.ga" && target.pathname.replace(/\/$/, "") === "/my-space") {
+      void Linking.openURL("consulatga:///").catch(() => setConsulate(true))
+      return
+    }
     void Linking.openURL(url).catch(() => setError(true))
   }
   return <SafeAreaView style={[styles.fill, { backgroundColor: colors.backgroundColor }]}>
@@ -72,6 +79,12 @@ function Browser() {
       onHttpError={e => { if (e.nativeEvent.statusCode >= 500) setError(true) }}
       renderError={() => <View />}
     />}
+    {consulate && <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.backgroundColor }]}>
+      <Button title="Revenir à DIASPORA" onPress={() => setConsulate(false)} />
+      <WebView source={{ uri: "https://consulat.ga/my-space" }} style={styles.fill}
+        originWhitelist={["https://*"]} allowFileAccess={false} mixedContentMode="never"
+        allowsBackForwardNavigationGestures />
+    </View>}
     {!source && !error && loading()}
     {error && <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
       <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.brand} accessible={false} />

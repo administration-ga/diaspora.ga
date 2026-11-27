@@ -38,7 +38,13 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
     if (started.current) return
     const query = new URLSearchParams(location.search)
     const afterIdn = query.get("apres") === "idn"
-    if (!returning && !legacy && afterIdn && session.status === "loading") return
+    const resume = !returning && !afterIdn && !query.has("echec") && query.get("ouvrir") === "1"
+    if ((resume || (!returning && !legacy && afterIdn)) && session.status === "loading") return
+    if (resume && session.status === "ready" && session.data.status === "signed_in") {
+      started.current = true
+      location.replace(routes.feed())
+      return
+    }
     started.current = true
     async function proceed() {
       if (query.has("echec")) throw new Error("IDN")

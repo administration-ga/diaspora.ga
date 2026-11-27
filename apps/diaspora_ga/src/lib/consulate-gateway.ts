@@ -47,7 +47,7 @@ export function configuredConsulateGateway(): ConsulateGatewayLinks | null {
  * Les attributs de tout lien vers consulat.ga : le même onglet (aucune cible), aucun ouvreur,
  * aucun référent transmis.
  */
-export const CONSULATE_LINK_ATTRIBUTES = { rel: "noopener noreferrer", referrerPolicy: "no-referrer" } as const
+export const CONSULATE_LINK_ATTRIBUTES = { target: "_blank", rel: "noopener noreferrer", referrerPolicy: "no-referrer" } as const
 
 /**
  * Ce que la feuille dit, selon la personne (vues du port de données, aucun champ ajouté) :

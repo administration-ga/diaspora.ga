@@ -2,6 +2,7 @@ export const ORIGIN = "https://diaspora.ga"
 export const feed = ORIGIN + "/fil"
 
 export function incoming(link: string | null): string | null {
+  if (link === "diasporaga:///ouvrir") return ORIGIN + "/passerelle/consulat?mode=app&ouvrir=1"
   if (!link) return null
   try {
     const url = new URL(link)

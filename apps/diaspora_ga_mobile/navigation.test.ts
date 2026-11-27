@@ -11,3 +11,7 @@ test("les destinations externes sont confiées au système", () => {
   expect(destination("https://diaspora.ga/fil")).toBe("inside")
   expect(destination("file:///tmp")).toBe("blocked")
 })
+test("le bouton consulaire reprend la session sans accepter de paramètres sur le lien privé", () => {
+  expect(incoming("diasporaga:///ouvrir")).toBe("https://diaspora.ga/passerelle/consulat?mode=app&ouvrir=1")
+  expect(incoming("diasporaga:///ouvrir?redirect=https://example.org")).toBeNull()
+})
