@@ -1,9 +1,9 @@
 /*
-!/apps/
+!/apps
 /apps/*
-!/apps/diaspora_ga_mobile/
-**/node_modules/
-**/.expo/
+!/apps/diaspora_ga_mobile
+node_modules
+.expo
 **/.env*
 **/ios/
 **/android/
