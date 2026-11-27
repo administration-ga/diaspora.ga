@@ -296,7 +296,7 @@ describe("Amorçage d'un compte de démonstration", () => {
     expect(mocks.join).toHaveBeenCalledOnce()
   })
 
-  it("l'extérieur au réseau : l'accueil d'ANTSIA seulement, jamais join, puis l'accueil de DIASPORA.GA", async () => {
+  it("l'extérieur au réseau : l'accueil d'ANTSIA seulement, jamais join, puis l'accueil de DIASPORA", async () => {
     window.sessionStorage.setItem(DEMO_ACCOUNT_KEY, "exterieur")
     mocks.demoAccounts = demoAccounts(equipment({ status: null, role: null, pageId: null, pageCreated: false }))
     mount()

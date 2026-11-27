@@ -104,7 +104,7 @@
       "open": "Propose a resource",
       "title": "Propose a resource",
       "description": "Another authorised person will review it before it appears in the kit.",
-      "statusInsufficient": "To propose a resource, your DIASPORA.GA membership must first be declared.",
+      "statusInsufficient": "To propose a resource, your DIASPORA membership must first be declared.",
       "carrier": "Propose on behalf of",
       "carrierSelf": "Myself (community resource)",
       "carrierHint": "A resource is only shown as official when it is carried by a page with the Official badge."
@@ -159,7 +159,7 @@
       "people": "Who carries it and who reviewed it",
       "author": "Proposed by",
       "reviewer": "Reviewed by",
-      "neutralPerson": "DIASPORA.GA member",
+      "neutralPerson": "DIASPORA member",
       "officialNote": "Resource carried by a page with the Official badge.",
       "communityNote": "Community resource reviewed by someone else: it does not replace official information."
     },

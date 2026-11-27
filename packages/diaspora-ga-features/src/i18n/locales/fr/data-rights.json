@@ -1,7 +1,7 @@
 {
   "settings": {
     "dataRights": {
-      "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts sans adhésion à DIASPORA.GA, après un départ ou si votre adhésion est suspendue.",
+      "lead": "Exportez les données de votre compte ANTSIA, commun à tous ses réseaux, demandez son effacement et consultez les décisions de modération qui vous concernent. Ces gestes restent ouverts sans adhésion à DIASPORA, après un départ ou si votre adhésion est suspendue.",
       "tabs": {
         "label": "Rubriques de mes données",
         "data": "Export et effacement",
@@ -20,12 +20,12 @@
       },
       "erasure": {
         "title": "Effacement du compte",
-        "lead": "L'effacement porte sur tout votre compte ANTSIA et sur tous ses réseaux, DIASPORA.GA compris.",
+        "lead": "L'effacement porte sur tout votre compte ANTSIA et sur tous ses réseaux, DIASPORA compris.",
         "loadError": "L'état de votre demande d'effacement n'a pas pu être lu.",
-        "scope": "La demande vise tout votre compte ANTSIA, dans tous ses réseaux, et pas seulement DIASPORA.GA.",
+        "scope": "La demande vise tout votre compte ANTSIA, dans tous ses réseaux, et pas seulement DIASPORA.",
         "grace": "Rien n'est effacé tout de suite : l'effacement commencera dans {{days}} jours, le {{date}}. D'ici là, vous pourrez annuler votre demande depuis cette page.",
         "final": "À l'échéance, toutes vos sessions seront fermées ; l'effacement ne pourra plus être annulé et rien ne pourra être restauré.",
-        "leaveInstead": "Pour seulement quitter DIASPORA.GA en gardant votre compte, choisissez plutôt « Quitter DIASPORA.GA ».",
+        "leaveInstead": "Pour seulement quitter DIASPORA en gardant votre compte, choisissez plutôt « Quitter DIASPORA ».",
         "exportFirst": "Pour garder une copie de vos données, téléchargez-les avant de confirmer.",
         "confirm": "Demander l'effacement",
         "requested": "Demande enregistrée : l'effacement commencera le {{date}}.",

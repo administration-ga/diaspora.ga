@@ -18,6 +18,10 @@ export interface NetworkAdminView {
   readonly accessLogged: boolean
 }
 
+export function networkDisplayName(name: string) {
+  return name.toUpperCase() === "DIASPORA.GA" ? "DIASPORA" : name
+}
+
 const NetworkAdminContext = createContext<NetworkAdminView | null>(null)
 
 /** Posé par la garde, après les deux réponses du serveur ; les sections le lisent. */

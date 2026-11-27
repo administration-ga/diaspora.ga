@@ -150,7 +150,7 @@ describe("Mes données — section et accès", () => {
     expect(screen.queryByRole("heading", { level: 2, name: raw("settings.data") })).toBeNull()
   })
 
-  it("sans adhésion à quitter, l'effacement ne propose pas « Quitter DIASPORA.GA », ni sur la page ni dans la confirmation", () => {
+  it("sans adhésion à quitter, l'effacement ne propose pas « Quitter DIASPORA », ni sur la page ni dans la confirmation", () => {
     mocks.rights = fakeRights().rights
     render(tree({ personId: "person_lecture", handle: null, canLeave: false }))
     expect(within(section()).queryByText(t("settings.dataRights.erasure.leaveInstead"))).toBeNull()

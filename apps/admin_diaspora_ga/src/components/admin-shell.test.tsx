@@ -85,16 +85,16 @@ describe("coque d'admin.diaspora.ga", () => {
   it("en-tête : réseau, administrateur, sortie partout ; le lien des membres seulement s'il est configuré", () => {
     mount()
     const header = screen.getByRole("banner")
-    expect(within(header).getByText("DIASPORA.GA")).toBeDefined()
+    expect(within(header).getByText("DIASPORA")).toBeDefined()
     expect(within(header).getByText("Connecté en tant que Awa NDONG")).toBeDefined()
     expect(within(header).getByRole("button", { name: "Se déconnecter partout" })).toBeDefined()
     expect(within(header).queryByRole("link", { name: /Ouvrir diaspora\.ga/ })).toBeNull()
   })
 
-  it("« Ouvrir diaspora.ga » mène à l'origine de l'environnement, dans un nouvel onglet", () => {
+  it("« Ouvrir DIASPORA » mène à l'origine de l'environnement, dans un nouvel onglet", () => {
     mocks.membersSiteUrl = "https://membres.exemple"
     mount()
-    const link = within(screen.getByRole("banner")).getByRole("link", { name: "Ouvrir diaspora.ga (nouvel onglet)" })
+    const link = within(screen.getByRole("banner")).getByRole("link", { name: "Ouvrir DIASPORA (nouvel onglet)" })
     expect(link.getAttribute("href")).toBe("https://membres.exemple")
     expect(link.getAttribute("target")).toBe("_blank")
     expect(link.getAttribute("rel")).toBe("noopener noreferrer")
@@ -113,7 +113,7 @@ describe("coque d'admin.diaspora.ga", () => {
     const sheet = await screen.findByRole("dialog", { name: "Menu de l’administration" })
     const nav = within(sheet).getByRole("navigation", { name: "Sections de l’administration" })
     expect(within(nav).getAllByRole("link").map((link) => link.textContent)).toEqual(["Tableau de bord", "Mesure", "Journal", "Modules", "Aperçu du menu", "Institutions et pages officielles", "Fondateurs", "Pays ouverts", "Recours", "Équipe et responsables", "Règles"])
-    expect(within(sheet).getByRole("link", { name: "Ouvrir diaspora.ga (nouvel onglet)" })).toBeDefined()
+    expect(within(sheet).getByRole("link", { name: "Ouvrir DIASPORA (nouvel onglet)" })).toBeDefined()
     expect(within(sheet).getByRole("button", { name: "Se déconnecter partout" })).toBeDefined()
     await userEvent.click(within(nav).getByRole("link", { name: "Tableau de bord" }))
     expect(screen.queryByRole("dialog")).toBeNull()

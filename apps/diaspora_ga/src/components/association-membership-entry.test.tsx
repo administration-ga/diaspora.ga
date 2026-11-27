@@ -114,7 +114,7 @@ describe("« Devenir adhérent » sur la fiche d'une association", () => {
     expect(screen.queryByRole("link", { name: "Gérer les adhérents" })).not.toBeInTheDocument()
     cleanup()
     mount("p-prisca", { page: { pageId: "page-asso-bordeaux", handle: "etudiants-bordeaux-demo", ownerKind: "association" } })
-    expect(screen.getByText(/n'a pas encore d'équipe sur DIASPORA\.GA/)).toBeInTheDocument()
+    expect(screen.getByText(/n'a pas encore d'équipe sur DIASPORA/)).toBeInTheDocument()
     expect(screen.queryByRole("button", { name: "Devenir adhérent" })).not.toBeInTheDocument()
   })
 

@@ -215,7 +215,7 @@ export function SignInScreen() {
       <main id={anchors.contentId} className="flex flex-1 items-center">
         <div className="mx-auto grid w-full max-w-[1060px] items-center gap-6 px-5 pb-10 pt-2 min-[960px]:grid-cols-[minmax(0,1fr)_420px] min-[960px]:gap-16 min-[960px]:pb-20 min-[960px]:pt-12">
           <section aria-labelledby={showcaseTitleId} className="mx-auto w-full max-w-[480px] text-center min-[960px]:-mt-12 min-[960px]:text-left">
-            <BrandLogo variant="stacked" className="text-foreground [&>img]:w-24 min-[960px]:[&>img]:w-36 [&>span>span:first-child]:w-44 min-[960px]:[&>span>span:first-child]:w-64" />
+            <BrandLogo variant="stacked" className="w-32 min-[960px]:w-48" />
             <p className="mt-4 inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1 text-sm font-semibold text-muted-foreground min-[960px]:mt-6">
               <ShieldCheck aria-hidden="true" className="size-4 shrink-0" />
               {t("brand.eyebrow")}

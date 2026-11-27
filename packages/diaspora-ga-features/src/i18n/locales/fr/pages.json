@@ -18,7 +18,7 @@
     },
     "directory": {
       "title": "Les pages du réseau",
-      "lead": "Associations, entreprises, médias et institutions présents dans DIASPORA.GA.",
+      "lead": "Associations, entreprises, médias et institutions présents dans DIASPORA.",
       "searchLabel": "Chercher une page",
       "searchPlaceholder": "Nom, sigle ou adresse d'une page",
       "searchHint": "La recherche commence à {{min}} caractères ; sans recherche, les pages officielles et vérifiées viennent d'abord.",

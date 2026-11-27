@@ -7,7 +7,7 @@
     "pending": "Awaiting moderation. This content has not been published yet.",
     "removed": "This content was removed by moderation.",
     "group": {
-      "metaTitle": "Association group — DIASPORA.GA",
+      "metaTitle": "Association group — DIASPORA",
       "title": "The association’s private group",
       "lead": "Joining the association and entering its group are separate choices. Discussions remain restricted to authorized group members.",
       "open": "Open the group",
@@ -59,7 +59,7 @@
       "someone": "a member"
     },
     "event": {
-      "metaTitle": "Association event — DIASPORA.GA",
+      "metaTitle": "Association event — DIASPORA",
       "sectionTitle": "Association events",
       "lead": "The association organizes; each member chooses to register. Event registration is separate from association and group membership.",
       "empty": "No accessible events yet.",
@@ -84,9 +84,9 @@
       "registrationClosureRule": "After closing, no new requests or places are assigned from the waiting list. You can still withdraw your registration or request.",
       "registrationClosed": "Registration and places assigned from the waiting list are closed.",
       "audience": "Who can view this event?",
-      "audienceHint": "This choice stays within DIASPORA.GA. It does not publish on ANTSIA.",
+      "audienceHint": "This choice stays within DIASPORA. It does not publish on ANTSIA.",
       "membersOnly": "Association members",
-      "network": "All DIASPORA.GA members",
+      "network": "All DIASPORA members",
       "capacityField": "Number of places (optional)",
       "capacityHint": "Leave blank for unlimited places, or enter a whole number from 1 to {{max}}.",
       "capacityChangeHint": "Increasing capacity or removing the limit allows people on the waiting list to be confirmed automatically, in order. Reducing capacity never removes a confirmed place.",

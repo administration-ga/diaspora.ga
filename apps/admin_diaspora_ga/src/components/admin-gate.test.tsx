@@ -15,7 +15,7 @@ import { REQUESTED_SECTION_KEY } from "@/lib/requested-section"
  * les deux réponses du serveur (administration prouvée, puis accès journalisé) ; un refus
  * est indistinct ; l'accès n'est inscrit qu'une fois.
  */
-const NETWORK = { _id: "network-diaspora", slug: "diaspora-ga", name: "DIASPORA.GA" }
+const NETWORK = { _id: "network-diaspora", slug: "diaspora-ga", name: "DIASPORA" }
 const ADMIN = { personId: "person-one", displayName: "Awa NDONG", networkId: "network-diaspora", networkSlug: "diaspora-ga", networkName: "DIASPORA.GA" }
 
 const mocks = vi.hoisted(() => ({
@@ -199,7 +199,7 @@ describe("garde d'admin.diaspora.ga — rien ne se monte avant les deux réponse
     mocks.admin = { ...ADMIN, accessLogged: true }
     mount()
     expect(screen.getByText("section-montee")).toBeDefined()
-    expect(screen.getAllByText("DIASPORA.GA").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("DIASPORA").length).toBeGreaterThan(0)
     expect(mocks.record).not.toHaveBeenCalled()
   })
 

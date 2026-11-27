@@ -104,7 +104,7 @@
       "open": "Proposer une ressource",
       "title": "Proposer une ressource",
       "description": "Une autre personne habilitée la relira avant qu'elle n'apparaisse dans le kit.",
-      "statusInsufficient": "Pour proposer une ressource, votre adhésion à DIASPORA.GA doit d'abord être déclarée.",
+      "statusInsufficient": "Pour proposer une ressource, votre adhésion à DIASPORA doit d'abord être déclarée.",
       "carrier": "Proposer au nom de",
       "carrierSelf": "Moi-même (ressource communautaire)",
       "carrierHint": "Une ressource ne se dit officielle que portée par une page au badge Officiel."
@@ -159,7 +159,7 @@
       "people": "Qui la porte et qui l'a relue",
       "author": "Proposée par",
       "reviewer": "Relue par",
-      "neutralPerson": "Membre de DIASPORA.GA",
+      "neutralPerson": "Membre de DIASPORA",
       "officialNote": "Ressource portée par une page au badge Officiel.",
       "communityNote": "Ressource communautaire relue par une autre personne : elle ne remplace pas l'information officielle."
     },

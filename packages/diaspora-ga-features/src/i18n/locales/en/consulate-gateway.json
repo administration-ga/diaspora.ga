@@ -9,7 +9,7 @@
     "rail": "My procedures on consulat.ga",
     "sheet": {
       "title": "Your procedures on consulat.ga",
-      "separate": "consulat.ga is another application, with its own sign-in: DIASPORA.GA sends it nothing.",
+      "separate": "consulat.ga is another application, with its own sign-in: DIASPORA sends it nothing.",
       "close": "Close",
       "sameTab": "These links open consulat.ga in this tab.",
       "idnLead": "Your account is linked to your digital identity: you can also use it to sign in to consulat.ga.",
@@ -39,10 +39,10 @@
     },
     "passage": {
       "failed": "We couldn’t open your Diaspora session",
-      "opening": "Opening DIASPORA.GA…",
+      "opening": "Opening DIASPORA…",
       "retryInfo": "Return to your consular account to try again with your current session.",
       "retry": "Try again",
-      "home": "DIASPORA.GA home",
+      "home": "DIASPORA home",
       "continueConsulate": "Continue with CONSULAT.GA",
       "checking": "Checking your session.",
       "downloadIntro": "Join your community in the app or continue in your browser with your consular session.",

@@ -82,15 +82,15 @@
       },
       "administrateur": {
         "title": "Administration du réseau",
-        "description": "Administrateur du réseau DIASPORA.GA."
+        "description": "Administrateur du réseau DIASPORA."
       },
       "suspendu": {
         "title": "Membre suspendu",
-        "description": "Suspendu dans DIASPORA.GA seulement : il ne publie plus."
+        "description": "Suspendu dans DIASPORA seulement : il ne publie plus."
       },
       "suspendu-racine": {
         "title": "Suspension à la racine",
-        "description": "Compte suspendu sur ANTSIA : la suspension vaut partout, DIASPORA.GA compris."
+        "description": "Compte suspendu sur ANTSIA : la suspension vaut partout, DIASPORA compris."
       },
       "bloque": {
         "title": "Membre bloqué",
@@ -98,7 +98,7 @@
       },
       "exterieur": {
         "title": "Extérieur au réseau",
-        "description": "Compte ANTSIA sans adhésion à DIASPORA.GA : il arrive à l'accueil."
+        "description": "Compte ANTSIA sans adhésion à DIASPORA : il arrive à l'accueil."
       }
     }
   }

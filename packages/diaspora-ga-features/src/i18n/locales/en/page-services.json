@@ -2,7 +2,7 @@
   "pageServices": {
     "title": "Services offered",
     "emptyTitle": "No active services offered",
-    "emptyBody": "This page currently offers no active services on DIASPORA.GA.",
+    "emptyBody": "This page currently offers no active services on DIASPORA.",
     "request": "Request a service",
     "manage": "Manage services",
     "inbox": "Received requests"

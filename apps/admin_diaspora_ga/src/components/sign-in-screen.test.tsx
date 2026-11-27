@@ -186,10 +186,10 @@ describe("entrée d'admin.diaspora.ga — l'identité numérique seule", () => {
   })
 })
 
-describe("entrée d'admin.diaspora.ga — la porte de diaspora.ga (24/11/2026)", () => {
+describe("entrée d'admin.diaspora.ga — la porte de DIASPORA (24/11/2026)", () => {
   it("la marque et l'accroche à gauche, la carte « Se connecter à l'administration » à droite, avec le seul bouton IDN", () => {
     mount()
-    expect(screen.getByText("DIASPORA.GA")).toBeDefined()
+    expect(screen.getByText("DIASPORA")).toBeDefined()
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Administrer le réseau des Gabonais de l’étranger.")
     const card = screen.getByRole("region", { name: "Se connecter à l’administration" })
     expect(within(card).getAllByRole("button").map((button) => button.textContent)).toEqual(["Se connecter avec l’identité numérique"])

@@ -3,7 +3,7 @@
     "calls": {
       "title": "Messages and calls",
       "lead": "Your account's settings: they also apply in ANTSIA. They decide whether a call to you rings, and what your connections see of you.",
-      "notOffered": "DIASPORA.GA does not offer calls yet: no call button appears here. These settings already apply to calls made to you in ANTSIA.",
+      "notOffered": "DIASPORA does not offer calls yet: no call button appears here. These settings already apply to calls made to you in ANTSIA.",
       "demoNotice": "Demo: no call is made here. These fictional settings last as long as the page.",
       "who": "Who can call you",
       "outside": {
@@ -15,7 +15,7 @@
       "readReceipts": "Read receipts",
       "readReceiptsHint": "In one-to-one conversations, here as in ANTSIA. They are mutual: when off, others no longer see when you read their messages, and you no longer see when they read yours.",
       "voicemail": "Voicemail",
-      "voicemailHint": "When you do not answer, the caller can leave you a voice message. You cannot listen to it in DIASPORA.GA yet.",
+      "voicemailHint": "When you do not answer, the caller can leave you a voice message. You cannot listen to it in DIASPORA yet.",
       "presence": "Show my presence",
       "presenceHint": "Your connections see whether you are online, on a call or on “Do not disturb”. Turned off, you no longer appear at all.",
       "callWaiting": "Call waiting",

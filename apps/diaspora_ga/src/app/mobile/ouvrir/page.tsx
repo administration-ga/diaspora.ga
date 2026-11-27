@@ -11,7 +11,7 @@ export default async function InstallPage() {
   const android = process.env.DIASPORA_PLAY_STORE_LIVE === "true"
     ? "https://play.google.com/store/apps/details?id=ga.diaspora.mobile" : null
   return <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-5 px-6">
-    <h1><BrandLogo name="DIASPORA" variant="horizontal" className="w-full max-w-80" /></h1>
+    <h1><BrandLogo variant="horizontal" className="w-full max-w-80" /></h1>
     <p>{t("consulateGateway.passage.downloadIntro")}</p>
     {ios && <a className="underline" href={ios}>{t("consulateGateway.passage.ios")}</a>}
     {android && <a className="underline" href={android}>{t("consulateGateway.passage.android")}</a>}

@@ -25,7 +25,7 @@
     "create": {
       "metaTitle": "Inscrire une organisation",
       "title": "Inscrire une organisation",
-      "lead": "Votre association ou votre entreprise a sa page dans DIASPORA.GA : elle publie, recrute, accueille ses adhérents ou propose ses services. Elle parle par ses signataires, jamais au nom de l'État.",
+      "lead": "Votre association ou votre entreprise a sa page dans DIASPORA : elle publie, recrute, accueille ses adhérents ou propose ses services. Elle parle par ses signataires, jamais au nom de l'État.",
       "kindLegend": "Que souhaitez-vous inscrire ?",
       "kindHint": {
         "association": "Une association déclarée ou en cours de déclaration.",
@@ -63,7 +63,7 @@
       },
       "next": "Continuer",
       "back": "Retour",
-      "natureClosed": "Pendant le pilote, DIASPORA.GA inscrit les associations et les entreprises. Un collectif informel se retrouve dans un groupe ; les médias attendent leur label.",
+      "natureClosed": "Pendant le pilote, DIASPORA inscrit les associations et les entreprises. Un collectif informel se retrouve dans un groupe ; les médias attendent leur label.",
       "natureOffer": {
         "association": "Adhérents, groupe privé, évènements, offres d'emploi et services.",
         "company": "Offres d'emploi, services sur rendez-vous et avis de clients."
@@ -117,7 +117,7 @@
         },
         "jobs": {
           "title": "Publier une offre d'emploi",
-          "hint": "Elle paraît dans l'emploi de DIASPORA.GA, au nom de la page."
+          "hint": "Elle paraît dans l'emploi de DIASPORA, au nom de la page."
         },
         "services": {
           "title": "Proposer vos services",
@@ -140,7 +140,7 @@
       "how": {
         "title": "Comment se passe une revendication",
         "evidence": "Joignez de une à cinq pièces : statuts, récépissé de déclaration, procès-verbal de désignation, extrait d'immatriculation.",
-        "private": "Vos pièces restent privées : seules la modération de DIASPORA.GA et vous-même les consultez. Elles ne sont jamais publiées.",
+        "private": "Vos pièces restent privées : seules la modération de DIASPORA et vous-même les consultez. Elles ne sont jamais publiées.",
         "decision": "La modération tranche par une décision motivée. Validée, elle fait de vous un administrateur et donne à la page le badge « Vérifié ».",
         "notOfficial": "« Vérifié » n'est pas « Officiel » : aucune revendication ne confère d'autorité officielle, réservée aux institutions.",
         "withdraw": "Tant qu'elle attend, vous pouvez retirer votre demande : ses pièces sont alors effacées."
@@ -166,7 +166,7 @@
       "detailsHint": "Fonction, date et organe de désignation ({{max}} caractères au plus). Aucune donnée d'état civil.",
       "noteMandate": "Mandat déclaré : {{mandate}}.",
       "noteWithDetails": "Mandat déclaré : {{mandate}}. {{details}}",
-      "consent": "Je déclare être mandaté par cette organisation et j'accepte que la modération de DIASPORA.GA consulte ces pièces pour instruire ma demande.",
+      "consent": "Je déclare être mandaté par cette organisation et j'accepte que la modération de DIASPORA consulte ces pièces pour instruire ma demande.",
       "submit": "Envoyer ma revendication",
       "submitVerify": "Envoyer ma demande de vérification",
       "sending": "Envoi des pièces…",
@@ -261,7 +261,7 @@
       "left": "Vous avez quitté l'équipe.",
       "roleChanged": "Rôle mis à jour.",
       "inviteTitle": "Inviter un membre",
-      "inviteLead": "Saisissez l'identifiant d'un membre de DIASPORA.GA : il recevra une invitation à accepter.",
+      "inviteLead": "Saisissez l'identifiant d'un membre de DIASPORA : il recevra une invitation à accepter.",
       "handle": "Identifiant du membre",
       "handleHint": "Par exemple prenom.nom, sans le @.",
       "role": "Rôle proposé",
@@ -288,7 +288,7 @@
         "promoted": "{{name}} administre la page dès maintenant.",
         "invited": "Invitation envoyée : la personne administrera la page dès qu'elle l'aura acceptée.",
         "leave": "Se retirer",
-        "leaveReady": "Une autre personne a accepté le rôle d'administrateur. Vous pourrez vous retirer si elle est toujours membre active de DIASPORA.GA : la plateforme le vérifie au moment du retrait.",
+        "leaveReady": "Une autre personne a accepté le rôle d'administrateur. Vous pourrez vous retirer si elle est toujours membre active de DIASPORA : la plateforme le vérifie au moment du retrait.",
         "leaveBlocked": "Pour vous retirer, la page doit garder un autre administrateur : confiez ce rôle à une autre personne et attendez qu'elle l'ait accepté.",
         "leaveConfirmTitle": "Vous retirer de la page ?",
         "leaveConfirmBody": "Vous perdez aussitôt votre rôle sur la page ; ses autres administrateurs continuent de la gérer.",
@@ -299,7 +299,7 @@
       "title": "Vérification de la page",
       "state": {
         "official": "Page officielle : son autorité vient de l'institution qu'elle représente, pas d'une revendication.",
-        "verified": "Page vérifiée : une revendication a été validée par la modération de DIASPORA.GA. Ce n'est pas une autorité officielle.",
+        "verified": "Page vérifiée : une revendication a été validée par la modération de DIASPORA. Ce n'est pas une autorité officielle.",
         "community": "Page de la communauté : elle n'a pas encore été vérifiée."
       },
       "request": "Demander la vérification",
@@ -316,7 +316,7 @@
     },
     "myPages": {
       "title": "Mes pages",
-      "lead": "Les pages dont vous faites partie de l'équipe dans DIASPORA.GA.",
+      "lead": "Les pages dont vous faites partie de l'équipe dans DIASPORA.",
       "emptyTitle": "Vous ne gérez encore aucune page",
       "emptyBody": "Inscrivez votre association ou votre entreprise, ou revendiquez sa page si elle existe déjà.",
       "onlyAsleep": "Pour l'instant, aucune de vos pages n'est en ligne : celles qui dorment sont listées plus bas. Vous pouvez aussi inscrire une autre organisation.",
@@ -361,11 +361,11 @@
     "page_country_invalid": "Ce pays n'est pas reconnu.",
     "page_post_country_required": "Pour publier localement, la page doit d'abord déclarer son pays (Gérer la page, onglet Identité).",
     "page_role_required": "Vous n'avez pas, ou plus, le rôle nécessaire sur cette page.",
-    "page_last_admin": "La page doit garder au moins un administrateur actif : nommez-en un autre, membre actif de DIASPORA.GA, avant de partir ou de changer ce rôle.",
+    "page_last_admin": "La page doit garder au moins un administrateur actif : nommez-en un autre, membre actif de DIASPORA, avant de partir ou de changer ce rôle.",
     "page_signatories_full": "L'équipe d'une page compte 50 membres au plus.",
     "page_signatory_identity_required": "Faire partie de l'équipe d'une page officielle exige une identité IDN de niveau 2.",
     "page_signatory_self": "Vous ne pouvez pas vous inviter vous-même.",
-    "page_member_not_found": "Aucun membre de DIASPORA.GA ne répond à cet identifiant.",
+    "page_member_not_found": "Aucun membre de DIASPORA ne répond à cet identifiant.",
     "page_member_handle_required": "Saisissez l'identifiant du membre.",
     "page_invitation_gone": "Cette invitation n'existe plus.",
     "page_not_claimable": "Cette page ne se revendique pas.",

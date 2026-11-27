@@ -16,7 +16,7 @@
       "completionDeclared": "Completion reported by the provider — without independent verification."
     },
     "moderation": {
-      "published": "Published in DIASPORA.GA",
+      "published": "Published in DIASPORA",
       "pending": "Awaiting moderation. This content is not published yet.",
       "removed": "This content was removed by moderation."
     },
@@ -35,7 +35,7 @@
       "ratingChoice": "{{rating}} out of 5",
       "body": "Your experience",
       "hint": "Describe the service. Do not publish phone numbers, email addresses or home addresses.",
-      "consent": "I agree to publish this review and my social name in DIASPORA.GA after moderation.",
+      "consent": "I agree to publish this review and my social name in DIASPORA after moderation.",
       "save": "Save changes",
       "publish": "Submit my review",
       "saved": "Your review was saved. Its moderation status is shown in your request."

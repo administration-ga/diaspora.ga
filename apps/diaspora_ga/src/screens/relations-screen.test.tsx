@@ -160,7 +160,7 @@ beforeEach(() => {
 
 afterEach(cleanup)
 
-describe("/relations — mes liens dans le réseau DIASPORA.GA", () => {
+describe("/relations — mes liens dans le réseau DIASPORA", () => {
   it("ouvre mes relations et rend les six destinations comme des liens nommés", () => {
     render(screenTree())
 
@@ -257,7 +257,7 @@ describe("/relations — mes liens dans le réseau DIASPORA.GA", () => {
     render(screenTree())
 
     expect(screen.getByText("Les relations sont indisponibles ici")).toBeInTheDocument()
-    expect(screen.getByText("Cette liste est réservée aux membres actifs de DIASPORA.GA. En démonstration, explorez les gestes de relation depuis les profils.")).toBeInTheDocument()
+    expect(screen.getByText("Cette liste est réservée aux membres actifs de DIASPORA. En démonstration, explorez les gestes de relation depuis les profils.")).toBeInTheDocument()
     expect(screen.queryByRole("region", { name: "Liste personnelle du moteur" })).not.toBeInTheDocument()
     expect(screen.queryByRole("navigation", { name: "Relations, demandes, abonnements, blocages et suggestions" })).not.toBeInTheDocument()
     expect(mocks.adapter).not.toHaveBeenCalled()

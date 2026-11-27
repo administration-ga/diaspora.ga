@@ -73,7 +73,7 @@ describe("AccountTheme — le thème suit le compte en session", () => {
     expect(document.documentElement.dataset.charte).toBe("diaspora-ga")
   })
 
-  it("un thème du compte que DIASPORA.GA n'a pas (Soleil d'antsia.ga) laisse le choix de l'appareil", async () => {
+  it("un thème du compte que DIASPORA n'a pas (Soleil d'antsia.ga) laisse le choix de l'appareil", async () => {
     window.localStorage.setItem(THEME_KEY, "gaboma")
     const store = demoStore()
     await store.switchTo("p-mireille")

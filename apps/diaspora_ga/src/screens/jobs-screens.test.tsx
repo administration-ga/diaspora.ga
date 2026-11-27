@@ -625,7 +625,7 @@ describe("EM-01 — fiche et candidature protégées contre les fausses offres",
     expect(screen.getByText(/Ne demandez jamais d'argent aux candidats/)).toBeTruthy()
   })
 
-  it("parle anglais, et aucune phrase ne dit que DIASPORA.GA vérifie ou garantit les offres", () => {
+  it("parle anglais, et aucune phrase ne dit que DIASPORA vérifie ou garantit les offres", () => {
     mocks.dataSource = { contentReports: reportsCapability() }
     mocks.offer = { status: "ready", data: detail("job-1") }
     render(tree(<JobOfferScreen jobId="job-1" />, "en"))

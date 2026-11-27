@@ -87,7 +87,7 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe("ProfileAlbums — les albums du moteur dans le profil diaspora", () => {
-  it("un membre en attente lit les albums dans DIASPORA.GA sans entrée de création", () => {
+  it("un membre en attente lit les albums dans DIASPORA sans entrée de création", () => {
     render(<ProfileAlbums {...profile} canPublish={false} />)
 
     expect(screen.getByRole("group", { name: "Albums du moteur" })).toBeInTheDocument()

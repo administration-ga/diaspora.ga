@@ -1,7 +1,7 @@
 {
   "landing": {
     "vision": {
-      "title": "Ce qu'est DIASPORA.GA",
+      "title": "Ce qu'est DIASPORA",
       "lead": "Le réseau social fermé des Gabonais de l'étranger : votre pays, votre communauté, et l'on sait toujours qui publie.",
       "offerTitle": "Ce que vous y trouvez",
       "offer": {
@@ -85,7 +85,7 @@
         "publish": "Lisez tout de suite ; publiez après la vérification consulaire ou un parrainage.",
         "publishSponsored": "Lisez tout de suite ; publiez dès qu'un membre vérifié vous parraine."
       },
-      "join": "Rejoindre DIASPORA.GA"
+      "join": "Rejoindre DIASPORA"
     }
   }
 }

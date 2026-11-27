@@ -112,7 +112,7 @@ describe("EngineIcom — accès de lecture au réseau distinct du droit de commu
     expect(screen.queryByTestId("communication-shell")).not.toBeInTheDocument()
   })
 
-  it("ouvre la lecture et iCom au membre déclaré, dans la charte et le réseau DIASPORA.GA", () => {
+  it("ouvre la lecture et iCom au membre déclaré, dans la charte et le réseau DIASPORA", () => {
     renderEngine()
 
     expect(mocks.probe).toHaveBeenLastCalledWith({ readingNetwork: expectedNetwork, icom: { status: "on", network: expectedNetwork } })

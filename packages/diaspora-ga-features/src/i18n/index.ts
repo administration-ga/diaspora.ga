@@ -35,7 +35,7 @@ export const LOCALE_COOKIE = "diaspora-ga-langue"
 export const DIASPORA_GA_NAMESPACE = "diaspora-ga"
 
 /** La marque, variable `{{brand}}` des textes du moteur. */
-export const DIASPORA_GA_BRAND = "DIASPORA.GA"
+export const DIASPORA_GA_BRAND = "DIASPORA"
 
 /**
  * AS-11a : la durée du sommeil d'une page, celle du moteur, dite par un refus que l'écran

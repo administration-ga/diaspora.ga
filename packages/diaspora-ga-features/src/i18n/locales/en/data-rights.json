@@ -1,7 +1,7 @@
 {
   "settings": {
     "dataRights": {
-      "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available without a DIASPORA.GA membership, after leaving, or if your membership is suspended.",
+      "lead": "Export the data of your ANTSIA account, shared by all its networks, request its erasure and review the moderation decisions that concern you. These remain available without a DIASPORA membership, after leaving, or if your membership is suspended.",
       "tabs": {
         "label": "My data sections",
         "data": "Export and erasure",
@@ -20,12 +20,12 @@
       },
       "erasure": {
         "title": "Account erasure",
-        "lead": "Erasure covers your whole ANTSIA account and all its networks, DIASPORA.GA included.",
+        "lead": "Erasure covers your whole ANTSIA account and all its networks, DIASPORA included.",
         "loadError": "The status of your erasure request could not be read.",
-        "scope": "The request covers your whole ANTSIA account, across all its networks, not just DIASPORA.GA.",
+        "scope": "The request covers your whole ANTSIA account, across all its networks, not just DIASPORA.",
         "grace": "Nothing is erased right away: erasure will start in {{days}} days, on {{date}}. Until then, you can cancel your request from this page.",
         "final": "When the time comes, all your sessions will be closed; erasure can no longer be cancelled and nothing can be restored.",
-        "leaveInstead": "To only leave DIASPORA.GA and keep your account, choose “Leave DIASPORA.GA” instead.",
+        "leaveInstead": "To only leave DIASPORA and keep your account, choose “Leave DIASPORA” instead.",
         "exportFirst": "To keep a copy of your data, download it before confirming.",
         "confirm": "Request erasure",
         "requested": "Request recorded: erasure will start on {{date}}.",
