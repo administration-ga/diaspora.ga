@@ -1,4 +1,3 @@
-/// <reference path="./assets.d.ts" />
 import referenceLocale from "../i18n/locales/fr/diaspora-ga.json"
 import { cn } from "../lib/cn"
 import bird from "./hirondelle.svg"
