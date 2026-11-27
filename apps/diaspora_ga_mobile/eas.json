@@ -1,0 +1,38 @@
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk",
+        "image": "latest"
+      },
+      "ios": {
+        "image": "latest"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "android": {
+        "image": "latest"
+      },
+      "ios": {
+        "image": "latest"
+      }
+    }
+  },
+  "cli": {
+    "appVersionSource": "remote"
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "5Y39TTNCM7",
+        "sku": "diaspora-ga-mobile",
+        "language": "fr-FR",
+        "appName": "DIASPORA.GA",
+        "bundleIdentifier": "ga.diaspora.mobile",
+        "ascAppId": "6839771667"
+      }
+    }
+  }
+}

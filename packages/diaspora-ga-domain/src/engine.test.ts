@@ -167,6 +167,13 @@ describe("idnGroundFromLink — le lien IDN du moteur lu comme fait du domaine",
     expect(idnGroundFromLink({ loa: 3, nationality: " gab " })).toEqual({ loa: 3, gaboneseNationality: true })
   })
 
+  it("reconnaît aussi les libellés français et anglais des profils IDN", () => {
+    for (const nationality of [" Gabonaise ", "gabonais", "Gabon", "Gabonese"]) {
+      expect(idnGroundFromLink({ nationality }).gaboneseNationality).toBe(true)
+    }
+    expect(idnGroundFromLink({ nationality: "Non gabonaise" }).gaboneseNationality).toBe(false)
+  })
+
   it("une nationalité étrangère exclut ; une nationalité absente reste inconnue", () => {
     expect(idnGroundFromLink({ loa: 3, nationality: "FR" }).gaboneseNationality).toBe(false)
     expect(idnGroundFromLink({ loa: 3 }).gaboneseNationality).toBeNull()

@@ -11,6 +11,7 @@ import { useEffect, useId, useRef, useState } from "react"
 import { DoorVision } from "@/components/door-vision"
 import { EntryDoor } from "@/components/entry-door"
 import { idnStartOptionsFor, rememberArrival, type ArrivalOrigin } from "@/lib/arrival"
+import { configuredConsulateGateway } from "@/lib/consulate-gateway"
 import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
 import { forgetIdnReturnError } from "@/lib/idn-return"
 import { CONSULAR_ATTESTATION_ANNOUNCED } from "@/lib/public-offer"
@@ -32,15 +33,14 @@ export type EntryIntent = "sign-in" | "sign-up"
  * (`lib/idn-return.ts`) ; la porte le dit, puis retire le code de l'adresse.
  *
  * `arrival` (CH-863, `/entrer?depuis=consulat`) : la personne arrive de consulat.ga. La porte le
- * dit en une ligne, l'entrée par l'identité numérique devient l'action principale — le départ
- * EXISTANT, inchangé, jamais lancé d'office —, et le code par e-mail reste offert. L'arrivée est
- * retenue dans l'onglet (`lib/arrival.ts`) pour la carte d'arrivée du fil.
+ * montre uniquement l’entrée IDN dans la démonstration. En production, la route monte directement
+ * la transition consulaire. L’arrivée est retenue dans l’onglet pour la carte du fil.
  */
 export function LandingScreen(
   props: { intent?: EntryIntent; signOutIncomplete?: boolean; idnRefusal?: EntryDoorsErrorCode | null; arrival?: ArrivalOrigin | null } = {},
 ) {
   return (
-    <EntryDoor after={<DoorVision showJoin={props.intent !== "sign-up"} />}>
+    <EntryDoor after={props.arrival ? undefined : <DoorVision showJoin={props.intent !== "sign-up"} />}>
       <AccessCard
         signUp={props.intent === "sign-up"}
         signOutIncomplete={props.signOutIncomplete === true}
@@ -63,6 +63,20 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
   }, [arrival])
   useLeaveEntryWhenSignedIn(!props.signOutIncomplete)
   const ArrivalIcon = MEMBER_GATEWAY_ICONS.consulate
+  if (arrival) {
+    return (
+      <section aria-labelledby="acces-titre" className="grid gap-4 rounded-xl bg-card p-4 shadow-float sm:p-6">
+        <div className="flex items-start gap-3">
+          <ArrivalIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div>
+            <h2 id="acces-titre" className="font-semibold">{t("consulateGateway.arrival.door")}</h2>
+            <p className="text-sm text-muted-foreground">{t("consulateGateway.arrival.doorHint")}</p>
+          </div>
+        </div>
+        <IdnEntry refusal={props.idnRefusal} arrival={arrival} />
+      </section>
+    )
+  }
   return (
     <section aria-labelledby="acces-titre" className="rounded-xl bg-card p-4 shadow-float sm:p-6">
       {props.signUp ? (
@@ -83,19 +97,15 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           {t("landing.signInTitle")}
         </h2>
       )}
+      {!props.signUp && source.kind === "engine" && configuredConsulateGateway() ? (
+        <Button asChild variant="outline" size="lg" className="mb-3 w-full">
+          <NextLink href={routes.enterFromConsulate()}>{t("consulateGateway.passage.continueConsulate")}</NextLink>
+        </Button>
+      ) : null}
       {props.signOutIncomplete ? (
         <p role="alert" className="mb-4 rounded-lg bg-muted p-4 text-sm">
           {t("entry.signOutIncomplete")}
         </p>
-      ) : null}
-      {arrival !== null ? (
-        <div role="note" className="mb-4 flex items-start gap-3 rounded-lg bg-muted p-3">
-          <ArrivalIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-          <div className="min-w-0 text-sm leading-snug">
-            <p className="font-semibold">{t("consulateGateway.arrival.door")}</p>
-            <p className="mt-0.5 text-muted-foreground">{t("consulateGateway.arrival.doorHint")}</p>
-          </div>
-        </div>
       ) : null}
       <IdnEntry refusal={props.idnRefusal} arrival={arrival} />
       <div className="my-4 flex items-center gap-3 text-[13px] text-muted-foreground">
@@ -103,7 +113,7 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
         <span>{t("landing.or")}</span>
         <span className="h-px flex-1 bg-border" />
       </div>
-      <CodeForm compact signUp={props.signUp} />
+      <CodeForm key={props.signUp ? "sign-up" : "sign-in"} compact signUp={props.signUp} publicEntry={arrival === null} />
       {/* Le SMS n'existe qu'en démonstration, sur la page dédiée au code. */}
       {source.kind === "demo" ? (
         <p className="mt-2 text-center">

@@ -16,8 +16,7 @@ import { routes } from "@/lib/routes"
 /**
  * CH-863, lot D1 — la porte d'arrivée `/entrer?depuis=consulat` : la valeur fermée, lue côté
  * serveur, fait dire à la porte « Vous arrivez de consulat.ga » ; l'action principale est l'entrée
- * EXISTANTE par l'identité numérique (aucun départ automatique vers identite.ga), le code par
- * e-mail reste offert ; le repère d'arrivée est retenu dans l'onglet pour la carte du fil.
+ * EXISTANTE par l'identité numérique (aucun départ automatique vers identite.ga), les codes par e-mail ne sont pas proposés ; le repère d'arrivée est retenu dans l'onglet pour la carte du fil.
  */
 const navigation = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }))
 vi.mock("next/navigation", () => ({ useRouter: () => navigation }))
@@ -53,7 +52,7 @@ afterEach(() => {
 })
 
 describe("porte d'arrivée — `/entrer?depuis=consulat`", () => {
-  it("dit d'où l'on vient, garde le code par e-mail, et retient l'arrivée dans l'onglet", async () => {
+  it("présente uniquement IDN et retient l’arrivée consulaire dans l’onglet", async () => {
     const { mount } = setup()
     mount(await EnterPage({ searchParams: Promise.resolve({ depuis: "consulat" }) }))
     expect(screen.getByText(flat(t("consulateGateway.arrival.door")))).toBeInTheDocument()
@@ -61,7 +60,7 @@ describe("porte d'arrivée — `/entrer?depuis=consulat`", () => {
     // Démonstration : la simulation d'IDN, sous le libellé de l'arrivée.
     expect(screen.getByRole("link", { name: t("consulateGateway.arrival.continueIdn") })).toHaveAttribute("href", routes.enterIdn())
     expect(screen.queryByRole("link", { name: t("landing.idnContinue") })).toBeNull()
-    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: t("code.emailLabel") })).toBeNull()
     await waitFor(() => expect(window.sessionStorage.getItem(ARRIVAL_KEY)).not.toBeNull())
     expect(JSON.parse(window.sessionStorage.getItem(ARRIVAL_KEY)!)).toMatchObject({ origin: "consulat" })
   })
@@ -78,7 +77,7 @@ describe("porte d'arrivée — `/entrer?depuis=consulat`", () => {
     await user.click(idn)
     // CH-863 D2 : au geste explicite, et sur cette porte seulement, l'entrée sans ressaisie est demandée.
     expect(signInWithIdn).toHaveBeenCalledExactlyOnceWith(undefined, { reuseIdnSession: true })
-    expect(screen.getByRole("textbox", { name: t("code.emailLabel") })).toBeInTheDocument()
+    expect(screen.queryByRole("textbox", { name: t("code.emailLabel") })).toBeNull()
   })
 
   it("après une déconnexion explicite dans ce navigateur : le départ ordinaire, ressaisie exigée", async () => {

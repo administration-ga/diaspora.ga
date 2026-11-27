@@ -40,8 +40,8 @@ export const IDN_PROVIDER_ID = "idn"
 export const IDN_ENTRY_SSO = "sso"
 
 /** Ce que la configuration publique du moteur dit des portes, réduit à ce que la porte lit. */
-export function toEntryDoorsView(configuration: { readonly idn: boolean; readonly emailOtp: boolean }): EntryDoorsView {
-  return { idn: configuration.idn === true, emailCode: configuration.emailOtp === true }
+export function toEntryDoorsView(configuration: { readonly idn: boolean; readonly emailOtp: boolean; readonly whatsappOtp?: boolean }): EntryDoorsView {
+  return { idn: configuration.idn === true, emailCode: configuration.emailOtp === true, ...(configuration.whatsappOtp === true ? { whatsappOtp: true } : {}) }
 }
 
 /** Les portes ouvertes de ce déploiement, lues sans session (projection publique du moteur). */

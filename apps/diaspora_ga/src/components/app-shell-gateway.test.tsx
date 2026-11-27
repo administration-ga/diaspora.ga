@@ -201,6 +201,14 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
+it("le badge CONSULAT.GA du fil ouvre l’espace consulaire au téléphone", () => {
+  mocks.desktop = false
+  renderShell()
+  const badge = screen.getByRole("link", { name: /^CONSULAT\.GA$/i })
+  expect(badge).toHaveAttribute("href", LINKS.mySpace)
+  expect(badge).toHaveAttribute("target", "_blank")
+})
+
 describe("coque — passerelle consulat.ga absente", () => {
   it("sans adresse de consulat.ga configurée : ni groupe, ni lien du rail, au bureau comme au téléphone", async () => {
     mocks.consulateUrl = null
@@ -268,7 +276,7 @@ describe("coque — passerelle consulat.ga au bureau, dans le menu du compte", (
     expect(entry).toHaveAttribute("href", LINKS.mySpace)
     expect(entry).toHaveAttribute("rel", "noopener noreferrer")
     expect(entry).toHaveAttribute("referrerpolicy", "no-referrer")
-    expect(entry).not.toHaveAttribute("target")
+    expect(entry).toHaveAttribute("target", "_blank")
     expect(entry).toHaveAccessibleDescription(t("consulateGateway.entry.hint"))
     // L'ordre des familles : « Mon espace », puis les démarches, puis « Mes données ».
     const order = Array.from(menu.querySelectorAll('[role="group"], [role="menuitem"]')).map((node) =>

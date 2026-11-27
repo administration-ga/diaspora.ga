@@ -110,11 +110,16 @@ export const DATA_ERROR_CODES = [
   "suspended",
   "too_many_attempts",
   "delivery_unavailable",
+  "gabonese_nationality_required",
+  "verified_phone_required",
   "feature_unavailable",
   "network_unavailable",
 ] as const
 
 export const FORM_ERROR_CODES = [
+  "given_name_required",
+  "family_name_required",
+  "nationality_required",
   "idn_identity_required",
   "idn_consent_required",
   "code_format",

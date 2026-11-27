@@ -43,8 +43,8 @@ afterEach(() => {
   Reflect.deleteProperty(window.navigator, "share")
 })
 
-function renderRoom(membership: MembershipView = PENDING) {
-  return render(<I18nProvider locale="fr"><PendingRoom membership={membership} /></I18nProvider>)
+function renderRoom(membership: MembershipView = PENDING, store = new DemoStore(null, Date.now, 0)) {
+  return render(<I18nProvider locale="fr"><DataSourceProvider source={createDemoDataSource(store)}><PendingRoom membership={membership} /></DataSourceProvider></I18nProvider>)
 }
 
 describe("Salle d'attente d'un compte en attente (EA-10)", () => {
@@ -124,7 +124,7 @@ describe("Parrainage obtenu par le lien, à deux comptes, sans saisie (EA-10)", 
     expect(joined.ok && joined.value.status).toBe("en_attente")
 
     // 1. La salle d'attente donne le lien.
-    renderRoom({ ...PENDING, personId: newcomer })
+    renderRoom({ ...PENDING, personId: newcomer }, store)
     const href = (screen.getByRole("textbox", { name: t("pendingRoom.linkLabel") }) as HTMLInputElement).value
     cleanup()
 
@@ -145,4 +145,20 @@ describe("Parrainage obtenu par le lien, à deux comptes, sans saisie (EA-10)", 
 
     await waitFor(() => expect(store.statusOf(newcomer)).toBe("declaree"))
   })
+})
+
+it("un proche peut saisir le code copié par le membre vérifié", async () => {
+  const store = new DemoStore(null, Date.now, 0)
+  await store.switchTo("p-mireille")
+  const user = userEvent.setup()
+  render(<I18nProvider locale="fr"><DataSourceProvider source={createDemoDataSource(store)}><SponsorScreen /></DataSourceProvider></I18nProvider>)
+  const code = (await screen.findByRole("textbox", { name: t("sponsorCode.mine") }) as HTMLInputElement).value
+  await user.click(screen.getByRole("button", { name: t("sponsorCode.copy") }))
+  expect(await navigator.clipboard.readText()).toBe(code)
+  cleanup()
+  await store.switchTo("p-steeve")
+  renderRoom(PENDING, store)
+  await user.type(screen.getByRole("textbox", { name: t("sponsorCode.received") }), code)
+  await user.click(screen.getByRole("button", { name: t("sponsorCode.redeem") }))
+  await waitFor(() => expect(store.statusOf("p-steeve")).toBe("declaree"))
 })

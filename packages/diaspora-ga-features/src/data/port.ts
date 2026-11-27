@@ -204,6 +204,7 @@ export interface CodeDestination {
  * interrompue se reprend sans rien publier deux fois.
  */
 export interface JoinInput {
+  readonly phoneRegistration?: { readonly firstName: string; readonly lastName: string; readonly declaredGabonese: true }
   readonly facet: FacetInput
   readonly handle?: string
   readonly displayName?: string
@@ -413,6 +414,7 @@ export interface DiasporaGaActions {
   markNotificationRead(notificationId: string): Promise<ActionResult>
   markAllNotificationsRead(): Promise<ActionResult>
   sponsor(handle: string): Promise<ActionResult>
+  redeemSponsorCode(code: string): Promise<ActionResult>
   revokeSponsorship(sponsorshipId: string): Promise<ActionResult>
   requestAttestation(): Promise<ActionResult<{ outcome: AttestationOutcome }>>
   /**

@@ -104,6 +104,8 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   // La porte : entrée, inscription, sortie, accueil d'un nouveau membre.
   home: outside("door"),
   enter: outside("door"),
+  consulatePass: outside("door"),
+  consulateConsent: outside("door"),
   register: outside("door"),
   enterFromConsulate: outside("door"),
   enterAfterSignOut: outside("door"),

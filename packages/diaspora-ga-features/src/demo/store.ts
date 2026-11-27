@@ -19,6 +19,8 @@ import {
   canRequestAttestation,
   capabilitiesOf,
   checkSponsorship,
+  normalizeSponsorCode,
+  sponsorCodeFromUuid,
   checkSponsorshipRevocation,
   consentRecord,
   deriveMembershipStatus,
@@ -296,6 +298,7 @@ export class DemoStore {
     return {
       ...membership,
       grounds: result.value.grounds,
+      ...(becameVerified ? { sponsorCode: sponsorCodeFromUuid(crypto.randomUUID()) } : lostVerified ? { sponsorCode: null } : {}),
       verifiedSince: becameVerified ? now : lostVerified ? null : membership.verifiedSince,
     }
   }
@@ -1303,6 +1306,14 @@ export class DemoStore {
   }
 
   // ── Parrainage ─────────────────────────────────────────────────────────
+  ensureMySponsorCode(): void {
+    const membership = this.viewer()?.membership
+    if (!membership || membership.sponsorCode || deriveMembershipStatus(membership.grounds, this.clock()) !== "verifiee") return
+    this.commit({ ...this.state, memberships: {
+      ...this.state.memberships, [membership.personId]: { ...membership, sponsorCode: sponsorCodeFromUuid(crypto.randomUUID()) },
+    } })
+  }
+
   async sponsor(rawHandle: string): Promise<ActionResult> {
     await this.pause()
     const viewer = this.viewer()
@@ -1311,32 +1322,50 @@ export class DemoStore {
     const handle = normalizeHandle(rawHandle)
     const target = Object.values(this.state.persons).find((person) => person.profile?.handle === handle)
     const targetMembership = target ? this.state.memberships[target.id] : undefined
-    const facts = sponsorFacts(this.state, viewer.person.id, now)
+    return this.recordSponsorship(viewer.person.id, target, targetMembership, now, false)
+  }
+
+  async redeemSponsorCode(raw: string): Promise<ActionResult> {
+    await this.pause()
+    const viewer = this.viewer()
+    if (!viewer?.membership) return fail("not_member")
+    const token = normalizeSponsorCode(raw)
+    const sponsor = token ? Object.values(this.state.memberships).find(member => member.sponsorCode === token) : null
+    if (!sponsor) return fail("target_not_eligible")
+    return this.recordSponsorship(sponsor.personId, viewer.person, viewer.membership, this.clock(), true)
+  }
+
+  private recordSponsorship(sponsorId: string, target: DemoPerson | undefined, targetMembership: DemoMembership | undefined, now: number, byCode: boolean): ActionResult {
+    if (!target || !targetMembership || !isProfilePublished(target) || this.blockedBetween(sponsorId, target.id)) return fail("target_not_eligible")
+    const facts = sponsorFacts(this.state, sponsorId, now)
     const check = checkSponsorship(
       facts,
       {
-        isSelf: target?.id === viewer.person.id,
+        isSelf: target?.id === sponsorId,
         // Cible introuvable : refus INDISTINCT, comme une cible non admissible.
         status: targetMembership ? deriveMembershipStatus(targetMembership.grounds, now) : "partie",
         alreadySponsored: targetMembership?.grounds.sponsored ?? false,
       },
       now,
     )
-    if (!check.ok) return fail(check.code)
-    if (!target || !targetMembership) return fail("target_not_eligible")
+    if (!check.ok) return fail(byCode ? "target_not_eligible" : check.code)
     const updated = this.withEvent(targetMembership, { kind: "sponsored" }, now)
     if (!updated) return fail("target_not_eligible")
     const [id, sequence] = this.nextId("s")
     const next: DemoState = {
       ...this.state,
-      memberships: { ...this.state.memberships, [target.id]: updated },
+      memberships: {
+        ...this.state.memberships,
+        ...(byCode ? { [sponsorId]: { ...this.state.memberships[sponsorId]!, sponsorCode: sponsorCodeFromUuid(crypto.randomUUID()) } } : {}),
+        [target.id]: updated,
+      },
       sponsorships: [
         ...this.state.sponsorships,
-        { id, sponsorId: viewer.person.id, sponsoredId: target.id, createdAt: now, revokedAt: null },
+        { id, sponsorId: sponsorId, sponsoredId: target.id, createdAt: now, revokedAt: null },
       ],
       sequence,
     }
-    this.commit(this.notified(next, { recipientId: target.id, kind: "sponsorship_received", actorId: viewer.person.id }))
+    this.commit(this.notified(next, { recipientId: target.id, kind: "sponsorship_received", actorId: sponsorId }))
     return OK
   }
 

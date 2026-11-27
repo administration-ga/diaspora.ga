@@ -22,7 +22,7 @@
 import type { EngineAuthClient } from "@antsia/api/auth-client"
 import { signOutEverywhere } from "@antsia/api/sign-out-everywhere"
 import { isMemberThemeId } from "@antsia/social-contracts/appearance"
-import { DEMO_GATE_TOKEN_HEADER } from "@antsia/social-contracts/demoGate"
+import { DEMO_GATE_TOKEN_HEADER, normalizeDemoGatePhone } from "@antsia/social-contracts/demoGate"
 import { isSupportedLocale } from "@diaspora-ga/features/i18n"
 import { useAuthenticatedConvexQuery, useStableConvexAuth } from "@antsia/api/hooks"
 import { api } from "@convex/_generated/api"
@@ -396,7 +396,7 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
       const signedIn = auth.isAuthenticated
       const person = useLoaded(api.modules.people.persons.getMyPerson, signedIn ? {} : "skip")
       const identity = useLoaded(api.modules.diaspora.membership.myIdentity, signedIn ? {} : "skip")
-      const authSession = deps.authClient.useSession() as { data?: { user?: { email?: string | null } } | null }
+      const authSession = deps.authClient.useSession() as { data?: { user?: { email?: string | null; phoneNumber?: string | null; phoneNumberVerified?: boolean } } | null }
       if (auth.isPending) return LOADING
       if (auth.isUnauthenticated) return ready({ status: "anonymous" })
       for (const loaded of [networkId, person, identity, membership]) if (loaded.state === "error") return failed(loaded.code)
@@ -406,7 +406,8 @@ export function createEngineDataSource(deps: EngineSourceDeps): DiasporaGaDataSo
       if (person.value === null || identity.value === null || membership.state !== "ready") return LOADING
       return ready({
         status: "signed_in",
-        account: toAccountView(person.value, identity.value, authSession.data?.user?.email ?? null),
+        account: toAccountView(person.value, identity.value, authSession.data?.user?.email ?? null,
+          authSession.data?.user?.phoneNumberVerified === true ? authSession.data.user.phoneNumber : null),
         membership: membership.value ? toMembershipView(person.value, membership.value) : null,
       })
     },
@@ -781,7 +782,7 @@ function consentScopeArgs(purpose: ConsentPurpose, networkId: Id<"networks">): {
 export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<string, ReactionKind | null> = new Map()): DiasporaGaActions {
   let networkId: Id<"networks"> | null = null
   /** L'adresse à laquelle le dernier code a été envoyé (la vérification la reprend). */
-  let pendingEmail: string | null = null
+  let pendingDestination: Parameters<DiasporaGaActions["requestCode"]>[0] | null = null
 
   async function diasporaGa(): Promise<Id<"networks">> {
     if (networkId) return networkId
@@ -840,8 +841,18 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     signInWithIdn: (_input, options) => startIdnSignIn(deps, options),
 
     async requestCode(destination, options) {
-      // Le SMS arrive avec l'identité du moteur (PA4).
-      if (destination.kind !== "email") return { ok: false, code: "feature_unavailable" }
+      if (destination.kind === "phone") {
+        const phoneNumber = normalizeDemoGatePhone(destination.value)
+        if (phoneNumber === null) return { ok: false, code: "phone_invalid" }
+        const locale = deps.locale?.()
+        const sent = await deps.authClient.phoneNumber.sendOtp({
+          phoneNumber,
+          ...withHeaders(locale ? { "Accept-Language": locale } : {}),
+        })
+        if (sent.error) return { ok: false, code: authActionErrorCode(sent.error) }
+        pendingDestination = { kind: "phone", value: phoneNumber }
+        return { ok: true, value: { demoCode: null } }
+      }
       const email = destination.value.trim().toLowerCase()
       // La langue affichée accompagne la demande (`Accept-Language`, relayé tel quel par
       // `/api/auth/*`) : le moteur compose le code dans cette langue, à la marque DIASPORA.GA.
@@ -850,7 +861,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
       const headers = { ...(locale ? { "Accept-Language": locale } : {}), ...demoGateHeaders(email, options) }
       const sent = await deps.authClient.emailOtp.sendVerificationOtp({ email, type: "sign-in", ...withHeaders(headers) })
       if (sent.error) return { ok: false, code: authActionErrorCode(sent.error) }
-      pendingEmail = email
+      pendingDestination = { kind: "email", value: email }
       // Le moteur ne rend le code qu'en développement local ou sur la démonstration déclarée ; porte armée,
       // le formulaire ordinaire ne le relit plus (CH-817 E5).
       return { ok: true, value: { demoCode: await codeShownWhenGateOpen(email) } }
@@ -859,11 +870,21 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     async verifyCode(code, destination, options) {
       // EA-08, MO-04 : l'adresse que l'écran a gardée dans l'onglet survit au rechargement, la
       // mémoire de cette source non ; sans elle, l'adresse du dernier envoi de cette session.
-      const email = destination?.kind === "email" ? destination.value.trim().toLowerCase() : pendingEmail
-      if (!email) return { ok: false, code: "code_expired" }
-      const signedIn = await deps.authClient.signIn.emailOtp({ email, otp: code.trim(), ...withHeaders(demoGateHeaders(email, options)) })
-      if (signedIn.error) return { ok: false, code: authActionErrorCode(signedIn.error) }
-      pendingEmail = null
+      const target = destination ?? pendingDestination
+      if (!target) return { ok: false, code: "code_expired" }
+      const otp = code.replace(/\s/g, "")
+      if (!/^\d{6}$/.test(otp)) return { ok: false, code: "code_invalid" }
+      if (target.kind === "phone") {
+        const phoneNumber = normalizeDemoGatePhone(target.value)
+        if (phoneNumber === null) return { ok: false, code: "phone_invalid" }
+        const signedIn = await deps.authClient.phoneNumber.verify({ phoneNumber, code: otp, disableSession: false })
+        if (signedIn.error) return { ok: false, code: authActionErrorCode(signedIn.error) }
+      } else {
+        const email = target.value.trim().toLowerCase()
+        const signedIn = await deps.authClient.signIn.emailOtp({ email, otp, ...withHeaders(demoGateHeaders(email, options)) })
+        if (signedIn.error) return { ok: false, code: authActionErrorCode(signedIn.error) }
+      }
+      pendingDestination = null
       // Rechargement complet : la session amorce proprement le jeton Convex de la personne qui arrive.
       if (typeof window !== "undefined") window.location.assign(routes.welcome())
       return { ok: true, value: null }
@@ -874,7 +895,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         resetLocalState: () => {
           myReactions.clear()
           networkId = null
-          pendingEmail = null
+          pendingDestination = null
           clearDiasporaGaDrafts()
         },
         // La navigation reste sous le verrou du moteur, pour préserver l'avis
@@ -902,6 +923,11 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (newProfile === null && !person.published) throw new Refusal("profile_republish_required")
         if (newProfile !== null && !newProfile.handle.trim()) throw new Refusal("handle_required")
         if (newProfile !== null && !newProfile.displayName.trim()) throw new Refusal("display_name_invalid")
+        const registration = {
+          networkId: id,
+          ...(input.phoneRegistration ? { phoneRegistration: input.phoneRegistration } : {}),
+        }
+        await deps.convex.query(api.modules.diaspora.membership.checkRegistration, registration)
         // Le clic « Créer mon profil et entrer » EST le consentement au profil social (décision du
         // 25/11/2026) : il s'enregistre AVANT que le profil ne naisse, pour qu'aucun profil n'existe
         // jamais sans son accord. Idempotent côté moteur : un accord déjà en vigueur n'est pas réécrit.
@@ -916,7 +942,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "notifications", origin: "onboarding", ...consentScopeArgs("notifications", id) })
         }
         const joined = await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporaGa, {
-          networkId: id,
+          ...registration,
           facet: toFacetArgs(input.facet),
           directoryVisibility: input.consents.directory ? input.directoryVisibility : "hidden",
         })
@@ -1202,6 +1228,12 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
     sponsor: (handle) =>
       attempt(async () => {
         await deps.convex.mutation(api.modules.diaspora.membership.sponsor, { networkId: await diasporaGa(), handle })
+        return null
+      }),
+
+    redeemSponsorCode: (code) =>
+      attempt(async () => {
+        await deps.convex.mutation(api.modules.diaspora.membership.redeemSponsorCode, { networkId: await diasporaGa(), code })
         return null
       }),
 

@@ -1,5 +1,6 @@
 {
   "welcomeEntry": {
+    "declareGabonese": "Je déclare être de nationalité gabonaise.",
     "title": "Bienvenue dans DIASPORA",
     "lead": "Vérifiez ce que les membres verront de vous, puis entrez : un seul geste suffit.",
     "identityHeading": "Votre profil",
@@ -8,6 +9,7 @@
     "editIdentity": "Modifier le nom affiché et l'identifiant",
     "editResidence": "Modifier le pays et la ville",
     "fromIdn": "Proposé d'après votre identité IDN.",
+    "idnConsulateCheck": "DIASPORA vérifie auprès de Consulat.ga si votre identité numérique y est rattachée. Si elle l’est, votre compte passe automatiquement au niveau 2 (vérifié).",
     "consent": "En créant votre profil, votre nom affiché, votre identifiant et votre pays deviennent visibles des membres de DIASPORA ; l'annuaire et les notifications restent désactivés tant que vous ne les activez pas.",
     "submit": "Créer mon profil et entrer",
     "submitKept": "Entrer dans DIASPORA"

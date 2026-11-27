@@ -240,17 +240,20 @@ function fakeAuth(overrides: Partial<Record<"send" | "signIn" | "signOut", () =>
   const send = vi.fn(overrides.send ?? (async () => ({ data: { success: true }, error: null })))
   const signIn = vi.fn(overrides.signIn ?? (async () => ({ data: {}, error: null })))
   const signOut = vi.fn(overrides.signOut ?? (async () => ({})))
-  const client = { emailOtp: { sendVerificationOtp: send }, signIn: { emailOtp: signIn }, signOut } as unknown as EngineAuthClient
-  return { client, send, signIn, signOut }
+  const sendPhone = vi.fn(async () => ({ data: {}, error: null }))
+  const verifyPhone = vi.fn(async () => ({ data: {}, error: null }))
+  const client = { phoneNumber: { sendOtp: sendPhone, verify: verifyPhone }, emailOtp: { sendVerificationOtp: send }, signIn: { emailOtp: signIn }, signOut } as unknown as EngineAuthClient
+  return { client, send, signIn, signOut, sendPhone, verifyPhone }
 }
 
 describe("écritures de la source « moteur »", () => {
-  it("le code à usage unique : courriel seulement (SMS avec PA4), code de développement relu s'il existe", async () => {
+  it("le code WhatsApp reste privé et le code de développement par courriel est relu s'il existe", async () => {
     // Un moteur d'avant la porte ne publie pas `demoGate` : la porte compte comme non armée.
     const { convex, calls } = fakeConvex({ [CONFIGURATION]: () => ({}), [LATEST_OTP]: () => ({ code: "123456", expiresAt: 2 }) })
     const auth = fakeAuth()
     const actions = createEngineActions({ convex, authClient: auth.client })
-    expect(await actions.requestCode({ kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: false, code: "feature_unavailable" })
+    expect(await actions.requestCode({ kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: true, value: { demoCode: null } })
+    expect(auth.sendPhone).toHaveBeenCalledExactlyOnceWith({ phoneNumber: "+33600000000" })
     expect(await actions.requestCode({ kind: "email", value: " Ada@Exemple.test " })).toEqual({ ok: true, value: { demoCode: "123456" } })
     expect(auth.send).toHaveBeenCalledWith({ email: "ada@exemple.test", type: "sign-in" })
     expect(calls).toEqual([
@@ -337,8 +340,9 @@ describe("écritures de la source « moteur »", () => {
     expect(await actions.verifyCode("654321", { kind: "email", value: " Ada@Exemple.test " })).toEqual({ ok: true, value: null })
     expect(auth.signIn).toHaveBeenCalledExactlyOnceWith({ email: "ada@exemple.test", otp: "654321" })
     expect(auth.send).not.toHaveBeenCalled()
-    // Le SMS n'a pas de porte moteur : sans envoi connu, le code a expiré.
-    expect(await createEngineActions({ convex, authClient: auth.client }).verifyCode("654321", { kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: false, code: "code_expired" })
+    // Le numéro gardé dans l’onglet permet de valider le code WhatsApp après rechargement.
+    expect(await createEngineActions({ convex, authClient: auth.client }).verifyCode("654 321", { kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: true, value: null })
+    expect(auth.verifyPhone).toHaveBeenCalledExactlyOnceWith({ phoneNumber: "+33600000000", code: "654321", disableSession: false })
   })
 
   it("la demande de code porte la langue affichée à ce moment-là : le moteur compose le code dans cette langue", async () => {
@@ -371,6 +375,7 @@ describe("écritures de la source « moteur »", () => {
       ...NEW_PERSON,
       "modules/people/profile:publishMyProfile": () => ({ handle: "ada" }),
       "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:checkRegistration": () => null,
       "modules/diaspora/membership:joinDiasporaGa": () => ({ status: "en_attente", rootStatus: "declaree" }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
@@ -385,6 +390,7 @@ describe("écritures de la source « moteur »", () => {
     expect(calls.map((call) => call.name)).toEqual([
       "modules/networks/networks:getBySlug",
       "modules/people/persons:getMyPerson",
+      "modules/diaspora/membership:checkRegistration",
       "modules/people/consents:recordConsent",
       "modules/people/profile:publishMyProfile",
       "modules/people/consents:recordConsent",
@@ -392,13 +398,27 @@ describe("écritures de la source « moteur »", () => {
     ])
     // Le clic est le consentement : il est enregistré avant que le profil n'existe, jamais après.
     // Le profil social vaut pour la personne entière.
-    expect(calls[2]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
+    expect(calls[3]?.args).toEqual({ purpose: "social_profile", origin: "onboarding" })
     // Un compte neuf : le profil naît de l'accueil, avec le nom et l'identifiant montrés avant le clic.
-    expect(calls[3]?.args).toEqual({ handle: "ada", displayName: "Ada" })
+    expect(calls[4]?.args).toEqual({ handle: "ada", displayName: "Ada" })
     // Les notifications valent pour le réseau EXACT que le moteur relit avant tout envoi (`notificationConsent`).
-    expect(calls[4]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diaspora-ga" })
+    expect(calls[5]?.args).toEqual({ purpose: "notifications", origin: "onboarding", networkId: "n-diaspora-ga" })
     // Sans consentement à l'annuaire, aucun niveau visible n'est demandé.
-    expect(calls[5]?.args).toMatchObject({ networkId: "n-diaspora-ga", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
+    expect(calls[6]?.args).toMatchObject({ networkId: "n-diaspora-ga", directoryVisibility: "hidden", facet: { countryOfResidence: "fr", city: "Lyon" } })
+  })
+
+  it("une admission refusée ne publie pas le profil et ne pose aucun consentement", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, ...NEW_PERSON,
+      "modules/diaspora/membership:checkRegistration": () => { throw engineError({ code: "policyRefused", appRule: "gabonese_nationality_required" }) },
+    })
+    const result = await createEngineActions({ convex, authClient: fakeAuth().client }).join({
+      facet: { countryOfResidence: "FR" }, handle: "ada", displayName: "Ada",
+      consents: { social_profile: true, directory: false, notifications: false }, directoryVisibility: "hidden",
+    })
+    expect(result).toEqual({ ok: false, code: "gabonese_nationality_required" })
+    expect(calls.map((call) => call.name)).toEqual([
+      "modules/networks/networks:getBySlug", "modules/people/persons:getMyPerson", "modules/diaspora/membership:checkRegistration",
+    ])
   })
 
   it("entrer avec un profil ANTSIA publié (acteur `exterieur`) : identifiant, nom et accroche ne sont ni redemandés ni réécrits (EA-04)", async () => {
@@ -407,6 +427,7 @@ describe("écritures de la source « moteur »", () => {
       ...NETWORK,
       "modules/people/persons:getMyPerson": () => outsider,
       "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:checkRegistration": () => null,
       "modules/diaspora/membership:joinDiasporaGa": () => ({ status: "en_attente", rootStatus: "declaree" }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
@@ -422,6 +443,7 @@ describe("écritures de la source « moteur »", () => {
     expect(calls.map((call) => call.name)).toEqual([
       "modules/networks/networks:getBySlug",
       "modules/people/persons:getMyPerson",
+      "modules/diaspora/membership:checkRegistration",
       "modules/people/consents:recordConsent",
       "modules/diaspora/membership:joinDiasporaGa",
     ])
@@ -452,6 +474,7 @@ describe("écritures de la source « moteur »", () => {
         return { handle: args.handle }
       },
       "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:checkRegistration": () => null,
       "modules/diaspora/membership:joinDiasporaGa": () => {
         if (joinFails) throw engineError({ code: "rateLimited", retryAfterMs: 1000 })
         return { status: "declaree", rootStatus: "declaree" }
@@ -488,6 +511,7 @@ describe("écritures de la source « moteur »", () => {
       ...NEW_PERSON,
       "modules/people/profile:publishMyProfile": () => ({ handle: "ada" }),
       "modules/people/consents:recordConsent": () => null,
+      "modules/diaspora/membership:checkRegistration": () => null,
       "modules/diaspora/membership:joinDiasporaGa": () => ({ status: "en_attente", rootStatus: "declaree" }),
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
@@ -509,6 +533,7 @@ describe("écritures de la source « moteur »", () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
       ...NEW_PERSON,
+      "modules/diaspora/membership:checkRegistration": () => null,
       "modules/people/consents:recordConsent": () => null,
       "modules/people/profile:publishMyProfile": () => {
         throw engineError({ code: "handleUnavailable" })
@@ -549,8 +574,8 @@ describe("écritures de la source « moteur »", () => {
   it("ce que le moteur ne sert pas encore se dit, sans rien inventer", async () => {
     const { convex, calls } = fakeConvex(NETWORK)
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
-    // Le SMS attend la passerelle du moteur (PA4) ; IDN est servi depuis EA-02 : voir `engine-idn.test.ts`.
-    expect(await actions.requestCode({ kind: "phone", value: "+33 6 00 00 00 00" })).toEqual({ ok: false, code: "feature_unavailable" })
+    // Un numéro sans indicatif est refusé avant l’envoi.
+    expect(await actions.requestCode({ kind: "phone", value: "0600000000" })).toEqual({ ok: false, code: "phone_invalid" })
     // Export et effacement sont servis depuis DG-026 : voir `engine-data-rights.test.tsx`.
     expect(await actions.react("post-1", null)).toEqual({ ok: true, value: null })
     expect(calls).toEqual([])

@@ -64,7 +64,7 @@
     "createAccount": "Créer un compte",
     "newHere": "Nouveau sur DIASPORA ?",
     "free": "L’inscription est gratuite.",
-    "privacy": "Votre e-mail reste privé. Connexion par code, sans mot de passe.",
+    "privacy": "Vos coordonnées restent privées. Connexion par code, sans mot de passe.",
     "boardTitle": "Votre communauté, pays par pays."
   },
   "entry": {
@@ -103,6 +103,13 @@
     "submit": "Autoriser et continuer"
   },
   "code": {
+    "whatsappLabel": "Votre numéro WhatsApp (avec indicatif)",
+    "sendWhatsApp": "Recevoir le code sur WhatsApp",
+    "whatsappClosed": "L’envoi de codes par WhatsApp est momentanément indisponible.",
+    "whatsappSentTo": "Code WhatsApp envoyé au {{destination}}.",
+    "changePhone": "Changer de numéro",
+    "legacyEmail": "Utiliser l’e-mail de mon compte existant",
+    "useWhatsApp": "Utiliser mon numéro WhatsApp",
     "title": "Recevoir un code",
     "lead": "Un code à usage unique, valable peu de temps. Il ne sert qu'une fois.",
     "kindLabel": "Recevoir le code par",
@@ -758,8 +765,8 @@
     "leaveConfirmBody": "Votre adhésion à DIASPORA prend fin, ainsi que votre parrainage reçu. Votre profil commun et vos consentements sont conservés. Vous pourrez revenir ; un nouveau parrainage pourra être nécessaire.",
     "left": "Vous avez quitté DIASPORA.",
     "sponsorHelp": "Parrainage",
-    "sponsorHelpLead": "Un membre vérifié depuis plus de 30 jours peut parrainer un compte en attente avec son identifiant.",
-    "sponsorHelpPending": "Pour publier : demandez à un membre vérifié depuis plus de 30 jours de vous parrainer. Il lui suffit de votre identifiant.",
+    "sponsorHelpLead": "Les membres reconnus par CONSULAT.GA peuvent parrainer dès leur entrée. Retrouvez votre code dans Parrainer.",
+    "sponsorHelpPending": "Si un proche vous a transmis son code de parrainage, saisissez-le ici. Vous pouvez aussi lui envoyer votre identifiant.",
     "copyHandle": "Copier mon identifiant",
     "handleCopied": "Identifiant copié.",
     "goSponsor": "Parrainer quelqu'un",
@@ -1342,6 +1349,11 @@
     "sessionRetry": "Réessayer"
   },
   "errors": {
+    "gabonese_nationality_required": "DIASPORA.GA est réservé aux Gabonais. Vérifiez le champ Nationalité sur Identité.ga, puis reconnectez-vous.",
+    "verified_phone_required": "Pour rejoindre DIASPORA.GA, entrez avec votre identité numérique ou vérifiez votre numéro avec le code WhatsApp.",
+    "given_name_required": "Saisissez vos prénoms (100 caractères maximum).",
+    "family_name_required": "Saisissez votre nom de famille (100 caractères maximum).",
+    "nationality_required": "Confirmez votre nationalité gabonaise pour rejoindre DIASPORA.GA.",
     "unknown": "Une erreur est survenue. Réessayez dans un instant.",
     "not_found": "Cet élément n'existe plus.",
     "not_signed_in": "Votre session a expiré : entrez de nouveau.",

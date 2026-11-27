@@ -93,11 +93,15 @@ export function toOwnProfileView(person: MyPerson): OwnProfileView {
 }
 
 /** Le compte de la session : la porte d'entrée (IDN et sa garantie, ou compte léger à adresse masquée). */
-export function toAccountView(person: MyPerson, identity: MyIdentity, email: string | null): AccountView {
+export function toAccountView(person: MyPerson, identity: MyIdentity, email: string | null, verifiedPhone?: string | null): AccountView {
+  const local: AccountView["local"] = verifiedPhone
+    ? { kind: "phone", masked: maskDestination("phone", verifiedPhone) }
+    : email ? { kind: "email", masked: maskDestination("email", email) } : null
   return {
     id: person._id,
-    idn: identity.idn ? { loa: identity.idn.loa } : null,
-    local: identity.idn === null && email ? { kind: "email", masked: maskDestination("email", email) } : null,
+    idn: identity.idn ? { loa: identity.idn.loa, ...(identity.idn.gaboneseNationality !== undefined ? { gaboneseNationality: identity.idn.gaboneseNationality } : {}) } : null,
+    ...(identity.phoneVerified === true ? { phoneVerified: true } : {}),
+    local: identity.idn === null && (!identity.phoneVerified || verifiedPhone) ? local : null,
     // Les prénom et nom d'IDN arrivent avec l'identité du moteur (PA4) ; proposés à l'accueil, jamais publiés d'office.
     nameHints: {},
     // Le thème du compte, s'il en a un (le moteur ne rend qu'un thème courant du contrat commun).
@@ -388,6 +392,7 @@ export function toWall(wall: { readonly items: readonly FeedItem[]; readonly pin
 export function toSponsorDashboardView(dashboard: SponsorDashboard): SponsorDashboardView {
   return {
     eligible: dashboard.eligible,
+    code: dashboard.code,
     refusal: dashboard.refusal,
     remaining: dashboard.remaining,
     windowDays: dashboard.windowDays,

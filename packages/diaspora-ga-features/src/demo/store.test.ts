@@ -266,13 +266,13 @@ describe("R3 — un compte léger se fait parrainer", () => {
     expect(await store.sponsor("nadia.mpassa")).toEqual({ ok: false, code: "target_not_eligible" })
   })
 
-  it("un membre vérifié depuis moins de 30 jours ne parraine pas encore", async () => {
+  it("une attestation consulaire ouvre le parrainage le jour même", async () => {
     const { store, me } = demo()
     await store.signInWithIdn(AWA)
     await store.join(joinInput())
     await store.requestAttestation()
     expect(store.statusOf(me())).toBe("verifiee")
-    expect(await store.sponsor("steeve.ngounie")).toEqual({ ok: false, code: "sponsor_too_recent" })
+    expect(await store.sponsor("steeve.ngounie")).toEqual({ ok: true, value: null })
   })
 
   it("retirer un parrainage fait retomber le filleul selon ses faits restants", async () => {

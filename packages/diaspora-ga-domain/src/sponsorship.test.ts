@@ -3,6 +3,9 @@ import {
   SPONSORSHIPS_PER_WINDOW,
   SPONSOR_MIN_VERIFIED_DAYS,
   checkSponsorship,
+  normalizeSponsorCode,
+  sponsorCodeFromUuid,
+  sponsorSeniorityWaived,
   checkSponsorshipRevocation,
   countsInSponsorshipWindow,
   remainingSponsorships,
@@ -13,11 +16,27 @@ import {
   type SponsorFacts,
   type SponsorshipTargetFacts,
 } from "./sponsorship"
+import { LIGHT_ACCOUNT_GROUNDS } from "./eligibility"
 import { DAY_MS } from "./time"
 
 const NOW = Date.UTC(2026, 9, 14, 12, 0, 0)
 const SENIOR: SponsorFacts = { status: "verifiee", verifiedSince: NOW - 31 * DAY_MS, sponsorshipsInWindow: 0 }
 const PENDING_TARGET: SponsorshipTargetFacts = { isSelf: false, status: "en_attente", alreadySponsored: false }
+
+describe("code et ancienneté du parrain", () => {
+  test("le code conserve les 16 derniers chiffres et tolère les séparateurs de lecture", () => {
+    const code = sponsorCodeFromUuid("01234567-89ab-4cde-8bad-0123456789ab")
+    expect(code).toBe("8BAD0123456789AB")
+    expect(normalizeSponsorCode(" 8bad-0123 4567-89ab ")).toBe(code)
+    expect(normalizeSponsorCode("12345")).toBeNull()
+  })
+  test("les preuves consulaires dispensent de l'ancienneté au même titre qu'une dispense fondatrice", () => {
+    expect(sponsorSeniorityWaived(LIGHT_ACCOUNT_GROUNDS)).toBe(false)
+    expect(sponsorSeniorityWaived({ ...LIGHT_ACCOUNT_GROUNDS, consulateAccount: true })).toBe(true)
+    expect(sponsorSeniorityWaived({ ...LIGHT_ACCOUNT_GROUNDS, consularAttestation: true })).toBe(true)
+    expect(sponsorSeniorityWaived({ ...LIGHT_ACCOUNT_GROUNDS, foundingAdmission: { seniorityWaiver: true } })).toBe(true)
+  })
+})
 
 describe("checkSponsorship — arbitrage A3", () => {
   test("un parrain vérifié depuis plus de 30 jours admet un compte en attente (R3)", () => {

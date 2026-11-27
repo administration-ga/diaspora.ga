@@ -19,6 +19,16 @@
     "attestationTitle": "Faire vérifier votre inscription consulaire",
     "attestationBody": "Vous avez une inscription dans un poste consulaire ? Demandez-en la vérification, avec votre accord."
   },
+  "sponsorCode": {
+    "mine": "Mon code de parrainage",
+    "hint": "Transmettez ce code à une personne que vous connaissez. Un nouveau code apparaîtra dès son utilisation.",
+    "copy": "Copier le code",
+    "copied": "Code copié.",
+    "received": "Code reçu de mon parrain",
+    "redeem": "Utiliser le code",
+    "done": "Parrainage reçu. Votre accès a été mis à jour.",
+    "invalid": "Ce code ne peut pas être utilisé. Demandez un code à votre parrain."
+  },
   "sponsorRequest": {
     "prefilled": "Cet identifiant vient d'un lien de demande de parrainage. Ne parrainez qu'une personne que vous connaissez.",
     "knows": "Je connais cette personne."

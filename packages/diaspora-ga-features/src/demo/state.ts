@@ -63,6 +63,7 @@ export interface DemoPerson {
 }
 
 export interface DemoMembership {
+  readonly sponsorCode?: string | null
   readonly personId: string
   readonly grounds: MembershipGrounds
   readonly joinedAt: number

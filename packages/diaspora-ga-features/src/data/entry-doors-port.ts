@@ -15,6 +15,8 @@ export interface EntryDoorsView {
   readonly idn: boolean
   /** Le code à usage unique par e-mail peut partir (service de courriel, ou développement local). */
   readonly emailCode: boolean
+  /** Codes à six chiffres remis par WhatsApp sur cette origine. */
+  readonly whatsappOtp?: boolean
 }
 
 /**

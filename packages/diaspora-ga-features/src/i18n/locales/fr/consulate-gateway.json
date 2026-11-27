@@ -30,12 +30,33 @@
     },
     "arrival": {
       "door": "Vous arrivez de consulat.ga.",
-      "doorHint": "Entrez avec la même identité numérique, ou avec un code reçu par e-mail.",
+      "doorHint": "Continuez avec l’identité numérique rattachée à votre compte consulaire.",
       "continueIdn": "Continuer avec mon identité numérique",
       "cardTitle": "Vous arrivez de consulat.ga",
       "cardBody": "Vous êtes ici @{{handle}}.",
       "back": "Revenir à consulat.ga",
       "notMe": "Ce n’est pas moi"
+    },
+    "passage": {
+      "failed": "Le passage n’a pas abouti",
+      "opening": "Ouverture de DIASPORA…",
+      "retryInfo": "Revenez dans votre espace consulaire pour relancer le passage avec votre session en cours.",
+      "retry": "Réessayer",
+      "home": "Accueil DIASPORA",
+      "continueConsulate": "Continuer avec CONSULAT.GA",
+      "downloadIntro": "Retrouvez votre communauté dans l’application ou continuez dans votre navigateur avec votre session consulaire.",
+      "ios": "Télécharger sur l’App Store",
+      "android": "Télécharger sur Google Play",
+      "later": "Les applications seront proposées ici dès leur publication.",
+      "laterIos": "La version iOS sera proposée ici dès sa publication.",
+      "laterAndroid": "La version Android sera proposée ici dès sa publication.",
+      "continueWeb": "Continuer sur le web",
+      "acceptTitle": "Rejoindre DIASPORA",
+      "acceptLead": "En acceptant, vous autorisez DIASPORA à publier le nom et l’identifiant affichés et à vérifier votre inscription consulaire avec votre identité numérique pour le statut de membre vérifié. Votre profil reste masqué dans l’annuaire.",
+      "terms": "Conditions d’utilisation",
+      "privacy": "Confidentialité",
+      "accept": "Accepter et rejoindre",
+      "checkProfile": "Vérifier mon profil"
     }
   }
 }

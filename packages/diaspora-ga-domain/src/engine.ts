@@ -148,6 +148,9 @@ export function toEngineFacet(facet: DiasporaFacet): {
 /** Codes de la nationalité gabonaise qu'IDN peut rendre (ISO 3166-1 alpha-2 et alpha-3). */
 export const GABONESE_NATIONALITY_CODES: readonly string[] = Object.freeze(["GA", "GAB"])
 
+// Le champ nationalité du profil IDN accepte aussi un pays ou un gentilé en toutes lettres.
+const GABONESE_NATIONALITIES = new Set([...GABONESE_NATIONALITY_CODES, "GABON", "GABONAIS", "GABONAISE", "GABONESE"])
+
 /**
  * Le lien IDN du moteur (`identityLinks`, fournisseur `idn`) lu comme fait du
  * domaine. Nationalité absente : inconnue (`null`), ce qui n'exclut pas ;
@@ -160,7 +163,7 @@ export function idnGroundFromLink(link: { readonly loa?: number | undefined; rea
   const nationality = link.nationality?.trim().toUpperCase() ?? ""
   return {
     loa: validLoa ? loa : IDN_LOA_MIN,
-    gaboneseNationality: nationality === "" ? null : GABONESE_NATIONALITY_CODES.includes(nationality),
+    gaboneseNationality: nationality === "" ? null : GABONESE_NATIONALITIES.has(nationality),
   }
 }
 
@@ -176,7 +179,7 @@ export type EngineVerificationSource = "consulat" | "idn" | "operator"
  */
 export function engineVerificationSource(grounds: MembershipGrounds, now: number): EngineVerificationSource | null {
   if (deriveMembershipStatus(grounds, now) !== "verifiee") return null
-  if (grounds.consularAttestation) return "consulat"
+  if (grounds.consularAttestation || grounds.consulateAccount) return "consulat"
   return deriveMembershipStatus({ ...grounds, foundingAdmission: null }, now) === "verifiee" ? "idn" : "operator"
 }
 
