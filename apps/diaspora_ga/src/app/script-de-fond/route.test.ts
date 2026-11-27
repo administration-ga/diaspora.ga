@@ -32,6 +32,7 @@ describe("route du script de fond", () => {
       version: SERVICE_WORKER_VERSION,
       cachePrefix: OFFLINE_CACHE_PREFIX,
       offlinePath: routes.offline(),
+      icon: routes.appIcon("192"),
       title: getFixedT("fr")("brand.name"),
       messages: { fr: getFixedT("fr")("installableApp.notificationBody"), en: getFixedT("en")("installableApp.notificationBody") },
       tagPrefix: "diaspora-ga-notification-",

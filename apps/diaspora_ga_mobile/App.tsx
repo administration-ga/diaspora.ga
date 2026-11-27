@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
-import { ActivityIndicator, BackHandler, Button, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
+import { ActivityIndicator, BackHandler, Button, Image, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
 import { WebView } from "react-native-webview"
 import { destination, feed, incoming } from "./navigation"
@@ -36,12 +36,24 @@ function Browser() {
     return () => { live = false; listener.remove(); back.remove() }
   }, [])
 
+  function loading() {
+    return (
+      <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
+        <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.brand} accessible={false} />
+        <Image source={require("./assets/wordmark.png")} resizeMode="contain"
+          style={[styles.lettering, { tintColor: dark ? colors.color : "#082645" }]} accessibilityLabel="DIASPORA" />
+        <ActivityIndicator accessibilityLabel="Ouverture de DIASPORA" />
+      </View>
+    )
+  }
+
   function openExternal(url: string) {
     void Linking.openURL(url).catch(() => setError(true))
   }
   return <SafeAreaView style={[styles.fill, { backgroundColor: colors.backgroundColor }]}>
     <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
     {source && <WebView ref={web} source={source} style={styles.fill} originWhitelist={["*"]}
+      startInLoadingState renderLoading={loading}
       allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
       mixedContentMode="never" thirdPartyCookiesEnabled={false} allowsInlineMediaPlayback
       mediaCapturePermissionGrantType="grantIfSameHostElseDeny" setSupportMultipleWindows
@@ -63,11 +75,12 @@ function Browser() {
       onHttpError={e => { if (e.nativeEvent.statusCode >= 500 && e.nativeEvent.url === latestLink.current) setError(true) }}
       renderError={() => <View />}
     />}
-    {(!source || error) && <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
-      {error ? <><Text accessibilityRole="header" style={[styles.title, { color: colors.color }]}>DIASPORA.GA est indisponible</Text>
-        <Text style={{ color: colors.color }}>Vérifiez votre connexion puis réessayez.</Text>
-        <Button title="Réessayer" onPress={() => { setError(false); web.current?.reload() }} /></>
-        : <ActivityIndicator accessibilityLabel="Ouverture de DIASPORA.GA" />}
+    {!source && !error && loading()}
+    {error && <View style={[styles.overlay, { backgroundColor: colors.backgroundColor }]}>
+      <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.brand} accessible={false} />
+      <Text accessibilityRole="header" style={[styles.title, { color: colors.color }]}>DIASPORA est indisponible</Text>
+      <Text style={{ color: colors.color }}>Vérifiez votre connexion puis réessayez.</Text>
+      <Button title="Réessayer" onPress={() => { setError(false); web.current?.reload() }} />
     </View>}
   </SafeAreaView>
 }
@@ -75,5 +88,7 @@ function Browser() {
 export default function App() { return <SafeAreaProvider><Browser /></SafeAreaProvider> }
 const styles = StyleSheet.create({
   fill: { flex: 1 }, overlay: { ...StyleSheet.absoluteFill, padding: 24, gap: 16, alignItems: "center", justifyContent: "center" },
+  lettering: { width: 160, height: 21 },
+  brand: { width: 144, height: 96 },
   title: { fontSize: 22, fontWeight: "600" },
 })

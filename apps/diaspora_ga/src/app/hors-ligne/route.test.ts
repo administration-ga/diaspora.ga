@@ -42,10 +42,10 @@ describe("page hors-ligne", () => {
     }
   })
 
-  it("est à la marque : mot-symbole, œillet et couleurs de la charte, en clair et en sombre", () => {
+  it("est à la marque : mot-symbole et couleurs de la charte, en clair et en sombre", () => {
     const html = offlinePageHtml({ locale: "fr", palette })
     expect(html).toContain(`${getFixedT("fr")("brand.name")}</p>`)
-    expect(html).toContain('class="eyelet"')
+    expect(html).toContain('class="mark"')
     for (const color of [palette.light.background, palette.light.accent, palette.dark.background, palette.dark.foreground]) expect(html).toContain(color)
     expect(html).toContain("prefers-color-scheme: dark")
   })

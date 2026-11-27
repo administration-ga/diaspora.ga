@@ -1,10 +1,10 @@
 // @vitest-environment node
+import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 
 import { getFixedT, type Locale } from "@diaspora-ga/features/i18n"
 import { describe, expect, it } from "vitest"
 
-import { APP_ICON_FORMATS, APPLE_ICON_SIZE, MANIFEST_ICONS, TAB_ICON_SIZE, appIconSpec, isAppIconFormat } from "./app-icon-spec"
 import { readInstallPalette } from "./install-palette-files"
 import { routes } from "./routes"
 import { webManifest } from "./web-manifest"
@@ -32,7 +32,7 @@ describe("manifeste de l'application installable", () => {
     const fr = manifestIn("fr")
     const en = manifestIn("en")
     expect(fr.name).toBe(getFixedT("fr")("brand.name"))
-    expect(fr.short_name).toBe(fr.name)
+    expect(fr.short_name).toBe(getFixedT("fr")("brand.shortName"))
     expect(fr.description).toBe(getFixedT("fr")("meta.description"))
     expect(en.description).toBe(getFixedT("en")("meta.description"))
     expect(en.description).not.toBe(fr.description)
@@ -65,26 +65,17 @@ describe("manifeste de l'application installable", () => {
   })
 })
 
-describe("icônes — l'œillet du mot-symbole", () => {
-  it("garde les proportions du mot-symbole (disque de 10 dans un anneau de 14)", () => {
-    for (const size of [TAB_ICON_SIZE, APPLE_ICON_SIZE, 192, 512]) {
-      const spec = appIconSpec(size)
-      expect(spec.size).toBe(size)
-      expect(spec.inner / spec.outer).toBeCloseTo(10 / 14, 1)
-      expect(spec.outer).toBeLessThan(size)
-    }
-  })
-
-  it("la variante masquable tient dans la zone sûre (cercle de 80 % du côté)", () => {
-    const icon = MANIFEST_ICONS.masquable
-    const spec = appIconSpec(icon.size, icon.purpose)
-    expect(icon.purpose).toBe("maskable")
-    expect(spec.outer).toBeLessThanOrEqual(icon.size * 0.8)
-    expect(spec.outer).toBeLessThan(appIconSpec(icon.size).outer)
-  })
-
-  it("ne connaît que les formats du manifeste", () => {
-    expect(APP_ICON_FORMATS.every(isAppIconFormat)).toBe(true)
-    for (const unknown of ["1024", "../manifest", "", "MASQUABLE"]) expect(isAppIconFormat(unknown)).toBe(false)
+describe("fichiers des icônes", () => {
+  it.each([
+    ["public/identite/pwa-192.png", 192],
+    ["public/identite/pwa-512.png", 512],
+    ["public/identite/pwa-maskable.png", 512],
+    ["src/app/apple-icon.png", 180],
+    ["src/app/icon.png", 32],
+  ] as const)("sert un PNG aux dimensions annoncées pour %s", (name, size) => {
+    const file = readFileSync(new URL(`../../${name}`, import.meta.url))
+    expect(file.toString("ascii", 1, 4)).toBe("PNG")
+    expect(file.readUInt32BE(16)).toBe(size)
+    expect(file.readUInt32BE(20)).toBe(size)
   })
 })

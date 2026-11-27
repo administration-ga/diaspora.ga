@@ -110,7 +110,7 @@ export function SiteFooter(props: { compact?: boolean } = {}) {
     <footer className={cn("border-t border-border", props.compact ? "bg-card" : "mt-16")}>
       <div className={cn("mx-auto flex w-full max-w-[1120px] flex-col gap-6 px-4 py-8 md:flex-row md:items-start md:justify-between", props.compact && "gap-4 py-5 max-md:items-center max-md:text-center")}>
         <div className={cn("flex flex-col gap-2", props.compact && "hidden min-[960px]:flex")}>
-          <Wordmark />
+          <Wordmark textOnly />
           <p className="max-w-sm text-[13px] text-muted-foreground">{t("footer.publisher")}</p>
         </div>
         <nav aria-label={t("footer.label")} className={cn("flex gap-2 text-sm", props.compact ? "flex-wrap justify-center gap-x-5" : "flex-col")}>
