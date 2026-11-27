@@ -22,5 +22,16 @@
   },
   "cli": {
     "appVersionSource": "remote"
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleTeamId": "5Y39TTNCM7",
+        "sku": "diaspora-ga-mobile",
+        "language": "fr-FR",
+        "appName": "DIASPORA.GA",
+        "bundleIdentifier": "ga.diaspora.mobile"
+      }
+    }
   }
 }
