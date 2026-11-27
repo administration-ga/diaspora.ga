@@ -61,7 +61,7 @@ import { showFloatingCard } from "@/components/floating-cards"
 import { ThemeSwitch } from "@/components/preferences"
 import { PublicShell, floatingLinkClass } from "@/components/site-chrome"
 import { contrastLevel, contrastRatio, type ContrastLevel } from "@/lib/contrast"
-import { routes } from "@/lib/routes"
+import { PROFILE_IMAGE_PATH, routes } from "@/lib/routes"
 
 /**
  * `/charte` — la charte « Sable de la diaspora », version 5 (27/11/2026) : chaque
@@ -344,6 +344,17 @@ export function CharteScreen() {
                 <figcaption className="mt-3 text-sm text-muted-foreground">{t(caption)}</figcaption>
               </figure>
             ))}
+            <figure className="flex min-w-0 flex-col rounded-2xl bg-card p-4 text-card-foreground sm:col-span-3">
+              <div className="grid min-h-32 place-items-center">
+                <img src={PROFILE_IMAGE_PATH} alt="" width={96} height={96} className="size-24 rounded-full" />
+              </div>
+              <figcaption className="mt-3 text-sm">
+                <span className="block text-muted-foreground">{t("charte.brand.profile")}</span>
+                <a href={PROFILE_IMAGE_PATH} download="DIASPORA-profil.png" className="inline-flex min-h-11 items-center font-semibold text-primary underline underline-offset-4">
+                  {t("charte.brand.downloadProfile")}
+                </a>
+              </figcaption>
+            </figure>
           </div>
           <p className="max-w-prose text-sm text-muted-foreground">{t("charte.brand.spacing")}</p>
         </Section>

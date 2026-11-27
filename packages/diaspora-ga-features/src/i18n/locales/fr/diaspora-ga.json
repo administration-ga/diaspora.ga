@@ -57,7 +57,7 @@
     "lead": "Échangez avec les Gabonais du monde, partagez votre quotidien et créez votre propre réseau.",
     "eligibility": "Le réseau des Gabonais de l’étranger.",
     "signInTitle": "Se connecter à DIASPORA",
-    "idnContinue": "Continuer avec IDN",
+    "idnContinue": "Continuer avec Identité.ga",
     "idnUnavailable": "La connexion IDN sera disponible prochainement.",
     "or": "ou",
     "signIn": "Se connecter",
@@ -375,6 +375,7 @@
     "shareBodyLabel": "Votre mot (facultatif)",
     "sharePlaceholder": "Pourquoi cette publication compte…",
     "shared": "Partagé.",
+    "visibility": "Visibilité",
     "reachLegend": "Où publier",
     "reachLocal": "Dans le hub {{country}}",
     "reachDiaspora": "Pour toute la diaspora",
@@ -847,6 +848,8 @@
       "app": "DIASPORA · signature horizontale de l’application",
       "stacked": "DIASPORA · signature verticale",
       "wordmark": "Signature typographique",
+      "profile": "Photo de profil officielle",
+      "downloadProfile": "Télécharger la photo de profil (PNG)",
       "spacing": "Autour du logo, laisser au minimum la hauteur d’une lettre. Sur fond sombre, le lettrage devient clair et l’hirondelle conserve ses couleurs."
     },
     "section": {

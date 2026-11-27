@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import NextLink from "next/link"
 
 import { getAppT } from "@/i18n/server"
@@ -14,6 +15,7 @@ export default async function NotFound() {
   const { t } = await getAppT()
   return (
     <main id={anchors.contentId} className="mx-auto flex min-h-dvh max-w-xl flex-col justify-center gap-4 px-6 py-16">
+      <BrandLogo className="w-40" />
       <h1 className="font-display text-3xl font-bold">{t("notFound.title")}</h1>
       <p className="text-muted-foreground">{t("notFound.lead")}</p>
       <NextLink className="inline-flex min-h-11 items-center self-start rounded-md text-primary underline underline-offset-4 focus-visible:shadow-focus" href={routes.dashboard()}>

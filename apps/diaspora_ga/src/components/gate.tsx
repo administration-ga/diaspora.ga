@@ -10,6 +10,8 @@ import { forgetPendingCode } from "@/lib/pending-code"
 import { entryExit, forgetReturnPath, liveMember, peekReturnPath, rememberReturnPath, type ReturnDestination } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 
+import { Wordmark } from "./wordmark"
+
 type SignedIn = Extract<SessionView, { status: "signed_in" }>
 
 /** L'exigence d'une page : ce que la session doit porter pour qu'elle s'affiche. */
@@ -93,6 +95,7 @@ export function Gate(props: {
 export function GateSkeleton() {
   return (
     <div className="mx-auto flex w-full max-w-[792px] flex-col gap-4 px-4 py-6" aria-busy="true">
+      <Wordmark className="w-32" />
       <Skeleton className="h-28 w-full rounded-xl" />
       <Skeleton className="h-40 w-full rounded-xl" />
       <Skeleton className="h-40 w-full rounded-xl" />

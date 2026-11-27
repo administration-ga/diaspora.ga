@@ -66,9 +66,8 @@ describe("passerelle consulat.ga — les adresses, depuis la configuration", () 
     expect(configuredConsulateGateway()?.mySpace).toBe("https://consulat.example/my-space")
   })
 
-  it("chaque lien part dans le même onglet, sans ouvreur ni référent", () => {
-    expect(CONSULATE_LINK_ATTRIBUTES).toEqual({ rel: "noopener noreferrer", referrerPolicy: "no-referrer" })
-    expect(CONSULATE_LINK_ATTRIBUTES).not.toHaveProperty("target")
+  it("chaque lien part dans un nouvel onglet, sans ouvreur ni référent", () => {
+    expect(CONSULATE_LINK_ATTRIBUTES).toEqual({ target: "_blank", rel: "noopener noreferrer", referrerPolicy: "no-referrer" })
   })
 
   it("plus aucun interrupteur de code : le module du réseau `consulateGateway` règle l'entrée, ouvert et fermé dans admin.diaspora.ga", () => {

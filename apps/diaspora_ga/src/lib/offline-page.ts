@@ -51,6 +51,8 @@ function styles(palette: InstallPalette | null): string {
 export function offlinePageHtml(input: { readonly locale: Locale; readonly palette: InstallPalette | null }): string {
   const order = [input.locale, ...SUPPORTED_LOCALES.filter((locale) => locale !== input.locale)]
   const first = getFixedT(input.locale)
+  const icon = process.env.DIASPORA_GA_OFFLINE_ICON
+  const mark = icon ? `<img src="data:image/png;base64,${icon}" width="48" height="48" alt="">` : ""
   const sections = order
     .map((locale, index) => {
       const t = getFixedT(locale)
@@ -76,7 +78,7 @@ export function offlinePageHtml(input: { readonly locale: Locale; readonly palet
     `<style>${styles(input.palette)}</style>`,
     "</head>",
     "<body><main>",
-    `<p class="mark">${escapeHtml(first("brand.name"))}</p>`,
+    `<p class="mark">${mark}${escapeHtml(first("brand.name"))}</p>`,
     sections,
     "</main></body>",
     "</html>",

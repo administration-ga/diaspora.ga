@@ -57,7 +57,7 @@
     "lead": "Connect with Gabonese people around the world, share your daily life and build your own network.",
     "eligibility": "The network for Gabonese people living abroad.",
     "signInTitle": "Sign in to DIASPORA",
-    "idnContinue": "Continue with IDN",
+    "idnContinue": "Continue with Identité.ga",
     "idnUnavailable": "IDN sign-in will be available soon.",
     "or": "or",
     "signIn": "Sign in",
@@ -375,6 +375,7 @@
     "shareBodyLabel": "Your note (optional)",
     "sharePlaceholder": "Why this post matters…",
     "shared": "Shared.",
+    "visibility": "Visibility",
     "reachLegend": "Where to post",
     "reachLocal": "In the {{country}} hub",
     "reachDiaspora": "For the whole diaspora",
@@ -847,6 +848,8 @@
       "app": "DIASPORA · horizontal app logo",
       "stacked": "DIASPORA · stacked logo",
       "wordmark": "Wordmark",
+      "profile": "Official profile picture",
+      "downloadProfile": "Download the profile picture (PNG)",
       "spacing": "Leave at least one capital letter’s height around the logo. On dark backgrounds the lettering becomes light and the swallow keeps its colours."
     },
     "section": {

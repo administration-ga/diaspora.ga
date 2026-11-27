@@ -8,6 +8,7 @@ import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
 
+import { BrandLogo } from "../brand/logo"
 import { useActions } from "../data/context"
 import type { ActionErrorCode } from "../data/errors"
 import {
@@ -581,6 +582,7 @@ export function PostComposerSheet(props: {
   return (
     <Sheet open={props.open} onOpenChange={changeOpen}>
       <SheetContent
+        leading={<BrandLogo variant="symbol" decorative className="w-8" />}
         title={page ? (fixedScope?.title ?? t("pagePublications.composeTitle")) : share ? t("composer.shareTitle") : t("composer.title")}
         description={fixedScope?.description ?? (page ? t("pagePublications.composeDescription", { name: page.name }) : share ? t("composer.shareDescription") : t("composer.description"))}
         hideDescription={!fixedScope}
@@ -623,7 +625,7 @@ export function PostComposerSheet(props: {
                 id={control.id}
                 aria-describedby={control.describedBy}
                 aria-invalid={control.invalid || undefined}
-                rows={5}
+                rows={3}
                 maxLength={POST_BODY_MAX + 200}
                 placeholder={page ? (fixedScope?.placeholder ?? t("pagePublications.placeholder", { name: page.name })) : share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
                 {...form.register("body")}
@@ -807,82 +809,92 @@ export function PostComposerSheet(props: {
             </div>
           ) : null}
 
-          {fixedScope ? <p className="rounded-lg bg-muted p-3 text-sm font-medium">{fixedScope.audienceLabel}</p> : <>
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">{t("composer.reachLegend")}</legend>
-            <Controller
-              control={form.control}
-              name="reach"
-              render={({ field }) => (
-                <RadioGroup value={localClosed ? "diaspora" : field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
-                  {!page || page.country ? <RadioCard
-                    value="local"
-                    disabled={localClosed}
-                    aria-describedby={localClosed ? localNoticeId : undefined}
-                    className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
-                  >
-                    <span className="flex flex-wrap items-center gap-2">
-                      <CountryTag country={localCountry} />
-                      <span className="text-sm">{t("composer.reachLocal", { country: countryLabel })}</span>
-                    </span>
-                  </RadioCard> : null}
-                  <RadioCard value="diaspora">
-                    <span className="flex flex-wrap items-center gap-2">
-                      <ScopeTag />
-                      <span className="text-sm">{t("composer.reachDiaspora")}</span>
-                    </span>
-                  </RadioCard>
-                </RadioGroup>
-              )}
-            />
-            {page && !page.country ? <p className="text-[13px] text-muted-foreground">{t("pagePublications.noCountry")}</p> : null}
-            {localClosed ? <p id={localNoticeId} className="text-[13px] text-pending-foreground">{t("composer.reviewNotice", { country: countryLabel })}</p> : null}
-          </fieldset>
+          {fixedScope ? <p className="rounded-lg bg-muted p-3 text-sm font-medium">{fixedScope.audienceLabel}</p> : (
+            <details className="rounded-lg border border-border px-3">
+              <summary className="min-h-11 cursor-pointer py-2 text-sm font-medium focus-visible:shadow-focus">
+                {t("composer.visibility")} · {localClosed || reach === "diaspora" ? t("composer.reachDiaspora") : countryLabel}
+                {" · "}{audience === "public" ? t("composer.audiencePublic") : page ? t("pagePublications.followersAudience") : t("composer.audienceConnections")}
+                {rootAllowed && alsoOnRoot ? " · ANTSIA" : ""}
+              </summary>
+              <div className="grid gap-4 pb-3">
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-medium">{t("composer.reachLegend")}</legend>
+                  <Controller
+                    control={form.control}
+                    name="reach"
+                    render={({ field }) => (
+                      <RadioGroup value={localClosed ? "diaspora" : field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
+                        {!page || page.country ? <RadioCard
+                          value="local"
+                          disabled={localClosed}
+                          aria-describedby={localClosed ? localNoticeId : undefined}
+                          className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
+                        >
+                          <span className="flex flex-wrap items-center gap-2">
+                            <CountryTag country={localCountry} />
+                            <span className="text-sm">{t("composer.reachLocal", { country: countryLabel })}</span>
+                          </span>
+                        </RadioCard> : null}
+                        <RadioCard value="diaspora">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <ScopeTag />
+                            <span className="text-sm">{t("composer.reachDiaspora")}</span>
+                          </span>
+                        </RadioCard>
+                      </RadioGroup>
+                    )}
+                  />
+                  {page && !page.country ? <p className="text-[13px] text-muted-foreground">{t("pagePublications.noCountry")}</p> : null}
+                  {localClosed ? <p id={localNoticeId} className="text-[13px] text-pending-foreground">{t("composer.reviewNotice", { country: countryLabel })}</p> : null}
+                </fieldset>
 
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">{t("composer.audienceLegend")}</legend>
-            <Controller
-              control={form.control}
-              name="audience"
-              render={({ field }) => (
-                <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("composer.audienceLegend")}>
-                  <RadioCard value="public">
-                    <span className="text-sm">{t("composer.audiencePublic")}</span>
-                  </RadioCard>
-                  <RadioCard value={page ? "followers" : "connections"}>
-                    <span className="text-sm">{page ? t("pagePublications.followersAudience") : t("composer.audienceConnections")}</span>
-                  </RadioCard>
-                </RadioGroup>
-              )}
-            />
-          </fieldset>
-          </>}
+                <fieldset className="flex flex-col gap-2">
+                  <legend className="mb-1 text-sm font-medium">{t("composer.audienceLegend")}</legend>
+                  <Controller
+                    control={form.control}
+                    name="audience"
+                    render={({ field }) => (
+                      <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("composer.audienceLegend")}>
+                        <RadioCard value="public">
+                          <span className="text-sm">{t("composer.audiencePublic")}</span>
+                        </RadioCard>
+                        <RadioCard value={page ? "followers" : "connections"}>
+                          <span className="text-sm">{page ? t("pagePublications.followersAudience") : t("composer.audienceConnections")}</span>
+                        </RadioCard>
+                      </RadioGroup>
+                    )}
+                  />
+                </fieldset>
 
-          {!page ? <div className="flex items-start gap-3 rounded-lg bg-muted p-3">
-            <Controller
-              control={form.control}
-              name="alsoOnRoot"
-              render={({ field }) => (
-                <Checkbox
-                  id={`${ids}-antsia`}
-                  checked={field.value}
-                  onCheckedChange={(checked) => field.onChange(checked === true)}
-                  disabled={!rootAllowed}
-                  aria-describedby={`${ids}-antsia-aide`}
-                  className="mt-0.5"
-                />
-              )}
-            />
-            <div className="min-w-0">
-              <Label htmlFor={`${ids}-antsia`} className="inline-flex items-center gap-1.5">
-                <GlobeIcon className="size-4" aria-hidden />
-                {t("composer.alsoOnRoot")}
-              </Label>
-              <p id={`${ids}-antsia-aide`} className="mt-0.5 text-[13px] text-muted-foreground">
-                {rootAllowed ? t("composer.alsoOnRootHint") : t("composer.alsoOnRootDisabled")}
-              </p>
-            </div>
-          </div> : null}
+                {!page ? <div className="flex items-start gap-3 rounded-lg bg-muted p-3">
+                  <Controller
+                    control={form.control}
+                    name="alsoOnRoot"
+                    render={({ field }) => (
+                      <Checkbox
+                        id={`${ids}-antsia`}
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(checked === true)}
+                        disabled={!rootAllowed}
+                        aria-describedby={`${ids}-antsia-aide`}
+                        className="mt-0.5"
+                      />
+                    )}
+                  />
+                  <div className="min-w-0">
+                    <Label htmlFor={`${ids}-antsia`} className="inline-flex items-center gap-1.5">
+                      <GlobeIcon className="size-4" aria-hidden />
+                      {t("composer.alsoOnRoot")}
+                    </Label>
+                    <p id={`${ids}-antsia-aide`} className="mt-0.5 text-[13px] text-muted-foreground">
+                      {rootAllowed ? t("composer.alsoOnRootHint") : t("composer.alsoOnRootDisabled")}
+                    </p>
+                  </div>
+                </div> : null}
+
+              </div>
+            </details>
+          )}
 
           <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 border-t border-border bg-card px-5 py-3">
             <Button variant="ghost" onClick={() => changeOpen(false)}>

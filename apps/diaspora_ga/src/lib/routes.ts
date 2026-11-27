@@ -231,6 +231,7 @@ export const PAGE_JOBS_ANCHOR = "emplois-de-la-page"
  */
 export const NOTIFICATION_REFERENCE_PARAM = "reference"
 
+export const PROFILE_IMAGE_PATH = "/identite/diaspora-profil.png"
 export const SHARE_IMAGE_PATH = "/identite/partage-envol.png"
 
 export const routes = {

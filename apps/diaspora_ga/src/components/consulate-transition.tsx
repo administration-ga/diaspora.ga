@@ -1,13 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { routes } from "@/lib/routes"
-import { LiquidWordmark } from "./liquid-wordmark"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 
 export function ConsulateTransition({ mobileHandoff = false }: { mobileHandoff?: boolean } = {}) {
   const { t } = useDiasporaGaT()
-  const area = useRef<HTMLElement>(null)
   const [offerIdn, setOfferIdn] = useState(false)
   useEffect(() => {
     if (!mobileHandoff || new URLSearchParams(window.location.search).get("mode") !== "app") return
@@ -16,10 +15,9 @@ export function ConsulateTransition({ mobileHandoff = false }: { mobileHandoff?:
     return () => window.clearTimeout(timer)
   }, [mobileHandoff])
   return (
-    <main ref={area}
-      className="relative isolate grid min-h-dvh place-items-center overflow-hidden">
-      <span role="status" aria-label={t("consulateGateway.passage.opening")} className="font-display text-[40px] font-bold leading-none tracking-tight text-primary sm:text-[72px]">
-        <LiquidWordmark text={t("brand.name")} areaRef={area} replayIntro />
+    <main className="relative isolate grid min-h-dvh place-items-center overflow-hidden">
+      <span role="status" aria-label={t("consulateGateway.passage.opening")} className="flex items-center justify-center px-6">
+        <BrandLogo decorative variant="horizontal" className="w-60 sm:w-80" />
       </span>
       {offerIdn && <a className="absolute bottom-[20%] rounded-full px-5 py-3 text-center underline"
         href={routes.consulatePass() + "?secours=idn"}>{t("consulateGateway.arrival.continueIdn")}</a>}

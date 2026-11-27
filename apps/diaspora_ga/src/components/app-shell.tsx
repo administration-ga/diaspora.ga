@@ -23,7 +23,6 @@ import {
 } from "@diaspora-ga/features"
 import {
   useAssociations,
-  useDataSource,
   useFeatureGate,
   useModerationDesk,
   useOpenCountries,
@@ -94,7 +93,7 @@ import { MessagesUnreadReader } from "./messages-unread"
 import { NetworkStatusNotice } from "./network-status"
 import { useSignOutEverywhere } from "./sign-out-settings"
 import { AppDemoChip } from "./site-chrome"
-import { BrandBird, Wordmark } from "./wordmark"
+import { Wordmark } from "./wordmark"
 
 interface ComposerControl {
   readonly open: () => void
@@ -1057,23 +1056,15 @@ function MobileHeader(props: {
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
-  const demo = useDataSource().kind === "demo"
   return (
     <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 backdrop-blur min-[360px]:px-4 min-[960px]:hidden">
-      {/* Largeurs mesurées sur les polices de la charte : mot-symbole 140 px, repère « Démo » 72 px
-          (34 px sans libellé), Publier, cloche et compte 136 px. Le mot-symbole et les trois actions
-          tiennent dès 320 px ; avec le repère de démonstration, celui-ci ne garde que son icône sous
-          420 px (son nom reste lu) et le mot-symbole son œillet sous 380 px (le lien reste nommé).
-          L'étiquette pays n'entre qu'à partir de 440 px, le format téléphone de la charte ; plus
-          étroit, la feuille du compte porte le pays (et « Communautés » quand elle est dans la barre). */}
-      <div className="flex shrink-0 items-center gap-2 max-[420px]:[&_[data-slot=demo-chip]>span]:sr-only">
-        <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="rounded-md focus-visible:shadow-focus">
-          {demo && <BrandBird className="min-[381px]:hidden" />}
-          <Wordmark className={demo ? "max-[380px]:hidden" : undefined} />
+      <div className="flex min-w-0 items-center gap-2 max-[420px]:[&_[data-slot=demo-chip]>span]:sr-only">
+        <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="inline-flex min-h-11 min-w-0 items-center rounded-md focus-visible:shadow-focus">
+          <Wordmark className="w-[clamp(6rem,32vw,10rem)]" />
         </NextLink>
         <AppDemoChip />
       </div>
-      <div className="flex min-w-0 items-center justify-end gap-1">
+      <div className="flex shrink-0 items-center justify-end gap-1">
         <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
         <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
         <NotificationBell />
@@ -1121,7 +1112,7 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
  * et l'entrée Live du composeur font la même demande.
  */
 function launchConference(): void {
-  requestConferenceLaunch({ userIds: [] })
+  requestConferenceLaunch({ userIds: [], quickSetup: true })
 }
 
 const CREATE_MENU_ITEM_CLASS = "flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"

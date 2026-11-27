@@ -37,7 +37,7 @@ import { StatusBanner } from "./status-banner"
 /**
  * CH-863, lot D1 — la carte de statut : « M'inscrire au consulat » mène à la destination
  * `register` du contrat DIASPORA-PASSERELLE-V1 (`/register?type=long_stay`), et non plus à la
- * racine de consulat.ga ; même onglet, sans référent. Sans adresse configurée : aucun lien.
+ * racine de consulat.ga ; nouvel onglet, sans référent. Sans adresse configurée : aucun lien.
  */
 const t = getFixedT("fr")
 const ORIGIN = "https://consulat.example"
@@ -74,13 +74,13 @@ beforeEach(() => {
 afterEach(() => cleanup())
 
 describe("carte de statut — « M'inscrire au consulat »", () => {
-  it("mène à l'inscription consulaire du contrat, dans le même onglet, sans référent", async () => {
+  it("mène à l'inscription consulaire du contrat, dans un nouvel onglet, sans référent", async () => {
     mount()
     const link = await screen.findByRole("link", { name: t("status.registerConsulate") })
     expect(link).toHaveAttribute("href", consulateGatewayLinks(ORIGIN)!.register)
     expect(link).toHaveAttribute("rel", "noopener noreferrer")
     expect(link).toHaveAttribute("referrerpolicy", "no-referrer")
-    expect(link).not.toHaveAttribute("target")
+    expect(link).toHaveAttribute("target", "_blank")
   })
 
   it("sans adresse de consulat.ga configurée : aucun lien, jamais un lien mort", async () => {
