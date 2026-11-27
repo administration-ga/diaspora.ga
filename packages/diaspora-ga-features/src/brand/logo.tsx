@@ -1,5 +1,5 @@
 /// <reference path="./assets.d.ts" />
-import { brand } from "../i18n/locales/fr/diaspora-ga.json"
+import referenceLocale from "../i18n/locales/fr/diaspora-ga.json"
 import { cn } from "../lib/cn"
 import bird from "./hirondelle.svg"
 import horizontal from "./diaspora-horizontal.svg"
@@ -23,14 +23,14 @@ export function BrandLogo({ variant = "horizontal", decorative = false, classNam
   className?: string
 }) {
   if (variant === "symbol") {
-    return <img src={assetUrl(bird)} alt={decorative ? "" : brand.name} width={1032} height={682} className={cn("block h-auto w-10 shrink-0", className)} />
+    return <img src={assetUrl(bird)} alt={decorative ? "" : referenceLocale.brand.name} width={1032} height={682} className={cn("block h-auto w-10 shrink-0", className)} />
   }
   if (variant === "wordmark") {
     const mask = `url("${assetUrl(lettering)}") center / contain no-repeat`
     return (
       <span translate="no" aria-hidden={decorative || undefined} className={cn("inline-block w-24 max-w-full", className)}>
         <span aria-hidden="true" className="block aspect-[1080/136] bg-current forced-colors:hidden" style={{ mask, WebkitMask: mask }} />
-        <span className="sr-only forced-colors:not-sr-only">{brand.name}</span>
+        <span className="sr-only forced-colors:not-sr-only">{referenceLocale.brand.name}</span>
       </span>
     )
   }
@@ -39,7 +39,7 @@ export function BrandLogo({ variant = "horizontal", decorative = false, classNam
     <span translate="no" aria-hidden={decorative || undefined} className={cn("inline-block max-w-full align-middle", variant === "horizontal" ? "w-40" : "w-32", className)}>
       <img src={assetUrl(light)} width={width} height={height} alt="" className="block h-auto w-full dark:hidden forced-colors:hidden" />
       <img src={assetUrl(dark)} width={width} height={height} alt="" className="hidden h-auto w-full dark:block forced-colors:!hidden" />
-      <span className="sr-only forced-colors:not-sr-only">{brand.name}</span>
+      <span className="sr-only forced-colors:not-sr-only">{referenceLocale.brand.name}</span>
     </span>
   )
 }
