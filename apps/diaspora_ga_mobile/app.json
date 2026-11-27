@@ -12,6 +12,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "ga.diaspora.mobile",
+      "appleTeamId": "5Y39TTNCM7",
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:diaspora.ga"

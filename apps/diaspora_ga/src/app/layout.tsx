@@ -6,13 +6,13 @@ import { Providers } from "@/components/providers"
 import { getAppT } from "@/i18n/server"
 import { DEFAULT_CHARTE } from "@/lib/appearance"
 import { installPalette } from "@/lib/install-palette"
-import { anchors } from "@/lib/routes"
+import { anchors, routes } from "@/lib/routes"
 
 import "./globals.css"
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getAppT()
-  const image = { url: "/identite/partage-envol.png", width: 1200, height: 630, alt: t("brand.shareName") }
+  const image = { url: routes.shareImage(), width: 1200, height: 630, alt: t("brand.shareName") }
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || `https://${t("brand.shareName").toLowerCase()}`
   return {
     metadataBase: new URL(siteUrl),

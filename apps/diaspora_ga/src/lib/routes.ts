@@ -232,6 +232,7 @@ export const PAGE_JOBS_ANCHOR = "emplois-de-la-page"
 export const NOTIFICATION_REFERENCE_PARAM = "reference"
 
 export const routes = {
+  shareImage: () => "/identite/partage-envol.png",
   home: () => "/",
   enter: () => "/entrer",
   consulatePass: () => "/passerelle/consulat",

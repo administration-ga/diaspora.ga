@@ -9,7 +9,6 @@ function Browser() {
   const colors = dark ? { backgroundColor: "#171411", color: "#eeeae3" } : { backgroundColor: "#faf8f4", color: "#262320" }
   const web = useRef<WebView>(null)
   const canGoBack = useRef(false)
-  const latestLink = useRef<string | null>(null)
   const [source, setSource] = useState<{ uri: string } | null>(null)
   const [error, setError] = useState(false)
 
@@ -17,7 +16,6 @@ function Browser() {
     let live = true
     let received = false
     const go = (url: string) => {
-      latestLink.current = url
       setError(false)
       setSource({ uri: url })
     }
@@ -54,7 +52,7 @@ function Browser() {
     {source && <WebView ref={web} source={source} style={styles.fill} originWhitelist={["*"]}
       startInLoadingState renderLoading={loading}
       allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
-      mixedContentMode="never" thirdPartyCookiesEnabled={false} allowsInlineMediaPlayback
+      mixedContentMode="never" thirdPartyCookiesEnabled={false} allowsInlineMediaPlayback allowsBackForwardNavigationGestures
       mediaCapturePermissionGrantType="grantIfSameHostElseDeny" setSupportMultipleWindows
       onNavigationStateChange={state => { canGoBack.current = state.canGoBack }}
       onShouldStartLoadWithRequest={req => {
@@ -71,7 +69,7 @@ function Browser() {
       onContentProcessDidTerminate={() => web.current?.reload()}
       onRenderProcessGone={() => setError(true)}
       onError={() => setError(true)}
-      onHttpError={e => { if (e.nativeEvent.statusCode >= 500 && e.nativeEvent.url === latestLink.current) setError(true) }}
+      onHttpError={e => { if (e.nativeEvent.statusCode >= 500) setError(true) }}
       renderError={() => <View />}
     />}
     {!source && !error && loading()}
