@@ -177,13 +177,6 @@ export function createEnginePagePublications(deps: EngineSourceDeps, options: En
         }
         const scope = parseContentScope({ reach: input.reach, country })
         if (!scope.ok) throw new Refusal(scope.code)
-        if (scope.value.reach === "local") {
-          // Même garde de tranche que le composeur personnel, tant que le
-          // crochet de politique serveur ne porte pas encore cette règle.
-          const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId: id })
-          const localCountry = scope.value.country
-          if (!open.some((hub) => hub.country === localCountry)) throw new Refusal("feature_unavailable")
-        }
         // Aucun contrôle après l'écriture : une panne de lecture ne doit pas
         // transformer une publication réussie en échec affiché au signataire.
         return await deps.convex.mutation(api.modules.pages.pages.publishAsPage, {
@@ -192,6 +185,7 @@ export function createEnginePagePublications(deps: EngineSourceDeps, options: En
           body: input.body,
           reach: scope.value.reach,
           audience: input.audience,
+          ...(input.guestVisible && input.audience === "public" ? { guestVisible: true } : {}),
           idempotencyKey: input.idempotencyKey,
           ...(input.media && input.media.length > 0 ? { media: input.media.map(toDeclaredMedia) } : {}),
         })

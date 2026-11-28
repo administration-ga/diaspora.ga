@@ -206,7 +206,7 @@ afterEach(cleanup)
 describe("/emploi — chercher", () => {
   it("lit le pays et la ville de l'adresse, ignore ce qui est illisible", () => {
     expect(jobFiltersFromParams(new URLSearchParams("pays=fr&ville=+Lyon+"))).toEqual({ country: "FR", city: "Lyon" })
-    expect(jobFiltersFromParams(new URLSearchParams("pays=ga&ville=+"))).toEqual({})
+    expect(jobFiltersFromParams(new URLSearchParams("pays=zz&ville=+"))).toEqual({})
   })
 
   it("cherche avec les filtres de l'adresse et montre les offres, le contrat, la rémunération annoncée et la page", () => {

@@ -10,18 +10,38 @@
     "editResidence": "Modifier le pays et la ville",
     "fromIdn": "Proposé d'après votre identité IDN.",
     "idnConsulateCheck": "DIASPORA vérifie auprès de Consulat.ga si votre identité numérique y est rattachée. Si elle l’est, votre compte passe automatiquement au niveau 2 (vérifié).",
-    "consent": "En créant votre profil, votre nom affiché, votre identifiant et votre pays deviennent visibles des membres de DIASPORA ; l'annuaire et les notifications restent désactivés tant que vous ne les activez pas.",
+    "consent": "À la première inscription, votre profil apparaît dans Membres. Les visiteurs peuvent voir votre nom affiché, votre identifiant, votre photo de profil et les publications que vous ouvrez au public. Votre téléphone et votre e-mail restent privés. Vous pouvez régler votre visibilité ensuite.",
     "submit": "Créer mon profil et entrer",
     "submitKept": "Entrer dans DIASPORA"
   },
   "firstChoices": {
     "title": "À vous de choisir, maintenant ou plus tard",
-    "lead": "Rien n'a été activé pour vous. Chaque choix est un geste à part, que vous retrouvez dans vos réglages.",
+    "lead": "Vous pouvez modifier ces préférences à tout moment dans vos réglages.",
     "dismiss": "Fermer, je choisirai plus tard",
     "settingsLead": "Dans vos réglages :",
     "settingsDirectory": "Annuaire",
     "settingsConsents": "Consentements",
     "settingsDevice": "Notifications de l'appareil",
     "directorySaved": "Votre visibilité dans l'annuaire est enregistrée."
+  },
+  "guest": {
+    "feed": "Le fil public",
+    "read": "Découvrir DIASPORA",
+    "signIn": "Se connecter",
+    "join": "Créer un compte",
+    "expired": "Connectez-vous pour continuer sur DIASPORA.",
+    "unavailable": "Ce contenu est indisponible.",
+    "empty": "Aucune publication publique pour le moment.",
+    "next": "Publications suivantes",
+    "follow": "Suivre",
+    "comment": "Commenter",
+    "pageSharing": "Rendre la page visible sans compte",
+    "profileSharing": "Rendre mon profil visible sans compte",
+    "visibilityHint": "Pour montrer votre profil aux visiteurs, choisissez « Tout le réseau » dans l’annuaire.",
+    "error": "Impossible de charger ce contenu.",
+    "more": "Ouvrir la publication",
+    "alt": "Photo de la publication",
+    "search": "Rechercher une personne ou une page",
+    "noResults": "Aucun profil public trouvé."
   }
 }

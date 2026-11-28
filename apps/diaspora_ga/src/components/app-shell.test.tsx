@@ -20,7 +20,7 @@ import {
 import { DemoStore, createDemoDataSource } from "@diaspora-ga/features/demo"
 import { getFixedT } from "@diaspora-ga/features/i18n"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
-import { MEMBER_MENU_ICONS, memberMenu, type MemberCreateEntry, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
+import { MEMBER_MENU_ICONS, memberMenu, type MemberMenuEntry } from "@diaspora-ga/features/navigation"
 import { act, cleanup, render, screen, waitFor, within } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import { createElement, type ComponentProps, type ReactNode } from "react"
@@ -28,7 +28,7 @@ import { toast } from "sonner"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { IcomNetwork } from "@/lib/icom-state"
-import { memberCreateHref, memberMenuHref } from "@/lib/member-menu"
+import { memberMenuHref } from "@/lib/member-menu"
 import { PRIMARY_DESTINATIONS, ROUTE_DESTINATIONS, type NavDestination, type RouteKey } from "@/lib/nav-destinations"
 import { routes } from "@/lib/routes"
 
@@ -1107,12 +1107,14 @@ describe("coque — Publier, une action stable", () => {
   it("ouvre le composeur depuis l'en-tête, depuis le rail et depuis un écran (useComposer)", async () => {
     const user = userEvent.setup()
     renderShell()
-    const [railButton, headerButton] = screen.getAllByRole("button", { name: "Publier" })
+    const [railButton, headerButton] = screen.getAllByRole("button", { name: "Créer" })
     expect(railButton).not.toHaveAttribute("aria-disabled")
     expect(headerButton).not.toHaveAttribute("aria-disabled")
 
     await user.click(headerButton!)
-    expect(screen.getByRole("dialog", { name: "Composeur" })).toBeInTheDocument()
+    expect(screen.queryByRole("dialog", { name: "Composeur" })).toBeNull()
+    await user.click(screen.getByRole("menuitem", { name: "Poster" }))
+    expect(await screen.findByRole("dialog", { name: "Composeur" })).toBeInTheDocument()
     expect(mocks.composer).toHaveBeenCalledWith(
       expect.objectContaining({ open: true, memberCountry: "FR", draftKey: "diaspora-ga:brouillon:persons_awa" }),
     )
@@ -1130,16 +1132,15 @@ describe("coque — Publier, une action stable", () => {
     renderShell({ membership: { ...MEMBER, status: "en_attente", canPublish: false } })
     const reason = "Publication possible après un parrainage ou une vérification"
     const buttons = screen.getAllByRole("button", { name: "Publier" })
-    expect(buttons).toHaveLength(2)
+    expect(buttons).toHaveLength(1)
     for (const button of buttons) {
       expect(button).toHaveAttribute("aria-disabled", "true")
       expect(button).not.toBeDisabled()
       expect(button).toHaveAccessibleDescription(reason)
     }
-    // Écrite sous le bouton du rail, annoncée avec celui de l'en-tête.
-    expect(screen.getAllByText(reason)).toHaveLength(2)
+    expect(screen.getAllByText(reason)).toHaveLength(1)
 
-    const headerButton = buttons[1]!
+    const headerButton = buttons[0]!
     await user.click(headerButton)
     const explanation = await screen.findByRole("dialog", { name: reason })
     expect(explanation).toHaveTextContent("Pour publier, demandez un parrainage à un membre vérifié")
@@ -1193,7 +1194,7 @@ describe("coque — le contexte pays", () => {
     expect(within(note).getByRole("link", { name: "Revenir à mon pays" })).toHaveAttribute("href", "/communautes")
   })
 
-  it.each(["/pays/fr", "/pays/ga", "/pays/xx", "/communautes", "/fil"])("sur %s, aucune zone consultée n'est annoncée", (pathname) => {
+  it.each(["/pays/fr", "/pays/zz", "/pays/xx", "/communautes", "/fil"])("sur %s, aucune zone consultée n'est annoncée", (pathname) => {
     renderShell({ pathname })
     expect(screen.queryByRole("note")).toBeNull()
   })
@@ -1230,7 +1231,10 @@ describe("coque — le contexte pays", () => {
 
   it("hors des adresses de Communautés, « Mon pays » n'est jamais courant", () => {
     renderShell({ pathname: "/fil", icom: true, features: ["pages"] })
-    for (const link of homeCountryLinks()) expect(link).not.toHaveAttribute("aria-current")
+    const homeLink = screen.getByRole("link", { name: /^Mon pays/ })
+    expect(homeLink).not.toHaveAttribute("aria-current")
+    expect(homeLink).not.toHaveTextContent("Lyon")
+    expect(homeLink.closest("[data-desktop-rail]")).not.toBeNull()
   })
 })
 
@@ -1238,17 +1242,10 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
   it("au bureau, sous « Publier » : un live et une actu quand iCom est ouvert, puis les deux inscriptions, chacune dite en une ligne", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true })
-    // « Publier » garde son bouton à part : le menu ne le double pas (vu avant l'ouverture, le menu étant modal).
-    expect(screen.getAllByRole("button", { name: "Publier" })).toHaveLength(2)
-    await user.click(screen.getByRole("button", { name: "Créer" }))
-    const menu = await screen.findByRole("menu")
-    const items = within(menu).getAllByRole("menuitem")
-    // Le live (direct ouvert par le code, CH-817) est un geste sans adresse, en tête comme la conférence du
-    // réseau de l'administration (juste après la publication, qui a son bouton à part).
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory(), routes.newPage("association"), routes.newPage("company")])
-    expect(items[0]).toHaveTextContent("Un live")
-    expect(items[2]).toHaveTextContent("Inscrire une association")
-    expect(items[2]).toHaveTextContent("Sa page, ses adhérents, son groupe et ses évènements.")
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
+    const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
+    expect(items.map((item) => item.textContent)).toEqual(["Poster", "Live", "+ Entreprise", "+ Association"])
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, null, routes.newPage("company"), routes.newPage("association")])
     await user.keyboard("{Escape}")
     expect(screen.queryByRole("menu")).toBeNull()
   })
@@ -1256,9 +1253,9 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
   it("sans iCom (démonstration), seulement les inscriptions", async () => {
     const user = userEvent.setup()
     renderShell()
-    await user.click(screen.getByRole("button", { name: "Créer" }))
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newPage("company"), routes.newPage("association")])
   })
 
   it("au téléphone, la feuille du compte porte « Créer » ; suspendu, aucun format", async () => {
@@ -1267,10 +1264,7 @@ describe("coque — « Créer », le menu de création (modèle du réseau de l'
     renderShell({ network: true })
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    expect(linksOf(within(sheet).getByRole("navigation", { name: "Créer" }))).toEqual([
-      ["Inscrire une association", routes.newPage("association")],
-      ["Inscrire une entreprise", routes.newPage("company")],
-    ])
+    expect(within(sheet).queryByRole("navigation", { name: "Créer" })).toBeNull()
     cleanup()
     renderShell({ membership: { ...MEMBER, status: "suspendue", canPublish: false } })
     expect(screen.queryByRole("button", { name: "Créer" })).toBeNull()
@@ -1281,12 +1275,11 @@ describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur 
   it("ouvert par le code (la position du dépôt), au bureau : le premier geste du menu, sans adresse, qui demande au moteur la création d'un live", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
-    await user.click(screen.getByRole("button", { name: "Créer" }))
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory(), routes.newPage("association"), routes.newPage("company")])
-    expect(items[0]).toHaveTextContent("Un live")
-    expect(items[0]).toHaveTextContent("Passer en direct devant vos relations, tout le réseau ou vos invités, quand vous êtes prêt.")
-    await user.click(items[0]!)
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, null, routes.newPage("company"), routes.newPage("association")])
+    expect(items[1]).toHaveTextContent("Live")
+    await user.click(items[1]!)
     expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
     expect(screen.queryByRole("menu")).toBeNull()
   })
@@ -1295,9 +1288,8 @@ describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur 
     mocks.desktop = false
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
-    await user.click(accountTrigger("dialog"))
-    const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
-    await user.click(within(within(sheet).getByRole("navigation", { name: "Créer" })).getByRole("button", { name: "Un live" }))
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[1]!)
+    await user.click(await screen.findByRole("menuitem", { name: "Live" }))
     expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
     expect(screen.queryByRole("dialog", { name: "Mon compte" })).toBeNull()
   })
@@ -1305,16 +1297,16 @@ describe("coque — « Créer → Un live » (CH-817), derrière l'interrupteur 
   it("ouvert, sans iCom (démonstration, membre qui n'écrit pas) : aucun live, l'hôte du direct n'étant pas monté", async () => {
     const user = userEvent.setup()
     renderShell({ features: ["pages"] })
-    await user.click(screen.getByRole("button", { name: "Créer" }))
-    expect(within(await screen.findByRole("menu")).getAllByRole("menuitem").map((item) => item.getAttribute("href"))).toEqual([routes.newPage("association"), routes.newPage("company")])
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
+    expect(within(await screen.findByRole("menu")).getAllByRole("menuitem").map((item) => item.getAttribute("href"))).toEqual([null, routes.newPage("company"), routes.newPage("association")])
   })
 
   it("refermé par le code : aucun live, au bureau comme au téléphone", async () => {
     mocks.liveClosed = true
     const user = userEvent.setup()
     renderShell({ icom: true, features: ["pages"] })
-    await user.click(screen.getByRole("button", { name: "Créer" }))
-    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /Un live/ })).toBeNull()
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
+    expect(within(await screen.findByRole("menu")).queryByRole("menuitem", { name: /^Live$/ })).toBeNull()
     await user.keyboard("{Escape}")
     await user.click(accountTrigger("dialog"))
     const sheet = await screen.findByRole("dialog", { name: "Mon compte" })
@@ -1335,10 +1327,7 @@ describe("coque — le live offert aux écrans et au composeur (26/11/2026), par
     renderShell({ icom: true, features: ["pages"] })
     await user.click(screen.getByRole("button", { name: "Live" }))
     expect(mocks.launch).toHaveBeenCalledExactlyOnceWith({ userIds: [], quickSetup: true })
-    const onGoLive = lastComposerProps()?.onGoLive
-    expect(onGoLive).toBeTypeOf("function")
-    onGoLive?.()
-    expect(mocks.launch).toHaveBeenCalledTimes(2)
+    expect(lastComposerProps()).not.toHaveProperty("onGoLive")
     // Le composeur d'un partage n'offre jamais le live.
     expect(mocks.composer.mock.calls.map(([props]) => props as { share?: unknown; onGoLive?: unknown }).filter((props) => props.share !== undefined).every((props) => props.onGoLive === undefined)).toBe(true)
   })
@@ -1462,10 +1451,10 @@ describe("réseau simple (ADR-0041 du moteur) : la coque ne monte que les module
   it("tout fermé : « Créer » n'offre plus l'inscription d'une organisation (le live et l'actu restent, ils ne sont pas des modules)", async () => {
     const user = userEvent.setup()
     renderShell({ icom: true, features: [] })
-    await user.click(screen.getByRole("button", { name: "Créer" }))
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
     const items = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, routes.newStory()])
-    expect(items[0]).toHaveTextContent("Un live")
+    expect(items.map((item) => item.getAttribute("href"))).toEqual([null, null])
+    expect(items[1]).toHaveTextContent("Live")
   })
 
   it("un module ouvert retrouve ses entrées, les autres restent fermés", async () => {
@@ -1513,10 +1502,6 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
   ]
 
   const entryLink = (entry: MemberMenuEntry) => [t(entry.labelKey), memberMenuHref(entry, MEMBER.handle)]
-  const createHrefs = (entries: readonly MemberCreateEntry[]) => entries.map((entry) => memberCreateHref(entry))
-  /** Les formats de la feuille, liens et gestes (le live n'a pas d'adresse), dans l'ordre. */
-  const sheetCreateHrefs = (container: HTMLElement) => Array.from(container.querySelectorAll("a, button")).map((item) => item.getAttribute("href"))
-
   it.each(CASES)("modules %j, %s : rail, barre du téléphone, menu du compte et « Créer », au bureau comme au téléphone", async (features, _name, situation, liveOpen) => {
     mocks.liveClosed = !liveOpen
     const user = userEvent.setup()
@@ -1538,10 +1523,11 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     expect(linksOf(bar)).toEqual(expected.phoneBar.map(entryLink))
 
     // « Créer », au bureau.
-    await user.click(screen.getByRole("button", { name: "Créer" }))
+    await user.click(screen.getAllByRole("button", { name: "Créer" })[0]!)
     const create = within(await screen.findByRole("menu")).getAllByRole("menuitem")
-    expect(create.map((item) => item.getAttribute("href"))).toEqual(createHrefs(expected.create))
-    expected.create.forEach((entry, index) => expect(create[index]).toHaveTextContent(t(entry.labelKey)))
+    expect(create.map((item) => item.getAttribute("href"))).toEqual([
+      null, ...(liveOpen ? [null] : []), ...(features.includes("pages") ? [routes.newPage("company"), routes.newPage("association")] : []),
+    ])
     await user.keyboard("{Escape}")
 
     // Le menu du compte, au bureau : profil, réglages, « Mon espace », mes données ; puis les
@@ -1559,7 +1545,7 @@ describe("coque — elle rend exactement le menu partagé, celui que montre l'ap
     await user.click(accountTrigger("dialog"))
     const sheet = within(await screen.findByRole("dialog", { name: "Mon compte" }))
     expect(linksOf(sheet.getByRole("navigation", { name: "Mon compte" }))).toEqual(expected.account.map(entryLink))
-    expect(sheetCreateHrefs(sheet.getByRole("navigation", { name: "Créer" }))).toEqual(createHrefs(expected.create))
+    expect(sheet.queryByRole("navigation", { name: "Créer" })).toBeNull()
     expect(expected.create.some((entry) => entry.id === "live")).toBe(liveOpen)
     await user.click(sheet.getByRole("button", { name: "Informations" }))
     information = await screen.findByRole("dialog", { name: "Informations" })

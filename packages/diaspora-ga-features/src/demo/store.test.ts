@@ -118,13 +118,13 @@ describe("R1 — une personne inscrite entre par IDN", () => {
     expect(refused).toEqual({ ok: false, code: "consent_social_profile_required" })
   })
 
-  it("refuse le Gabon comme pays de résidence, un handle pris, un nom affiché trop court", async () => {
+  it("accepte le Gabon et refuse un identifiant pris ou un nom trop court", async () => {
     const { store } = demo()
     await store.signInWithIdn(AWA)
-    expect(await store.join(joinInput({ facet: { countryOfResidence: "GA" } }))).toEqual({ ok: false, code: "country_is_home" })
     expect(await store.join(joinInput({ handle: "mireille.ivindo" }))).toEqual({ ok: false, code: "handle_taken" })
     expect(await store.join(joinInput({ handle: "a" }))).toEqual({ ok: false, code: "handle_length" })
     expect(await store.join(joinInput({ displayName: " A " }))).toEqual({ ok: false, code: "display_name_invalid" })
+    expect(await store.join(joinInput({ facet: { countryOfResidence: "GA" } }))).toEqual({ ok: true, value: { status: "declaree", country: "GA" } })
   })
 
   it("une identité IDN de nationalité non gabonaise ne fonde rien : le compte reste en attente", async () => {
@@ -196,7 +196,7 @@ describe("Porte fiable — la vérification reprend l'adresse gardée par l'écr
 })
 
 describe("R3 — un compte léger se fait parrainer", () => {
-  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie pour toute la diaspora (pays fermé)", async () => {
+  it("en attente puis lecture seule ; parrainé par un membre vérifié depuis plus de 30 jours, il publie dans son pays et dans toute la diaspora", async () => {
     const { store, me } = demo()
     const sent = await store.requestCode({ kind: "email", value: "nouvelle@example.com" })
     if (!sent.ok || !sent.value.demoCode) throw new Error("code non émis")
@@ -217,11 +217,11 @@ describe("R3 — un compte léger se fait parrainer", () => {
     await store.switchTo(newcomer)
     expect(store.statusOf(newcomer)).toBe("declaree")
     expect(membershipView(store.getState(), newcomer, T0)?.sponsoredBy).toEqual({ handle: "mireille.ivindo", displayName: "Mireille IVINDO" })
-    // HB-01 : le Canada n'est pas ouvert ici ; le hub local refuse, comme l'adaptateur du moteur, sans rien écrire.
-    // FD-04 : le refus dit ce que dit le composeur (`hub_not_open`).
+    // A local post in a country without moderators is accepted for review.
     const before = store.getState().posts.length
-    expect(await store.publish(post)).toEqual({ ok: false, code: "hub_not_open" })
-    expect(store.getState().posts).toHaveLength(before)
+    expect(await store.publish(post)).toEqual({ ok: true, value: { moderation: "pending_review" } })
+    expect(store.getState().posts).toHaveLength(before + 1)
+    expect(store.getState().posts[0]?.scope).toEqual({ reach: "local", country: "CA" })
     expect(await store.publish({ ...post, reach: "diaspora" })).toEqual({ ok: true, value: { moderation: "published" } })
     expect(store.getState().posts[0]).toMatchObject({ body: "Bonjour Montréal", scope: { reach: "diaspora", country: "CA" } })
   })

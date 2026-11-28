@@ -2,7 +2,7 @@
   "landing": {
     "vision": {
       "title": "What DIASPORA is",
-      "lead": "The closed social network of Gabonese people living abroad: your country, your community, and you always know who is posting.",
+      "lead": "The social network for Gabonese people living abroad: your country, your community, and you always know who is posting.",
       "offerTitle": "What you will find",
       "offer": {
         "country": {
@@ -46,7 +46,6 @@
           "body": "Contact goes through messaging: a “Write” button, never a displayed phone number."
         }
       },
-      "countriesTitle": "Countries already open",
       "trustTitle": "A network you can trust",
       "trust": {
         "closed": {

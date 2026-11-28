@@ -23,7 +23,6 @@ import {
 import {
   useCountryHub,
   useFeatureGate,
-  useOpenCountries,
   useOptionalDataSource,
   type CountryHubView,
   type HubPagesQuery,
@@ -74,7 +73,6 @@ function Hub(props: { iso: string; membership: MembershipView }) {
   const { t, locale } = useDiasporaGaT()
   const parsed = parseResidenceCountry(props.iso)
   if (!parsed.ok) {
-    // Refus indistinct : un code inconnu et le Gabon rendent la même page.
     return (
       <EmptyState
         icon={<CompassIcon />}
@@ -90,12 +88,10 @@ function Hub(props: { iso: string; membership: MembershipView }) {
 function CountryJump(props: { membership: MembershipView; label: string; current?: CountryCode }) {
   const { t } = useDiasporaGaT()
   const router = useRouter()
-  const open = useOpenCountries()
   return (
     <CountrySwitch
       value={props.current ?? null}
       onChange={(code) => router.push(routes.hub(code))}
-      openCountries={open.status === "ready" ? open.data.map((item) => item.country) : []}
       title={t("hub.switchTitle")}
       description={t("hub.switchDescription")}
       rememberKey="diaspora-ga:hubs:recents"

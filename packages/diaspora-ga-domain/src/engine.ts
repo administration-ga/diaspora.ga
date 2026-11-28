@@ -10,7 +10,7 @@
  * vérifie de son côté que cette graine passe ses validateurs (test de la
  * tranche `convex/modules/diaspora`).
  */
-import { DEFAULT_OPEN_COUNTRIES, HOME_COUNTRY, isResidenceCountry } from "./countries"
+import { DEFAULT_OPEN_COUNTRIES, isResidenceCountry } from "./countries"
 import {
   deriveMembershipStatus,
   IDN_LOA_MAX,
@@ -88,7 +88,7 @@ export function toEngineFacetVisibility(level: FieldVisibility): EngineFacetVisi
 }
 
 const FIELD_SHAPES: Readonly<Record<FacetField, Omit<EngineFacetField, "key" | "defaultVisibility">>> = {
-  countryOfResidence: { kind: "country", required: true, excludedValues: [HOME_COUNTRY] },
+  countryOfResidence: { kind: "country", required: true },
   city: { kind: "text", required: false, maxLength: CITY_MAX_LENGTH },
   postSlug: { kind: "text", required: false, maxLength: 80 },
   associationIds: { kind: "textList", required: false, maxItems: ASSOCIATIONS_MAX },

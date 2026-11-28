@@ -25,7 +25,6 @@ import {
   useAssociations,
   useFeatureGate,
   useModerationDesk,
-  useOpenCountries,
   usePageAdmin,
   useSession,
   NETWORK_FEATURES,
@@ -37,9 +36,9 @@ import {
   type PageAdminCapability,
   type PostView,
 } from "@diaspora-ga/features/data"
+import { BrandLogo } from "@diaspora-ga/features/brand/logo"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import {
-  MEMBER_CREATE_ICONS,
   MEMBER_DATA_ENTRY,
   MEMBER_GATEWAY_GROUP_LABEL_KEY,
   MEMBER_GATEWAY_ICONS,
@@ -63,7 +62,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import NextLink from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { DropdownMenu, Popover } from "radix-ui"
 import { createContext, Suspense, useContext, useEffect, useId, useRef, useState, type MouseEvent, type ReactNode } from "react"
 import { toast } from "sonner"
@@ -85,6 +84,7 @@ import { featureOfPath } from "@/lib/network-features"
 import { isPlainClick } from "@/lib/plain-click"
 import { routes } from "@/lib/routes"
 
+import { CreationActions } from "./creation-actions"
 import { ConsulateGatewaySheet } from "./consulate-gateway-sheet"
 import { FirstChoicesPrompt } from "./first-choices-prompt"
 import { IcomIsland, useEngineNetwork, useIcomNetwork } from "./icom"
@@ -97,8 +97,7 @@ import { Wordmark } from "./wordmark"
 
 interface ComposerControl {
   readonly open: () => void
-  /** A3 : des fichiers choisis hors de la feuille (raccourcis Photo et Vidéo du fil) ; la feuille s'ouvre et les joint. */
-  readonly attach: (files: readonly File[]) => void
+  readonly formats: readonly CreateFormat[]
   readonly canPublish: boolean
   /**
    * Lancer un live (le même geste que « Créer → Un live ») ; `null` quand le live n'est pas offert
@@ -107,7 +106,7 @@ interface ComposerControl {
   readonly goLive: (() => void) | null
 }
 
-const ComposerContext = createContext<ComposerControl>({ open: () => {}, attach: () => {}, canPublish: false, goLive: null })
+const ComposerContext = createContext<ComposerControl>({ open: () => {}, formats: [], canPublish: false, goLive: null })
 
 /** Ouvre le composeur de la coque depuis un écran (« Quoi de neuf ? »). */
 export function useComposer(): ComposerControl {
@@ -393,14 +392,11 @@ export function AppShell(props: AppShellProps) {
   const { t } = useDiasporaGaT()
   const pathname = usePathname() ?? ""
   const [composerOpen, setComposerOpen] = useState(false)
-  // A3 : les fichiers choisis depuis le fil, numérotés : chaque geste n'est joint qu'une fois.
-  const [composerFiles, setComposerFiles] = useState<{ readonly id: number; readonly files: readonly File[] } | null>(null)
   // Partage cité : la publication citée reste posée pendant la fermeture de la feuille (pas de bascule de titre).
   const [shareTarget, setShareTarget] = useState<PostView | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   // Chaque partage remonte son composeur : formulaire, aperçu et clé d'idempotence repartent de zéro.
   const [shareSession, setShareSession] = useState(0)
-  const openCountries = useOpenCountries()
   // iCom (PD7) : en mode moteur, pour un membre qui peut écrire ; le dock se monte au bureau seulement
   // (seuil du moteur, 960 px ; inconnu au rendu serveur, donc rien avant le premier passage client).
   const icom = useIcomNetwork()
@@ -412,8 +408,6 @@ export function AppShell(props: AppShellProps) {
   const view = props.layout === "view"
   const wide = props.layout === "wide"
   const canPublish = membership.canPublish
-  // Inconnus tant qu'ils ne sont pas lus : le composeur n'affirme alors aucun pays fermé (HB-01).
-  const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
   // Une seule entrée relève du chemin courant, rail et barre basse confondus (UX-05).
   const current = navDestinationOf(pathname, membership.handle)
   // ADR-0041 du moteur : les modules ouverts sur le réseau ; la barre et le menu du compte n'offrent que ceux-là.
@@ -453,17 +447,16 @@ export function AppShell(props: AppShellProps) {
   // Le menu « Créer » (modèle du réseau de l'administration) : le live et les actus suivent iCom, l'inscription la règle partagée.
   const create = menu.create.map(createFormatOf)
   // Le live, offert par la même règle que « Créer → Un live » (interrupteur du direct, publication et iCom
-  // ouverts — iCom ne l'est qu'avec le moteur) : la carte « Quoi de neuf ? » et le composeur le proposent aussi.
+  // ouverts — iCom ne l'est qu'avec le moteur) : le fil et le menu ouvrent le même studio.
   const goLive = create.some((format) => format.id === "live") ? launchConference : null
   // La garde des adresses : un module fermé dit « introuvable », comme une page qui n'existe pas.
   const feature = featureOfPath(pathname)
   const content = feature === null || (features.ready && features.isOpen(feature)) ? props.children : features.ready ? <FeatureNotFound /> : <FeatureLoading />
-  const openComposer = () => setComposerOpen(true)
-  const attachToComposer = (files: readonly File[]) => {
-    setComposerFiles((current) => ({ id: (current?.id ?? 0) + 1, files }))
+  const publishOrigin = useRef<HTMLElement | null>(null)
+  const openComposer = () => {
+    publishOrigin.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setComposerOpen(true)
   }
-
   // La page flottante « Informations » (une page = une vue) : ouverte depuis le menu ou la feuille du
   // compte, sur l'adresse où elle l'a été. Suivre un lien qui mène ailleurs (un renvoi d'une rubrique)
   // la referme d'elle-même : l'adresse a changé.
@@ -535,6 +528,8 @@ export function AppShell(props: AppShellProps) {
 
           <div className={cn("min-w-0 flex-1", view && "flex flex-col tall:min-h-0")}>
             <MobileHeader
+              pathname={pathname}
+              section={phoneBar.find((entry) => entry.active) ?? accountCurrent}
               membership={membership}
               homeCountryCurrent={homeCountryCurrent}
               account={accountGroups}
@@ -546,21 +541,27 @@ export function AppShell(props: AppShellProps) {
             />
             <main
               id="contenu"
+              data-feed-ticket={Boolean(consulateEntry && consulateLinks && pathname === routes.feed()) || undefined}
               className={cn(
                 // Au téléphone, la réserve basse reste : la vue finit au-dessus de la barre flottante.
                 "mx-auto grid w-full gap-6 px-4 pb-[calc(var(--esp-reseau-tabbar-inset)+env(safe-area-inset-bottom)+1rem)] pt-4 min-[960px]:pt-6 xl:grid-cols-[minmax(0,792px)_312px] xl:justify-center",
                 view ? "min-[960px]:pb-6 tall:min-h-0 tall:flex-1 tall:grid-rows-[minmax(0,1fr)]" : "min-[960px]:pb-10",
               )}
             >
-              <ComposerContext.Provider value={{ open: openComposer, attach: attachToComposer, canPublish, goLive }}>
+              <ComposerContext.Provider value={{ open: openComposer, formats: create, canPublish, goLive }}>
                 <InformationReaderContext.Provider value={{ available: information.length > 0, open: openInformation }}>
                   {/* En vue, les avis prennent leur hauteur et le `ViewFrame` de l'écran le reste. */}
                   <div className={cn("flex min-w-0 flex-col gap-4", view ? "tall:min-h-0 xl:col-span-2" : wide ? "xl:col-span-2" : "max-w-[792px]")}>
                     {/* L'état du réseau (MO-05) : dit en tête du contenu, sans rien masquer. */}
-                    {consulate && pathname === routes.feed() && (
-                      <a href={consulate.links.mySpace} {...CONSULATE_LINK_ATTRIBUTES}
-                        className="inline-flex min-h-11 items-center gap-2 self-end rounded-full bg-muted px-4 text-sm font-semibold text-foreground hover:underline focus-visible:outline-2">
-                        <consulate.icon aria-hidden="true" size={16} /> <span className="uppercase">{t("consulateGateway.entry.label")}</span> <ArrowUpRightIcon aria-hidden="true" size={15} />
+                    {consulateEntry && consulateLinks && pathname === routes.feed() && (
+                      <a href={consulateLinks.mySpace} {...CONSULATE_LINK_ATTRIBUTES}
+                        data-consulate-ticket=""
+                        aria-label={t("consulateGateway.entry.label")}
+                        title={t(consulateEntry.hintKey)}
+                        className="fixed right-0 top-[38%] z-30 flex min-h-28 w-11 items-stretch justify-end rounded-s-xl focus-visible:shadow-focus">
+                        <span className="flex w-8 items-center justify-center rounded-s-xl bg-secondary text-xs font-bold tracking-wide text-secondary-foreground shadow-float">
+                          <span className="rotate-180 [writing-mode:vertical-rl]">{t("consulateGateway.entry.label")}</span>
+                        </span>
                       </a>
                     )}
                     <NetworkStatusNotice />
@@ -607,10 +608,8 @@ export function AppShell(props: AppShellProps) {
             open={composerOpen}
             onOpenChange={setComposerOpen}
             memberCountry={membership.facet.countryOfResidence}
-            openCountries={open}
             draftKey={`diaspora-ga:brouillon:${membership.personId}`}
-            incomingFiles={composerFiles}
-            {...(goLive === null ? {} : { onGoLive: goLive })}
+            returnFocus={() => publishOrigin.current}
           />
         ) : null}
         {canPublish ? (
@@ -619,7 +618,6 @@ export function AppShell(props: AppShellProps) {
             open={shareOpen}
             onOpenChange={setShareOpen}
             memberCountry={membership.facet.countryOfResidence}
-            openCountries={open}
             share={shareTarget}
           />
         ) : null}
@@ -717,8 +715,10 @@ function DesktopRail(props: {
           <RailLink key={entry.id} entry={entry} />
         ))}
       </nav>
-      <PublishAction variant="rail" membership={props.membership} onPublish={props.onPublish} />
-      {props.create.length > 0 ? <CreateMenu formats={props.create} /> : null}
+      {props.membership.canPublish || props.create.length > 0 ? (
+        <CreateMenu placement="rail" formats={props.create} onPost={props.membership.canPublish ? props.onPublish : null} />
+      ) : null}
+      {!props.membership.canPublish ? <PublishAction variant="rail" membership={props.membership} /> : null}
       <AccountMenu
         membership={props.membership}
         groups={props.account}
@@ -805,7 +805,7 @@ function HomeCountryLink(props: { membership: MembershipView; caption: "visible"
       >
         {t("nav.hub")}
       </span>
-      <CountryTag country={props.membership.facet.countryOfResidence} city={props.membership.facet.city} className="min-w-0 shrink" />
+      <CountryTag country={props.membership.facet.countryOfResidence} className="min-w-0 shrink" />
     </NextLink>
   )
 }
@@ -1046,6 +1046,8 @@ function AccountMenu(props: {
 // ═══════════════════════════════════════════════════════════════
 
 function MobileHeader(props: {
+  pathname: string
+  section: NavEntry | null
   membership: MembershipView
   homeCountryCurrent: boolean
   account: AccountGroups
@@ -1056,23 +1058,66 @@ function MobileHeader(props: {
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
+  const router = useRouter()
+  const section = props.section
+  const home = props.pathname === routes.feed()
+  const root = [routes.feed(), routes.explore(), routes.communities(), routes.messages(), routes.services()].includes(props.pathname)
+  const parent = section && section.href !== props.pathname ? section.href : routes.feed()
+  // Keep the last internal link only in this tab. Direct entries have a stable section fallback.
+  useEffect(() => {
+    const record = (event: globalThis.MouseEvent) => {
+      if (event.button || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || !(event.target instanceof Element)) return
+      const link = event.target.closest<HTMLAnchorElement>("a[href]")
+      if (!link || link.dataset.headerBack !== undefined || link.target && link.target !== "_self" || link.hasAttribute("download")) return
+      const target = new URL(link.href)
+      if (target.origin !== window.location.origin || target.pathname === window.location.pathname) return
+      try { sessionStorage.setItem("diaspora:last-internal-link", target.pathname + target.search) } catch { /* Storage may be disabled. */ }
+    }
+    document.addEventListener("click", record, true)
+    return () => document.removeEventListener("click", record, true)
+  }, [])
   return (
-    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 border-b border-border bg-background/95 px-3 backdrop-blur min-[360px]:px-4 min-[960px]:hidden">
+    <header className="sticky top-0 z-40 flex h-14 shrink-0 items-center justify-between gap-2 bg-card px-3 backdrop-blur min-[360px]:px-4 min-[960px]:hidden">
       <div className="flex min-w-0 items-center gap-2 max-[420px]:[&_[data-slot=demo-chip]>span]:sr-only">
-        <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="inline-flex min-h-11 min-w-0 items-center rounded-md focus-visible:shadow-focus">
-          <Wordmark className="w-[clamp(6rem,32vw,10rem)]" />
-        </NextLink>
+        {root ? null : (
+          <NextLink data-header-back="" href={parent} aria-label={t("common.back")}
+            className="grid size-11 shrink-0 place-items-center rounded-full bg-muted focus-visible:shadow-focus"
+            onClick={(event) => {
+              if (!isPlainClick(event)) return
+              try {
+                if (sessionStorage.getItem("diaspora:last-internal-link") !== window.location.pathname + window.location.search || window.history.length < 2) return
+                sessionStorage.removeItem("diaspora:last-internal-link")
+                event.preventDefault()
+                router.back()
+              } catch { /* Follow the section link when storage is unavailable. */ }
+            }}>
+            <ArrowLeftIcon aria-hidden className="size-5" />
+          </NextLink>
+        )}
+        {home || !section ? (
+          <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="inline-flex min-h-11 min-w-0 items-center rounded-md focus-visible:shadow-focus">
+            <Wordmark className="w-[clamp(5rem,28vw,10rem)]" />
+          </NextLink>
+        ) : (
+          <>
+            <NextLink href={routes.feed()} aria-label={t("nav.feed")} className="grid size-11 shrink-0 place-items-center rounded-md focus-visible:shadow-focus">
+              <BrandLogo variant="symbol" decorative className="w-7" />
+            </NextLink>
+            <span className="truncate text-base font-bold">{t(section.labelKey)}</span>
+          </>
+        )}
         <AppDemoChip />
       </div>
       <div className="flex shrink-0 items-center justify-end gap-1">
-        <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />
-        <PublishAction variant="header" membership={props.membership} onPublish={props.onPublish} />
+        {!home && <HomeCountryLink membership={props.membership} caption="hidden" current={props.homeCountryCurrent} className="hidden min-[440px]:flex" />}
+        {props.membership.canPublish || props.create.length > 0 ? (
+          <CreateMenu placement="header" formats={props.create} onPost={props.membership.canPublish ? props.onPublish : null} />
+        ) : <PublishAction variant="header" membership={props.membership} />}
         <NotificationBell />
         <AccountSheet
           membership={props.membership}
           groups={props.account}
           information={props.information}
-          create={props.create}
           consulate={props.consulate}
           onInformation={props.onInformation}
         />
@@ -1109,98 +1154,40 @@ function SheetLink(props: { entry: NavEntry; onFollow: () => void }) {
  * une fois dans la couche de communication d'iCom quand le direct est ouvert (`liveAvailable`), la
  * consomme et ouvre le dialogue de création du moteur (« Lancer un live », textes surchargés par
  * DIASPORA.GA) ; le live créé, il mène à sa page. Le raccourci « Live » de la carte « Quoi de neuf ? »
- * et l'entrée Live du composeur font la même demande.
+ * utilise la même demande.
  */
 function launchConference(): void {
   requestConferenceLaunch({ userIds: [], quickSetup: true })
 }
 
-const CREATE_MENU_ITEM_CLASS = "flex min-h-14 cursor-pointer items-start gap-3 rounded-lg px-3 py-2 outline-none focus-visible:shadow-focus data-[highlighted]:bg-muted"
-
-/**
- * « Créer » au bureau, sous « Publier » : un menu de formats, chacun dit en une ligne
- * (comme le menu de création du réseau de l'administration). Flèches, Échap et focus rendu par Radix.
- * Un format sans adresse (le live) est un geste du menu, pas un lien.
- */
-function CreateMenu(props: { formats: readonly CreateFormat[] }) {
+/** Run a dialog action after Radix restores focus to the menu trigger. */
+function CreateMenu(props: { placement: "rail" | "header"; formats: readonly CreateFormat[]; onPost: (() => void) | null }) {
   const { t } = useDiasporaGaT()
+  const nextAction = useRef<(() => void) | null>(null)
+  const mobile = props.placement === "header"
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
-        <Button variant="outline" className="w-full">
-          <PlusIcon aria-hidden />
-          {t("nav.create.label")}
-        </Button>
+        <button aria-label={t("nav.create.label")} type="button" className={mobile ? HEADER_PUBLISH_CLASS : "inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-3 font-semibold text-primary-foreground hover:bg-[var(--primary-fill-hover)] focus-visible:shadow-focus"}>
+          <PlusIcon aria-hidden className="size-5" />
+          {mobile ? null : t("nav.create.label")}
+        </button>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          side="right"
-          align="start"
-          sideOffset={8}
-          collisionPadding={12}
-          className="z-60 w-[min(20rem,calc(100vw-2rem))] rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float"
-        >
-          <DropdownMenu.Label className="px-3 pb-1 pt-2 text-xs font-semibold text-muted-foreground">{t("nav.create.title")}</DropdownMenu.Label>
-          {props.formats.map((format) => {
-            const Icon = MEMBER_CREATE_ICONS[format.id]
-            const body = (
-              <>
-                <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold">{t(format.labelKey)}</span>
-                  <span className="block text-[13px] leading-snug text-muted-foreground">{t(format.hintKey)}</span>
-                </span>
-              </>
-            )
-            return format.href === null ? (
-              <DropdownMenu.Item key={format.id} onSelect={launchConference} className={CREATE_MENU_ITEM_CLASS}>
-                {body}
-              </DropdownMenu.Item>
-            ) : (
-              <DropdownMenu.Item key={format.id} asChild>
-                <NextLink href={format.href} className={CREATE_MENU_ITEM_CLASS}>
-                  {body}
-                </NextLink>
-              </DropdownMenu.Item>
-            )
-          })}
+        <DropdownMenu.Content side={mobile ? "bottom" : "right"} align={mobile ? "end" : "start"} sideOffset={8} collisionPadding={12}
+          aria-label={t("nav.create.title")}
+          onCloseAutoFocus={() => {
+            const open = nextAction.current
+            nextAction.current = null
+            if (open) queueMicrotask(open)
+          }}
+          className="z-60 w-52 rounded-xl bg-popover p-1.5 text-popover-foreground shadow-float">
+          <CreationActions menu formats={props.formats}
+            onPost={props.onPost ? () => { nextAction.current = props.onPost } : null}
+            onLive={() => { nextAction.current = launchConference }} />
         </DropdownMenu.Content>
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
-  )
-}
-
-const CREATE_SHEET_ITEM_CLASS = "flex min-h-12 w-full min-w-0 items-center gap-3 rounded-lg px-3 text-left text-[15px] font-medium transition-colors hover:bg-muted focus-visible:shadow-focus"
-
-/** Un format de « Créer » dans la feuille du compte : un lien, ou, sans adresse (le live), un bouton qui referme la feuille. */
-function CreateSheetLink(props: { format: CreateFormat; onFollow: () => void }) {
-  const { t } = useDiasporaGaT()
-  const Icon = MEMBER_CREATE_ICONS[props.format.id]
-  const body = (
-    <>
-      <Icon className="size-5 shrink-0" aria-hidden />
-      <span className="min-w-0 truncate">{t(props.format.labelKey)}</span>
-    </>
-  )
-  return (
-    <li>
-      {props.format.href === null ? (
-        <button
-          type="button"
-          onClick={() => {
-            props.onFollow()
-            launchConference()
-          }}
-          className={CREATE_SHEET_ITEM_CLASS}
-        >
-          {body}
-        </button>
-      ) : (
-        <NextLink href={props.format.href} onClick={props.onFollow} className={CREATE_SHEET_ITEM_CLASS}>
-          {body}
-        </NextLink>
-      )}
-    </li>
   )
 }
 
@@ -1213,13 +1200,11 @@ function AccountSheet(props: {
   membership: MembershipView
   groups: AccountGroups
   information: readonly NavEntry[]
-  create: readonly CreateFormat[]
   consulate: ConsulateGateway | null
   onInformation: (returnFocus: HTMLElement | null) => void
 }) {
   const { t } = useDiasporaGaT()
   const [open, setOpen] = useState(false)
-  const createId = useId()
   const spaceId = useId()
   const gatewayIds = useId()
   const exit = useAccountSignOut()
@@ -1259,7 +1244,7 @@ function AccountSheet(props: {
         </div>
         <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
           <TrustBadges badges={membership.badges} />
-          <CountryTag country={membership.facet.countryOfResidence} city={membership.facet.city} />
+          <CountryTag country={membership.facet.countryOfResidence} />
         </div>
         {/* Les familles : le compte, « Mon espace », puis « Mes données » et « Informations » ; puis « Créer »
             (au téléphone seulement) et la sortie. Tous les liens du compte restent dans sa navigation, dans
@@ -1337,19 +1322,6 @@ function AccountSheet(props: {
             ) : null}
           </div>
         </nav>
-        {/* Au téléphone, l'en-tête n'a plus de place : les formats de « Créer » vivent dans la feuille du compte. */}
-        {props.create.length > 0 ? (
-          <nav aria-labelledby={createId} className="mt-3 border-t border-border pt-1">
-            <p id={createId} className={FAMILY_TITLE_CLASS}>
-              {t("nav.create.title")}
-            </p>
-            <ul className="flex flex-col gap-0.5">
-              {props.create.map((format) => (
-                <CreateSheetLink key={format.id} format={format} onFollow={close} />
-              ))}
-            </ul>
-          </nav>
-        ) : null}
         {/* La sortie, en bouton neutre ; la feuille reste ouverte pendant qu'elle se fait. */}
         <div aria-busy={exit.busy} className="mt-3 border-t border-border pt-4">
           <Button type="button" variant="outline" disabled={exit.busy} onClick={exit.run} className="w-full">
@@ -1419,24 +1391,11 @@ const HEADER_PUBLISH_CLASS =
  * elle, écrite sous le bouton au bureau, et un geste ouvre l'explication avec les
  * chemins qui la rouvrent (parrainage, vérification ; recours pendant une suspension).
  */
-function PublishAction(props: { variant: "rail" | "header"; membership: MembershipView; onPublish: () => void }) {
+function PublishAction(props: { variant: "rail" | "header"; membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const ids = useId()
   const [explaining, setExplaining] = useState(false)
   const rail = props.variant === "rail"
-  if (props.membership.canPublish) {
-    return rail ? (
-      <Button onClick={props.onPublish} className="w-full">
-        <PenSquareIcon aria-hidden />
-        {t("composer.open")}
-      </Button>
-    ) : (
-      <button type="button" onClick={props.onPublish} aria-label={t("composer.open")} className={HEADER_PUBLISH_CLASS}>
-        <PlusIcon aria-hidden className="size-5" />
-      </button>
-    )
-  }
-
   const refusal = publishRefusal(props.membership.status)
   const hintId = `${ids}-raison`
   const titleId = `${ids}-titre`

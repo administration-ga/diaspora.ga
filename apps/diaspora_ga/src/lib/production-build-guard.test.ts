@@ -45,12 +45,12 @@ describe("garde de construction — la source de données se déclare", () => {
 
   it("la démonstration est refusée sur un domaine public", () => {
     const { errors } = checkProductionBuild({ ...READY, dataSource: "demo", convexUrl: undefined })
-    expect(errors).toEqual([expect.stringContaining("domaine public")])
+    expect(errors).toEqual([expect.stringContaining("engine")])
   })
 
-  it("la démonstration déclarée passe en local, ou sans domaine visé", () => {
+  it("la démonstration est refusée en construction, même en local, ou sans domaine visé", () => {
     for (const siteUrl of [undefined, "http://localhost:3031", "http://127.0.0.1:3031", "http://[::1]:3031", "http://diaspora-ga.localhost", "https://recette.test"]) {
-      expect(checkProductionBuild({ dataSource: "demo", convexUrl: undefined, siteUrl, buildSha: "abc1234" }).errors, siteUrl).toEqual([])
+      expect(checkProductionBuild({ dataSource: "demo", convexUrl: undefined, siteUrl, buildSha: "abc1234" }).errors, siteUrl).toHaveLength(1)
     }
   })
 
@@ -113,7 +113,7 @@ describe("garde de construction — branchée dans next.config.ts", () => {
 
   it("`next build` vers un domaine public avec la démonstration échoue", () => {
     stubBuild({ dataSource: "demo", siteUrl: PUBLIC_SITE, buildSha: "abc1234" })
-    expect(() => diasporaGaNextConfig(PHASE_PRODUCTION_BUILD)).toThrow(/domaine public/)
+    expect(() => diasporaGaNextConfig(PHASE_PRODUCTION_BUILD)).toThrow(/engine/)
   })
 
   it("`next build` complet rend la configuration commune du moteur", () => {

@@ -38,7 +38,7 @@ function startOf(cursor: string | null): number | null {
 }
 
 /**
- * Une fenêtre du parcours pour ce lecteur. Un pays fermé, une ville illisible ou
+ * Une fenêtre du parcours pour ce lecteur. Un code pays invalide, une ville illisible ou
  * un curseur étranger rendent une liste vide et close, comme au moteur.
  */
 export function memberBrowseView(state: DemoState, viewerId: string, request: MemberBrowseRequest, now: number, pageSize: number = MEMBER_BROWSE_PAGE_SIZE): MemberBrowsePage {
@@ -73,7 +73,7 @@ export function createDemoMemberBrowse(store: DemoStore, options: { readonly pag
         const state = store.getState()
         const viewerId = state.session.personId
         if (!viewerId) return { status: "error", code: "not_signed_in" }
-        // Un compte en attente lit le réseau ; il ne consulte pas l'annuaire (le refus de la recherche).
+        // L’annuaire est lisible dès l’inscription. La visibilité de chaque personne est jugée séparément.
         const status = statusOf(state, viewerId, store.now())
         if (!status || !hasCapability(status, "view_directory")) return { status: "error", code: "status_insufficient" }
         const request: MemberBrowseRequest = { country, cursor, ...(city !== undefined ? { city } : {}), ...(verifiedOnly !== undefined ? { verifiedOnly } : {}) }

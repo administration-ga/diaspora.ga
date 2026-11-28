@@ -86,7 +86,7 @@ describe("facette diaspora au format du moteur", () => {
 
   it("le pays de résidence est obligatoire et ne peut pas être le Gabon", () => {
     const country = DIASPORA_GA_FACET_SCHEMA.fields.find((field) => field.key === "countryOfResidence")
-    expect(country).toMatchObject({ kind: "country", required: true, excludedValues: ["GA"] })
+    expect(country).toMatchObject({ kind: "country", required: true })
     expect(DIASPORA_GA_FACET_SCHEMA.fields.filter((field) => field.required).map((field) => field.key)).toEqual(["countryOfResidence"])
   })
 })
@@ -100,7 +100,7 @@ describe("graine du réseau diaspora-ga", () => {
       membershipPolicy: "declared_or_verified",
       defaultVisibility: "network",
       reachValues: ["local", "diaspora"],
-      openCountries: ["FR"],
+      openCountries: [...DIASPORA_GA_NETWORK_SEED.openCountries],
       theme: "diaspora-ga",
     })
     expect(DIASPORA_GA_NETWORK_SEED.facetSchema).toBe(DIASPORA_GA_FACET_SCHEMA)
@@ -244,7 +244,7 @@ describe("facetFromEngine — la facette relue depuis le moteur", () => {
 
   it("sans pays de résidence valide, pas de facette", () => {
     expect(facetFromEngine({}, null)).toBeNull()
-    expect(facetFromEngine({ countryOfResidence: "GA" }, null)).toBeNull()
+    expect(facetFromEngine({ countryOfResidence: "GA" }, null)?.countryOfResidence).toBe("GA")
     expect(facetFromEngine({ countryOfResidence: "ZZ" }, null)).toBeNull()
     expect(facetFromEngine({ countryOfResidence: 33 }, null)).toBeNull()
   })

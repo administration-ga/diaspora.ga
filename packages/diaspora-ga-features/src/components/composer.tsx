@@ -1,8 +1,8 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { canAlsoPublishOnRoot, isCountryOpen, type ContentModerationState, type CountryCode } from "@diaspora-ga/domain"
-import { FilmIcon, GlobeIcon, ImagePlusIcon, LoaderCircleIcon, RotateCcwIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react"
+import { canAlsoPublishOnRoot, isResidenceCountry, type ContentModerationState, type CountryCode } from "@diaspora-ga/domain"
+import { GlobeIcon, ImagePlusIcon, LoaderCircleIcon, RotateCcwIcon, SendIcon, TriangleAlertIcon, XIcon } from "lucide-react"
 import { type ChangeEvent, type FormEvent, type KeyboardEvent, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
@@ -29,12 +29,12 @@ import type { PostView } from "../data/types"
 import { useDiasporaGaT } from "../i18n/client"
 import { cn } from "../lib/cn"
 import { countryName } from "../lib/countries"
-import { MEMBER_CREATE_ICONS } from "../navigation/icons"
 import { Button } from "../primitives/button"
 import { Checkbox } from "../primitives/checkbox"
 import { Field, Input, Label, Textarea } from "../primitives/field"
 import { RadioCard, RadioGroup } from "../primitives/radio-group"
 import { Sheet, SheetContent } from "../primitives/sheet"
+import { CountrySwitch } from "./country-switch"
 import { CountryTag, ScopeTag } from "./country-tag"
 import { SharedPostEmbed, sharedPreviewOf } from "./post-share"
 
@@ -43,6 +43,7 @@ export const POST_BODY_MAX = 2000
 const composerFields = z.object({
   body: z.string().trim().max(POST_BODY_MAX, "post_too_long"),
   reach: z.enum(["local", "diaspora"]),
+  country: z.custom<CountryCode>(value => typeof value === "string" && isResidenceCountry(value)).optional(),
   audience: z.enum(["public", "connections", "followers"]),
   alsoOnRoot: z.boolean(),
   /** Les médias joints, dans l'ordre : la clé de leur dépôt et leur texte alternatif. */
@@ -195,7 +196,7 @@ export function PostComposerSheet(props: {
    * Les pays ouverts du réseau ; `null` tant qu'ils ne sont pas connus
    * (chargement, panne) : rien n'est alors affirmé, et l'adaptateur juge à l'envoi.
    */
-  openCountries: readonly CountryCode[] | null
+  openCountries?: readonly CountryCode[] | null
   /**
    * Brouillon durable (EXF-DG-10) : gardé dans CE navigateur sous cette clé (une
    * par personne), rétabli à l'ouverture, effacé à la publication. Jamais envoyé.
@@ -211,20 +212,14 @@ export function PostComposerSheet(props: {
    * carte « Quoi de neuf ? ») ; joints une fois par `id`, jugés comme un choix fait ici.
    */
   incomingFiles?: { readonly id: number; readonly files: readonly File[] } | null
-  /**
-   * Lancer un live depuis la feuille (26/11/2026) : au téléphone, « + » ouvre directement ce
-   * composeur, qui offre donc le live à côté des photos et de la vidéo. Le geste ferme la feuille,
-   * puis demande la création du live (`onGoLive`, le même geste que « Créer → Un live »). Absent : le
-   * live n'est pas offert (démonstration, interrupteur du direct fermé) ; jamais dans un partage ni
-   * pour une page.
-   */
-  onGoLive?: () => void
+  returnFocus?: () => HTMLElement | null
   /** Une page parle sous sa propre identité, avec ses abonnés et sa règle collective. */
   page?: {
     readonly id: string
     readonly name: string
     readonly country: CountryCode | null
     readonly publish: PagePublicationsCapability["publish"]
+    readonly guestSharing?: boolean
     /** Un contexte collectif fermé : aucun choix de portée ne peut l'élargir. */
     readonly fixedScope?: {
       readonly description: string
@@ -249,15 +244,6 @@ export function PostComposerSheet(props: {
   const fixedScope = page?.fixedScope
   const hasFixedScope = fixedScope !== undefined
   const share = page ? null : props.share ?? null
-  const goLive = page || share ? undefined : props.onGoLive
-  // Le live demandé : la feuille se ferme d'abord, et la création du live ne s'ouvre qu'une fois la
-  // feuille partie (à la restitution du focus, que la feuille cède alors au dialogue du live).
-  const goLiveRequested = useRef(false)
-  // Une demande restée sans fermeture ne survit pas à la réouverture : seul le geste de CETTE ouverture compte.
-  useEffect(() => {
-    if (props.open) goLiveRequested.current = false
-  }, [props.open])
-  const LiveIcon = MEMBER_CREATE_ICONS.live
   const defaults: ComposerValues = { ...DEFAULTS, reach: fixedScope || (page && !page.country) ? "diaspora" : "local", sharing: share !== null }
   const schema = useMemo(() => composerSchemaFor(fixedScope?.requireMedia === true), [fixedScope?.requireMedia])
   const form = useForm<ComposerValues>({ resolver: zodResolver(schema), defaultValues: defaults })
@@ -269,21 +255,23 @@ export function PostComposerSheet(props: {
   const mediaFields = useFieldArray({ control: form.control, name: "media" })
   const [attachments, setAttachments] = useState<Readonly<Record<string, Attachment>>>({})
   const [mediaError, setMediaError] = useState<ActionErrorCode | null>(null)
-  const photoInput = useRef<HTMLInputElement>(null)
-  const videoInput = useRef<HTMLInputElement>(null)
+  const mediaInput = useRef<HTMLInputElement>(null)
+  const [guestConsentFor, setGuestConsentFor] = useState<string | null>(null)
   const attachedCount = useRef(0)
   // Le verrou précède même la validation asynchrone : un sélecteur déjà ouvert
   // ne doit pas ajouter des photos à une publication dont le contenu est parti.
   const submissionInFlight = useRef(false)
   const audience = useWatch({ control: form.control, name: "audience" })
+  const guestContext = !share && !fixedScope && audience === "public" && (!page || page.guestSharing === true)
+    ? page?.id ?? props.draftKey ?? "personal"
+    : null
+  const guestVisible = guestContext !== null && guestConsentFor === guestContext
+  useEffect(() => { setGuestConsentFor(null) }, [guestContext])
   const reach = useWatch({ control: form.control, name: "reach" })
   const body = useWatch({ control: form.control, name: "body" })
   const rootAllowed = !page && canAlsoPublishOnRoot(audience === "followers" ? "connections" : audience)
-  const localCountry = page?.country ?? props.memberCountry
-  // Un pays connu pour fermé ne reçoit pas de publication locale : la portée effective est la diaspora,
-  // sans réécrire le choix gardé (il revient si le pays ouvre pendant que la feuille vit).
-  const localClosed = !hasFixedScope && (!page || page.country !== null)
-    && props.openCountries !== null && !isCountryOpen(localCountry, props.openCountries)
+  const selectedCountry = useWatch({ control: form.control, name: "country" })
+  const localCountry = page?.country ?? selectedCountry ?? props.memberCountry
 
   // Une audience restreinte ferme la case ANTSIA : la valeur suit, jamais l'inverse.
   useEffect(() => {
@@ -309,9 +297,9 @@ export function PostComposerSheet(props: {
   const alsoOnRoot = useWatch({ control: form.control, name: "alsoOnRoot" })
   useEffect(() => {
     if (!draftKey) return
-    const timer = setTimeout(() => writeDraft(draftKey, { body, reach: hasFixedScope ? "diaspora" : reach, audience: hasFixedScope ? "public" : audience, alsoOnRoot: hasFixedScope ? false : alsoOnRoot }), DRAFT_SAVE_MS)
+    const timer = setTimeout(() => writeDraft(draftKey, { body, country: selectedCountry, reach: hasFixedScope ? "diaspora" : reach, audience: hasFixedScope ? "public" : audience, alsoOnRoot: hasFixedScope ? false : alsoOnRoot }), DRAFT_SAVE_MS)
     return () => clearTimeout(timer)
-  }, [draftKey, body, reach, audience, alsoOnRoot, hasFixedScope])
+  }, [draftKey, body, selectedCountry, reach, audience, alsoOnRoot, hasFixedScope])
 
   // Les aperçus locaux (URL d'objet) se libèrent au retrait, à la publication, et quand le composeur quitte l'écran.
   const previewUrls = useRef(new Set<string>())
@@ -524,18 +512,20 @@ export function PostComposerSheet(props: {
     if (fixedScope?.requireMedia && media.length === 0) { setMediaError("association_event_gallery_media_required"); return }
     const pageInput: Omit<PagePublicationInput, "pageId"> = {
       body: values.body,
-      reach: fixedScope || (page && !page.country) || localClosed ? "diaspora" : values.reach,
+      reach: fixedScope || (page && !page.country) ? "diaspora" : values.reach,
       audience: !fixedScope && values.audience === "followers" ? "followers" : "public",
+      ...(page?.guestSharing && !fixedScope && values.audience === "public" && guestVisible ? { guestVisible: true } : {}),
       ...(media.length > 0 ? { media } : {}),
       idempotencyKey: publishKey,
     }
     const result = page ? await page.publish({ pageId: page.id, ...pageInput }) : await actions.publish({
       body: values.body,
-      reach: localClosed ? "diaspora" : values.reach,
+      reach: values.reach,
       audience: values.audience === "connections" ? "connections" : "public",
       alsoOnRoot: values.alsoOnRoot,
+      ...(!share && values.audience === "public" && guestVisible ? { guestVisible: true } : {}),
       // Local : le pays du hub. Diaspora : le pays d'ORIGINE, en pastille dans les autres hubs (EXF-DG-16).
-      country: props.memberCountry,
+      country: values.reach === "local" ? localCountry : props.memberCountry,
       ...(media.length > 0 ? { media } : {}),
       ...(share ? { sharedPostId: share.id } : {}),
       idempotencyKey: publishKey,
@@ -545,6 +535,7 @@ export function PostComposerSheet(props: {
       toast.error(t(`errors.${result.code}`))
       return
     }
+    setGuestConsentFor(null)
     setPublishKey(newPublishKey())
     const mediaPendingCheck = media.some((item) => item.upload.pendingCheck === true)
     // Une publication retenue en relecture le dit, même dans une page ou un groupe : l'auteur sait pourquoi elle n'apparaît pas encore.
@@ -574,7 +565,6 @@ export function PostComposerSheet(props: {
   }
 
   const countryLabel = countryName(localCountry, locale)
-  const localNoticeId = `${ids}-local-ferme`
   const bodyError = form.formState.errors.body?.message
   const mediaFieldError = form.formState.errors.media?.root?.message ?? form.formState.errors.media?.message
   const mediaNotice = mediaError ?? mediaFieldError
@@ -588,10 +578,11 @@ export function PostComposerSheet(props: {
         hideDescription={!fixedScope}
         closeLabel={t("common.close")}
         onCloseAutoFocus={(event) => {
-          if (!goLiveRequested.current) return
-          goLiveRequested.current = false
-          event.preventDefault()
-          goLive?.()
+          const origin = props.returnFocus?.()
+          if (origin?.isConnected) {
+            event.preventDefault()
+            origin.focus({ preventScroll: true })
+          }
         }}
       >
         <form onSubmit={onSubmit} className="flex flex-col gap-5" aria-busy={form.formState.isSubmitting} noValidate>
@@ -626,6 +617,7 @@ export function PostComposerSheet(props: {
                 aria-describedby={control.describedBy}
                 aria-invalid={control.invalid || undefined}
                 rows={3}
+                className="border-0 bg-muted"
                 maxLength={POST_BODY_MAX + 200}
                 placeholder={page ? (fixedScope?.placeholder ?? t("pagePublications.placeholder", { name: page.name })) : share ? t("composer.sharePlaceholder") : t("composer.placeholder", { country: countryLabel })}
                 {...form.register("body")}
@@ -758,13 +750,9 @@ export function PostComposerSheet(props: {
             {/* A3 (comme UDB) : deux sélecteurs, photos (plusieurs) ou une vidéo seule ; les bornes du moteur dites dessous. */}
             <div className="flex flex-col gap-1.5">
               <div role="group" aria-label={t("composer.mediaAdd")} className="flex flex-wrap items-center gap-2">
-                <Button type="button" variant="outline" onClick={() => photoInput.current?.click()} disabled={!canAttachPhotos} aria-describedby={`${ids}-medias-aide`}>
+                <Button ref={addMediaButton} type="button" variant="secondary" onClick={() => mediaInput.current?.click()} disabled={!canAttachPhotos} aria-describedby={`${ids}-medias-aide`}>
                   <ImagePlusIcon aria-hidden />
-                  {t("composer.mediaAddPhotos")}
-                </Button>
-                <Button ref={addMediaButton} type="button" variant="outline" onClick={() => videoInput.current?.click()} disabled={!canAttachVideo} aria-describedby={`${ids}-medias-aide`}>
-                  <FilmIcon aria-hidden />
-                  {t("composer.mediaAddVideo")}
+                  {t("composer.mediaAdd")}
                 </Button>
               </div>
               <p id={`${ids}-medias-aide`} aria-live="polite" className="text-[13px] text-muted-foreground">
@@ -777,8 +765,7 @@ export function PostComposerSheet(props: {
                       : t("composer.mediaLimits")}
               </p>
             </div>
-            <input ref={photoInput} type="file" accept={POST_PHOTO_ACCEPT} multiple hidden onChange={attachFiles} />
-            <input ref={videoInput} type="file" accept={POST_VIDEO_ACCEPT} hidden onChange={attachFiles} />
+            <input ref={mediaInput} type="file" accept={canAttachVideo ? `${POST_PHOTO_ACCEPT},${POST_VIDEO_ACCEPT}` : POST_PHOTO_ACCEPT} multiple hidden onChange={attachFiles} />
             {mediaNotice ? (
               <p role="alert" className="text-[13px] text-destructive">
                 {t(`errors.${mediaNotice}`)}
@@ -786,33 +773,10 @@ export function PostComposerSheet(props: {
             ) : null}
           </fieldset>
 
-          {/* Le live, à côté des photos et de la vidéo (comme UDB et le réseau de l'administration) : il ne
-              joint rien, il ferme la feuille et ouvre la création du live, le brouillon gardé. */}
-          {goLive ? (
-            <div role="group" aria-labelledby={`${ids}-live`} className="flex flex-col gap-2">
-              <p id={`${ids}-live`} className="text-sm font-medium">{t("composer.liveLegend")}</p>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  aria-describedby={`${ids}-live-aide`}
-                  onClick={() => {
-                    goLiveRequested.current = true
-                    changeOpen(false)
-                  }}
-                >
-                  <LiveIcon aria-hidden />
-                  {t("composer.goLive")}
-                </Button>
-                <p id={`${ids}-live-aide`} className="min-w-0 flex-1 basis-48 text-[13px] text-muted-foreground">{t("composer.liveHint")}</p>
-              </div>
-            </div>
-          ) : null}
-
           {fixedScope ? <p className="rounded-lg bg-muted p-3 text-sm font-medium">{fixedScope.audienceLabel}</p> : (
-            <details className="rounded-lg border border-border px-3">
+            <details className="rounded-lg bg-muted px-3">
               <summary className="min-h-11 cursor-pointer py-2 text-sm font-medium focus-visible:shadow-focus">
-                {t("composer.visibility")} · {localClosed || reach === "diaspora" ? t("composer.reachDiaspora") : countryLabel}
+                {t("composer.visibility")} · {reach === "diaspora" ? t("composer.reachDiaspora") : countryLabel}
                 {" · "}{audience === "public" ? t("composer.audiencePublic") : page ? t("pagePublications.followersAudience") : t("composer.audienceConnections")}
                 {rootAllowed && alsoOnRoot ? " · ANTSIA" : ""}
               </summary>
@@ -823,12 +787,9 @@ export function PostComposerSheet(props: {
                     control={form.control}
                     name="reach"
                     render={({ field }) => (
-                      <RadioGroup value={localClosed ? "diaspora" : field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
+                      <RadioGroup value={field.value} onValueChange={field.onChange} aria-label={t("composer.reachLegend")}>
                         {!page || page.country ? <RadioCard
                           value="local"
-                          disabled={localClosed}
-                          aria-describedby={localClosed ? localNoticeId : undefined}
-                          className="data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60"
                         >
                           <span className="flex flex-wrap items-center gap-2">
                             <CountryTag country={localCountry} />
@@ -845,7 +806,10 @@ export function PostComposerSheet(props: {
                     )}
                   />
                   {page && !page.country ? <p className="text-[13px] text-muted-foreground">{t("pagePublications.noCountry")}</p> : null}
-                  {localClosed ? <p id={localNoticeId} className="text-[13px] text-pending-foreground">{t("composer.reviewNotice", { country: countryLabel })}</p> : null}
+                  {!page && reach === "local" ? (
+                    <CountrySwitch value={localCountry} onChange={(value) => form.setValue("country", value, { shouldDirty: true })}
+                      title={t("country.choose")} description={t("composer.reachLegend")} />
+                  ) : null}
                 </fieldset>
 
                 <fieldset className="flex flex-col gap-2">
@@ -866,6 +830,12 @@ export function PostComposerSheet(props: {
                   />
                 </fieldset>
 
+                {guestContext !== null ? (
+                  <div className="flex items-center gap-3 rounded-lg bg-card p-3">
+                    <Checkbox id={`${ids}-visiteurs`} checked={guestVisible} onCheckedChange={(value) => setGuestConsentFor(value === true ? guestContext : null)} />
+                    <Label htmlFor={`${ids}-visiteurs`}>{t("composer.guestVisible")}</Label>
+                  </div>
+                ) : null}
                 {!page ? <div className="flex items-start gap-3 rounded-lg bg-muted p-3">
                   <Controller
                     control={form.control}
@@ -896,7 +866,7 @@ export function PostComposerSheet(props: {
             </details>
           )}
 
-          <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 border-t border-border bg-card px-5 py-3">
+          <div className="sticky bottom-0 -mx-5 -mb-4 flex justify-end gap-2 bg-card px-5 py-3">
             <Button variant="ghost" onClick={() => changeOpen(false)}>
               {t("common.cancel")}
             </Button>

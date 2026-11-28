@@ -14,7 +14,7 @@
  * une offre refusée ici l'est partout, avec le même code fermé.
  */
 import type { PageOwnerKind } from "./badges"
-import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
+import { isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { parseMoney, type CurrencyCode, type Money, type MoneyRefusal } from "./money"
 import { ok, refuse, type Result } from "./result"
 
@@ -278,7 +278,6 @@ export function parseServiceCountry(raw: string | null | undefined): Result<Coun
   const code = normalizeCountryCode(raw ?? "")
   if (code.length === 0) return refuse("service_country_required")
   if (!isCountryCode(code)) return refuse("service_country_unknown")
-  if (code === HOME_COUNTRY) return refuse("service_country_is_home")
   return ok(code)
 }
 

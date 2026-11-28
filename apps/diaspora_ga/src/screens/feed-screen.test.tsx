@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import { DEFAULT_FACET_VISIBILITY } from "@diaspora-ga/domain"
 import type { FeedDiscoveryProps } from "@diaspora-ga/features"
-import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT } from "@diaspora-ga/features/data"
 import type { AssociationEventsCapability, CountryEventsPage, CountryEventsRequest, CountryHubView, HubPagesView, Loadable, MembershipView, PagesCapability, PageView } from "@diaspora-ga/features/data"
 import { I18nProvider } from "@diaspora-ga/features/i18n/client"
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react"
@@ -30,7 +29,6 @@ const mocks = vi.hoisted(() => ({
   canPublish: false,
   // A3 : le composeur de la coque, ouvert et nourri par les raccourcis Photo et Vidéo.
   composerOpen: vi.fn(),
-  composerAttach: vi.fn(),
   // Le live offert par la coque (`goLive`) : `null` sauf dans les scénarios du live.
   goLive: null as (() => void) | null,
   // CH-816 (P2) : la déclaration de l'application ; les scénarios de la découverte la basculent.
@@ -57,7 +55,11 @@ vi.mock("@/components/gate", () => ({
 }))
 vi.mock("@/components/app-shell", () => ({
   AppShell: ({ children }: { children: ReactNode }) => <>{children}</>,
-  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, attach: mocks.composerAttach, goLive: mocks.goLive }),
+  useComposer: () => ({ canPublish: mocks.canPublish, open: mocks.composerOpen, formats: [
+    ...(mocks.goLive ? [{ id: "live", href: null }] : []),
+    { id: "association", href: routes.newPage("association") },
+    { id: "company", href: routes.newPage("company") },
+  ], goLive: mocks.goLive }),
 }))
 vi.mock("@/components/feed-pages", () => ({
   FeedPages: (props: FeedPagesProps) => {
@@ -146,7 +148,7 @@ describe("/fil — filtre de mot-dièse", () => {
     expect(screen.getByText(label)).toBeTruthy()
     expect(screen.getByRole("link", { name: clear })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
     expect(screen.getByRole("link", { name: diaspora })).toHaveAttribute("href", "/fil?scope=diaspora&tag=%C3%A9t%C3%A9&country=CA")
-    expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("button", { name: "Canada" })).toHaveAttribute("aria-current", "page")
   })
   it("un jeton Unicode canonique reste entier dans la lecture et les liens de portée", () => {
     mocks.search = new URLSearchParams({ scope: "mon_pays", tag: "İSTANBUL", country: "CA" }).toString()
@@ -169,7 +171,7 @@ describe("/fil — filtre de mot-dièse", () => {
     expect(props.tag).toBe("été")
     expect(props.membership.canPublish).toBe(false)
   })
-  it.each(["XX", "GA", "<script>"])("ignore le pays invalide %s et conserve le filtre sans modifier la personne", (country) => {
+  it.each(["XX", "ZZ", "<script>"])("ignore le pays invalide %s et conserve le filtre sans modifier la personne", (country) => {
     mocks.search = new URLSearchParams({ scope: "diaspora", tag: "gabon", country }).toString()
     render(tree())
     const props = mocks.feed.mock.lastCall![0] as FeedPagesProps
@@ -177,7 +179,7 @@ describe("/fil — filtre de mot-dièse", () => {
     expect(props.tag).toBe("gabon")
     expect(props.hubCountry).toBeUndefined()
     expect(props.membership).toEqual(MEMBER)
-    expect(screen.getByRole("link", { name: "France" })).toHaveAttribute("href", "/fil?scope=mon_pays&tag=gabon")
+    expect(screen.getByRole("button", { name: "France" })).toHaveAttribute("aria-haspopup", "dialog")
     expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=diaspora")
   })
   it("ne crée aucun filtre pour une valeur vide et conserve les adresses usuelles", () => {
@@ -211,9 +213,9 @@ describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascul
 
   it("le pays de résidence et « Toute la diaspora », dans cet ordre, le pays actif par défaut", () => {
     render(tree())
-    const links = Array.from(scopes().querySelectorAll("a"))
+    const links = Array.from(scopes().querySelectorAll("button, a"))
     expect(links.map((link) => link.textContent)).toEqual(["France", "Toute la diaspora"])
-    expect(screen.getByRole("link", { name: "France" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("button", { name: "France" })).toHaveAttribute("aria-current", "page")
     expect(screen.queryByRole("link", { name: "Récents" })).toBeNull()
     expect(screen.queryByRole("link", { name: "Pour vous" })).toBeNull()
   })
@@ -222,7 +224,7 @@ describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascul
     mocks.search = new URLSearchParams({ scope, country: "CA" }).toString()
     render(tree())
     expect(mocks.feed).toHaveBeenLastCalledWith(expect.objectContaining({ scope: "mon_pays", hubCountry: "CA" }))
-    expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("aria-current", "page")
+    expect(screen.getByRole("button", { name: "Canada" })).toHaveAttribute("aria-current", "page")
     expect(screen.getByRole("link", { name: "Toute la diaspora" })).not.toHaveAttribute("aria-current")
   })
 
@@ -242,7 +244,11 @@ describe("/fil — deux onglets, ni « Récents » ni « Pour vous », ni bascul
     expect(mocks.stories).toHaveBeenCalled()
     expect(screen.queryByRole("navigation", { name: "Affichage du fil" })).toBeNull()
     // Les portées mènent à la liste : l'adresse de découverte ne se propage pas.
-    expect(screen.getByRole("link", { name: "Canada" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA")
+    fireEvent.click(screen.getByRole("button", { name: "Canada" }))
+    const selector = screen.getByRole("dialog", { name: "Changer de pays" })
+    fireEvent.change(within(selector).getByRole("searchbox"), { target: { value: "GA" } })
+    fireEvent.click(within(selector).getByRole("button", { name: "Gabon" }))
+    expect(mocks.push).toHaveBeenCalledWith("/fil?scope=mon_pays&country=GA", { scroll: false })
   })
 })
 
@@ -297,6 +303,16 @@ describe("/fil — bascule Liste / Découverte (DG-017), la découverte offerte"
     expect(screen.getByRole("link", { name: "Toute la diaspora" })).toHaveAttribute("href", "/fil?scope=diaspora&tag=%C3%A9t%C3%A9&country=CA&vue=decouverte")
     expect(screen.getByRole("link", { name: "Retirer le filtre" })).toHaveAttribute("href", "/fil?scope=mon_pays&country=CA&vue=decouverte")
     expect(screen.queryByText("Canada, et ce qui concerne toute la diaspora.")).toBeNull()
+  })
+
+  it("choisit un pays par son code en conservant le mot-dièse et le mode de lecture", () => {
+    mocks.search = "scope=diaspora&tag=gabon&vue=decouverte"
+    render(tree())
+    fireEvent.click(screen.getByRole("button", { name: "France" }))
+    const dialog = screen.getByRole("dialog", { name: "Changer de pays" })
+    fireEvent.change(within(dialog).getByRole("searchbox"), { target: { value: "CA" } })
+    fireEvent.click(within(dialog).getByRole("button", { name: "Canada" }))
+    expect(mocks.push).toHaveBeenCalledWith("/fil?scope=mon_pays&tag=gabon&country=CA&vue=decouverte", { scroll: false })
   })
 
   it("une valeur inconnue du mode garde la liste", () => {
@@ -474,74 +490,31 @@ describe("/fil — le rail lit les prochains évènements du pays par la capacit
   })
 })
 
-describe("/fil — la carte d'identité porte l'inscription d'une organisation (AS-05)", () => {
-  it("un membre qui publie voit « Inscrire une association » et « Inscrire une entreprise »", () => {
+describe("/fil — actions de création", () => {
+  it("ouvre directement les quatre parcours et regroupe les médias dans Poster", () => {
     mocks.canPublish = true
     mocks.membership = { ...MEMBER, status: "declaree", canPublish: true }
+    mocks.goLive = vi.fn()
     render(tree())
-    const group = screen.getByRole("group", { name: "Inscrire votre organisation" })
-    expect(group.querySelector(`a[href="${routes.newPage("association")}"]`)).not.toBeNull()
-    expect(group.querySelector(`a[href="${routes.newPage("company")}"]`)).not.toBeNull()
+    const actions = within(screen.getByRole("group", { name: "Créer" }))
+    fireEvent.click(actions.getByRole("button", { name: "Poster" }))
+    expect(mocks.composerOpen).toHaveBeenCalledOnce()
+    fireEvent.click(actions.getByRole("button", { name: "Live" }))
+    expect(mocks.goLive).toHaveBeenCalledOnce()
+    expect(actions.getByRole("link", { name: "+ Entreprise" })).toHaveAttribute("href", routes.newPage("company"))
+    expect(actions.getByRole("link", { name: "+ Association" })).toHaveAttribute("href", routes.newPage("association"))
+    expect(actions.queryByRole("button", { name: /photo|vidéo/i })).toBeNull()
   })
 
-  it("sans publication possible, la carte ne paraît pas", () => {
-    render(tree())
-    expect(screen.queryByRole("group", { name: "Inscrire votre organisation" })).toBeNull()
-  })
-})
-
-describe("/fil — raccourcis Photo et Vidéo de la carte « Quoi de neuf ? » (A3)", () => {
-  function publisher() {
+  it("garde les entrées organisation ouvertes quand le membre attend le droit de poster", () => {
+    const view = render(tree())
+    const actions = within(screen.getByRole("group", { name: "Créer" }))
+    expect(actions.queryByRole("button", { name: "Poster" })).toBeNull()
+    expect(actions.getByRole("link", { name: "+ Entreprise" })).toHaveAttribute("href", routes.newPage("company"))
     mocks.canPublish = true
     mocks.membership = { ...MEMBER, status: "declaree", canPublish: true }
-  }
-
-  it.each([
-    { name: "Photo", accept: POST_PHOTO_ACCEPT, multiple: true, file: new File(["p"], "depuis-le-fil.png", { type: "image/png" }) },
-    { name: "Vidéo", accept: POST_VIDEO_ACCEPT, multiple: false, file: new File(["v"], "depuis-le-fil.mp4", { type: "video/mp4" }) },
-  ])("« $name » ouvre le composeur et son sélecteur d'un même geste ; le fichier choisi rejoint le composeur", ({ name, accept, multiple, file }) => {
-    publisher()
-    const click = vi.spyOn(HTMLInputElement.prototype, "click").mockImplementation(() => undefined)
-    try {
-      render(tree())
-      const group = screen.getByRole("group", { name: "Publier une photo ou une vidéo" })
-      fireEvent.click(within(group).getByRole("button", { name }))
-      expect(click).toHaveBeenCalledOnce()
-      expect(mocks.composerOpen).toHaveBeenCalledOnce()
-      const input = click.mock.contexts[0] as HTMLInputElement
-      expect(input.accept).toBe(accept)
-      expect(input.multiple).toBe(multiple)
-      fireEvent.change(input, { target: { files: [file] } })
-      expect(mocks.composerAttach).toHaveBeenCalledWith([file])
-      expect(input.value).toBe("")
-    } finally {
-      click.mockRestore()
-    }
-  })
-
-  it("sans publication possible, aucun raccourci", () => {
-    render(tree())
-    expect(screen.queryByRole("group", { name: "Publier une photo ou une vidéo" })).toBeNull()
-  })
-
-  it("le live offert par la coque : « Live » à côté de Photo et Vidéo, le même geste que « Créer → Un live »", () => {
-    publisher()
-    const goLive = vi.fn()
-    mocks.goLive = goLive
-    render(tree())
-    const group = screen.getByRole("group", { name: "Publier une photo, une vidéo, ou lancer un live" })
-    expect(within(group).getAllByRole("button").map((button) => button.textContent)).toEqual(["Photo", "Vidéo", "Live"])
-    fireEvent.click(within(group).getByRole("button", { name: "Live" }))
-    expect(goLive).toHaveBeenCalledOnce()
-    // Le live n'ouvre pas le composeur : il ouvre en place la création du live du moteur.
-    expect(mocks.composerOpen).not.toHaveBeenCalled()
-  })
-
-  it("le live non offert (démonstration, direct fermé) : Photo et Vidéo seulement", () => {
-    publisher()
-    render(tree())
-    const group = screen.getByRole("group", { name: "Publier une photo ou une vidéo" })
-    expect(within(group).queryByRole("button", { name: "Live" })).toBeNull()
+    view.rerender(tree())
+    expect(within(screen.getByRole("group", { name: "Créer" })).queryByRole("button", { name: "Live" })).toBeNull()
   })
 })
 

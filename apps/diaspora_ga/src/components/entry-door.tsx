@@ -8,11 +8,9 @@ import { useId, type ReactNode } from "react"
 
 import { routes } from "@/lib/routes"
 
-import { DemoAccountsPill } from "./demo-accounts-panel"
 import { BrandLogo } from "@diaspora-ga/features/brand/logo"
-import { OpenCountriesList, useHasOpenCountries } from "./open-countries"
 import { LanguageSwitch } from "./preferences"
-import { AppDemoChip, SiteFooter } from "./site-chrome"
+import { SiteFooter } from "./site-chrome"
 
 /**
  * La porte de DIASPORA.GA : une seule, responsive, pour l'accueil, la connexion,
@@ -37,7 +35,6 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
   return (
     <div className="flex min-h-dvh flex-col overflow-x-clip">
       <header className="relative z-20 mx-auto flex w-full max-w-[1060px] flex-wrap items-center justify-end gap-3 px-5 py-4">
-        <AppDemoChip />
         <LanguageSwitch />
         <AppearanceToggle />
       </header>
@@ -68,7 +65,6 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
                 {t("landing.title")}
               </h1>
               <p className="mt-4 hidden max-w-[420px] text-lg leading-relaxed text-muted-foreground min-[960px]:block">{t("landing.lead")}</p>
-              <OpenCommunities />
             </section>
             <div className="relative z-10 mx-auto w-full min-w-0 max-w-[420px]">
               {props.children}
@@ -81,8 +77,6 @@ export function EntryDoor(props: { children: ReactNode; align?: "center" | "star
         {props.after}
       </main>
       <SiteFooter compact />
-      {/* CH-817 : la pastille « Compte démo », discrète, tout en bas ; absente quand la porte est fermée. */}
-      <DemoAccountsPill />
     </div>
   )
 }
@@ -97,20 +91,6 @@ export function EntryCard(props: { title: string; lead?: string; children: React
       </h2>
       {props.lead ? <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{props.lead}</p> : null}
       <div className="mt-5 flex flex-col gap-5">{props.children}</div>
-    </section>
-  )
-}
-
-/** Pays réellement ouverts, sans chiffre promotionnel ni contenu du réseau fermé. */
-function OpenCommunities() {
-  const { t } = useDiasporaGaT()
-  if (!useHasOpenCountries()) return null
-  return (
-    <section aria-labelledby="pays-ouverts" className="mt-8 hidden min-[960px]:block">
-      <h2 id="pays-ouverts" className="mb-3 text-sm text-muted-foreground">
-        {t("landing.boardTitle")}
-      </h2>
-      <OpenCountriesList />
     </section>
   )
 }

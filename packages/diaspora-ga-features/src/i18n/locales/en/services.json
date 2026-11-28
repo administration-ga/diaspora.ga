@@ -201,7 +201,7 @@
     "service_category_invalid": "Choose a category from the list.",
     "service_country_required": "Choose the country of the service area.",
     "service_country_unknown": "This country is not recognised.",
-    "service_country_is_home": "The catalogue serves the diaspora: choose a country outside Gabon.",
+    "service_country_is_home": "This country was not accepted. Check your selection and try again.",
     "service_city_required": "Type the city of the service area.",
     "service_city_too_long": "The service area city has at most 80 characters.",
     "service_delivery_invalid": "Choose a delivery mode.",

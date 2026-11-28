@@ -101,6 +101,7 @@ export const DATA_ERROR_CODES = [
   "share_with_media",
   // Pays pas encore ouvert (FD-04, HB-01) : la publication dans son hub attend son ouverture.
   "hub_not_open",
+  "guest_profile_required",
   "attestation_not_needed",
   "attestation_too_soon",
   "attestation_unavailable",

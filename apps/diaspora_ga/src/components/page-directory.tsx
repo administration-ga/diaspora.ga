@@ -116,7 +116,6 @@ function useSettled<T>(value: T, delay: number): T {
 function Directory(props: PageDirectoryProps & { source: DiasporaGaDataSource; capability: PagesCapability }) {
   const { t, locale } = useDiasporaGaT()
   const ids = useId()
-  const open = props.source.useOpenCountries()
   const session = props.source.useSession()
   const readerId = session.status === "ready" && session.data.status === "signed_in" ? session.data.membership?.personId ?? null : null
   const supportsCategories = props.capability.supportsDirectoryCategories === true && !props.followedOnly
@@ -267,7 +266,7 @@ function Directory(props: PageDirectoryProps & { source: DiasporaGaDataSource; c
           <CountrySwitch
             value={country}
             onChange={choose}
-            openCountries={open.status === "ready" ? open.data.map((item) => item.country) : []}
+
             title={t("page.directory.chooseCountryTitle")}
             description={t("page.directory.chooseCountryDescription")}
             rememberKey="diaspora-ga:pages:recents"

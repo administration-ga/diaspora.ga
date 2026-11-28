@@ -138,7 +138,7 @@ describe("zone de service", () => {
     expect(parseServiceCountry(null)).toEqual({ ok: false, code: "service_country_required" })
     expect(parseServiceCountry(undefined)).toEqual({ ok: false, code: "service_country_required" })
     expect(parseServiceCountry("XX")).toEqual({ ok: false, code: "service_country_unknown" })
-    expect(parseServiceCountry("ga")).toEqual({ ok: false, code: "service_country_is_home" })
+    expect(parseServiceCountry("ga")).toEqual({ ok: true, value: "GA" })
   })
 
   it("prend une ville saisie, sans GPS, et en tire sa clé", () => {
@@ -212,7 +212,6 @@ describe("une offre", () => {
     [{ city: "Paris www.exemple.test" }, "service_contact_details_forbidden"],
     [{ category: "health" }, "service_category_invalid"],
     [{ country: "" }, "service_country_required"],
-    [{ country: "GA" }, "service_country_is_home"],
     [{ city: " " }, "service_city_required"],
     [{ delivery: "teleport" }, "service_delivery_invalid"],
     [{ languages: [] }, "service_languages_required"],
@@ -320,7 +319,6 @@ describe("recherche", () => {
 
   it.each([
     [{ query: "x".repeat(SERVICE_QUERY_MAX_LENGTH + 1) }, "service_query_too_long"],
-    [{ country: "GA" }, "service_country_is_home"],
     [{ country: "ZZ" }, "service_country_unknown"],
     [{ city: "x".repeat(81) }, "service_city_too_long"],
     [{ category: "health" }, "service_category_invalid"],

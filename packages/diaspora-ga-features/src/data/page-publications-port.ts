@@ -52,6 +52,7 @@ export interface PageWallRequest {
 }
 
 export interface PagePublicationInput {
+  readonly guestVisible?: boolean
   readonly pageId: string
   readonly body: string
   readonly reach: Reach

@@ -175,7 +175,7 @@ export function jobSearchArgsOf(request: JobSearchRequest) {
 }
 
 /** Le réseau lisible par ce membre ; `null` tant qu'un refus ou un chargement l'empêche. */
-function useReadableNetwork(capability: "read_network" | "view_directory" = "read_network"): { readonly networkId: Id<"networks"> | null; readonly refusal: ActionErrorCode | null } {
+function useReadableNetwork(capability: "read_network" | "publish" = "read_network"): { readonly networkId: Id<"networks"> | null; readonly refusal: ActionErrorCode | null } {
   const member = useEngineMember()
   const refusal = memberReadError(member, capability)
   const id = member.networkId.state === "ready" ? member.networkId.value : null
@@ -349,7 +349,7 @@ export function createEngineJobs(deps: EngineSourceDeps): JobsCapability {
       write(async (networkId) => await deps.convex.mutation(JOBS.removeMyTalentProfile, { networkId })),
 
     useTalentSearch({ country, skill, cursor }) {
-      const { networkId, refusal } = useReadableNetwork("view_directory")
+      const { networkId, refusal } = useReadableNetwork("publish")
       const loaded = useLoaded(
         JOBS.searchTalents,
         networkId

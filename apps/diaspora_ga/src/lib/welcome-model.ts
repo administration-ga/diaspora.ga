@@ -9,11 +9,10 @@
  *    quand IDN donne un nom affichable ET un identifiant libre, une ligne de rappel ; sinon les
  *    champs, déjà remplis de ce qu'IDN donne. Le premier identifiant libre est présélectionné ;
  *    un identifiant pris ou hors charte n'est jamais proposé ;
- *  · la résidence : la facette d'avant le départ, puis IDN, puis la saisie. Une ligne de rappel
- *    seulement pour un pays connu hors du Gabon ; un pays fermé reste une ligne de rappel, que
- *    l'écran marque de l'avis `countryNotOpen` (on entre quand même) ;
- *  · le clic : le profil social accordé, l'annuaire masqué, les notifications coupées — ils se
- *    proposent après l'entrée. Aucune année d'arrivée n'est demandée à l'entrée ; celle d'avant
+ *  · la résidence : le dernier pays de la facette ou celui donné par IDN est proposé
+ *    s’il figure au catalogue, Gabon compris. La personne peut le modifier ;
+ *  · l’annuaire : un nouveau membre apparaît dans la recherche. Un retour conserve la
+ *    confidentialité. Les notifications sont désactivées au départ ; la date d’arrivée d’avant
  *    un départ est gardée si la personne revient dans le même pays.
  *
  * Rien n'est écrit avant le clic : ce module ne fait que lire et composer.
@@ -138,7 +137,7 @@ export function welcomeModel(input: WelcomeModelInput): WelcomeModel {
   const knownCountry = known !== null && isResidenceCountry(known.country) ? known.country : null
   const residence: WelcomeResidencePlan =
     known !== null && knownCountry !== null && known.city.trim().length <= CITY_MAX_LENGTH
-      ? { mode: "summary", source: known.source, country: knownCountry, city: known.city.trim(), open: input.openCountries === null ? null : input.openCountries.includes(knownCountry) }
+      ? { mode: "summary", source: known.source, country: knownCountry, city: known.city.trim(), open: true }
       : { mode: "fields" }
 
   return {
@@ -148,7 +147,7 @@ export function welcomeModel(input: WelcomeModelInput): WelcomeModel {
     defaults: {
       displayName: prefilledName,
       handleChoice: firstHandle,
-      // Le Gabon ou un pays inconnu ne se reprennent pas : le champ reste vide.
+      // Un pays inconnu laisse le champ vide.
       country: knownCountry ?? "",
       city: knownCountry !== null && known !== null ? known.city.trim() : "",
     },
@@ -165,8 +164,8 @@ export interface WelcomeValues {
 }
 
 /**
- * L'entrée que le clic envoie. Le profil social est accordé par le geste même ; l'annuaire et les
- * notifications partent à « non » (l'invite de première visite les propose ensuite).
+ * Un nouveau profil est visible dans l’annuaire à l’inscription. Lors d’un retour,
+ * la visibilité publique ne se réactive pas automatiquement.
  */
 export function welcomeJoinInput(model: WelcomeModel, values: WelcomeValues): JoinInput {
   const keptArrival = model.returning !== null && model.returning.countryOfResidence === values.country ? model.returning.arrivedAt : undefined
@@ -174,7 +173,8 @@ export function welcomeJoinInput(model: WelcomeModel, values: WelcomeValues): Jo
     facet: { countryOfResidence: values.country, city: values.city, ...(keptArrival !== undefined ? { arrivedAt: keptArrival } : {}) },
     // Un profil déjà là n'envoie rien : le fournisseur le garde tel quel (EA-04).
     ...(model.identity.mode === "kept" ? {} : { handle: values.handle, displayName: values.displayName }),
-    consents: { social_profile: true, directory: false, notifications: false },
-    directoryVisibility: "hidden",
+    consents: { social_profile: true, directory: model.returning === null, notifications: false },
+    directoryVisibility: model.returning === null ? "network" : "hidden",
+    ...(model.returning === null ? { guestProfile: true } : {}),
   }
 }

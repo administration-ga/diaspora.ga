@@ -26,3 +26,125 @@
   vertical-align: middle;
   background: url("../../../../packages/diaspora-ga-features/src/brand/hirondelle.svg") center / contain no-repeat;
 }
+
+/* Keep the touch target stationary as the partner tab briefly peeks out. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-consulate-ticket]:not(:hover):not(:focus-visible) > span {
+    animation: consulate-peek 4s ease-in-out 2;
+  }
+}
+@keyframes consulate-peek {
+  0%, 20%, 100% { translate: 0 0; }
+  50%, 75% { translate: 58% 0; }
+}
+
+[data-direct-setup] :is(input:not([type="checkbox"]), select, details) {
+  border: 0;
+  background-color: var(--muted);
+}
+[data-direct-setup] :is(input, select, button, summary):focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+
+/* iCom keeps the composer in the visible viewport. Surface colours separate
+   the timeline, typing area and actions while the keyboard is open. */
+.msg-create-actions, .msg-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+}
+.msg-create-actions .msg-group-btn, .msg-contact-actions .msg-group-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 44px;
+  padding: .45rem .85rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ink-100);
+  color: var(--ink-900);
+  font-size: .875rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.msg-create-actions .msg-group-btn:first-child {
+  background: var(--role-message-fill, var(--primary-fill));
+  color: var(--role-message-on, var(--on-fill));
+}
+.msg-create-actions .msg-group-btn:hover, .msg-contact-actions .msg-group-btn:hover { filter: brightness(.95); }
+.msg-panel .msg-contact-empty .msg-empty { padding-bottom: .25rem; }
+.msg-panel .msg-composer, .msg-panel[data-variant="page"] .msg-composer {
+  border: 0;
+  background: var(--ink-0);
+}
+.msg-panel .msg-composer textarea {
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: 1.375rem;
+  background: var(--ink-100);
+  color: var(--ink-900);
+}
+.msg-panel .msg-composer textarea:focus-visible,
+.msg-panel .msg-group-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -2px;
+}
+.msg-panel .msg-search-row:focus-within { outline: none; }
+.msg-panel .msg-search-row:has(input:focus-visible) { outline: 2px solid var(--ring); outline-offset: -2px; }
+.msg-panel .msg-search-row input:focus-visible { outline: none; box-shadow: none; }
+.msg-panel .msg-grp-foot, .msg-panel .msg-grp-selected, .msg-panel .msg-head-row { border: 0; }
+.msg-panel .msg-grp-field input { border: 0; background: var(--ink-100); }
+
+.esk-dialog:has([data-direct-setup]),
+.esk-dialog:has([data-direct-setup]) :is(.esk-dialog-header, .esk-dialog-footer) {
+  border: 0;
+}
+
+@media (max-width: 1450px) {
+  main[data-feed-ticket] { padding-inline-end: max(2.75rem, env(safe-area-inset-right)); }
+}
+body:has([role="dialog"], input:focus, textarea:focus, [contenteditable="true"]:focus) [data-consulate-ticket] {
+  visibility: hidden;
+}
+
+.msg-archive-switch, .msg-thread-menu button {
+  display: inline-flex;
+  min-height: 44px;
+  gap: .4rem;
+  align-items: center;
+  padding: .4rem .85rem;
+  border: none;
+  border-radius: .75rem;
+  background: var(--ink-100);
+  color: var(--ink-900);
+  font: inherit;
+  cursor: pointer;
+}
+.msg-archive-switch { align-self: flex-start; margin: .4rem .75rem 0; font-size: .8125rem; }
+.msg-thread-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+.msg-thread-line .msg-row-name > svg { display: inline; }
+.msg-thread-options summary {
+  display: grid;
+  min-width: 44px;
+  min-height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  list-style: none;
+}
+.msg-thread-options summary::-webkit-details-marker { display: none; }
+.msg-thread-options[open] { grid-column: 1 / -1; }
+.msg-thread-options[open] summary { margin-left: auto; }
+.msg-thread-menu { display: flex; gap: .25rem; flex-wrap: wrap; padding: .375rem; background: var(--ink-100); border-radius: .75rem; }
+.msg-thread-menu button { font-size: .8125rem; }
+.msg-thread-menu button:hover, .msg-thread-options summary:hover { background: var(--ink-200); }

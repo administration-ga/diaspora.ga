@@ -42,6 +42,7 @@ import { PageShareButton } from "@/components/page-share-button"
 import { ProfileCover } from "@/components/profile-images"
 import { ReportContentSheet, ReportedContent, useOptionalContentReports } from "@/components/report-content-sheet"
 import { publicEnv } from "@/lib/env"
+import { focusGuestIntent } from "@/lib/guest-time"
 import { routes } from "@/lib/routes"
 
 /** `/pages/[handle]` — page d'institution, d'association ou d'entreprise (EXF-DG-20 à 23, DG-007). */
@@ -380,6 +381,8 @@ function FollowButton(props: { capability: PagesCapability; handle: string; name
   return (
     <>
       <Button
+        id="suivre"
+        ref={focusGuestIntent}
         variant={props.following || !props.filled ? "outline" : "social"}
         disabled={busy || blocked}
         aria-busy={busy}

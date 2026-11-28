@@ -95,6 +95,7 @@ import enNotificationsCenter from "./locales/en/notifications-center.json"
 import enIcomNotices from "./locales/en/icom-notices.json"
 import enFeedRail from "./locales/en/feed-rail.json"
 import enMemberBrowse from "./locales/en/member-browse.json"
+import enSms from "./locales/en/sms.json"
 import enLive from "./locales/en/live.json"
 import enPostAuthorGestures from "./locales/en/post-author-gestures.json"
 import enPostSharing from "./locales/en/post-sharing.json"
@@ -186,6 +187,7 @@ import frNotificationsCenter from "./locales/fr/notifications-center.json"
 import frIcomNotices from "./locales/fr/icom-notices.json"
 import frFeedRail from "./locales/fr/feed-rail.json"
 import frMemberBrowse from "./locales/fr/member-browse.json"
+import frSms from "./locales/fr/sms.json"
 import frLive from "./locales/fr/live.json"
 import frPostAuthorGestures from "./locales/fr/post-author-gestures.json"
 import frPostSharing from "./locales/fr/post-sharing.json"
@@ -292,6 +294,7 @@ export const LOCALE_PARTS = {
     "member-browse": frMemberBrowse,
     // CH-817 : la page du direct (conférences du moteur), ouverte par le code le 26/11/2026.
     live: frLive,
+    sms: frSms,
     // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
     "post-author-gestures": frPostAuthorGestures,
     // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.
@@ -394,6 +397,7 @@ export const LOCALE_PARTS = {
     // CH-816 (P3) : parcourir l’annuaire par pays, ville et confiance.
     "member-browse": enMemberBrowse,
     live: enLive,
+    sms: enSms,
     // CH-817 (FD-10) : épingler sur son mur, retirer d’ANTSIA, suivre les commentaires.
     "post-author-gestures": enPostAuthorGestures,
     // CH-817 (FD-06) : la feuille de partage du téléphone pour une publication.

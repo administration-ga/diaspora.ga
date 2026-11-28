@@ -32,6 +32,7 @@ export const ROUTE_VIEWS: Readonly<Record<string, RouteView>> = {
   "/pages/[handle]": "stream",
   "/pages/[handle]/groupe": "stream",
   "/services": "stream",
+  "/messages-sms": "stream",
   "/emploi": "stream",
   "/talents": "stream",
   "/entraide": "stream",

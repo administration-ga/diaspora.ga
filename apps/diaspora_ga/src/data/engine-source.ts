@@ -935,7 +935,8 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         if (newProfile !== null) await deps.convex.mutation(api.modules.people.profile.publishMyProfile, newProfile)
         // L'annuaire et les notifications valent pour le réseau : le moteur ne relit que l'accord
         // du réseau exact avant tout envoi (`notificationConsent`).
-        if (input.consents.directory) {
+        const priorMembership = input.guestProfile ? await deps.convex.query(api.modules.diaspora.membership.myMembership, { networkId: id }) : null
+        if (input.consents.directory && !priorMembership) {
           await deps.convex.mutation(api.modules.people.consents.recordConsent, { purpose: "directory", origin: "onboarding", ...consentScopeArgs("directory", id) })
         }
         if (input.consents.notifications) {
@@ -943,6 +944,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         }
         const joined = await deps.convex.mutation(api.modules.diaspora.membership.joinDiasporaGa, {
           ...registration,
+          ...(input.guestProfile !== undefined ? { guestProfile: input.guestProfile } : {}),
           facet: toFacetArgs(input.facet),
           directoryVisibility: input.consents.directory ? input.directoryVisibility : "hidden",
         })
@@ -1001,14 +1003,6 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
         const scope = parseContentScope({ reach: input.reach, country: input.country ?? null })
         if (!scope.ok) throw new Refusal(scope.code)
         const networkId = await diasporaGa()
-        // Un pays qui n'est pas ouvert ne reçoit pas de publication locale tant qu'aucune relecture
-        // par pays n'existe (HB-11) : le refus dit ce que dit le composeur (FD-04). Garde d'écran
-        // seulement : la garde serveur est demandée au moteur (issue [S1] de FD-04).
-        if (scope.value.reach === "local") {
-          const local = scope.value.country
-          const open = await deps.convex.query(api.modules.diaspora.hubs.listOpenCountries, { networkId })
-          if (!open.some((hub) => hub.country === local)) throw new Refusal("hub_not_open")
-        }
         // L'état que le moteur rend (publiée, ou retenue en relecture) ; jamais « publiée » d'office.
         const published = await deps.convex.mutation(api.modules.posts.posts.publish, {
           networkId,
@@ -1017,6 +1011,7 @@ export function createEngineActions(deps: EngineSourceDeps, myReactions: Map<str
           reach: scope.value.reach,
           ...(scope.value.country !== undefined ? { country: scope.value.country } : {}),
           alsoOnRoot: input.alsoOnRoot && input.audience === "public",
+          ...(input.guestVisible && input.audience === "public" && !input.sharedPostId ? { guestVisible: true } : {}),
           ...(input.media && input.media.length > 0 ? { media: input.media.map(toDeclaredMedia) } : {}),
           // Partage cité : le moteur re-garde l'original, et cite l'original d'un partage.
           ...(input.sharedPostId ? { sharedPostId: input.sharedPostId as Id<"posts"> } : {}),

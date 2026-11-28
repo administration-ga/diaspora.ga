@@ -22,6 +22,8 @@ import { InformationSheet } from "./information-sheet"
 const mocks = vi.hoisted(() => ({ followed: vi.fn() }))
 
 // Un lien ordinaire : le test note les liens que le navigateur suivrait (clic non intercepté).
+vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.followed }) }))
+
 vi.mock("next/link", () => ({
   default: ({ href, children, onClick, ...rest }: Omit<ComponentProps<"a">, "href"> & { href: string }) => (
     <a

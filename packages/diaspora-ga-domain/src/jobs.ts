@@ -19,7 +19,7 @@
  *     DÉCLARÉES : une attestation consulaire ne dit rien d'une compétence.
  */
 import type { PageOwnerKind } from "./badges"
-import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
+import { isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { parseMoney, type CurrencyCode, type MoneyRefusal } from "./money"
 import { ok, refuse, type Result } from "./result"
 import { normalizeServiceText, serviceTextRefusal } from "./service-requests"
@@ -310,7 +310,6 @@ export function parseJobCountry(raw: string | null | undefined): Result<CountryC
   const code = normalizeCountryCode(raw ?? "")
   if (code.length === 0) return refuse("job_country_required")
   if (!isCountryCode(code)) return refuse("job_country_unknown")
-  if (code === HOME_COUNTRY) return refuse("job_country_is_home")
   return ok(code)
 }
 

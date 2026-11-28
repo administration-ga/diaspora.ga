@@ -26,7 +26,7 @@
  *
  * Ce module est relu par le moteur (lib ES2021) : aucune API plus récente.
  */
-import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
+import { isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { ok, refuse, type Result } from "./result"
 import { canonicalTimeZone, isServiceInstant, normalizeServiceText, serviceTextRefusal } from "./service-requests"
 import { cityKeyOf, containsContactDetails, serviceSearchWords } from "./services"
@@ -217,7 +217,6 @@ export function parseAidCountry(raw: string | null | undefined): Result<CountryC
   const code = normalizeCountryCode(raw ?? "")
   if (code.length === 0) return refuse("aid_country_required")
   if (!isCountryCode(code)) return refuse("aid_country_unknown")
-  if (code === HOME_COUNTRY) return refuse("aid_country_is_home")
   return ok(code)
 }
 

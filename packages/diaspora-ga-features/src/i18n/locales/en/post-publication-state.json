@@ -4,6 +4,7 @@
     "shareSent": "Share sent."
   },
   "errors": {
-    "hub_not_open": "This country isn't open yet: posting in its hub waits until it opens. Post to the whole diaspora."
+    "hub_not_open": "This country isn't open yet: posting in its hub waits until it opens. Post to the whole diaspora.",
+    "guest_profile_required": "To share publicly, enable profile visibility for visitors in Settings › Directory, or turn off this option to post to members."
   }
 }

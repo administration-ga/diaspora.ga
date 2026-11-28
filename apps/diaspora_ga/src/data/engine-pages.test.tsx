@@ -187,11 +187,11 @@ describe("fiche d'une page — adaptateur moteur", () => {
     })
   })
 
-  it("un pays hors diaspora est écarté, jamais deviné ; un mur épuisé ne promet rien de plus", () => {
-    serveDetail({ ...PAGE, country: "GA", badge: "community", viewer: { following: false, role: null } }, { items: [], nextCursor: null }, { claimable: false, orphan: false })
+  it.each([["GA", "GA"], ["ZZ", null]] as const)("projette le code pays %s et rend un mur épuisé sans suite", (input, expected) => {
+    serveDetail({ ...PAGE, country: input, badge: "community", viewer: { following: false, role: null } }, { items: [], nextCursor: null }, { claimable: false, orphan: false })
     const { result } = renderHook(() => useEnginePage("collectif-lyon"))
     if (result.current.status !== "ready" || result.current.data === null) throw new Error("fiche attendue")
-    expect(result.current.data.page).toMatchObject({ country: null, trust: "community", badge: "community", claimable: false })
+    expect(result.current.data.page).toMatchObject({ country: expected, trust: "community", badge: "community", claimable: false })
     expect(result.current.data).toMatchObject({ morePosts: false, posts: [], viewer: { role: null, following: false } })
   })
 

@@ -215,15 +215,52 @@ export function PostCommentsSheet(props: {
   canComment: boolean
   open: boolean
   onOpenChange: (open: boolean) => void
+  id?: string
+  returnFocus?: () => HTMLElement | null
 }) {
   const { t } = useDiasporaGaT()
+  const ownId = useId()
+  const id = props.id ?? ownId
   return (
     <Sheet open={props.open} onOpenChange={props.onOpenChange}>
-      <SheetContent title={t("comments.title")} description={t("comments.description")} hideDescription closeLabel={t("comments.close")}>
+      <SheetContent id={id} title={t("comments.title")} description={t("comments.description")} hideDescription closeLabel={t("comments.close")}
+        className="max-md:bottom-[var(--comment-keyboard,0px)] max-md:max-h-[min(88dvh,var(--comment-viewport,100dvh))] md:top-[var(--comment-center,50%)] md:max-h-[min(88dvh,780px,var(--comment-viewport,100dvh))]"
+        bodyClassName="flex flex-col overflow-hidden p-0"
+        onOpenAutoFocus={(event) => {
+          const field = document.getElementById(id)?.querySelector<HTMLTextAreaElement>("[data-comment-input]")
+          if (field) { event.preventDefault(); field.focus({ preventScroll: true }) }
+        }}
+        onCloseAutoFocus={(event) => {
+          const origin = props.returnFocus?.()
+          if (origin?.isConnected) { event.preventDefault(); origin.focus({ preventScroll: true }) }
+        }}>
+        <CommentKeyboardViewport id={id} />
         {props.open ? <CommentsSession postId={props.postId} postIsMine={props.postIsMine} canComment={props.canComment} /> : null}
       </SheetContent>
     </Sheet>
   )
+}
+
+// Mount inside the dialog portal so the panel exists before viewport listeners attach.
+function CommentKeyboardViewport({ id }: { id: string }) {
+  useLayoutEffect(() => {
+    const viewport = window.visualViewport
+    const panel = document.getElementById(id)
+    if (!viewport || !panel) return
+    const align = () => {
+      panel.style.setProperty("--comment-viewport", `${viewport.height}px`)
+      panel.style.setProperty("--comment-keyboard", `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`)
+      panel.style.setProperty("--comment-center", `${viewport.offsetTop + viewport.height / 2}px`)
+    }
+    align()
+    viewport.addEventListener("resize", align)
+    viewport.addEventListener("scroll", align)
+    return () => {
+      viewport.removeEventListener("resize", align)
+      viewport.removeEventListener("scroll", align)
+    }
+  }, [id])
+  return null
 }
 
 function CommentsSession(props: CommentsContext) {
@@ -561,9 +598,9 @@ function CommentForm(props: {
   const busy = operation.busy || form.formState.isSubmitting
   const replying = props.replyTo !== null
 
-  // « Répondre » mène au champ : on écrit aussitôt, sans chercher où.
+  // Also covers the session resolving just after the sheet opens.
   useLayoutEffect(() => {
-    if (replying) bodyInput.current?.focus()
+    bodyInput.current?.focus({ preventScroll: true })
   }, [replying])
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -585,7 +622,7 @@ function CommentForm(props: {
   }
 
   return (
-    <form noValidate onSubmit={onSubmit} className="flex flex-col gap-2 border-t border-border px-5 pb-4 pt-3">
+    <form noValidate onSubmit={onSubmit} className="shrink-0 bg-card px-3 pb-2 pt-1">
       {props.replyTo ? (
         <p className="flex items-center gap-2 text-[13px] text-muted-foreground">
           <CornerDownRightIcon className="size-4 shrink-0" aria-hidden />
@@ -598,33 +635,31 @@ function CommentForm(props: {
       <Label htmlFor={`${ids}-corps`} className="sr-only">
         {t("comments.label")}
       </Label>
-      <Textarea
-        id={`${ids}-corps`}
-        rows={2}
-        maxLength={COMMENT_MAX_LENGTH}
-        disabled={busy}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${ids}-erreur` : `${ids}-compte`}
-        placeholder={props.replyTo ? t("comments.replyPlaceholder") : t("comments.placeholder")}
-        className="min-h-11"
-        {...bodyField}
-        ref={(element) => { bodyField.ref(element); bodyInput.current = element }}
-      />
-      <div className="flex items-center gap-3">
-        {error ? (
-          <p id={`${ids}-erreur`} role="alert" className="min-w-0 flex-1 text-[13px] font-medium text-destructive">
-            {t(`errors.${error}`)}
-          </p>
-        ) : (
-          <p id={`${ids}-compte`} className="min-w-0 flex-1 text-[12px] text-muted-foreground">
-            {t("comments.counter", { count: body.length, max: COMMENT_MAX_LENGTH })}
-          </p>
-        )}
-        <Button variant="send" type="submit" size="sm" disabled={busy}>
+      <div className="flex items-end gap-2">
+        <Textarea
+          data-comment-input=""
+          id={`${ids}-corps`}
+          rows={1}
+          maxLength={COMMENT_MAX_LENGTH}
+          readOnly={busy}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${ids}-erreur` : undefined}
+          placeholder={props.replyTo ? t("comments.replyPlaceholder") : t("comments.placeholder")}
+          className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl border-0 bg-muted text-base"
+          {...bodyField}
+          enterKeyHint="send"
+          onKeyDown={(event) => {
+            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing || event.keyCode === 229) return
+            event.preventDefault()
+            if (!busy && body.trim()) event.currentTarget.form?.requestSubmit()
+          }}
+          ref={(element) => { bodyField.ref(element); bodyInput.current = element }}
+        />
+        <Button variant="send" type="submit" size="icon" disabled={busy || !body.trim()} aria-label={t("comments.send")}>
           <SendIcon aria-hidden />
-          {t("comments.send")}
         </Button>
       </div>
+      {error ? <p id={`${ids}-erreur`} role="alert" className="mt-1 text-sm text-destructive">{t(`errors.${error}`)}</p> : null}
     </form>
   )
 }

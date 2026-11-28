@@ -86,6 +86,7 @@ démonstration ne peuvent pas servir la production par mégarde.
 | `DIASPORA_GA_<CIBLE>_VERCEL_PROJECT_ID` | projet d'hébergement de la cible | `VERCEL_PROJECT_ID` (ligne de commande seulement) |
 | `DIASPORA_GA_<CIBLE>_IDN_PORTAL_URL` (facultative) | portail IDN ; absente, le lien d'élévation ne s'affiche pas | `NEXT_PUBLIC_IDN_PORTAL_URL` |
 | `DIASPORA_GA_<CIBLE>_CONSULATE_URL` (facultative) | consulat.ga ; absente, le lien ne s'affiche pas | `NEXT_PUBLIC_CONSULATE_URL` |
+| `DIASPORA_GA_<CIBLE>_SMS_ENABLED` (facultative) | `1` affiche l'entrée SMS dans iCom. `0` ou une valeur absente la masque. Le relais opérateur se configure dans Convex. | `NEXT_PUBLIC_DIASPORA_SMS_ENABLED` à la construction |
 | `DIASPORA_GA_<CIBLE>_LIVEKIT_WS_URL` (facultative) | origine `wss://` exacte du serveur vidéo ; absente, la politique de sécurité n'ouvre aucune origine média | `LIVEKIT_WS_URL` (lue à la construction) |
 | `DIASPORA_GA_VERCEL_ORG_ID` | équipe d'hébergement | `VERCEL_ORG_ID` (ligne de commande seulement) |
 | `DIASPORA_GA_VERCEL_SCOPE` | portée des commandes de l'hébergeur | option `--scope` |

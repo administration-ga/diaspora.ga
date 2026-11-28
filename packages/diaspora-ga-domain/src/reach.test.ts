@@ -59,7 +59,7 @@ describe("portée d'un contenu", () => {
 
   test("refus : portée inconnue, pays invalide ou Gabon", () => {
     expect(parseContentScope({ reach: "monde", country: "FR" })).toEqual({ ok: false, code: "scope_reach_invalid" })
-    expect(parseContentScope({ reach: "local", country: "GA" })).toEqual({ ok: false, code: "scope_country_invalid" })
+    expect(parseContentScope({ reach: "local", country: "GA" })).toEqual({ ok: true, value: { reach: "local", country: "GA" } })
     expect(parseContentScope({ reach: "diaspora", country: "Narnia" })).toEqual({ ok: false, code: "scope_country_invalid" })
   })
 

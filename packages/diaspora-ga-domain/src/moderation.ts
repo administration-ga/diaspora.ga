@@ -9,7 +9,7 @@
  *   · L'auteur voit l'état de son contenu ; les autres ne voient jamais un
  *     contenu non publié.
  */
-import { isCountryOpen, type CountryCode } from "./countries"
+import { type CountryCode } from "./countries"
 import type { ContentScope } from "./reach"
 
 export const CONTENT_MODERATION_STATES = ["pending_review", "published", "rejected"] as const
@@ -49,7 +49,7 @@ export interface PublicationPolicyInput {
 }
 
 export function moderationScopeFor(scope: ContentScope, openCountries: readonly CountryCode[]): ModerationScope {
-  if (scope.reach === "local" && isCountryOpen(scope.country, openCountries)) {
+  if (scope.reach === "local" && openCountries.includes(scope.country)) {
     return { kind: "country", country: scope.country }
   }
   return { kind: "network" }
@@ -57,7 +57,7 @@ export function moderationScopeFor(scope: ContentScope, openCountries: readonly 
 
 /** Le sort d'un contenu communautaire à sa publication : relu d'abord, ou publié. */
 export function publicationPolicy(input: PublicationPolicyInput): PublicationPolicy {
-  const moderation = moderationScopeFor(input.scope, input.openCountries)
+  const moderation = moderationScopeFor(input.scope, input.countryActiveModerators > 0 && input.scope.reach === "local" ? [input.scope.country] : [])
   const activeModerators =
     moderation.kind === "country" ? input.countryActiveModerators : input.networkActiveModerators
   // Un pays fermé passe TOUJOURS par la relecture réseau, même quand l'équipe

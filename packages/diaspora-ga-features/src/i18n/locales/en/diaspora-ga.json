@@ -7,7 +7,7 @@
   "meta": {
     "title": "DIASPORA — the network of Gabonese people abroad",
     "titleTemplate": "%s · DIASPORA",
-    "description": "The closed social network of the Gabonese diaspora: your country, your community, and you always know who is posting."
+    "description": "The social network of the Gabonese diaspora: your country, your community, and you always know who is posting."
   },
   "a11y": {
     "skipToContent": "Skip to content"
@@ -34,7 +34,7 @@
   },
   "footer": {
     "label": "Information",
-    "publisher": "DIASPORA is published by NTSAGUI Digital. The network is reserved for Gabonese people living abroad.",
+    "publisher": "DIASPORA is published by NTSAGUI Digital.",
     "legalNotice": "Legal notice",
     "privacy": "Privacy",
     "charte": "Design charter"
@@ -55,7 +55,7 @@
   "landing": {
     "title": "Find your people,\nwherever you are.",
     "lead": "Connect with Gabonese people around the world, share your daily life and build your own network.",
-    "eligibility": "The network for Gabonese people living abroad.",
+    "eligibility": "For Gabonese people around the world.",
     "signInTitle": "Sign in to DIASPORA",
     "idnContinue": "Continue with Identité.ga",
     "idnUnavailable": "IDN sign-in will be available soon.",
@@ -64,8 +64,7 @@
     "createAccount": "Create an account",
     "newHere": "New to DIASPORA?",
     "free": "Registration is free.",
-    "privacy": "Your contact details stay private. Sign in with a code, without a password.",
-    "boardTitle": "Your community, country by country."
+    "privacy": "Your contact details stay private. Sign in with a code, without a password."
   },
   "entry": {
     "signOutIncomplete": "Full sign-out could not be confirmed. Other devices may remain signed in and some data may remain in this browser. Sign in again to retry signing out once your connection is restored.",
@@ -130,10 +129,9 @@
   "welcome": {
     "metaTitle": "Welcome",
     "countryLabel": "Country of residence",
-    "countryHint": "Gabon is not offered: DIASPORA is the network of Gabonese people abroad.",
+    "countryHint": "Choose your country or territory of residence.",
     "countrySheetTitle": "Your country of residence",
     "countrySheetDescription": "Search by name or by code.",
-    "countryNotOpen": "This country isn't open yet: you can read everything and post to the whole diaspora. Posting in the country's hub waits until it opens.",
     "cityLabel": "City",
     "cityHint": "Optional. By default, only your connections see it.",
     "displayNameLabel": "Display name",
@@ -224,7 +222,6 @@
     "resultCount_one": "{{count}} country",
     "resultCount_other": "{{count}} countries",
     "noResult": "No country matches your search.",
-    "openBadge": "Open",
     "quickAccess": "Quick access",
     "homeTag": "my country"
   },
@@ -305,6 +302,7 @@
       "noneAdded": "No additional posts to display on this page."
     },
     "title": "Feed",
+    "chooseCountryHint": "Choose the country whose posts you want to read.",
     "scopesLabel": "Feed scopes",
     "scope": {
       "mon_pays": "My country",
@@ -318,7 +316,6 @@
       "recents": "Everything you can read, newest first.",
       "pour_vous": "Your connections, and the pages and groups you follow."
     },
-    "prompt": "What's new in {{city}}?",
     "promptNoCity": "What's new on your side?",
     "empty": {
       "action": "Post",
@@ -338,8 +335,7 @@
         "title": "Your “For you” feed is empty.",
         "body": "Connect with members and follow pages to fill it."
       }
-    },
-    "registerLabel": "Register your organisation"
+    }
   },
   "rail": {
     "myHub": "Your country",
@@ -379,7 +375,6 @@
     "reachLegend": "Where to post",
     "reachLocal": "In the {{country}} hub",
     "reachDiaspora": "For the whole diaspora",
-    "reviewNotice": "{{country}} isn't open yet: posting in its hub waits until it opens. Your post goes to the whole diaspora.",
     "audienceLegend": "Who can read",
     "audiencePublic": "All DIASPORA members",
     "audienceConnections": "My connections",
@@ -1154,20 +1149,32 @@
   },
   "members": {
     "title": "Members",
-    "lead": "Members who chose to appear in the directory. Contact goes through messaging: no contact details are shown.",
     "searchLabel": "Search for a member",
-    "searchPlaceholder": "Name or handle",
+    "searchPlaceholder": "Name or @handle",
     "reachLabel": "Where to search",
     "reachNetwork": "Whole network",
     "idleTitle": "Search for a member by name or handle.",
-    "idleBody": "Only members who chose to be listed appear: no one is listed without their consent.",
+    "idleBody": "Search for someone by name or handle.",
     "emptyTitle": "No member found for “{{query}}”.",
-    "emptyBody": "A member who hasn't chosen to appear in the directory can't be found. Check the spelling, or the exact handle.",
+    "emptyBody": "Check the name or handle. Hidden profiles are excluded.",
     "count_one": "{{count}} member found.",
     "count_other": "{{count}} members found.",
     "resultsLabel": "Members found",
     "mine": "Your directory level: “{{level}}”.",
-    "mineAction": "Change it"
+    "mineAction": "Change it",
+    "invite": "Invite a contact",
+    "inviteTitle": "Join me on DIASPORA",
+    "sms": "Invite by SMS",
+    "whatsapp": "Invite via WhatsApp",
+    "shareLink": "Share link",
+    "shareMine": "Share my profile",
+    "shareProfile": "Share profile",
+    "linkCopied": "Link copied.",
+    "shareFailed": "Sharing failed. Try again.",
+    "backToCompose": "Return to the conversation you are creating",
+    "more": "More from the network",
+    "fansCount_one": "{{count}} follower",
+    "fansCount_other": "{{count}} followers"
   },
   "comments": {
     "title": "Comments",
@@ -1372,7 +1379,7 @@
     "code_expired": "This code has expired. Ask for a new one.",
     "country_required": "Choose your country of residence.",
     "country_unknown": "This country is not recognized.",
-    "country_is_home": "Gabon is not a diaspora country of residence.",
+    "country_is_home": "This country was not accepted. Check your selection and try again.",
     "city_too_long": "The city has 80 characters at most.",
     "city_invalid": "The city must fit on a single line.",
     "arrived_at_out_of_range": "Enter a year between 1950 and the current year.",

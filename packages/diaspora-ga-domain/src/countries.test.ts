@@ -24,12 +24,12 @@ describe("codes ISO 3166-1 alpha-2", () => {
     for (const reserved of ["XK", "AA", "QM", "ZZ", "EU"]) expect(isCountryCode(reserved)).toBe(false)
   })
 
-  test("pays de résidence = tous les pays sauf le Gabon", () => {
+  test("pays de résidence = tous les pays et territoires", () => {
     expect(HOME_COUNTRY).toBe("GA")
-    expect(RESIDENCE_COUNTRY_CODES).toHaveLength(248)
-    expect(RESIDENCE_COUNTRY_CODES).not.toContain("GA")
+    expect(RESIDENCE_COUNTRY_CODES).toHaveLength(249)
+    expect(RESIDENCE_COUNTRY_CODES).toContain("GA")
     expect(isResidenceCountry("FR")).toBe(true)
-    expect(isResidenceCountry("GA")).toBe(false)
+    expect(isResidenceCountry("GA")).toBe(true)
     expect(isResidenceCountry("XK")).toBe(false)
   })
 })
@@ -47,23 +47,14 @@ describe("parseResidenceCountry", () => {
     expect(parseResidenceCountry("   ")).toEqual({ ok: false, code: "country_required" })
     expect(parseResidenceCountry("France")).toEqual({ ok: false, code: "country_unknown" })
     expect(parseResidenceCountry("XK")).toEqual({ ok: false, code: "country_unknown" })
-    expect(parseResidenceCountry("ga")).toEqual({ ok: false, code: "country_is_home" })
+    expect(parseResidenceCountry("ga")).toEqual({ ok: true, value: "GA" })
   })
 })
 
-describe("pays ouverts (A8)", () => {
-  test("la France seule au lancement", () => {
-    expect([...DEFAULT_OPEN_COUNTRIES]).toEqual(["FR"])
-    expect(isCountryOpen("FR", DEFAULT_OPEN_COUNTRIES)).toBe(true)
-    expect(isCountryOpen("CA", DEFAULT_OPEN_COUNTRIES)).toBe(false)
-  })
-
-  test("le Gabon n'est jamais un pays ouvert de la diaspora, même par erreur de configuration", () => {
-    expect(isCountryOpen("GA", ["GA", "FR"])).toBe(false)
-  })
-
-  test("les candidats suivants sont des pays de résidence", () => {
-    expect([...NEXT_OPENING_CANDIDATES]).toEqual(["ES", "BE", "CA", "MA", "SN"])
-    for (const code of NEXT_OPENING_CANDIDATES) expect(isResidenceCountry(code)).toBe(true)
+describe("ouverture mondiale", () => {
+  test("tous les codes ISO sont ouverts, même avec les anciennes listes pilotes", () => {
+    expect(DEFAULT_OPEN_COUNTRIES).toEqual(ISO_COUNTRY_CODES)
+    for (const code of ISO_COUNTRY_CODES) expect(isCountryOpen(code, ["FR"])).toBe(true)
+    expect(NEXT_OPENING_CANDIDATES).toEqual([])
   })
 })

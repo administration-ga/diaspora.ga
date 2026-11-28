@@ -305,6 +305,18 @@ describe("ProfileScreen — suivre et ne plus suivre selon l'adhésion", () => {
     mocks.relation = { status: "ready", data: { connection: "none", connectionId: null, following: true } }
   })
 
+  it("retrouve le geste demandé avant la connexion et attend le choix du membre", () => {
+    const prior = window.location.href
+    try {
+      history.replaceState({}, "", "/@boris.demo#relation")
+      render(tree(otherProfile.handle))
+      expect(screen.getByRole("button", { name: t("relation.connect") })).toHaveFocus()
+      expect(mocks.connect).not.toHaveBeenCalled()
+    } finally {
+      history.replaceState({}, "", prior)
+    }
+  })
+
   it("un membre en attente peut retirer son abonnement existant par l'identifiant de la personne", async () => {
     mocks.membership = { ...membership, status: "en_attente", canPublish: false }
     render(tree(otherProfile.handle))
@@ -416,6 +428,17 @@ describe("ProfileScreen — « Appeler » derrière l'interrupteur des appels (I
     mocks.profile = { status: "ready", data: relationProfile }
     mocks.relation = { status: "ready", data: { connection: "connected", connectionId: "connections_boris", following: false } }
     mocks.icom = { status: "on", network: { networkId: "networks_diaspora-ga", slug: "diaspora-ga", personId: membership.personId } as IcomNetwork }
+  })
+
+  it("retrouve le bouton Écrire après la connexion d’une relation", () => {
+    const prior = window.location.href
+    try {
+      history.replaceState({}, "", "/@boris.demo#ecrire")
+      render(tree(relationProfile.handle))
+      expect(screen.getByRole("button", { name: writeName })).toHaveFocus()
+    } finally {
+      history.replaceState({}, "", prior)
+    }
   })
 
   it("appels fermés : « Écrire » reste, aucun geste d'appel n'est proposé à une relation", () => {

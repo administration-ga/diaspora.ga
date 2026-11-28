@@ -146,7 +146,7 @@ describe("/entraide — questions et missions d'un pays", () => {
   it("le pays du membre par défaut ; l'adresse porte le pays et la ville saisie, une valeur illisible est ignorée", () => {
     expect(aidFilterFromParams(new URLSearchParams(), "FR")).toEqual({ country: "FR", city: "" })
     expect(aidFilterFromParams(new URLSearchParams("pays=be&ville=%20Li%C3%A8ge%20"), "FR")).toEqual({ country: "BE", city: "Liège" })
-    expect(aidFilterFromParams(new URLSearchParams("pays=GA"), "FR")).toEqual({ country: "FR", city: "" })
+    expect(aidFilterFromParams(new URLSearchParams("pays=ZZ"), "FR")).toEqual({ country: "FR", city: "" })
   })
 
   it("les questions ouvertes, puis résolues ; les missions à venir et « Proposer » pour l'équipe vivante", async () => {

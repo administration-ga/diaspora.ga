@@ -314,6 +314,7 @@ export interface PageImageView {
 // ═══════════════════════════════════════════════════════════════
 
 export interface CreatePageInput {
+  readonly guestVisible?: boolean
   readonly name: string
   readonly ownerKind: MemberPageKind
   /** Facultative : sans elle, le moteur dérive l'adresse du nom. */

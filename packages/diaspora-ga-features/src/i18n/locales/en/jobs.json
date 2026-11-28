@@ -349,7 +349,7 @@
     "job_contract_invalid": "Choose a contract from the list.",
     "job_country_required": "Choose a country.",
     "job_country_unknown": "This country is unknown.",
-    "job_country_is_home": "Choose a diaspora country of residence: Gabon is not one of them.",
+    "job_country_is_home": "This country was not accepted. Check your selection and try again.",
     "job_city_too_long": "The city has at most 80 characters.",
     "job_work_mode_invalid": "Choose a work mode.",
     "job_languages_required": "Choose at least one language.",

@@ -31,7 +31,11 @@ vi.mock("next/navigation", () => ({
 const NETWORK = { networkId: "networks_diaspora-ga", slug: "diaspora-ga", personId: "persons_awa" } as IcomNetwork
 
 function Declared() {
-  return <output data-testid="live-available">{String(useNetwork().liveAvailable)}</output>
+  const network = useNetwork()
+  return <>
+    <output data-testid="live-available">{String(network.liveAvailable)}</output>
+    <output data-testid="live-preview">{String(network.liveStudioPreview)}</output>
+  </>
 }
 
 function mount() {
@@ -53,6 +57,7 @@ describe("iCom — l'interrupteur du direct déclaré au moteur (liveAvailable)"
   it("la position du dépôt (ouvert le 26/11/2026) : le moteur le lit ouvert", () => {
     mount()
     expect(screen.getByTestId("live-available")).toHaveTextContent("true")
+    expect(screen.getByTestId("live-preview")).toHaveTextContent("true")
   })
 
   it("ouvert : le moteur le lit ouvert", () => {

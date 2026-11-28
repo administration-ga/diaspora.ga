@@ -50,9 +50,9 @@ describe("JSON de facette à coller dans la console", () => {
     }
   })
 
-  it("garde les règles de la diaspora : pays obligatoire sans le Gabon, rien de lisible depuis la racine", () => {
+  it("garde les règles de la diaspora : pays obligatoire, Gabon compris, rien de lisible depuis la racine", () => {
     const fields = parsedFields(consoleFacetSchemaJson())
-    expect(fields[0]).toEqual({ key: "countryOfResidence", kind: "country", required: true, defaultVisibility: "network", excludedValues: ["GA"] })
+    expect(fields[0]).toEqual({ key: "countryOfResidence", kind: "country", required: true, defaultVisibility: "network" })
     expect(fields.map((field) => field.defaultVisibility)).not.toContain("root")
     expect(fields.filter((field) => field.defaultVisibility === "network").map((field) => field.key)).toEqual(["countryOfResidence", "helpAvailable"])
   })
@@ -72,7 +72,7 @@ describe("un champ au format de la console", () => {
   it("omet les options absentes et copie les listes figées", () => {
     const frozen = Object.freeze(["GA"])
     const field = toConsoleFacetField({ key: "countryOfResidence", kind: "country", required: true, defaultVisibility: "network", excludedValues: frozen })
-    expect(field).toEqual({ key: "countryOfResidence", kind: "country", required: true, defaultVisibility: "network", excludedValues: ["GA"] })
+    expect(field).toEqual({ key: "countryOfResidence", kind: "country", required: true, defaultVisibility: "network", excludedValues: [...frozen] })
     expect(field.excludedValues).not.toBe(frozen)
     expect(Object.isFrozen(field.excludedValues)).toBe(false)
     expect(Object.keys(toConsoleFacetField({ key: "helpAvailable", kind: "boolean", required: false, defaultVisibility: "network" }))).toEqual([
@@ -103,7 +103,7 @@ describe("formulaire « Créer un réseau » de la console", () => {
       membershipPolicy: "declared_or_verified",
       defaultVisibility: "network",
       reachValues: "local, diaspora",
-      openCountries: "FR",
+      openCountries: DIASPORA_GA_NETWORK_SEED.openCountries.join(", "),
       theme: "diaspora-ga",
       managedBy: "diaspora",
       facetSchema: consoleFacetSchemaJson(),

@@ -41,14 +41,14 @@ describe("parcourir l'annuaire fictif", () => {
     expect(handles(store, "p-nadia", FRANCE)).toEqual(["prisca.abanga"])
   })
 
-  it("« vérifiés seulement », la ville sur ce que le lecteur voit, un pays fermé", () => {
+  it("« vérifiés seulement », la ville sur ce que le lecteur voit, un pays sans profil visible", () => {
     const store = setup()
     expect(handles(store, "p-steeve", { ...FRANCE, verifiedOnly: true })).toEqual(["prisca.abanga", "mireille.ivindo"])
     // La ville de Prisca est réservée à ses relations : Steeve en est une, Nadia non.
     expect(handles(store, "p-steeve", { ...FRANCE, city: " BORDEAUX " })).toEqual(["prisca.abanga"])
     expect(handles(store, "p-nadia", { ...FRANCE, city: "Bordeaux" })).toEqual([])
     expect(handles(store, "p-steeve", { ...FRANCE, city: "Paris" })).toEqual([])
-    // La Belgique n'est pas ouverte dans le jeu fictif.
+    // Les profils belges de ce jeu ont gardé leurs réglages de confidentialité.
     expect(memberBrowseView(store.getState(), "p-nadia", { country: "BE", cursor: null }, NOW)).toEqual({ items: [], continueCursor: null, isDone: true })
     expect(memberBrowseView(store.getState(), "p-steeve", { ...FRANCE, cursor: "-1" }, NOW)).toEqual({ items: [], continueCursor: null, isDone: true })
   })
@@ -65,7 +65,7 @@ describe("parcourir l'annuaire fictif", () => {
     expect(third.items.map((item) => item.handle)).toEqual(["mireille.ivindo"])
   })
 
-  it("un blocage retire la personne ; la capacité refuse un compte en attente et sans session", async () => {
+  it("un blocage retire la personne ; le compte en attente voit les membres éligibles, la session anonyme reste refusée", async () => {
     const store = setup()
     await act(async () => {
       await store.block("p-mireille")
@@ -79,7 +79,8 @@ describe("parcourir l'annuaire fictif", () => {
       ...state,
       memberships: { ...state.memberships, "p-rodrigue": { ...state.memberships["p-rodrigue"]!, grounds: { ...state.memberships["p-rodrigue"]!.grounds, sponsored: false } } },
     }))
-    expect(renderHook(() => createDemoMemberBrowse(waiting).useBrowse(FRANCE)).result.current).toEqual({ status: "error", code: "status_insufficient" })
+    const waitingPage = renderHook(() => createDemoMemberBrowse(waiting).useBrowse(FRANCE)).result.current
+    expect(waitingPage).toMatchObject({ status: "ready", data: { items: [expect.objectContaining({ handle: "prisca.abanga" })] } })
     expect(renderHook(() => createDemoMemberBrowse(setup(null)).useBrowse(FRANCE)).result.current).toEqual({ status: "error", code: "not_signed_in" })
   })
 

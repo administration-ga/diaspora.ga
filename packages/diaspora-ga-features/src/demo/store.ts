@@ -509,7 +509,6 @@ export class DemoStore {
     if (input.reach === "local" && authority.page.country === null) return fail("page_post_country_required")
     const scope = parseContentScope({ reach: input.reach, country: input.reach === "local" ? authority.page.country : null })
     if (!scope.ok) return fail(scope.code)
-    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("feature_unavailable")
     const policy = publicationPolicy({
       scope: scope.value,
       openCountries: this.state.openCountries,
@@ -663,7 +662,6 @@ export class DemoStore {
     // Même règle que l'adaptateur du moteur (HB-01) : un pays pas encore ouvert ne reçoit pas de
     // publication locale tant qu'aucune relecture par pays n'existe (HB-11) ; la diaspora reste ouverte.
     // Le refus dit ce que dit le composeur (FD-04).
-    if (scope.value.reach === "local" && !this.state.openCountries.includes(scope.value.country)) return fail("hub_not_open")
     const policy = publicationPolicy({
       scope: scope.value,
       openCountries: this.state.openCountries,

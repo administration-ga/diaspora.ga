@@ -13,7 +13,7 @@
  * le même code fermé.
  */
 import type { PageOwnerKind } from "./badges"
-import { HOME_COUNTRY, isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
+import { isCountryCode, normalizeCountryCode, type CountryCode } from "./countries"
 import { hasCapability, type MembershipStatus } from "./eligibility"
 import { ok, refuse, type Result } from "./result"
 import { cityKeyOf, containsContactDetails, serviceSearchWords } from "./services"
@@ -214,7 +214,6 @@ export function parseArrivalKitCountry(raw: string | null | undefined): Result<C
   const code = normalizeCountryCode(raw ?? "")
   if (code.length === 0) return refuse("arrival_kit_country_required")
   if (!isCountryCode(code)) return refuse("arrival_kit_country_unknown")
-  if (code === HOME_COUNTRY) return refuse("arrival_kit_country_is_home")
   return ok(code)
 }
 

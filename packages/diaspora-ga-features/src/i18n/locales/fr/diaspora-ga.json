@@ -7,7 +7,7 @@
   "meta": {
     "title": "DIASPORA — le réseau des Gabonais de l'étranger",
     "titleTemplate": "%s · DIASPORA",
-    "description": "Le réseau social fermé de la diaspora gabonaise : votre pays, votre communauté, des contenus dont on sait toujours qui les publie."
+    "description": "Le réseau social de la diaspora gabonaise : votre pays, votre communauté, des contenus dont on sait toujours qui les publie."
   },
   "a11y": {
     "skipToContent": "Aller au contenu"
@@ -34,7 +34,7 @@
   },
   "footer": {
     "label": "Informations",
-    "publisher": "DIASPORA est édité par NTSAGUI Digital. Le réseau est réservé aux Gabonais de l'étranger.",
+    "publisher": "DIASPORA est édité par NTSAGUI Digital.",
     "legalNotice": "Mentions légales",
     "privacy": "Confidentialité",
     "charte": "Charte graphique"
@@ -55,7 +55,7 @@
   "landing": {
     "title": "Retrouvez les vôtres,\noù que vous soyez.",
     "lead": "Échangez avec les Gabonais du monde, partagez votre quotidien et créez votre propre réseau.",
-    "eligibility": "Le réseau des Gabonais de l’étranger.",
+    "eligibility": "Pour les Gabonais du monde entier.",
     "signInTitle": "Se connecter à DIASPORA",
     "idnContinue": "Continuer avec Identité.ga",
     "idnUnavailable": "La connexion IDN sera disponible prochainement.",
@@ -64,8 +64,7 @@
     "createAccount": "Créer un compte",
     "newHere": "Nouveau sur DIASPORA ?",
     "free": "L’inscription est gratuite.",
-    "privacy": "Vos coordonnées restent privées. Connexion par code, sans mot de passe.",
-    "boardTitle": "Votre communauté, pays par pays."
+    "privacy": "Vos coordonnées restent privées. Connexion par code, sans mot de passe."
   },
   "entry": {
     "signOutIncomplete": "La déconnexion complète n’a pas pu être confirmée. D’autres appareils peuvent rester connectés et des données de ce navigateur peuvent subsister. Reconnectez-vous pour réessayer la déconnexion dès que la connexion est rétablie.",
@@ -130,10 +129,9 @@
   "welcome": {
     "metaTitle": "Bienvenue",
     "countryLabel": "Pays de résidence",
-    "countryHint": "Le Gabon n'est pas proposé : DIASPORA est le réseau des Gabonais de l'étranger.",
+    "countryHint": "Choisissez votre pays ou territoire de résidence.",
     "countrySheetTitle": "Votre pays de résidence",
     "countrySheetDescription": "Cherchez par nom ou par code.",
-    "countryNotOpen": "Ce pays n'est pas encore ouvert : vous lisez tout et publiez pour toute la diaspora. La publication dans le hub du pays attend son ouverture.",
     "cityLabel": "Ville",
     "cityHint": "Facultative. Par défaut, seules vos relations la voient.",
     "displayNameLabel": "Nom affiché",
@@ -224,7 +222,6 @@
     "resultCount_one": "{{count}} pays",
     "resultCount_other": "{{count}} pays",
     "noResult": "Aucun pays ne correspond à votre recherche.",
-    "openBadge": "Ouvert",
     "quickAccess": "Accès rapide",
     "homeTag": "mon pays"
   },
@@ -305,6 +302,7 @@
       "noneAdded": "Aucune publication supplémentaire à afficher sur cette page."
     },
     "title": "Fil",
+    "chooseCountryHint": "Choisissez le pays dont vous souhaitez lire les publications.",
     "scopesLabel": "Portées du fil",
     "scope": {
       "mon_pays": "Mon pays",
@@ -318,7 +316,6 @@
       "recents": "Tout ce que vous pouvez lire, du plus récent au plus ancien.",
       "pour_vous": "Vos relations, les pages et les groupes que vous suivez."
     },
-    "prompt": "Quoi de neuf à {{city}} ?",
     "promptNoCity": "Quoi de neuf de votre côté ?",
     "empty": {
       "action": "Publier",
@@ -338,8 +335,7 @@
         "title": "Votre fil « Pour vous » est vide.",
         "body": "Connectez-vous à des membres et suivez des pages pour le remplir."
       }
-    },
-    "registerLabel": "Inscrire votre organisation"
+    }
   },
   "rail": {
     "myHub": "Votre pays",
@@ -379,7 +375,6 @@
     "reachLegend": "Où publier",
     "reachLocal": "Dans le hub {{country}}",
     "reachDiaspora": "Pour toute la diaspora",
-    "reviewNotice": "{{country}} n'est pas encore ouvert : la publication dans son hub attend son ouverture. Votre publication part pour toute la diaspora.",
     "audienceLegend": "Qui peut lire",
     "audiencePublic": "Tous les membres de DIASPORA",
     "audienceConnections": "Mes relations",
@@ -1154,20 +1149,32 @@
   },
   "members": {
     "title": "Membres",
-    "lead": "Les membres qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie : aucune coordonnée n'est affichée.",
     "searchLabel": "Chercher un membre",
-    "searchPlaceholder": "Nom ou identifiant",
+    "searchPlaceholder": "Nom ou @identifiant",
     "reachLabel": "Où chercher",
     "reachNetwork": "Tout le réseau",
     "idleTitle": "Cherchez un membre par son nom ou son identifiant.",
-    "idleBody": "Seuls les membres qui l'ont choisi apparaissent : personne n'est listé sans son accord.",
+    "idleBody": "Recherchez une personne par son nom ou son identifiant.",
     "emptyTitle": "Aucun membre trouvé pour « {{query}} ».",
-    "emptyBody": "Un membre qui n'a pas choisi d'apparaître dans l'annuaire reste introuvable. Vérifiez l'orthographe, ou l'identifiant exact.",
+    "emptyBody": "Vérifiez le nom ou l’identifiant. Les profils masqués ne figurent pas dans cette liste.",
     "count_one": "{{count}} membre trouvé.",
     "count_other": "{{count}} membres trouvés.",
     "resultsLabel": "Membres trouvés",
     "mine": "Votre niveau d'annuaire : « {{level}} ».",
-    "mineAction": "Le régler"
+    "mineAction": "Le régler",
+    "invite": "Inviter un contact",
+    "inviteTitle": "Rejoignez-moi sur DIASPORA",
+    "sms": "Inviter par SMS",
+    "whatsapp": "Inviter par WhatsApp",
+    "shareLink": "Partager le lien",
+    "shareMine": "Partager mon profil",
+    "shareProfile": "Partager le profil",
+    "linkCopied": "Lien copié.",
+    "shareFailed": "Le partage a échoué. Réessayez.",
+    "backToCompose": "Revenir à la conversation en préparation",
+    "more": "Autres espaces du réseau",
+    "fansCount_one": "{{count}} fan",
+    "fansCount_other": "{{count}} fans"
   },
   "comments": {
     "title": "Commentaires",
@@ -1372,7 +1379,7 @@
     "code_expired": "Ce code a expiré. Demandez-en un nouveau.",
     "country_required": "Choisissez votre pays de résidence.",
     "country_unknown": "Ce pays n'est pas reconnu.",
-    "country_is_home": "Le Gabon n'est pas un pays de résidence de la diaspora.",
+    "country_is_home": "Ce pays n’a pas été accepté. Vérifiez votre sélection et réessayez.",
     "city_too_long": "La ville compte 80 caractères au plus.",
     "city_invalid": "La ville tient sur une seule ligne.",
     "arrived_at_out_of_range": "Saisissez une année entre 1950 et l'année en cours.",

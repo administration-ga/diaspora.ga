@@ -55,8 +55,8 @@ describe("relecture puis publication directe (EXF-DG-42)", () => {
     expect(initialModerationState(policy)).toBe("pending_review")
   })
 
-  test("pays fermé : toujours la relecture réseau, même équipe réseau au complet (R3, invariant 10)", () => {
-    const policy = publicationPolicy({ ...BASE, scope: { reach: "local", country: "CA" }, networkActiveModerators: 9 })
+  test("sans équipe locale : relecture réseau, même équipe réseau au complet (R3, invariant 10)", () => {
+    const policy = publicationPolicy({ ...BASE, scope: { reach: "local", country: "CA" }, countryActiveModerators: 0, networkActiveModerators: 9 })
     expect(policy).toEqual({ review: "pending_review", moderation: { kind: "network" } })
   })
 

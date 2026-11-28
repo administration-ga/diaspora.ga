@@ -286,7 +286,7 @@
     "aid_theme_invalid": "Choose a topic from the list.",
     "aid_country_required": "Choose a country.",
     "aid_country_unknown": "This country is not recognised.",
-    "aid_country_is_home": "DIASPORA mutual aid is about countries of residence, outside Gabon.",
+    "aid_country_is_home": "This country was not accepted. Check your selection and try again.",
     "aid_city_required": "Enter the city.",
     "aid_city_invalid": "This city name cannot be read.",
     "aid_city_too_long": "The city name is too long.",

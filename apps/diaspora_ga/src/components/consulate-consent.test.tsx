@@ -31,7 +31,7 @@ it("présente l'identité du compte sans formulaire et attend le geste d’adhé
   expect(mocks.join).not.toHaveBeenCalled()
   fireEvent.click(screen.getByRole("button",{name:"consulateGateway.passage.accept"}))
   await waitFor(()=>expect(mocks.replace).toHaveBeenCalledWith("/fil"))
-  expect(mocks.join).toHaveBeenCalledWith({facet:{countryOfResidence:"FR"},displayName:"Lise Anne MBA",handle:"anonyme",consents:{social_profile:true,directory:false,notifications:false},directoryVisibility:"hidden"})
+  expect(mocks.join).toHaveBeenCalledWith({facet:{countryOfResidence:"FR"},displayName:"Lise Anne MBA",handle:"anonyme",consents:{social_profile:true,directory:true,notifications:false},directoryVisibility:"network",guestProfile:true})
 })
 it("refuse le rappel d'un autre utilisateur sans afficher ses noms ni permettre l’adhésion", async () => {
   mocks.authUser="other"

@@ -22,10 +22,10 @@
     }
   },
   "composer": {
+    "guestVisible": "Visible aussi sans compte",
     "mediaAfterCheck": "Publication envoyée : vos photos ou votre vidéo apparaîtront après leur vérification de sécurité.",
     "mediaAfterCheckDetail": "Les photos et la vidéo apparaîtront après leur vérification de sécurité.",
-    "mediaAddPhotos": "Photos",
-    "mediaAddVideo": "Vidéo",
+
     "mediaLimits": "Jusqu’à {{postMediaMaxCount}} photos de {{postImageMaxMegabytes}} Mo chacune, ou une vidéo seule de {{postVideoMaxMegabytes}} Mo et {{postVideoMaxMinutes}} min au plus.",
     "mediaUploadingPercent": "Envoi : {{percent}}",
     "mediaUploadProgressLabel": "Envoi {{name, de}}",
@@ -33,9 +33,7 @@
     "mediaRetryLabel": "Réessayer l’envoi {{name, de}}"
   },
   "feed": {
-    "shortcutsLabel": "Publier une photo ou une vidéo",
-    "shortcutPhoto": "Photo",
-    "shortcutVideo": "Vidéo"
+
   },
   "errors": {
     "media_video_too_large_to_convert": "Cette vidéo est trop lourde pour être préparée dans ce navigateur : au-delà de {{postVideoConvertMaxGigabytes}} Go, la conversion n’est pas possible ici. Elle n’est pas envoyée. Raccourcissez-la ou exportez-la en plus basse définition, puis choisissez-la de nouveau.",

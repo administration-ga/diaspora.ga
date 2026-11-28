@@ -12,7 +12,7 @@
  * Les types sont COPIÉS chez le consommateur (doctrine d'interopérabilité) :
  * la source du contrat est `GABON_DIPLOMATIE/docs/contrats/DIASPORA-ATTESTATION-V1.md`.
  */
-import { isResidenceCountry, type CountryCode } from "./countries"
+import { HOME_COUNTRY, isResidenceCountry, type CountryCode } from "./countries"
 import { ok, refuse, type Result } from "./result"
 
 export const ATTESTATION_CONTRACT = "DIASPORA-ATTESTATION-V1"
@@ -85,7 +85,7 @@ export function parseAttestationResponse(raw: unknown): Result<AttestationRespon
   const { contract, verified, countryOfResidence, postSlug, registrationStatus, since, attestedAt } = record
   if (contract !== ATTESTATION_CONTRACT) return refuse("response_field_invalid")
   if (typeof verified !== "boolean" || !isTimestamp(attestedAt)) return refuse("response_field_invalid")
-  if (countryOfResidence !== undefined && (typeof countryOfResidence !== "string" || !isResidenceCountry(countryOfResidence))) {
+  if (countryOfResidence !== undefined && (typeof countryOfResidence !== "string" || !isResidenceCountry(countryOfResidence) || countryOfResidence === HOME_COUNTRY)) {
     return refuse("response_field_invalid")
   }
   if (postSlug !== undefined && (typeof postSlug !== "string" || !POST_SLUG.test(postSlug))) {

@@ -58,7 +58,7 @@ un test vérifie que ce document en est la copie exacte.
 | Politique d’adhésion | « Déclarée ou vérifiée » (`declared_or_verified`) |
 | Visibilité par défaut | « Dans ce réseau » (`network`) |
 | Portées autorisées | `local, diaspora` |
-| Pays ouverts | `FR` |
+| Pays ouverts | `AD, AE, AF, AG, AI, AL, AM, AO, AQ, AR, AS, AT, AU, AW, AX, AZ, BA, BB, BD, BE, BF, BG, BH, BI, BJ, BL, BM, BN, BO, BQ, BR, BS, BT, BV, BW, BY, BZ, CA, CC, CD, CF, CG, CH, CI, CK, CL, CM, CN, CO, CR, CU, CV, CW, CX, CY, CZ, DE, DJ, DK, DM, DO, DZ, EC, EE, EG, EH, ER, ES, ET, FI, FJ, FK, FM, FO, FR, GA, GB, GD, GE, GF, GG, GH, GI, GL, GM, GN, GP, GQ, GR, GS, GT, GU, GW, GY, HK, HM, HN, HR, HT, HU, ID, IE, IL, IM, IN, IO, IQ, IR, IS, IT, JE, JM, JO, JP, KE, KG, KH, KI, KM, KN, KP, KR, KW, KY, KZ, LA, LB, LC, LI, LK, LR, LS, LT, LU, LV, LY, MA, MC, MD, ME, MF, MG, MH, MK, ML, MM, MN, MO, MP, MQ, MR, MS, MT, MU, MV, MW, MX, MY, MZ, NA, NC, NE, NF, NG, NI, NL, NO, NP, NR, NU, NZ, OM, PA, PE, PF, PG, PH, PK, PL, PM, PN, PR, PS, PT, PW, PY, QA, RE, RO, RS, RU, RW, SA, SB, SC, SD, SE, SG, SH, SI, SJ, SK, SL, SM, SN, SO, SR, SS, ST, SV, SX, SY, SZ, TC, TD, TF, TG, TH, TJ, TK, TL, TM, TN, TO, TR, TT, TV, TW, TZ, UA, UG, UM, US, UY, UZ, VA, VC, VE, VG, VI, VN, VU, WF, WS, YE, YT, ZA, ZM, ZW` |
 | Thème | `diaspora-ga` |
 | Admission du réseau | « Tranche d’admission DIASPORA.GA » (`diaspora`) |
 | Schéma de facette (JSON) | le bloc ci-dessous, tel quel |
@@ -71,10 +71,7 @@ un test vérifie que ce document en est la copie exacte.
       "key": "countryOfResidence",
       "kind": "country",
       "required": true,
-      "defaultVisibility": "network",
-      "excludedValues": [
-        "GA"
-      ]
+      "defaultVisibility": "network"
     },
     {
       "key": "city",
@@ -124,23 +121,24 @@ bun -e 'import { diasporaGaConsoleNetworkForm } from "./packages/diaspora-ga-dom
 - **l'admission ne se change plus après la création** : un réseau créé avec l'admission générique
   ignorerait la nationalité, le parrainage et l'attestation consulaire, et ne se corrige pas par un
   réglage ;
-- seuls le pays de résidence (jamais le Gabon) et la disponibilité pour l'entraide sont lisibles du
-  réseau par défaut ; aucun champ n'est lisible depuis la racine ;
+- le pays de résidence se choisit parmi les 249 pays et territoires du catalogue, Gabon compris.
+  Le pays et la disponibilité pour l'entraide sont visibles des membres du réseau par défaut.
+  Les autres champs sont masqués par défaut ;
 - l'identifiant public est unique : s'il existe déjà, la console refuse (conflit).
 
 **Preuve** : la console liste le réseau avec « Tranche d’admission DIASPORA.GA » ; le journal des
 décisions porte la création et son motif ; la lecture publique `modules/networks/networks:getBySlug`
 (`slug` `diaspora-ga`) rend `managedBy: "diaspora"`.
 
-## 3. Le premier passage nocturne crée le hub de la France
+## 3. Le passage nocturne actualise les compteurs des hubs par pays
 
-**Qui** : personne, le moteur. La tâche planifiée « compteurs des hubs DIASPORA.GA » (chaque jour à
-2 h 30 UTC) crée le hub de chaque pays ouvert et compte ses membres ; la mesure du pilote suit à
-2 h 50 UTC. Rien n'est créé à la main.
+Les membres peuvent consulter les 249 hubs dès la création du réseau. Chaque jour à 2 h 30 UTC,
+la tâche « compteurs des hubs DIASPORA.GA » actualise les compteurs des pays qui ont déjà une
+fiche ou pour lesquels elle a trouvé des membres, des organisations ou des événements.
+La mesure du pilote suit à 2 h 50 UTC.
 
-**Preuve** : après la nuit qui suit la création du réseau, la santé du moteur (console) montre les
-tâches planifiées passées (relevé global), et le hub de la France se lit sur le site. Aucune
-annonce avant.
+Dans la console, vérifier l'exécution des tâches planifiées après la première nuit. Sur le site,
+consulter les hubs du Gabon et de la France, puis les compteurs d'un pays où des membres sont inscrits.
 
 ## 4. L'équipe de modération France et les responsables du réseau
 
@@ -150,7 +148,8 @@ lot A6 : le bureau de modération de diaspora.ga ne décide plus), sur les noms 
 propriétaire.
 
 - « Équipes de modération » : créer l'équipe de la France pour le réseau DIASPORA.GA, avec son motif,
-  puis y placer les modérateurs désignés. Règle du projet : pas de pays ouvert sans modération.
+  puis y placer les modérateurs désignés pour le pilote français. L'équipe du pays traite les
+  signalements dans son périmètre.
 - Responsables du réseau (administrateur et modérateur du réseau ; l'administrateur juge les recours
   et lit la mesure du pilote dans l'application d'administration ; lots EX-08 du moteur, MD-01 et
   LX-03, décision 3 du plan 17, CH-815 A6) :
@@ -217,6 +216,7 @@ machine qui publie (`docs/37`, § 3) ; aucune ne se saisit à la main.
 | `NEXT_PUBLIC_BUILD_SHA` | posée par le script : l'étiquette tirée des deux commits |
 | `NEXT_PUBLIC_IDN_PORTAL_URL` | `DIASPORA_GA_PRODUCTION_IDN_PORTAL_URL`, facultative : absente, le lien d'élévation ne s'affiche pas |
 | `NEXT_PUBLIC_CONSULATE_URL` | `DIASPORA_GA_PRODUCTION_CONSULATE_URL`, facultative : idem |
+| `NEXT_PUBLIC_DIASPORA_SMS_ENABLED` | `DIASPORA_GA_PRODUCTION_SMS_ENABLED`, facultative. La valeur `1` affiche l'entrée SMS dans iCom. La valeur `0` ou l'absence de réglage la masque. Le relais SMS se configure sur le serveur Convex. |
 | `LIVEKIT_WS_URL` | `DIASPORA_GA_PRODUCTION_LIVEKIT_WS_URL`, facultative, origine `wss://` exacte : celle du serveur vidéo, que la politique de sécurité du site ouvre (§ 6.3) ; absente, aucune origine média n'est ouverte |
 
 Le projet d'hébergement de production se désigne par `DIASPORA_GA_PRODUCTION_VERCEL_PROJECT_ID`, avec
@@ -382,8 +382,8 @@ s'affichent à 390 et 1 440 px ; un vrai compte entre (recette réelle, plan 01,
 - **Le site** : `node scripts/rollback.mjs --target production --to <déploiement précédent> --version
   <son étiquette>` (`docs/37`, § 6). À la toute première publication, il n'y a pas de déploiement
   précédent : revenir en arrière consiste à retirer le domaine du projet (geste du propriétaire).
-- **Un pays** : retiré des pays ouverts par la console (réglage du réseau, avec motif) ; rien n'est
-  supprimé.
+- Les 249 pays et territoires restent accessibles. Le retour à la version précédente du site
+  s'applique au réseau entier.
 - **Le réseau** : jamais supprimé ; son archivage exige deux administrateurs de plateforme (une
   demande, puis une approbation par un autre).
 - **Le backend** : la session du moteur republie le commit précédent d'ANTSIA, jamais d'index

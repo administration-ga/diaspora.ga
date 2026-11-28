@@ -205,6 +205,8 @@ it("le badge CONSULAT.GA du fil ouvre l’espace consulaire au téléphone", () 
   mocks.desktop = false
   renderShell()
   const badge = screen.getByRole("link", { name: /^CONSULAT\.GA$/i })
+  expect(badge).toHaveAttribute("data-consulate-ticket")
+  expect(document.getElementById("contenu")).toHaveAttribute("data-feed-ticket")
   expect(badge).toHaveAttribute("href", LINKS.mySpace)
   expect(badge).toHaveAttribute("target", "_blank")
 })

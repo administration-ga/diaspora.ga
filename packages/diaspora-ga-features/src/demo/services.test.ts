@@ -143,10 +143,10 @@ describe("démonstration des services — offres fictives", () => {
     ])
   })
 
-  it("rend un code fermé pour un filtre refusé ou un curseur d'une autre recherche", () => {
+  it("accepte le filtre Gabon et refuse un curseur étranger", () => {
     const { capability } = setup("p-prisca")
     const { result, rerender } = renderHook((request: ServiceSearchRequest) => capability.useSearch(request), { initialProps: { country: "GA", cursor: null } as ServiceSearchRequest })
-    expect(result.current).toEqual({ status: "error", code: "service_country_is_home" })
+    expect(result.current).toMatchObject({ status: "ready", data: { items: [], isDone: true } })
     rerender({ cursor: "pas-un-curseur" })
     expect(result.current).toEqual({ status: "error", code: "unknown" })
   })

@@ -1,5 +1,7 @@
 "use client"
 
+import { GuestVisibilitySetting } from "@/components/guest-visibility-setting"
+
 /**
  * Les écrans de gestion des pages (DG-008). PROPRIÉTAIRE : chantier « gestion
  * des pages ».
@@ -263,6 +265,7 @@ function ManageView(props: { readonly management: PageManagement; readonly page:
                 <h2 className="font-display text-xl font-bold">{t("pageAdmin.identity.title")}</h2>
                 <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t("pageAdmin.identity.lead")}</p>
               </div>
+              <GuestVisibilitySetting pageId={page.id} />
               <PageIdentityForm key={page.id} management={props.management} page={page} />
             </div>
           ) : (

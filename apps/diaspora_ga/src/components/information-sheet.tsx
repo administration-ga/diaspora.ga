@@ -1,11 +1,13 @@
 "use client"
 
 import { LEGAL_TEXTS, type LegalTextKind } from "@diaspora-ga/domain"
-import { cn, Sheet, SheetContent } from "@diaspora-ga/features"
+import { cn, CountrySwitch, Sheet, SheetContent } from "@diaspora-ga/features"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import type { MemberMenuEntryId } from "@diaspora-ga/features/navigation"
 import { ArrowLeftIcon, ArrowUpRightIcon, ChevronRightIcon, type LucideIcon } from "lucide-react"
 import NextLink from "next/link"
+import { useRouter } from "next/navigation"
+import { routes } from "@/lib/routes"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { formatLegalTextDate, INFORMATION_ENTRY_TEXTS, legalSectionHref } from "@/lib/legal-texts"
@@ -73,6 +75,7 @@ function InformationPanel(props: {
   readonly returnFocus: () => HTMLElement | null
 }) {
   const { t, locale } = useDiasporaGaT()
+  const router = useRouter()
   const [level, setLevel] = useState<Level>(INDEX)
   const contentId = useId()
   const describedBy = useId()
@@ -133,6 +136,13 @@ function InformationPanel(props: {
       {level.level === "index" ? (
         <nav aria-label={t("nav.account.info")}>
           <ul className="flex flex-col gap-0.5">
+            <li>
+              <CountrySwitch value={null} title={t("explore.countriesTitle")} triggerLabel={t("explore.countriesTitle")}
+                description={t("explore.countriesLead")} onChange={(code) => {
+                  props.onOpenChange(false)
+                  router.push(routes.hub(code))
+                }} />
+            </li>
             {props.entries.map((entry) => {
               const text = textOf(entry)
               const Icon = entry.icon

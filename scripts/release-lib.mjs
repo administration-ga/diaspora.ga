@@ -90,7 +90,8 @@ const deepFreeze = (value) => {
  * - `releaseKeys` : ce que la publication exige (le contrôle et le retour arrière exigent
  *   `CHECK_KEYS` et `ROLLBACK_KEYS`, les mêmes pour toutes) ; `optionalUrlKeys` : les
  *   liens facultatifs ; `optionalMediaKeys` : les origines facultatives d'un serveur média
- *   (`wss://`, lues à la construction pour la politique de sécurité du site) ;
+ *   (`wss://`, lues à la construction pour la politique de sécurité du site).
+ *   `optionalFlagKeys` contient les options de construction valant exactement `0` ou `1` ;
  * - `publicVariables` : la liste publique, celle du catalogue (`build_args` et
  *   `runtime_env`), écrite à part pour que la garde `assertPublicOnly` ait un sens ;
  * - `siteVariables` : ce que la publication passe au site, dans l'ordre : une valeur
@@ -116,16 +117,19 @@ export const RELEASE_APPS = deepFreeze({
       projectId: "DIASPORA_GA_{CIBLE}_VERCEL_PROJECT_ID",
       idnPortalUrl: "DIASPORA_GA_{CIBLE}_IDN_PORTAL_URL",
       consulateUrl: "DIASPORA_GA_{CIBLE}_CONSULATE_URL",
+      smsEnabled: "DIASPORA_GA_{CIBLE}_SMS_ENABLED",
       livekitWsUrl: "DIASPORA_GA_{CIBLE}_LIVEKIT_WS_URL",
     },
     releaseKeys: ["siteUrl", "convexUrl", "convexSiteUrl", "projectId", "orgId", "scope"],
     optionalUrlKeys: ["idnPortalUrl", "consulateUrl"],
     optionalMediaKeys: ["livekitWsUrl"],
+    optionalFlagKeys: ["smsEnabled"],
     publicVariables: [
       "NEXT_PUBLIC_CONVEX_URL",
       "NEXT_PUBLIC_SITE_URL",
       "NEXT_PUBLIC_BUILD_SHA",
       "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE",
+      "NEXT_PUBLIC_DIASPORA_SMS_ENABLED",
       "NEXT_PUBLIC_IDN_PORTAL_URL",
       "NEXT_PUBLIC_CONSULATE_URL",
       "NEXT_PUBLIC_CONVEX_SITE_URL",
@@ -140,6 +144,7 @@ export const RELEASE_APPS = deepFreeze({
       // CH-817 : la même origine des actions HTTP, lue par le NAVIGATEUR (la porte des comptes de démonstration).
       ["NEXT_PUBLIC_CONVEX_SITE_URL", { machine: "convexSiteUrl" }],
       ["NEXT_PUBLIC_BUILD_SHA", { version: true }],
+      ["NEXT_PUBLIC_DIASPORA_SMS_ENABLED", { machine: "smsEnabled", optional: true }],
       ["NEXT_PUBLIC_IDN_PORTAL_URL", { machine: "idnPortalUrl", optional: true }],
       ["NEXT_PUBLIC_CONSULATE_URL", { machine: "consulateUrl", optional: true }],
       // Le serveur média des appels et du direct : sa seule trace côté site est la politique de sécurité,
@@ -163,6 +168,7 @@ export const RELEASE_APPS = deepFreeze({
     releaseKeys: ["siteUrl", "convexUrl", "convexSiteUrl", "projectId", "orgId", "scope", "membersSiteUrl"],
     optionalUrlKeys: [],
     optionalMediaKeys: [],
+    optionalFlagKeys: [],
     publicVariables: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_MEMBERS_SITE_URL", "CONVEX_SITE_URL"],
     siteVariables: [
       ["NEXT_PUBLIC_SITE_URL", { machine: "siteUrl" }],
@@ -304,7 +310,7 @@ function variableName(app, target, key) {
  * @param {string} [app] l'application (absente : diaspora.ga)
  */
 export function readTargetEnv(target, env = process.env, keys = RELEASE_KEYS, app = DEFAULT_RELEASE_APP) {
-  const { optionalUrlKeys, optionalMediaKeys } = releaseApp(app)
+  const { optionalUrlKeys, optionalMediaKeys, optionalFlagKeys } = releaseApp(app)
   const name = (key, forTarget = target, forApp = app) => variableName(forApp, forTarget, key)
   const values = {}
   const problems = []
@@ -334,6 +340,15 @@ export function readTargetEnv(target, env = process.env, keys = RELEASE_KEYS, ap
     if (value === undefined) continue
     if (!isWssOrigin(value)) problems.push(`${variable} doit être une origine wss, sans chemin ni barre finale`)
     values[key] = value
+  }
+  // La sonde et le retour arrière réutilisent un site déjà construit.
+  const buildFlags = keys === CHECK_KEYS || keys === ROLLBACK_KEYS ? [] : optionalFlagKeys
+  for (const key of buildFlags) {
+    const variable = name(key)
+    const value = env[variable]
+    if (value === undefined || value === "") continue
+    if (value !== "0" && value !== "1") problems.push(`${variable} doit valoir 0 ou 1`)
+    else values[key] = value
   }
   const other = otherTarget(target)
   for (const key of EXCLUSIVE_KEYS) {
