@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { ISO_COUNTRY_CODES } from "./countries"
 import { countsAsHubMember, MEMBER_COUNTER_DISPLAY_THRESHOLD, presentHubCounters, presentMemberCounter } from "./hubs"
 import { DIASPORA_GA_NETWORK, ROOT_NETWORK_SLUG } from "./network"
 import { DiasporaGaViolation, ok, refuse, unwrap } from "./result"
@@ -15,7 +16,8 @@ describe("qui compte parmi les membres d'un hub", () => {
   test("ni le niveau « personne », ni un consentement retiré, ni un statut sans annuaire", () => {
     expect(countsAsHubMember({ ...listed, directoryVisibility: "hidden" })).toBe(false)
     expect(countsAsHubMember({ ...listed, directoryConsent: false })).toBe(false)
-    for (const status of ["en_attente", "suspendue", "partie"] as const) {
+    expect(countsAsHubMember({ ...listed, status: "en_attente" })).toBe(true)
+    for (const status of ["suspendue", "partie"] as const) {
       expect(countsAsHubMember({ ...listed, status })).toBe(false)
     }
   })
@@ -63,7 +65,7 @@ describe("compteurs d'un hub", () => {
 })
 
 describe("le réseau diaspora-ga (cahier §7)", () => {
-  test("fermé, enfant d'antsia, déclaré ou vérifié, network par défaut, France ouverte", () => {
+  test("fermé, enfant d'antsia, déclaré ou vérifié, network par défaut, tous les pays ouverts", () => {
     expect(DIASPORA_GA_NETWORK).toEqual({
       slug: "diaspora-ga",
       kind: "closed",
@@ -71,7 +73,7 @@ describe("le réseau diaspora-ga (cahier §7)", () => {
       membershipPolicy: "declared_or_verified",
       defaultVisibility: "network",
       reachValues: ["local", "diaspora"],
-      openCountries: ["FR"],
+      openCountries: ISO_COUNTRY_CODES,
     })
     expect(ROOT_NETWORK_SLUG).toBe("antsia")
   })

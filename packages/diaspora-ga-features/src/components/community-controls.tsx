@@ -12,7 +12,7 @@ import {
   UsersRoundIcon,
   type LucideIcon,
 } from "lucide-react"
-import type { ReactNode } from "react"
+import type { ReactNode, Ref } from "react"
 
 import { useDiasporaGaT } from "../i18n/client"
 import { cn } from "../lib/cn"
@@ -28,11 +28,13 @@ import { SponsoredBadge } from "./trust-badge"
  * ouverte, le bouton dit pourquoi (`unavailableHint`, par défaut « elle
  * arrive »), au lieu de mentir par un lien mort.
  */
-export function ContactButton(props: { onContact?: () => void; recipientName: string; unavailableHint?: string; className?: string }) {
+export function ContactButton(props: { onContact?: () => void; recipientName: string; unavailableHint?: string; className?: string; id?: string; ref?: Ref<HTMLButtonElement> }) {
   const { t } = useDiasporaGaT()
   const available = props.onContact !== undefined
   return (
     <Button
+      id={props.id}
+      ref={props.ref}
       variant="message"
       onClick={props.onContact}
       disabled={!available}

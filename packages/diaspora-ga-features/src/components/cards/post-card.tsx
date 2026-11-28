@@ -3,7 +3,8 @@
 import type { CountryCode } from "@diaspora-ga/domain"
 import { GlobeIcon, HandHeartIcon, HeartIcon, LightbulbIcon, MessageCircleIcon, PartyPopperIcon, PinIcon, type LucideIcon } from "lucide-react"
 import { DropdownMenu } from "radix-ui"
-import { useState } from "react"
+import { useId, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 import { useFeatureGate } from "../../data/context"
 import type { PostView, ReactionKind } from "../../data/types"
@@ -46,6 +47,7 @@ export function PostCard(props: {
   onReact?: (kind: ReactionKind | null) => void
   /** Commenter suit le même droit que réagir, sauf avis contraire. */
   canComment?: boolean
+  initialCommentsOpen?: boolean
   className?: string
 }) {
   const { t, locale } = useDiasporaGaT()
@@ -55,7 +57,9 @@ export function PostCard(props: {
   const post = neutralAuthor
     ? { ...props.post, author: { ...props.post.author, handle: "", displayName: t("bell.someone"), badges: [] } }
     : props.post
-  const [commentsOpen, setCommentsOpen] = useState(false)
+  const [commentsOpen, setCommentsOpen] = useState(props.initialCommentsOpen === true)
+  const commentPanelId = useId()
+  const commentTrigger = useRef<HTMLButtonElement>(null)
   // ADR-0041 : pages fermées sur le réseau, la publication d'une page garde son nom, sans lien vers une fiche refusée.
   const pagesOpen = useFeatureGate().isOpen("pages")
   const authorHref = neutralAuthor ? null : post.author.kind === "page" ? (pagesOpen ? routes.page(post.author.handle) : null) : routes.profile(post.author.handle)
@@ -164,7 +168,13 @@ export function PostCard(props: {
             type="button"
             aria-haspopup="dialog"
             aria-expanded={commentsOpen}
-            onClick={() => setCommentsOpen(true)}
+            ref={commentTrigger}
+            aria-controls={commentsOpen ? commentPanelId : undefined}
+            onClick={() => {
+              // iOS opens its keyboard only while the touch is still being handled.
+              flushSync(() => setCommentsOpen(true))
+              document.getElementById(commentPanelId)?.querySelector<HTMLTextAreaElement>("[data-comment-input]")?.focus({ preventScroll: true })
+            }}
             className="inline-flex min-h-10 items-center gap-1.5 rounded-md px-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:shadow-focus"
           >
             <MessageCircleIcon className="size-4" aria-hidden />
@@ -180,6 +190,8 @@ export function PostCard(props: {
         </footer>
       </article>
       <PostCommentsSheet
+        id={commentPanelId}
+        returnFocus={() => commentTrigger.current}
         postId={post.id}
         postIsMine={post.isMine}
         canComment={props.canComment ?? props.canReact}

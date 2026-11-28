@@ -88,6 +88,7 @@ const DESTINATIONS: readonly DestinationRule[] = [
   rule(routes.members(), "view_directory"),
   rule(routes.relations(), "read_network"),
   rule(routes.messages(), "communicate", true),
+  rule(routes.smsMessages(), "communicate"),
   rule(routes.newStory(), "publish"),
   rule(routes.stories(), "read_network"),
   rule(routes.explore(), "read_network"),
@@ -189,7 +190,14 @@ export function parseReturnPath(raw: unknown): ReturnDestination | null {
   if (!matched) return null
 
   const filters = new URLSearchParams()
-  for (const [key, value] of new URLSearchParams(search)) {
+  const incoming = new URLSearchParams(search)
+  // Only the iCom group invitation survives the authentication round trip on this exact route.
+  const invites = incoming.getAll("invitation-groupe")
+  const invite = invites.length === 1 ? invites[0] : undefined
+  if (pathname === routes.messages() && invite && /^[A-Za-z0-9_-]{16,256}$/.test(invite)) {
+    filters.set("invitation-groupe", invite)
+  }
+  for (const [key, value] of incoming) {
     if (!(ROUTE_FILTER_KEYS as readonly string[]).includes(key)) continue
     if (value.length > MAX_FILTER_LENGTH || hasControl(value)) continue
     filters.append(key, value)

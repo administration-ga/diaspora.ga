@@ -2,7 +2,7 @@
   "landing": {
     "vision": {
       "title": "Ce qu'est DIASPORA",
-      "lead": "Le réseau social fermé des Gabonais de l'étranger : votre pays, votre communauté, et l'on sait toujours qui publie.",
+      "lead": "Le réseau social des Gabonais de l'étranger : votre pays, votre communauté, et l'on sait toujours qui publie.",
       "offerTitle": "Ce que vous y trouvez",
       "offer": {
         "country": {
@@ -46,7 +46,6 @@
           "body": "Le contact passe par la messagerie : un bouton « Écrire », jamais un numéro affiché."
         }
       },
-      "countriesTitle": "Les pays déjà ouverts",
       "trustTitle": "Un réseau de confiance",
       "trust": {
         "closed": {

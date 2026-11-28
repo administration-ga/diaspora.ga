@@ -33,6 +33,12 @@
     },
     "moderation": "Modération",
     "create": {
+      "actions": {
+        "post": "Poster",
+        "live": "Live",
+        "company": "+ Entreprise",
+        "association": "+ Association"
+      },
       "label": "Créer",
       "title": "Créer",
       "story": "Une actu",
@@ -47,27 +53,7 @@
   },
   "explore": {
     "title": "Membres",
-    "lead": "Trouvez des membres, des pages et des communautés dans tout le réseau.",
-    "membersTitle": "Chercher une personne",
-    "membersBody": "Parcourez les membres d'un pays ou d'une ville, ou cherchez un nom, parmi ceux qui ont choisi d'apparaître dans l'annuaire. Le contact passe par la messagerie.",
-    "membersAction": "Ouvrir la recherche",
-    "servicesBody": "Coiffure, traduction, photographie, aide à l'installation : trouvez une compétence de la diaspora près de chez vous.",
-    "servicesAction": "Parcourir les services",
-    "countriesTitle": "Pays ouverts",
-    "countriesLead": "Chaque hub rassemble les actualités, les évènements, les associations et les entreprises d'un pays.",
-    "countriesEmptyTitle": "Aucun pays n'est encore ouvert.",
-    "countriesEmptyBody": "Un pays s'ouvre avec deux associations relais et un modérateur. Le hub de votre pays se lit déjà.",
-    "countriesErrorTitle": "La liste des pays n'est pas disponible.",
-    "countriesErrorBody": "Vérifiez votre connexion et rechargez la page pour réessayer.",
-    "reload": "Recharger la page",
-    "myCommunity": "Voir ma communauté",
-    "mutualAidBody": "Posez une question pratique ou proposez votre aide, et retrouvez les missions bénévoles des associations.",
-    "mutualAidAction": "Ouvrir l'entraide",
-    "arrivalKitBody": "Démarches, logement, santé, transports : des ressources datées, sourcées et relues, par ville.",
-    "arrivalKitAction": "Consulter le kit d'arrivée",
-    "mentoringBody": "Des membres volontaires partagent leur expérience d'études, d'emploi ou d'installation.",
-    "mentoringAction": "Trouver un mentor",
-    "jobsBody": "Les offres publiées par les entreprises et associations de la diaspora, et les talents qui ont choisi d'être visibles.",
-    "jobsAction": "Voir les offres d'emploi"
+    "countriesTitle": "Pays et territoires",
+    "countriesLead": "Recherchez un pays pour ouvrir son fil local."
   }
 }

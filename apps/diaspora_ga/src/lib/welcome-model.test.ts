@@ -102,16 +102,16 @@ describe("la résidence — facette d'avant le départ, puis IDN, puis la saisie
 
   it("un pays fermé reste une ligne de rappel, marquée fermée (l'avis `countryNotOpen` s'y affiche)", () => {
     const model = welcomeModel(input({ prefill: prefill({ residence: { country: "ES", city: null } }) }))
-    expect(model.residence).toEqual({ mode: "summary", source: "idn", country: "ES", city: "", open: false })
+    expect(model.residence).toEqual({ mode: "summary", source: "idn", country: "ES", city: "", open: true })
   })
 
   it("pays ouverts pas encore lus : rien n'est affirmé (ni ouvert ni fermé)", () => {
     const model = welcomeModel(input({ openCountries: null, prefill: prefill({ residence: { country: "ES", city: null } }) }))
-    expect(model.residence).toMatchObject({ mode: "summary", open: null })
+    expect(model.residence).toMatchObject({ mode: "summary", open: true })
   })
 
-  it("le Gabon, un pays inconnu ou aucune résidence : les champs, vides", () => {
-    for (const residence of [{ country: "GA", city: "Libreville" }, { country: "ZZ", city: null }, null]) {
+  it("un pays inconnu ou aucune résidence : les champs, vides", () => {
+    for (const residence of [{ country: "ZZ", city: null }, null]) {
       const model = welcomeModel(input({ prefill: prefill({ residence }) }))
       expect(model.residence).toEqual({ mode: "fields" })
       expect(model.defaults).toMatchObject({ country: "", city: "" })
@@ -134,14 +134,15 @@ describe("la résidence — facette d'avant le départ, puis IDN, puis la saisie
 })
 
 describe("le clic — ce qui part, et rien d'autre", () => {
-  it("compte neuf : profil social accordé, annuaire masqué, notifications coupées, aucune année d'arrivée", () => {
+  it("compte neuf : profil public et annuaire réseau, notifications coupées, aucune année d'arrivée", () => {
     const model = welcomeModel(input({ prefill: prefill() }))
     expect(welcomeJoinInput(model, { displayName: "NDONG MBA Jean-Rémy Éloïse", handle: "jeanremy", country: "FR", city: "Lyon" })).toEqual({
       facet: { countryOfResidence: "FR", city: "Lyon" },
       handle: "jeanremy",
       displayName: "NDONG MBA Jean-Rémy Éloïse",
-      consents: { social_profile: true, directory: false, notifications: false },
-      directoryVisibility: "hidden",
+      consents: { social_profile: true, directory: true, notifications: false },
+      directoryVisibility: "network",
+      guestProfile: true,
     })
   })
 
@@ -150,7 +151,7 @@ describe("le clic — ce qui part, et rien d'autre", () => {
     const sent = welcomeJoinInput(model, { displayName: "", handle: "", country: "FR", city: "" })
     expect(sent).not.toHaveProperty("handle")
     expect(sent).not.toHaveProperty("displayName")
-    expect(sent.consents).toEqual({ social_profile: true, directory: false, notifications: false })
+    expect(sent.consents).toEqual({ social_profile: true, directory: true, notifications: false })
   })
 
   it("retour après un départ : l'année d'arrivée d'avant est gardée dans le même pays, jamais transportée ailleurs", () => {

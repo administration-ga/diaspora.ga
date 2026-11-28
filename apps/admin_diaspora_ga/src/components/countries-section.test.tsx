@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
-import { COUNTRY_OPENING_REQUIREMENTS } from "@diaspora-ga/domain"
 import { createAppI18n } from "@diaspora-ga/features/i18n"
-import { cleanup, render, screen, waitFor, within } from "@testing-library/react"
+import { cleanup, render, screen } from "@testing-library/react"
 import userEvent from "@testing-library/user-event"
 import type { FunctionReference } from "convex/server"
 import { I18nextProvider } from "react-i18next"
@@ -9,7 +8,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { APP_NAMESPACE, appResources } from "@/i18n/resources"
 import type { CountryRow } from "@/lib/countries"
-import { DECISION_REASON_BOUNDS } from "@/lib/moderation-rules"
 
 /**
  * CH-815 A7 — la section « Pays ouverts » : la lecture des pays du réseau (ouverture, équipes du
@@ -53,14 +51,6 @@ import { CountriesSection } from "./countries-section"
 import { NetworkAdminProvider } from "./network-admin-context"
 
 const i18n = createAppI18n({ locale: "fr", appResources, defaultNS: APP_NAMESPACE })
-const t = i18n.getFixedT("fr", APP_NAMESPACE)
-const members = i18n.getFixedT("fr", "diaspora-ga")
-const errors = i18n.getFixedT("fr", "errors")
-/** Le texte tel que Testing Library le compare : espaces insécables de la typographie française ramenées à l'espace. */
-const n = (text: string) => text.replace(/\s+/gu, " ")
-const refusal = (data: Record<string, unknown>) => Object.assign(new Error("refus"), { data })
-const REASON = "Équipe de Belgique en place et relais engagés."
-
 const value = (count: number) => ({ kind: "value", value: count })
 
 /** Un pays fictif : identifiants en clair (le moteur les rend opaques). */
@@ -96,150 +86,23 @@ beforeEach(() => {
 })
 afterEach(() => cleanup())
 
-describe("section Pays ouverts — lecture", () => {
-  it("chaque carte dit le code puis le nom du pays une seule fois (et non deux fois le nom)", () => {
-    mount()
-    const [belgium, france] = screen.getAllByRole("listitem").map((item) => within(item))
-    expect(belgium!.getByRole("heading", { name: "Belgique" })).toHaveTextContent(/^BEBelgique$/)
-    expect(france!.getByRole("heading", { name: "France" })).toHaveTextContent(/^FRFrance$/)
-  })
-
-  it("lit les pays du réseau administré ; ouverture, équipes, modérateurs actifs, compteurs présentés", () => {
+describe("couverture géographique", () => {
+  it("charge une seule fiche lors de la sélection d’un pays", async () => {
+    const user = userEvent.setup()
     mount()
     expect(mocks.args.at(-1)).toEqual({ networkId: NETWORK_ID })
-    const [belgium, france] = screen.getAllByRole("listitem").map((item) => within(item))
-    expect(belgium!.getByRole("heading", { name: "Belgique" })).toBeInTheDocument()
-    expect(belgium!.getByText(t("countries.closed"))).toBeInTheDocument()
-    expect(belgium!.getByText(n(t("countries.moderatorsCount", { count: 2, shown: "2" })))).toBeInTheDocument()
-    expect(belgium!.getByText("42")).toBeInTheDocument()
-    expect(belgium!.getByText(members("hub.counters.associations"))).toBeInTheDocument()
-    // Les évènements à venir ne sont pas comptés exactement par cette lecture : aucun chiffre de façade.
-    expect(belgium!.queryByText(members("hub.counters.events"))).toBeNull()
-    expect(belgium!.getByRole("button", { name: t("countries.openFor", { country: "Belgique" }) })).toBeInTheDocument()
-    expect(france!.getByText(t("countries.open"))).toBeInTheDocument()
-    expect(france!.getByText(t("countries.teamWithScope", { name: "France", surface: members("moderationDesk.surface.post") }))).toBeInTheDocument()
-    expect(france!.getByRole("button", { name: t("countries.closeFor", { country: "France" }) })).toBeInTheDocument()
+    expect(screen.queryByRole("heading", { name: "France" })).toBeNull()
+    await user.click(screen.getByRole("combobox"))
+    await user.type(screen.getByRole("searchbox"), "France")
+    await user.click(screen.getByRole("button", { name: /France/ }))
+    expect(screen.getByRole("heading", { name: "France" })).toBeVisible()
+    expect(screen.queryByRole("heading", { name: "Belgique" })).toBeNull()
     expect(mocks.setOpen).not.toHaveBeenCalled()
   })
 
-  it("dit le routage par pays : un contenu va à l'équipe de son pays, et un deuxième pays s'ouvre dès que son équipe existe", () => {
-    mount()
-    const note = screen.getByText(n(t("countries.routingNote")))
-    expect(note).toHaveTextContent(/à l.équipe de son pays, puis de sa nature/)
-    expect(note).toHaveTextContent(/deuxième pays peut donc s.ouvrir dès que son équipe existe/)
-    const english = i18n.getFixedT("en", APP_NAMESPACE)("countries.routingNote")
-    expect(english).toMatch(/A second country can therefore open as soon as its team exists/)
-    // CH-815 : plus rien ne dit que le pays d'une équipe ne délimite aucune compétence.
-    for (const copy of [t("countries.routingNote"), english]) expect(copy).not.toMatch(/aucune compétence|routage par pays|does not delimit|routing by country/)
-  })
-
-  it("un pays sans équipe, au hub pas encore compté : il le dit, sans chiffre", () => {
-    mocks.rows = [country({ teams: [], activeModerators: 0, canOpen: false, countersComputedAt: null })]
-    mount()
-    const card = within(screen.getByRole("listitem"))
-    expect(card.getByText(t("countries.noTeam"))).toBeInTheDocument()
-    expect(card.getByText(n(t("countries.notCounted")))).toBeInTheDocument()
-    expect(card.queryByText("42")).toBeNull()
-  })
-
-  it("un pays ouvert sans modérateur actif : l'anomalie est signalée", () => {
-    mocks.rows = [country({ country: "FR", open: true, teams: [], activeModerators: 0, canOpen: false })]
-    mount()
-    expect(screen.getByText(n(t("countries.anomaly")))).toBeInTheDocument()
-  })
-
-  it("aucun pays : un état vide qui renvoie à l'équipe", () => {
-    mocks.rows = []
-    mount()
-    expect(screen.getByText(t("countries.emptyTitle"))).toBeInTheDocument()
-    expect(screen.getByRole("link", { name: t("countries.teamLink") })).toHaveAttribute("href", "/equipe")
-  })
-
-  it("pendant la lecture : un état de chargement ; un refus reste dans la section", () => {
+  it("annonce la lecture en cours", () => {
     mocks.rows = undefined
-    const { unmount } = mount()
-    expect(screen.getByRole("status")).toHaveTextContent(t("section.loading"))
-    unmount()
-    mocks.failure = refusal({ code: "policyRefused" })
     mount()
-    expect(screen.getByRole("alert")).toHaveTextContent(errors("policyRefused"))
-  })
-})
-
-describe("section Pays ouverts — ouvrir et fermer", () => {
-  async function openSheet(user: ReturnType<typeof userEvent.setup>) {
-    await user.click(screen.getByRole("button", { name: t("countries.openFor", { country: "Belgique" }) }))
-    return within(await screen.findByRole("dialog"))
-  }
-
-  it("ouvrir : l'attestation des associations relais est obligatoire, comme le motif", async () => {
-    const user = userEvent.setup()
-    mount()
-    const dialog = await openSheet(user)
-    await user.click(dialog.getByRole("button", { name: t("countries.openConfirm") }))
-    expect(await dialog.findByText(n(t("countries.attestationRequired")))).toBeInTheDocument()
-    expect(dialog.getByText(n(t("decision.reasonLength", DECISION_REASON_BOUNDS)))).toBeInTheDocument()
-    expect(mocks.setOpen).not.toHaveBeenCalled()
-  })
-
-  it("ouvrir, relais attestés et motif donné : arguments exacts au moteur", async () => {
-    const user = userEvent.setup()
-    mount()
-    const dialog = await openSheet(user)
-    const attestation = dialog.getByRole("checkbox", { name: t("countries.attestation", { relays: COUNTRY_OPENING_REQUIREMENTS.relayAssociations, country: "Belgique" }) })
-    expect(attestation).toHaveAttribute("aria-checked", "false")
-    await user.click(attestation)
-    await user.type(dialog.getByLabelText(t("decision.reason")), REASON)
-    await user.click(dialog.getByRole("button", { name: t("countries.openConfirm") }))
-    await waitFor(() => expect(mocks.setOpen).toHaveBeenCalledWith({ networkId: NETWORK_ID, country: "BE", open: true, reason: REASON, relayAssociationsAttested: true }))
-    expect(mocks.success).toHaveBeenCalledWith(t("countries.opened", { country: "Belgique" }))
-  })
-
-  it.each([
-    ["moderator_missing", { code: "conflict", appRule: "moderator_missing", appParams: { required: 1 } }, t("countries.refusal.moderatorMissing", { required: 1 })],
-    ["relay_associations_missing", { code: "conflict", appRule: "relay_associations_missing", appParams: { required: 2 } }, t("countries.refusal.relayMissing", { required: 2 })],
-  ])("le refus du moteur %s est expliqué", async (_, data, text) => {
-    const user = userEvent.setup()
-    mocks.setOpen.mockRejectedValueOnce(refusal(data))
-    mount()
-    const dialog = await openSheet(user)
-    await user.click(dialog.getByRole("checkbox"))
-    await user.type(dialog.getByLabelText(t("decision.reason")), REASON)
-    await user.click(dialog.getByRole("button", { name: t("countries.openConfirm") }))
-    expect(await dialog.findByText(n(text))).toBeInTheDocument()
-    expect(mocks.success).not.toHaveBeenCalled()
-  })
-
-  it("sans modérateur actif lu, l'ouverture n'est pas offerte : la section renvoie à l'équipe", async () => {
-    const user = userEvent.setup()
-    mocks.rows = [country({ activeModerators: 0, canOpen: false })]
-    mount()
-    const dialog = await openSheet(user)
-    expect(dialog.getByText(n(t("countries.cannotOpen")))).toBeInTheDocument()
-    expect(dialog.queryByRole("button", { name: t("countries.openConfirm") })).toBeNull()
-    expect(dialog.getByRole("link", { name: t("countries.teamLink") })).toHaveAttribute("href", "/equipe")
-  })
-
-  it("fermer : motif exigé, arguments exacts, sans attestation", async () => {
-    const user = userEvent.setup()
-    mocks.setOpen.mockResolvedValueOnce({ open: false, changed: true })
-    mount()
-    await user.click(screen.getByRole("button", { name: t("countries.closeFor", { country: "France" }) }))
-    const dialog = within(await screen.findByRole("dialog"))
-    await user.type(dialog.getByLabelText(t("decision.reason")), REASON)
-    await user.click(dialog.getByRole("button", { name: t("countries.closeConfirm") }))
-    await waitFor(() => expect(mocks.setOpen).toHaveBeenCalledWith({ networkId: NETWORK_ID, country: "FR", open: false, reason: REASON }))
-    expect(mocks.success).toHaveBeenCalledWith(t("countries.closedDone", { country: "France" }))
-  })
-
-  it("sans changement, le moteur n'écrit rien : la section le dit", async () => {
-    const user = userEvent.setup()
-    mocks.setOpen.mockResolvedValueOnce({ open: true, changed: false })
-    mount()
-    const dialog = await openSheet(user)
-    await user.click(dialog.getByRole("checkbox"))
-    await user.type(dialog.getByLabelText(t("decision.reason")), REASON)
-    await user.click(dialog.getByRole("button", { name: t("countries.openConfirm") }))
-    await waitFor(() => expect(mocks.success).toHaveBeenCalledWith(t("countries.unchangedOpen", { country: "Belgique" })))
+    expect(screen.getByRole("status")).toBeVisible()
   })
 })

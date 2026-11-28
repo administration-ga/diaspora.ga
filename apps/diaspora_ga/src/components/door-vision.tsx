@@ -26,7 +26,6 @@ import NextLink from "next/link"
 import { announcedOfferCards, CONSULAR_ATTESTATION_ANNOUNCED, type OfferCardId } from "@/lib/public-offer"
 import { routes } from "@/lib/routes"
 
-import { OpenCountriesList, useHasOpenCountries } from "./open-countries"
 
 /**
  * La vision de DIASPORA.GA, sous la porte de l'accueil et de /entrer : ce qu'est le
@@ -87,7 +86,6 @@ function steps(consularAnnounced: boolean): readonly string[] {
 /** `showJoin` : l'appel à rejoindre, sauf sur la carte d'inscription elle-même. */
 export function DoorVision(props: { showJoin: boolean }) {
   const { t } = useDiasporaGaT()
-  const hasCountries = useHasOpenCountries()
   const offer = announcedOfferCards().map((card) => OFFER_CONTENT[card.id])
   const consularAnnounced = CONSULAR_ATTESTATION_ANNOUNCED
   return (
@@ -101,16 +99,6 @@ export function DoorVision(props: { showJoin: boolean }) {
         </header>
 
         <VisionGroup id="vision-offre" title={t("landing.vision.offerTitle")} items={offer} />
-
-        {/* Au bureau, la vitrine montre déjà les pays ouverts ; au téléphone, ils sont ici. */}
-        {hasCountries ? (
-          <section aria-labelledby="vision-pays" className="flex flex-col gap-3 min-[960px]:hidden">
-            <h3 id="vision-pays" className="text-lg font-semibold">
-              {t("landing.vision.countriesTitle")}
-            </h3>
-            <OpenCountriesList />
-          </section>
-        ) : null}
 
         <VisionGroup id="vision-confiance" title={t("landing.vision.trustTitle")} items={trustItems(consularAnnounced)} />
 

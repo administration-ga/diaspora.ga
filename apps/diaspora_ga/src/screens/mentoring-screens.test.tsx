@@ -152,7 +152,7 @@ afterEach(() => {
 describe("/mentorat", () => {
   it("lit le pays de l'adresse, sinon celui de ma facette", () => {
     expect(mentoringCountryOf("be", "FR")).toBe("BE")
-    expect(mentoringCountryOf("ga", "FR")).toBe("FR")
+    expect(mentoringCountryOf("ga", "FR")).toBe("GA")
     expect(mentoringCountryOf(null, "CA")).toBe("CA")
   })
 

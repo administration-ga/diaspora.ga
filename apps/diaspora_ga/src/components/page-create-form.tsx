@@ -172,6 +172,8 @@ export function PageCreateForm(props: { readonly management: PageManagement; rea
     if (moved.current) stepHeading.current?.focus()
   }, [step])
 
+  const [guestVisible, setGuestVisible] = useState(false)
+
   const goTo = (next: RegistrationStep) => {
     moved.current = true
     setRefusal(null)
@@ -195,6 +197,7 @@ export function PageCreateForm(props: { readonly management: PageManagement; rea
       const kind = input.ownerKind as MemberPageKind
       const result = await props.management.createPage({
         ownerKind: kind,
+        ...(guestVisible ? { guestVisible: true } : {}),
         name: input.name,
         country: input.country as CountryCode,
         ...(input.handle.trim() ? { handle: input.handle.trim() } : {}),
@@ -304,6 +307,10 @@ export function PageCreateForm(props: { readonly management: PageManagement; rea
               )}
             </Field>
 
+            <label className="flex min-h-11 items-center gap-2">
+              <input type="checkbox" checked={guestVisible} onChange={event => setGuestVisible(event.target.checked)} />
+              {t("guest.pageSharing")}
+            </label>
             <NearbyPages name={name} country={country} />
 
             <Field id={`${id}-sigle`} label={t("pageAdmin.create.shortName")} hint={t("pageAdmin.create.shortNameHint", { max: PAGE_SHORT_NAME_MAX_LENGTH })} error={message(errors.shortName?.message)}>

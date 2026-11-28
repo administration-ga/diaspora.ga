@@ -5,7 +5,7 @@
  * cette table par `RoutingProvider`.
  */
 import { chatKey, contextualConversationKey, groupeKey } from "@antsia/social-features/features/messagerie/messagerie-dock"
-import { conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
+import { composeGroupeHref, composeHref, conversationHref } from "@antsia/social-features/features/messagerie/messagerie-routes"
 import { parseResidenceCountry, type CommunityRule, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
 import { moderationDeskPath, type ModerationDeskTab } from "@diaspora-ga/features/navigation"
 import { PAGE_ASSOCIATION_TYPES, PAGE_COMPANY_SECTORS, type PageAssociationType, type PageCompanySector } from "@antsia/social-domain/pagePresentation"
@@ -16,6 +16,12 @@ export function mobileStoreLinks(appleId: string | undefined, playStoreLive: boo
     ios: appleId && /^[0-9]{6,12}$/.test(appleId) ? `https://apps.apple.com/app/id${appleId}` : null,
     android: playStoreLive ? "https://play.google.com/store/apps/details?id=ga.diaspora.mobile" : null,
   }
+}
+
+export function whatsAppShareHref(link: string): string {
+  const url = new URL("https://wa.me/")
+  url.searchParams.set("text", link)
+  return url.href
 }
 
 /** Le jeton peut contenir une expansion Unicode de minuscule (İ → i̇) : ne pas le redécouper. */
@@ -290,6 +296,7 @@ export const routes = {
   /** L'annuaire opt-in des membres (EXF-DG-19). */
   /** L'annuaire : la recherche par nom, et le parcours par pays, ville et confiance (CH-816 P3). */
   members: (filters?: MemberBrowseParams) => membersHref(filters),
+  membersFromIcom: (source: "message" | "groupe") => `${membersHref()}?depuis=${source}`,
   /** Mes liens dans le réseau, sans recherche d'annuaire générique. */
   relations: (kind?: "accepted" | "received" | "sent" | "following" | "blocked" | "dismissed") => kind === "received"
     ? "/relations?onglet=demandes"
@@ -302,6 +309,9 @@ export const routes = {
    * iCom ; au bureau, l'adresse ouvre la carte iCom détachée sur le fil.
    */
   messages: () => "/messages",
+  smsMessages: () => "/messages-sms",
+  composeGroup: () => composeGroupeHref("/messages"),
+  composeMessage: () => composeHref("/messages"),
   /** Une conversation de mise en relation (CC-6) : `/messages/mise-en-relation/<fil>`, composée par la messagerie du moteur. */
   contextualConversation: (threadId: string) => conversationHref(contextualConversationKey(threadId), "/messages") ?? "/messages",
   /** Une conversation de groupe d'iCom (IM-04 : message ou invitation de groupe) : `/messages/groupe/<fil>`, composée par la messagerie du moteur. */

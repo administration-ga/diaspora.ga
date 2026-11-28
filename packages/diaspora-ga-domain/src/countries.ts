@@ -6,8 +6,7 @@
  * nom de pays n'est écrit en dur, ni ici ni dans les locales.
  *
  * Le pays est le contexte permanent de DIASPORA.GA (cahier §5, invariant 7) :
- * le pays de résidence est obligatoire et ne peut pas être le Gabon — ce
- * réseau est celui des Gabonais de l'étranger.
+ * le pays de résidence est obligatoire pour situer les publications locales.
  */
 import { ok, refuse, type Result } from "./result"
 
@@ -51,15 +50,13 @@ export const ISO_COUNTRY_CODES = [
 
 export type CountryCode = (typeof ISO_COUNTRY_CODES)[number]
 
-/** Le Gabon : jamais un pays de résidence de la diaspora. */
+/** Pays d'origine du réseau. */
 export const HOME_COUNTRY = "GA" satisfies CountryCode
 
 const COUNTRY_SET: ReadonlySet<string> = new Set(ISO_COUNTRY_CODES)
 
-/** Les pays où un membre peut déclarer résider (tous sauf le Gabon). */
-export const RESIDENCE_COUNTRY_CODES: readonly CountryCode[] = Object.freeze(
-  ISO_COUNTRY_CODES.filter((code) => code !== HOME_COUNTRY),
-)
+/** Tous les pays et territoires du catalogue sont accessibles dès l’inscription. */
+export const RESIDENCE_COUNTRY_CODES: readonly CountryCode[] = ISO_COUNTRY_CODES
 
 /** `" fr "` → `"FR"` : une URL `/pays/fr` et une saisie libre désignent le même pays. */
 export function normalizeCountryCode(raw: string): string {
@@ -71,7 +68,7 @@ export function isCountryCode(value: string): value is CountryCode {
 }
 
 export function isResidenceCountry(value: string): value is CountryCode {
-  return isCountryCode(value) && value !== HOME_COUNTRY
+  return isCountryCode(value)
 }
 
 export const RESIDENCE_COUNTRY_REFUSALS = [
@@ -92,29 +89,15 @@ export function parseResidenceCountry(
   const code = normalizeCountryCode(raw)
   if (code.length === 0) return refuse("country_required")
   if (!isCountryCode(code)) return refuse("country_unknown")
-  if (code === HOME_COUNTRY) return refuse("country_is_home")
   return ok(code)
 }
 
-/**
- * Pays ouverts au lancement — arbitrage A8, valeur par défaut retenue : la
- * France seule. La liste vivante est une donnée du réseau (`networks.openCountries`)
- * modifiée par la console ; cette constante n'est que la valeur de départ.
- */
-export const DEFAULT_OPEN_COUNTRIES: readonly CountryCode[] = Object.freeze(["FR"])
+/** Couverture géographique commune à l’inscription, au fil et aux hubs. */
+export const DEFAULT_OPEN_COUNTRIES: readonly CountryCode[] = ISO_COUNTRY_CODES
 
-/** Ordre d'ouverture envisagé ensuite (A8), selon les associations relais. */
-export const NEXT_OPENING_CANDIDATES: readonly CountryCode[] = Object.freeze([
-  "ES",
-  "BE",
-  "CA",
-  "MA",
-  "SN",
-])
+/** Compatibilité avec les applications antérieures à l’ouverture mondiale. */
+export const NEXT_OPENING_CANDIDATES: readonly CountryCode[] = []
 
-export function isCountryOpen(
-  country: CountryCode,
-  openCountries: readonly CountryCode[],
-): boolean {
-  return country !== HOME_COUNTRY && openCountries.includes(country)
+export function isCountryOpen(country: CountryCode, _legacyOpenCountries?: readonly CountryCode[]): boolean {
+  return isCountryCode(country)
 }

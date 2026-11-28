@@ -120,7 +120,7 @@ describe("zone : pays et ville saisie", () => {
     expect(parseArrivalKitCountry(undefined)).toEqual({ ok: false, code: "arrival_kit_country_required" })
     expect(parseArrivalKitCountry("  ")).toEqual({ ok: false, code: "arrival_kit_country_required" })
     expect(parseArrivalKitCountry("ZZ")).toEqual({ ok: false, code: "arrival_kit_country_unknown" })
-    expect(parseArrivalKitCountry("ga")).toEqual({ ok: false, code: "arrival_kit_country_is_home" })
+    expect(parseArrivalKitCountry("ga")).toEqual({ ok: true, value: "GA" })
   })
 
   test("la ville est facultative ; saisie, elle est bornée et repliée comme celle du catalogue", () => {
@@ -240,7 +240,7 @@ describe("une ressource : saisie → version validée", () => {
     expect(refusalOf({ body: "x".repeat(ARRIVAL_KIT_BODY_MAX_LENGTH + 1) })).toBe("arrival_kit_body_too_long")
     expect(refusalOf({ category: "sports" })).toBe("arrival_kit_category_invalid")
     expect(refusalOf({ country: "" })).toBe("arrival_kit_country_required")
-    expect(refusalOf({ country: "GA" })).toBe("arrival_kit_country_is_home")
+    expect(refusalOf({ country: "ZZ" })).toBe("arrival_kit_country_unknown")
     expect(refusalOf({ city: "x".repeat(ARRIVAL_KIT_CITY_MAX_LENGTH + 1) })).toBe("arrival_kit_city_too_long")
     expect(refusalOf({ sourceName: "ab" })).toBe("arrival_kit_source_name_too_short")
     expect(refusalOf({ sourceUrl: "http://exemple-public.fr/" })).toBe("arrival_kit_source_url_not_https")

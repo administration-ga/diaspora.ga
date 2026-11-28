@@ -204,6 +204,7 @@ export interface CodeDestination {
  * interrompue se reprend sans rien publier deux fois.
  */
 export interface JoinInput {
+  readonly guestProfile?: boolean
   readonly phoneRegistration?: { readonly firstName: string; readonly lastName: string; readonly declaredGabonese: true }
   readonly facet: FacetInput
   readonly handle?: string
@@ -266,6 +267,7 @@ export interface PublishMediaInput {
 }
 
 export interface PublishInput {
+  readonly guestVisible?: boolean
   /** Facultatif dès qu'un média porte la publication (une photo sans légende est légitime). */
   readonly body: string
   readonly reach: Reach

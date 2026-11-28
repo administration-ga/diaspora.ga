@@ -33,6 +33,12 @@
     },
     "moderation": "Moderation",
     "create": {
+      "actions": {
+        "post": "Post",
+        "live": "Live",
+        "company": "+ Business",
+        "association": "+ Association"
+      },
       "label": "Create",
       "title": "Create",
       "story": "A story",
@@ -47,27 +53,7 @@
   },
   "explore": {
     "title": "Members",
-    "lead": "Find members, pages and communities across the whole network.",
-    "membersTitle": "Find a person",
-    "membersBody": "Browse the members of a country or a city, or search for a name, among those who chose to appear in the directory. Contact goes through messaging.",
-    "membersAction": "Open the search",
-    "servicesBody": "Hairdressing, translation, photography, help settling in: find a diaspora skill near you.",
-    "servicesAction": "Browse services",
-    "countriesTitle": "Open countries",
-    "countriesLead": "Each hub brings together a country's news, events, associations and companies.",
-    "countriesEmptyTitle": "No country is open yet.",
-    "countriesEmptyBody": "A country opens with two relay associations and one moderator. Your country's hub can already be read.",
-    "countriesErrorTitle": "The list of countries is unavailable.",
-    "countriesErrorBody": "Check your connection and reload the page to try again.",
-    "reload": "Reload the page",
-    "myCommunity": "See my community",
-    "mutualAidBody": "Ask a practical question or offer your help, and find volunteer missions from associations.",
-    "mutualAidAction": "Open mutual aid",
-    "arrivalKitBody": "Paperwork, housing, health, transport: dated, sourced and reviewed resources, city by city.",
-    "arrivalKitAction": "Browse the arrival kit",
-    "mentoringBody": "Volunteer members share their experience of studying, working or settling in.",
-    "mentoringAction": "Find a mentor",
-    "jobsBody": "Job offers published by diaspora companies and associations, and the talents who chose to be visible.",
-    "jobsAction": "See job offers"
+    "countriesTitle": "Countries and territories",
+    "countriesLead": "Find a country to open its local feed."
   }
 }

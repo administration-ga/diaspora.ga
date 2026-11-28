@@ -160,20 +160,14 @@ describe("Accueil — accès au réseau personnel", () => {
     expect(screen.getByRole("link", { name: t("landing.createAccount") })).toHaveAttribute("href", routes.register())
   })
 
-  it("CH-817 : plus de bouton de comptes de démonstration dans la carte d'accès ; la pastille « Compte démo » tout en bas", () => {
+  it("la porte d’entrée affiche uniquement les comptes normaux", () => {
     const { mount } = setup()
     const { container } = mount()
 
     const card = container.querySelector("section[aria-labelledby='acces-titre']")
     if (!card) throw new Error("Carte d'accès absente")
     expect(card.textContent ?? "").not.toMatch(/démonstration|démo/i)
-    const pill = screen.getByRole("link", { name: t("demoGate.pill") })
-    expect(card.contains(pill)).toBe(false)
-    // Tout en bas : après le pied de page, dernier élément de la page.
-    const footer = screen.getByRole("contentinfo")
-    expect(footer.compareDocumentPosition(pill) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
-    const focusable = [...container.querySelectorAll<HTMLElement>("a[href], button")]
-    expect(focusable.at(-1)).toBe(pill)
+    expect(screen.queryByRole("link", { name: t("demoGate.pill") })).not.toBeInTheDocument()
   })
 
   it("CH-817 : avec le moteur, sans porte servie, aucune pastille ni bouton de démonstration", () => {

@@ -286,7 +286,7 @@
     "aid_theme_invalid": "Choisissez un thème dans la liste.",
     "aid_country_required": "Choisissez un pays.",
     "aid_country_unknown": "Ce pays n'est pas reconnu.",
-    "aid_country_is_home": "L'entraide de DIASPORA concerne les pays de résidence, hors du Gabon.",
+    "aid_country_is_home": "Ce pays n’a pas été accepté. Vérifiez votre sélection et réessayez.",
     "aid_city_required": "Indiquez la ville.",
     "aid_city_invalid": "Ce nom de ville n'est pas lisible.",
     "aid_city_too_long": "Le nom de la ville est trop long.",

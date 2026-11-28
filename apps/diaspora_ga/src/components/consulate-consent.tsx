@@ -3,7 +3,7 @@
 import { isResidenceCountry, type CountryCode } from "@diaspora-ga/domain"
 import { Button, CountrySwitch } from "@diaspora-ga/features"
 import {
-  useActions, useDataSource, useHandleSuggestions, useOpenCountries, useSession,
+  useActions, useDataSource, useHandleSuggestions, useSession,
   type ActionErrorCode, type AccountView, type DiasporaGaDataSource,
 } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react"
 import { rememberArrival } from "@/lib/arrival"
 import { authClient } from "@/lib/auth-client"
 import { clearConsent, readConsent, type ConsentProfile } from "@/lib/consulate-consent"
-import { liveMember } from "@/lib/return-path"
+import { liveMember, peekReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 import { ConsulateTransition } from "./consulate-transition"
 
@@ -29,7 +29,7 @@ export function ConsulateConsent({ idnOnly }: { idnOnly: boolean }) {
     if (member) {
       clearConsent()
       rememberArrival("consulat")
-      location.replace(routes.feed())
+      location.replace(peekReturnPath()?.path ?? routes.feed())
       return
     }
     if (userId && !idnOnly) {
@@ -60,7 +60,6 @@ function ConsentForm({ grant, account, prefillSource, publication }: {
   const actions = useActions()
   const prefill = prefillSource.useEntryPrefill()
   const profile = publication.useMyProfile()
-  const countries = useOpenCountries()
   const [chosenCountry, chooseCountry] = useState<CountryCode | null>(null)
   const [error, setError] = useState<ActionErrorCode | null>(null)
   const [busy, setBusy] = useState(false)
@@ -87,12 +86,12 @@ function ConsentForm({ grant, account, prefillSource, publication }: {
       const result = await actions.join({
         facet: { countryOfResidence: country },
         ...(kept ? {} : { displayName, handle }),
-        consents: { social_profile: true, directory: false, notifications: false }, directoryVisibility: "hidden",
+        consents: { social_profile: true, directory: true, notifications: false }, directoryVisibility: "network", guestProfile: true,
       })
       if (result.ok) {
         clearConsent()
         rememberArrival("consulat")
-        location.replace(routes.feed())
+        location.replace(peekReturnPath()?.path ?? routes.feed())
         return
       }
       setError(result.code)
@@ -108,8 +107,9 @@ function ConsentForm({ grant, account, prefillSource, publication }: {
     <p>{t("consulateGateway.passage.acceptLead")}</p>
     {displayName && <p className="font-semibold">{displayName}{handle && <span className="ml-2 font-normal text-muted-foreground">@{handle}</span>}</p>}
     <CountrySwitch value={country} onChange={chooseCountry}
-      openCountries={countries.status === "ready" ? countries.data.map(row => row.country) : []}
+
       title={t("welcome.countrySheetTitle")} description={t("welcome.countrySheetDescription")} />
+    <p className="text-sm">{t("welcomeEntry.consent")}</p>
     <p className="text-sm"><a className="underline" target="_blank" rel="noreferrer" href={routes.terms()}>{t("consulateGateway.passage.terms")}</a>
       {" · "}<a className="underline" target="_blank" rel="noreferrer" href={routes.privacy()}>{t("consulateGateway.passage.privacy")}</a></p>
     {error && <p role="alert">{t(`errors.${error}`)}</p>}

@@ -47,10 +47,10 @@ function choose(files: File[]) {
   fireEvent.change(input, { target: { files } })
 }
 
-function PageComposer({ fixed = true }: { readonly fixed?: boolean }) {
+function PageComposer({ fixed = true, guestSharing = false }: { readonly fixed?: boolean; readonly guestSharing?: boolean }) {
   const [open, setOpen] = useState(true)
   return <I18nProvider locale="fr"><DataSourceProvider source={source}>
-    <PostComposerSheet open={open} onOpenChange={(next) => { setOpen(next); if (!next) onClose() }} memberCountry="FR" openCountries={["FR"]} draftKey="recette:page-fixed" page={{ id: "page-1", name: "Association de recette", country: "FR", publish: pagePublish, ...(fixed ? { fixedScope: { description: t("eventGallery.composeDescription", { title: "Rencontre de recette" }), audienceLabel: t("eventGallery.associationAudience"), requireMedia: true } } : {}) }} />
+    <PostComposerSheet open={open} onOpenChange={(next) => { setOpen(next); if (!next) onClose() }} memberCountry="FR" openCountries={["FR"]} draftKey="recette:page-fixed" page={{ id: "page-1", name: "Association de recette", country: "FR", publish: pagePublish, guestSharing, ...(fixed ? { fixedScope: { description: t("eventGallery.composeDescription", { title: "Rencontre de recette" }), audienceLabel: t("eventGallery.associationAudience"), requireMedia: true } } : {}) }} />
   </DataSourceProvider></I18nProvider>
 }
 
@@ -147,8 +147,7 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     expect(publish.mock.calls[0]?.[0].media).toBeUndefined()
     choose([new File(["photo"], "trop-tard.png", { type: "image/png" })])
     expect(uploadMedia).not.toHaveBeenCalled()
-    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeDisabled()
-    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeDisabled()
     const form = document.querySelector("form")
     if (!form) throw new Error("Formulaire absent")
     await act(async () => { fireEvent.submit(form) })
@@ -187,7 +186,7 @@ describe("Composeur — les fichiers choisis rejoignent réellement la publicati
     await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(publish).toHaveBeenCalledOnce())
-    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeEnabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
     expect(screen.getAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(2)
     expect(onClose).not.toHaveBeenCalled()
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
@@ -298,7 +297,7 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
     expect(screen.queryByRole("alert")).not.toBeInTheDocument()
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:recette-IMG_0412.MOV")
     // Le bouton d'annulation a disparu : le focus revient au bouton d'ajout d'une vidéo, de nouveau actif.
-    const add = screen.getByRole("button", { name: t("composer.mediaAddVideo") })
+    const add = screen.getByRole("button", { name: t("composer.mediaAdd") })
     expect(add).toBeEnabled()
     expect(add).toHaveFocus()
 
@@ -347,7 +346,7 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
     await act(async () => { upload.result.resolve({ ok: false, code: "media_video_too_long_to_convert" }) })
     expect(await screen.findByRole("alert")).toHaveTextContent(plain(t("errors.media_video_too_long_to_convert")))
     expect(screen.queryAllByRole("textbox", { name: t("composer.mediaAltLabel") })).toHaveLength(0)
-    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeEnabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
 
     // Rechargé, le composeur rend le texte, jamais une vidéo à moitié préparée.
     view.unmount()
@@ -368,17 +367,54 @@ describe("Composeur — la vidéo d'un iPhone est préparée, puis envoyée (FD-
   })
 })
 
+describe("Composeur — lecture sans compte", () => {
+  it("ne publie aux visiteurs qu’après un choix explicite", async () => {
+    const user = userEvent.setup()
+    render(<Composer />)
+    const summary = document.querySelector("details > summary")!
+    await user.click(summary)
+    const choice = screen.getByRole("checkbox", { name: t("composer.guestVisible") })
+    expect(choice).not.toBeChecked()
+    await user.click(choice)
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Nouvelle publique")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(publish).toHaveBeenCalledWith(expect.objectContaining({ guestVisible: true })))
+  })
+
+  it("une page autorisée choisit son audience publique, un groupe garde son périmètre", async () => {
+    const user = userEvent.setup()
+    const view = render(<PageComposer fixed={false} guestSharing />)
+    await user.click(document.querySelector("details > summary")!)
+    await user.click(screen.getByRole("checkbox", { name: t("composer.guestVisible") }))
+    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Actualité de la page")
+    await user.click(screen.getByRole("button", { name: t("composer.publish") }))
+    await waitFor(() => expect(pagePublish).toHaveBeenCalledWith(expect.objectContaining({ guestVisible: true })))
+    view.unmount()
+    render(<PageComposer fixed guestSharing />)
+    expect(screen.queryByRole("checkbox", { name: t("composer.guestVisible") })).toBeNull()
+  })
+
+  it("retire l’accord lorsque l’audience est restreinte", async () => {
+    const user = userEvent.setup()
+    render(<Composer />)
+    await user.click(document.querySelector("details > summary")!)
+    await user.click(screen.getByRole("checkbox", { name: t("composer.guestVisible") }))
+    await user.click(screen.getByRole("radio", { name: t("composer.audienceConnections") }))
+    expect(screen.queryByRole("checkbox", { name: t("composer.guestVisible") })).toBeNull()
+    await user.click(screen.getByRole("radio", { name: t("composer.audiencePublic") }))
+    expect(screen.getByRole("checkbox", { name: t("composer.guestVisible") })).not.toBeChecked()
+  })
+})
+
 describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel essai (A3)", () => {
   it("deux sélecteurs distincts, photos (plusieurs) et vidéo (une), et les bornes du moteur dites", () => {
     render(<Composer />)
     const group = screen.getByRole("group", { name: t("composer.mediaAdd") })
-    expect(within(group).getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeEnabled()
-    expect(within(group).getByRole("button", { name: t("composer.mediaAddVideo") })).toBeEnabled()
-    const [photoInput, videoInput] = [...document.querySelectorAll<HTMLInputElement>('input[type="file"]')]
-    expect(photoInput?.accept).toBe(POST_PHOTO_ACCEPT)
-    expect(photoInput?.multiple).toBe(true)
-    expect(videoInput?.accept).toBe(POST_VIDEO_ACCEPT)
-    expect(videoInput?.multiple).toBe(false)
+    expect(within(group).getByRole("button", { name: t("composer.mediaAdd") })).toBeEnabled()
+    const inputs = document.querySelectorAll<HTMLInputElement>('input[type="file"]')
+    expect(inputs).toHaveLength(1)
+    expect(inputs[0]?.accept).toBe(`${POST_PHOTO_ACCEPT},${POST_VIDEO_ACCEPT}`)
+    expect(inputs[0]?.multiple).toBe(true)
     const limits = screen.getByText(plain(t("composer.mediaLimits")))
     for (const value of [String(POST_MEDIA_MAX_COUNT), megabytes(POST_IMAGE_MAX_BYTES), megabytes(POST_VIDEO_MAX_BYTES), String(POST_VIDEO_MAX_DURATION_MS / 60_000)]) expect(limits.textContent).toContain(value)
   })
@@ -387,8 +423,7 @@ describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel e
     render(<Composer />)
     choose([new File(["v"], "clip.mp4", { type: "video/mp4" })])
     await waitFor(() => expect(screen.getByRole("button", { name: t("composer.publish") })).toBeEnabled())
-    expect(screen.getByRole("button", { name: t("composer.mediaAddPhotos") })).toBeDisabled()
-    expect(screen.getByRole("button", { name: t("composer.mediaAddVideo") })).toBeDisabled()
+    expect(screen.getByRole("button", { name: t("composer.mediaAdd") })).toBeDisabled()
   })
 
   it("M2 : un MP4 plus lourd que la borne d'envoi part en préparation (compression) ; au-delà du plafond de conversion du moteur, refusé dès le choix", async () => {
@@ -453,51 +488,9 @@ describe("Composeur — entrée Photo et Vidéo, avancement de l'envoi, nouvel e
   })
 })
 
-describe("Composeur — le live, à côté des photos et de la vidéo (26/11/2026)", () => {
-  function LiveComposer(props: { readonly onGoLive?: () => void; readonly page?: boolean }) {
-    const [open, setOpen] = useState(true)
-    return <I18nProvider locale="fr"><DataSourceProvider source={source}>
-      <button onClick={() => setOpen(true)}>Reprendre</button>
-      <PostComposerSheet
-        open={open}
-        onOpenChange={(next) => { setOpen(next); if (!next) onClose() }}
-        memberCountry="FR"
-        openCountries={["FR"]}
-        draftKey="recette:composeur-live"
-        {...(props.onGoLive ? { onGoLive: props.onGoLive } : {})}
-        {...(props.page ? { page: { id: "page-1", name: "Association de recette", country: "FR", publish: pagePublish } } : {})}
-      />
-    </DataSourceProvider></I18nProvider>
-  }
-
-  it("« Lancer un live » ferme la feuille, PUIS demande la création du live, le brouillon gardé", async () => {
-    const goLive = vi.fn()
-    const user = userEvent.setup()
-    render(<LiveComposer onGoLive={goLive} />)
-    const sheet = screen.getByRole("dialog", { name: t("composer.title") })
-    const group = within(sheet).getByRole("group", { name: t("composer.liveLegend") })
-    const button = within(group).getByRole("button", { name: t("composer.goLive") })
-    expect(button).toHaveAccessibleDescription(t("composer.liveHint"))
-    await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Un brouillon gardé")
-    await user.click(button)
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-    expect(onClose).toHaveBeenCalledOnce()
-    expect(goLive).toHaveBeenCalledOnce()
-    expect(publish).not.toHaveBeenCalled()
-    // Une fermeture ordinaire, plus tard, ne relance pas le live.
-    await user.click(screen.getByRole("button", { name: "Reprendre" }))
-    await user.click(await screen.findByRole("button", { name: t("common.cancel") }))
-    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull())
-    expect(goLive).toHaveBeenCalledOnce()
-  })
-
-  it("sans `onGoLive` (démonstration, direct fermé) ni pour une page : aucune entrée Live", () => {
-    render(<LiveComposer />)
-    expect(screen.queryByRole("button", { name: t("composer.goLive") })).toBeNull()
-    cleanupComposer()
-    render(<LiveComposer onGoLive={vi.fn()} page />)
-    expect(screen.queryByRole("button", { name: t("composer.goLive") })).toBeNull()
-  })
+it("garde le direct dans son parcours dédié", () => {
+  render(<Composer />)
+  expect(screen.queryByRole("button", { name: /live|direct/i })).toBeNull()
 })
 
 function IncomingComposer(props: { readonly incoming: { readonly id: number; readonly files: readonly File[] } }) {
@@ -519,35 +512,34 @@ function CountryComposer(props: { readonly memberCountry: "FR" | "ES"; readonly 
   </DataSourceProvider></I18nProvider>
 }
 
-describe("Composeur — pays pas encore ouvert (HB-01)", () => {
+describe("Composeur — diffusion mondiale", () => {
   beforeEach(() => {
     pagePublish.mockReset().mockResolvedValue({ ok: true, value: { postId: "post-page", created: true } })
   })
 
-  it("le hub local est inactif et expliqué, la portée part pour toute la diaspora, aucune relecture n'est promise", async () => {
+  it("un membre choisit un pays de diffusion dans le catalogue mondial", async () => {
     const user = userEvent.setup()
     render(<CountryComposer memberCountry="ES" openCountries={["FR"]} />)
     const local = screen.getByRole("radio", { name: /Dans le hub Espagne/ })
-    expect(local).toBeDisabled()
-    expect(local).not.toBeChecked()
-    expect(local).toHaveAccessibleDescription(t("composer.reviewNotice", { country: "Espagne" }))
-    expect(screen.getByRole("radio", { name: /Pour toute la diaspora/ })).toBeChecked()
-    expect(screen.getByRole("dialog")).not.toHaveTextContent(/relue|relecture/i)
+    expect(local).toBeEnabled()
+    expect(local).toBeChecked()
+    await user.click(screen.getByRole("combobox"))
+    await user.type(screen.getByRole("searchbox"), "Gabon")
+    await user.click(screen.getByRole("button", { name: /Gabon/ }))
     await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Bonjour depuis Madrid")
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(publish).toHaveBeenCalledOnce())
-    // La diaspora garde le pays d'ORIGINE de l'auteur (pastille dans les autres hubs).
-    expect(publish.mock.calls[0]?.[0]).toMatchObject({ body: "Bonjour depuis Madrid", reach: "diaspora", country: "ES" })
+    expect(publish.mock.calls[0]?.[0]).toMatchObject({ body: "Bonjour depuis Madrid", reach: "local", country: "GA" })
   })
 
-  it("une page d'un pays fermé publie pour toute la diaspora", async () => {
+  it("une page peut publier dans tout pays où elle est implantée", async () => {
     const user = userEvent.setup()
     render(<CountryComposer memberCountry="FR" openCountries={["FR"]} pageCountry="ES" />)
-    expect(screen.getByRole("radio", { name: /Dans le hub Espagne/ })).toBeDisabled()
+    expect(screen.getByRole("radio", { name: /Dans le hub Espagne/ })).toBeEnabled()
     await user.type(screen.getByRole("textbox", { name: t("composer.bodyLabel") }), "Annonce de la page")
     await user.click(screen.getByRole("button", { name: t("composer.publish") }))
     await waitFor(() => expect(pagePublish).toHaveBeenCalledOnce())
-    expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "page-es", reach: "diaspora" })
+    expect(pagePublish.mock.calls[0]?.[0]).toMatchObject({ pageId: "page-es", reach: "local" })
   })
 
   it("en France, rien ne change : le hub local reste offert et choisi par défaut", async () => {

@@ -1,3 +1,4 @@
+import { GuestEntry } from "@/components/guest-reader"
 import type { Metadata } from "next"
 
 import { getAppT } from "@/i18n/server"
@@ -10,5 +11,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function OrganizationPage(props: { params: Promise<{ handle: string }> }) {
   const { handle } = await props.params
-  return <PageScreen handle={handle} />
+  return <GuestEntry screen="page" target={handle}><PageScreen handle={handle} /></GuestEntry>
 }

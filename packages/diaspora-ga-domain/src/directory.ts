@@ -110,10 +110,10 @@ export function directoryCityKey(city: string | null | undefined): string | null
  */
 export function parseDirectoryBrowse(
   input: DirectoryBrowseInput,
-  openCountries: readonly string[],
+  _legacyOpenCountries: readonly string[],
 ): Result<DirectoryBrowseFilters, DirectoryBrowseRefusal> {
   const country = normalizeCountryCode(input.country)
-  if (!isResidenceCountry(country) || !openCountries.includes(country)) return refuse("directory_country_closed")
+  if (!isResidenceCountry(country)) return refuse("directory_country_closed")
   const raw = input.city ?? ""
   const city = raw.trim().replace(/\s+/g, " ")
   if (city.length === 0) return ok({ country, cityKey: null, verifiedOnly: input.verifiedOnly === true })

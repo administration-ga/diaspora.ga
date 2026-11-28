@@ -159,7 +159,7 @@ describe("les sorties — porte, code, IDN, fin de l'accueil", () => {
   it("un compte en attente : la page si elle lui est lisible, sinon son hub", () => {
     expect(entryExit(pending, event)).toBe(EVENT)
     expect(entryExit(pending, messages)).toBe(routes.hub("CA"))
-    expect(entryExit(pending, parseReturnPath(routes.members()))).toBe(routes.hub("CA"))
+    expect(entryExit(pending, parseReturnPath(routes.members()))).toBe(routes.members())
   })
 
   it("sans adhésion : l'accueil d'abord, sauf pour « Mes données »", () => {
@@ -242,4 +242,14 @@ describe("la mémoire de l'onglet", () => {
     expect(() => forgetReturnPath(refused)).not.toThrow()
     expect(peekReturnPath(NOW, null)).toBeNull()
   })
+})
+
+it("reprend uniquement une invitation de groupe valide sur la messagerie après connexion", () => {
+  const token = "a-b_c8".repeat(6)
+  const path = routes.messages() + "?invitation-groupe=" + token
+  const storage = memoryStorage()
+  rememberReturnPath({ pathname: routes.messages(), search: "?invitation-groupe=" + token + "&code=123", hash: "" }, NOW, storage)
+  expect(peekReturnPath(NOW, storage)?.path).toBe(path)
+  expect(parseReturnPath(routes.profile("lina") + "?invitation-groupe=" + token)?.path).toBe(routes.profile("lina"))
+  expect(parseReturnPath(path + "&invitation-groupe=" + token)?.path).toBe(routes.messages())
 })

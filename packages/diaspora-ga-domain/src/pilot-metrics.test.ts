@@ -76,11 +76,11 @@ describe("périodes, portée et jours UTC", () => {
     }
   })
 
-  test("la portée : tout le réseau, ou un pays de résidence normalisé — jamais le Gabon", () => {
+  test("la portée : tout le réseau, ou un pays de résidence normalisé", () => {
     expect(parsePilotScope(null)).toEqual({ ok: true, value: null })
     expect(parsePilotScope(undefined)).toEqual({ ok: true, value: null })
     expect(parsePilotScope(" fr ")).toEqual({ ok: true, value: "FR" })
-    for (const raw of ["GA", "ga", "XX", "", "France"]) expect(parsePilotScope(raw)).toEqual({ ok: false, code: "pilot_metrics_country_invalid" })
+    for (const raw of ["XX", "", "France"]) expect(parsePilotScope(raw)).toEqual({ ok: false, code: "pilot_metrics_country_invalid" })
   })
 
   test("le passage recalcule les 90 jours UTC complets qui précèdent son jour", () => {

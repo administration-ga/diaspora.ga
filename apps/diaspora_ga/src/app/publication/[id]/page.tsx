@@ -1,3 +1,4 @@
+import { GuestEntry } from "@/components/guest-reader"
 import type { Metadata } from "next"
 
 import { getAppT } from "@/i18n/server"
@@ -10,5 +11,5 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PostPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
-  return <PostScreen postId={id} />
+  return <GuestEntry screen="post" target={id}><PostScreen postId={id} /></GuestEntry>
 }

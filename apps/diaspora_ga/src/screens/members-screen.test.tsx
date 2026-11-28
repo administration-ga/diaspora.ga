@@ -103,15 +103,16 @@ describe("/membres — parcourir l'annuaire", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Parcourir l’annuaire des membres" })).toBeInTheDocument()
   })
 
-  it("un compte en attente : l'annuaire dit quand il s'ouvre, sans liste ni reprise", async () => {
+  it("un compte en attente peut chercher un membre visible dès son arrivée", async () => {
     renderMembers(
       demoSource("p-rodrigue", (state) => ({
         ...state,
         memberships: { ...state.memberships, "p-rodrigue": { ...state.memberships["p-rodrigue"]!, grounds: { ...state.memberships["p-rodrigue"]!.grounds, sponsored: false } } },
       })),
     )
-    expect(await screen.findByText("L’annuaire se consulte dès que votre adhésion est déclarée ou vérifiée.")).toBeInTheDocument()
-    expect(screen.queryByRole("list", { name: "Membres de l’annuaire" })).toBeNull()
+    const field = screen.getByRole("searchbox", { name: "Chercher un membre" })
+    fireEvent.change(field, { target: { value: "prisca" } })
+    expect(await screen.findByRole("link", { name: /Prisca ABANGA/ })).toHaveAttribute("href", "/@prisca.abanga")
     expect(screen.queryByRole("button", { name: "Réessayer" })).toBeNull()
   })
 

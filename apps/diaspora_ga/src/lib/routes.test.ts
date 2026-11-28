@@ -64,8 +64,9 @@ describe("routes de l'arborescence — cinq destinations et espace personnel (DG
       "/services?q=coiffure&pays=FR&ville=Paris&categorie=beaute&mode=onsite",
     )
     expect(routes.services({ q: "   ", city: "" })).toBe("/services")
-    // Le Gabon n'est pas un pays de résidence : il n'entre jamais comme zone de recherche.
-    expect(routes.services({ country: HOME_COUNTRY })).toBe("/services")
+    expect(routes.services({ country: HOME_COUNTRY })).toBe("/services?pays=GA")
+    // @ts-expect-error Entrée externe hors catalogue, refusée également à l’exécution.
+    expect(routes.services({ country: "ZZ" })).toBe("/services")
   })
 
   it("une recherche ne peut pas injecter de paramètre ou de fragment", () => {

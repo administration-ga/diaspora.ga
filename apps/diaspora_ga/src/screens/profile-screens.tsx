@@ -27,10 +27,12 @@ import { Gate } from "@/components/gate"
 import { IcomIsland, useEngineNetwork, useIcomState, useWriteTo } from "@/components/icom"
 import { ProfileAlbums } from "@/components/profile-albums"
 import { ProfileAvatar, ProfileCover } from "@/components/profile-images"
+import { ProfileShareAction } from "@/components/member-share-actions"
 import { ProfileMenu } from "@/components/profile-menu"
 import { ProfilePostPages } from "@/components/feed-pages"
 import { ReportedContent } from "@/components/report-content-sheet"
 import { callsAreOpen } from "@/lib/calls"
+import { focusGuestIntent } from "@/lib/guest-time"
 import { routes } from "@/lib/routes"
 
 /** `/@handle` (réécrit vers `/profil/handle`) — profil publié, facette selon ses visibilités (EXF-DG-07/08). */
@@ -95,6 +97,7 @@ function Profile(props: { handle: string; membership: MembershipView }) {
           <div className="-mt-10 flex items-end justify-between gap-3">
             <ProfileAvatar id={view.personId} name={view.displayName} image={view.avatar} />
             <div className="flex flex-wrap justify-end gap-2">
+              {!preview ? <ProfileShareAction handle={view.handle} own={view.isSelf} /> : null}
               {view.isSelf ? preview ? (
                 <Button asChild variant="ghost" size="sm">
                   <NextLink href={routes.profile(view.handle)}><EyeIcon aria-hidden />{t("profile.previewExit")}</NextLink>
@@ -144,6 +147,7 @@ function Profile(props: { handle: string; membership: MembershipView }) {
           <div>
             <h1 className="break-words font-display text-3xl font-bold leading-tight">{view.displayName}</h1>
             <p className="break-words font-mono text-sm text-muted-foreground">@{view.handle}</p>
+            {view.fanCount !== undefined ? <p className="mt-1 text-sm text-muted-foreground">{t("members.fansCount", { count: view.fanCount })}</p> : null}
             <TrustBadges badges={view.badges} size="md" className="mt-2" />
             {view.headline ? <p className="mt-3 break-words text-[15px]">{view.headline}</p> : null}
           </div>
@@ -295,7 +299,7 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
   return (
     <div className="flex flex-wrap justify-end gap-2">
       {connection === "none" ? (
-        <Button variant="social" size="sm" disabled={locked} aria-describedby={props.canCommunicate ? undefined : hintId} onClick={() => run(() => actions.connect(props.personId), t("relation.requestSent", { name }))}>
+        <Button id="relation" ref={focusGuestIntent} variant="social" size="sm" disabled={locked} aria-describedby={props.canCommunicate ? undefined : hintId} onClick={() => run(() => actions.connect(props.personId), t("relation.requestSent", { name }))}>
           <UserPlusIcon aria-hidden />
           {t("relation.connect")}
         </Button>
@@ -323,6 +327,8 @@ function RelationBar(props: { personId: string; handle: string; displayName: str
       <Button
         size="sm"
         variant={following || relationIsFilled ? "outline" : "social"}
+        id="suivre"
+        ref={focusGuestIntent}
         aria-pressed={following}
         disabled={busy || (!following && !props.canCommunicate)}
         onClick={() => run(() => (following ? actions.unfollow(props.personId) : actions.follow(props.handle)))}
@@ -352,6 +358,7 @@ function PersonContact(props: { personId: string; handle: string; displayName: s
   const icom = useIcomState()
   const relation = useRelation(props.personId)
   const connected = relation.status === "ready" && relation.data.connection === "connected"
+  if (icom.status === "loading" || relation.status === "loading") return <Skeleton className="h-9 w-20 rounded-full" />
   if (icom.status === "on" && connected) {
     return (
       <IcomIsland network={icom.network}>
@@ -361,7 +368,9 @@ function PersonContact(props: { personId: string; handle: string; displayName: s
   }
   const hint =
     icom.status === "on" ? t("contact.needsRelation") : icom.status === "off" && icom.reason === "not_allowed" ? t("relation.needsStatus") : undefined
-  return <ContactButton recipientName={props.displayName} unavailableHint={hint} />
+  return <span id="ecrire" tabIndex={-1} ref={focusGuestIntent} aria-label={hint ?? t("contact.soon")}>
+    <ContactButton recipientName={props.displayName} unavailableHint={hint} />
+  </span>
 }
 
 /**
@@ -373,7 +382,7 @@ function IcomContact(props: { personId: string; handle: string; displayName: str
   const writeTo = useWriteTo()
   return (
     <>
-      <ContactButton recipientName={props.displayName} onContact={() => writeTo(props.handle)} />
+      <ContactButton id="ecrire" ref={focusGuestIntent} recipientName={props.displayName} onContact={() => writeTo(props.handle)} />
       {callsAreOpen() ? <CallButton personId={props.personId} handle={props.handle} displayName={props.displayName} /> : null}
     </>
   )

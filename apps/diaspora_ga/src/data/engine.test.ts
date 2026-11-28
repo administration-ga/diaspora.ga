@@ -545,9 +545,9 @@ describe("écritures de la source « moteur »", () => {
       ok: false,
       code: "consent_social_profile_required",
     })
-    expect(await actions.join({ ...base, facet: { countryOfResidence: "GA" }, consents: { social_profile: true, directory: false, notifications: false } })).toEqual({
+    expect(await actions.join({ ...base, facet: { countryOfResidence: "ZZ" }, consents: { social_profile: true, directory: false, notifications: false } })).toEqual({
       ok: false,
-      code: "country_is_home",
+      code: "country_unknown",
     })
     expect(calls).toEqual([])
     expect(await actions.join({ ...base, consents: { social_profile: true, directory: false, notifications: false } })).toEqual({ ok: false, code: "handle_taken" })
@@ -970,17 +970,14 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
     expect(toPublishOutcome({ postId: "post-1", moderation: "pending_review" })).toEqual({ moderation: "pending_review" })
   })
 
-  it("local dans un pays non ouvert : refusé avant toute écriture, avec le message du composeur (FD-04)", async () => {
-    const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR })
+  it("publie localement au Canada même sur un réseau configuré autrefois pour la France", async () => {
+    const { convex, calls } = fakeConvex({ ...NETWORK, ...OPEN_FR, "modules/posts/posts:publish": () => ({ postId: "new", created: true }) })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
-    expect(await actions.publish({ body: "Bonjour Montréal", reach: "local", country: "CA", audience: "public", alsoOnRoot: false })).toEqual({
-      ok: false,
-      code: "hub_not_open",
-    })
-    expect(calls.some((call) => call.name === "modules/posts/posts:publish")).toBe(false)
+    expect((await actions.publish({ body: "Bonjour Montréal", reach: "local", country: "CA", audience: "public", alsoOnRoot: false })).ok).toBe(true)
+    expect(calls.some(call => call.name === "modules/diaspora/hubs:listOpenCountries")).toBe(false)
   })
 
-  it("un pays absent ou le Gabon : le refus du domaine, sans appel ; un refus de portée du moteur arrive avec son code", async () => {
+  it("un pays absent ou inconnu : le refus du domaine, sans appel ; un refus de portée du moteur arrive avec son code", async () => {
     const { convex, calls } = fakeConvex({
       ...NETWORK,
       ...OPEN_FR,
@@ -990,7 +987,7 @@ describe("publications à portée et pays (PD4, lot 7 d'ANTSIA)", () => {
     })
     const actions = createEngineActions({ convex, authClient: fakeAuth().client })
     expect(await actions.publish({ body: "x", reach: "local", audience: "public", alsoOnRoot: false })).toEqual({ ok: false, code: "scope_country_required" })
-    expect(await actions.publish({ body: "x", reach: "local", country: "GA" as never, audience: "public", alsoOnRoot: false })).toEqual({
+    expect(await actions.publish({ body: "x", reach: "local", country: "ZZ" as never, audience: "public", alsoOnRoot: false })).toEqual({
       ok: false,
       code: "scope_country_invalid",
     })

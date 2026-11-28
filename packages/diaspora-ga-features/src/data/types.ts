@@ -471,6 +471,7 @@ export interface ProfileImageView {
 }
 
 export interface ProfileView {
+  readonly fanCount?: number
   readonly personId: string
   readonly handle: string
   readonly displayName: string

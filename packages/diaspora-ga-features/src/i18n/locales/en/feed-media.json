@@ -22,10 +22,10 @@
     }
   },
   "composer": {
+    "guestVisible": "Also visible without an account",
     "mediaAfterCheck": "Post sent: your photos or video will appear once their security check is done.",
     "mediaAfterCheckDetail": "Photos and videos will appear once their security check is done.",
-    "mediaAddPhotos": "Photos",
-    "mediaAddVideo": "Video",
+
     "mediaLimits": "Up to {{postMediaMaxCount}} photos of {{postImageMaxMegabytes}} MB each, or a single video of up to {{postVideoMaxMegabytes}} MB and {{postVideoMaxMinutes}} min.",
     "mediaUploadingPercent": "Uploading: {{percent}}",
     "mediaUploadProgressLabel": "Uploading {{name}}",
@@ -33,9 +33,7 @@
     "mediaRetryLabel": "Retry uploading {{name}}"
   },
   "feed": {
-    "shortcutsLabel": "Post a photo or a video",
-    "shortcutPhoto": "Photo",
-    "shortcutVideo": "Video"
+
   },
   "errors": {
     "media_video_too_large_to_convert": "This video is too heavy to be prepared in this browser: above {{postVideoConvertMaxGigabytes}} GB it can’t be converted here. It isn’t sent. Shorten it or export it at a lower resolution, then choose it again.",

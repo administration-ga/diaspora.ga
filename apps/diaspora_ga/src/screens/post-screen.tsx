@@ -61,6 +61,7 @@ function PostDetail(props: { postId: string; membership: MembershipView }) {
       <h1 className="sr-only">{t("postScreen.title")}</h1>
       <PostCard
         post={post.data}
+        initialCommentsOpen={typeof window !== "undefined" && window.location.hash === "#commenter"}
         now={now}
         canReact={props.membership.canPublish}
         onReact={async (kind) => {

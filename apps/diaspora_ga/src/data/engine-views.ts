@@ -458,6 +458,7 @@ export function toProfileView(profile: PublicProfile, member: MemberFacet, posts
     cover: toProfileImage(profile.cover),
     badges: profile.badges,
     facet,
+    ...(member.fanCount !== undefined ? { fanCount: member.fanCount } : {}),
     publicFacet: member.preview ? toFacetProjection(member.preview) : facet,
     postName: null,
     isSelf: profile.isMe,

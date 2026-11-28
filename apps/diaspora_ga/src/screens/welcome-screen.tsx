@@ -19,7 +19,6 @@ import {
   useActions,
   useDataSource,
   useHandleSuggestions,
-  useOpenCountries,
   type ActionErrorCode,
   type DiasporaGaActions,
   type DiasporaGaDataSource,
@@ -210,15 +209,14 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
   const actions = useActions()
   const router = useRouter()
   const ids = useId()
-  const openCountries = useOpenCountries()
-  const open = openCountries.status === "ready" ? openCountries.data.map((item) => item.country) : null
+
   // Retour après un départ : l'adhésion partie garde sa facette, pays et ville sont repris.
   const departed = props.membership?.status === "partie" ? props.membership : null
   const returning = useMemo<ReturningFacet | null>(
     () => (departed ? { countryOfResidence: departed.facet.countryOfResidence, ...(departed.facet.city !== undefined ? { city: departed.facet.city } : {}), ...(departed.facet.arrivedAt !== undefined ? { arrivedAt: departed.facet.arrivedAt } : {}) } : null),
     [departed],
   )
-  const model = welcomeModel({ prefill: props.prefill, openCountries: open, identity, returning })
+  const model = welcomeModel({ prefill: props.prefill, openCountries: null, identity, returning })
   // « Modifier » rouvre une ligne de rappel en champs ; un refus d'identité au clic aussi.
   const [identityEditing, setIdentityEditing] = useState(false)
   const [residenceEditing, setResidenceEditing] = useState(false)
@@ -251,9 +249,9 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
     // Ce qu'IDN propose (nom, premier identifiant libre) et la résidence connue : montrés, jamais écrits avant le clic.
     defaultValues: { ...model.defaults, handleOther: "", firstName: "", lastName: "", declaredGabonese: false },
   })
-  const [displayName, handleChoice, country, handleOther] = useWatch({
+  const [displayName, handleChoice, handleOther] = useWatch({
     control: form.control,
-    name: ["displayName", "handleChoice", "country", "handleOther"],
+    name: ["displayName", "handleChoice", "handleOther"],
   })
   const suggestions = useHandleSuggestions(displayName)
   // Les propositions viennent d'IDN seulement quand il en donne (consigne du propriétaire, 25/11/2026) :
@@ -363,12 +361,6 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
   const shownIdentityError = identity.kind === "withdrawn" ? identityError : null
   const title = identity.kind === "published" ? t("welcomeProfile.keptTitle") : identity.kind === "withdrawn" ? t("welcomeProfile.withdrawnTitle") : t("welcomeEntry.title")
   const lead = identity.kind === "published" ? t("welcomeProfile.keptLead") : identity.kind === "withdrawn" ? t("welcomeProfile.withdrawnLead") : t("welcomeEntry.lead")
-  const chosenCountry = isResidenceCountry(country) ? country : null
-  // Un pays fermé n'empêche pas d'entrer : l'avis dit ce qui est possible (HB-01).
-  const countryClosed = residenceFields
-    ? chosenCountry !== null && open !== null && !open.includes(chosenCountry)
-    : model.residence.mode === "summary" && model.residence.open === false
-
   return (
     <div className="mx-auto w-full max-w-[640px] px-4 pb-10 pt-6 md:pt-10">
       <h1 className="font-display text-4xl font-bold leading-tight">{title}</h1>
@@ -520,7 +512,6 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
                           field.onChange(code)
                           void form.trigger("country")
                         }}
-                        openCountries={open ?? []}
                         title={t("welcome.countrySheetTitle")}
                         description={t("welcome.countrySheetDescription")}
                       />
@@ -542,7 +533,6 @@ function Onboarding(props: PrefillContext & { prefill: EntryPrefillView | null }
             </>
           ) : null}
 
-          {countryClosed ? <p className="rounded-lg bg-pending px-3 py-2 text-[13px] text-pending-foreground">{t("welcome.countryNotOpen")}</p> : null}
           {departed ? <p className="rounded-lg bg-muted px-3 py-2 text-[13px] text-muted-foreground">{t("welcomeProfile.returningNote")}</p> : null}
         </section>
 

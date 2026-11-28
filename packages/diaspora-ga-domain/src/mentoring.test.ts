@@ -138,7 +138,7 @@ describe("profil de mentor", () => {
     expect(parseMentorProfile(profile({ languages: [] }))).toEqual({ ok: false, code: "mentor_languages_required" })
     expect(parseMentorProfile(profile({ languages: ["fr", "klingon"] }))).toEqual({ ok: false, code: "mentor_language_invalid" })
     expect(parseMentorProfile(profile({ languages: ["fr", "en", "es", "pt", "de", "it"] }))).toEqual({ ok: false, code: "mentor_languages_too_many" })
-    for (const country of ["GA", "ZZ", ""]) expect(parseMentorProfile(profile({ country }))).toEqual({ ok: false, code: "mentor_country_invalid" })
+    for (const country of ["ZZ", ""]) expect(parseMentorProfile(profile({ country }))).toEqual({ ok: false, code: "mentor_country_invalid" })
     expect(parseMentorProfile(profile({ city: "Paris\nNord" }))).toEqual({ ok: false, code: "mentor_city_invalid" })
     expect(parseMentorProfile(profile({ city: "x".repeat(81) }))).toEqual({ ok: false, code: "mentor_city_invalid" })
     expect(parseMentorProfile(profile({ city: "12 rue des Lilas" }))).toEqual({ ok: false, code: "mentoring_address_forbidden" })

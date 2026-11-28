@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react"
-import { ActivityIndicator, Alert, BackHandler, Button, Image, Linking, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
+import { ActivityIndicator, Alert, BackHandler, Button, Image, Linking, Platform, Share, StatusBar, StyleSheet, Text, View, useColorScheme } from "react-native"
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context"
-import { WebView } from "react-native-webview"
+import { WebView, type WebViewMessageEvent } from "react-native-webview"
 import { destination, feed, incoming, missingConsulateEntry } from "./navigation"
+
+import { installShareBridge, readShareRequest, smsComposerUrl } from "./share-links"
 
 function Browser() {
   const dark = useColorScheme() === "dark"
@@ -11,6 +13,9 @@ function Browser() {
   const [consulate, setConsulate] = useState(false)
   const web = useRef<WebView>(null)
   const canGoBack = useRef(false)
+  const partnerOpen = useRef(false)
+  const partnerOverlay = useRef(false)
+  const activeShare = useRef(false)
   const [source, setSource] = useState<{ uri: string } | null>(null)
   const [error, setError] = useState(false)
 
@@ -18,18 +23,34 @@ function Browser() {
     let live = true
     let received = false
     const go = (url: string) => {
+      partnerOpen.current = false
+      partnerOverlay.current = false
       setConsulate(false)
       setError(false)
       setSource({ uri: url })
     }
     const listener = Linking.addEventListener("url", event => {
       const url = incoming(event.url)
-      if (url) { received = true; go(url) }
+      if (!url) return
+      received = true
+      if (partnerOpen.current && [incoming("diasporaga:///ouvrir"), incoming("https://diaspora.ga/mobile/ouvrir")].includes(url)) {
+        partnerOpen.current = false
+        partnerOverlay.current = false
+        setConsulate(false)
+        return
+      }
+      go(url)
     })
     void Linking.getInitialURL().then(link => {
       if (live && !received) go(incoming(link) ?? feed)
     }).catch(() => { if (live && !received) go(feed) })
     const back = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (partnerOverlay.current) {
+        partnerOverlay.current = false
+        partnerOpen.current = false
+        setConsulate(false)
+        return true
+      }
       if (!canGoBack.current || !web.current) return false
       web.current.goBack()
       return true
@@ -50,15 +71,44 @@ function Browser() {
   function openExternal(url: string) {
     const target = new URL(url)
     if (target.origin === "https://consulat.ga" && target.pathname.replace(/\/$/, "") === "/my-space") {
-      void Linking.openURL("consulatga:///").catch(() => setConsulate(true))
+      partnerOpen.current = true
+      void Linking.openURL("consulatga:///").catch(() => {
+        partnerOverlay.current = true
+        setConsulate(true)
+      })
       return
     }
     void Linking.openURL(url).catch(() => Alert.alert("Ouverture impossible", "Aucune application disponible pour ouvrir ce lien."))
+  }
+  async function onShareMessage(event: WebViewMessageEvent) {
+    const request = readShareRequest(event.nativeEvent.url, event.nativeEvent.data)
+    if (!request) return
+    const reply = (result: "opened" | "shared" | "cancelled" | "failed") => {
+      const detail = JSON.stringify({ id: request.id, result })
+      web.current?.injectJavaScript(`window.dispatchEvent(new CustomEvent("diaspora-share-result", { detail: ${detail} })); true;`)
+    }
+    if (activeShare.current) { reply("failed"); return }
+    activeShare.current = true
+    try {
+      if (request.action === "sms") {
+        await Linking.openURL(smsComposerUrl(request.url, Platform.OS === "ios"))
+        reply("opened")
+      } else {
+        const result = await Share.share({ title: request.title, message: request.url })
+        reply(result.action === Share.dismissedAction ? "cancelled" : "shared")
+      }
+    } catch {
+      reply("failed")
+    } finally {
+      activeShare.current = false
+    }
   }
   return <SafeAreaView style={[styles.fill, { backgroundColor: colors.backgroundColor }]}>
     <StatusBar barStyle={dark ? "light-content" : "dark-content"} />
     {source && <WebView ref={web} source={source} style={styles.fill} originWhitelist={["*"]}
       startInLoadingState renderLoading={loading}
+      injectedJavaScriptBeforeContentLoaded={installShareBridge} injectedJavaScript={installShareBridge}
+      onMessage={event => { void onShareMessage(event) }}
       allowFileAccess={false} allowFileAccessFromFileURLs={false} allowUniversalAccessFromFileURLs={false}
       mixedContentMode="never" thirdPartyCookiesEnabled={false} allowsInlineMediaPlayback allowsBackForwardNavigationGestures
       mediaCapturePermissionGrantType="grantIfSameHostElseDeny" setSupportMultipleWindows
@@ -87,7 +137,7 @@ function Browser() {
     {consulate && <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.backgroundColor }]}>
       <View style={styles.returnBar}>
         <Image source={require("./assets/hirondelle.png")} resizeMode="contain" style={styles.returnMark} accessible={false} />
-        <Button title="Revenir à DIASPORA" onPress={() => setConsulate(false)} />
+        <Button title="Revenir à DIASPORA" onPress={() => { partnerOverlay.current = false; partnerOpen.current = false; setConsulate(false) }} />
       </View>
       <WebView source={{ uri: "https://consulat.ga/my-space" }} style={styles.fill}
         originWhitelist={["https://*"]} allowFileAccess={false} mixedContentMode="never"

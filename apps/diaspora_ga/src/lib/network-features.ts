@@ -49,6 +49,7 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   // Les personnes.
   explore: CORE,
   members: CORE,
+  membersFromIcom: CORE,
   profile: CORE,
   profilePreview: CORE,
   profileTab: CORE,
@@ -68,6 +69,9 @@ export const ROUTE_FEATURES: Readonly<Record<RouteKey, NetworkFeature | null>> =
   hubWelcome: CORE,
   // iCom.
   messages: CORE,
+  smsMessages: CORE,
+  composeMessage: CORE,
+  composeGroup: CORE,
   contextualConversation: CORE,
   groupConversation: CORE,
   personalConversation: CORE,

@@ -175,7 +175,6 @@ describe("une offre d'emploi", () => {
     [{ title: "Écrire à rh@exemple.fr" }, "job_contact_details_forbidden"],
     [{ description: "Envoyez votre candidature au 06 12 34 56 78, dès aujourd'hui." }, "job_contact_details_forbidden"],
     [{ contract: "benevolat" }, "job_contract_invalid"],
-    [{ country: "GA" }, "job_country_is_home"],
     [{ city: "x".repeat(JOB_CITY_MAX_LENGTH + 1) }, "job_city_too_long"],
     [{ workMode: "partout" }, "job_work_mode_invalid"],
     [{ languages: [] }, "job_languages_required"],
@@ -190,7 +189,7 @@ describe("une offre d'emploi", () => {
     expect(parseJobCountry(undefined)).toEqual({ ok: false, code: "job_country_required" })
     expect(parseJobCountry("  ")).toEqual({ ok: false, code: "job_country_required" })
     expect(parseJobCountry("ZZ")).toEqual({ ok: false, code: "job_country_unknown" })
-    expect(parseJobCountry("ga")).toEqual({ ok: false, code: "job_country_is_home" })
+    expect(parseJobCountry("ga")).toEqual({ ok: true, value: "GA" })
     expect(parseJobCountry(" be ")).toEqual({ ok: true, value: "BE" })
   })
 
@@ -298,7 +297,6 @@ describe("la recherche des offres", () => {
 
   it.each([
     [{ query: "x".repeat(JOB_QUERY_MAX_LENGTH + 1) }, "job_query_too_long"],
-    [{ country: "GA" }, "job_country_is_home"],
     [{ city: "x".repeat(JOB_CITY_MAX_LENGTH + 1) }, "job_city_too_long"],
     [{ contract: "benevolat" }, "job_contract_invalid"],
     [{ workMode: "partout" }, "job_work_mode_invalid"],

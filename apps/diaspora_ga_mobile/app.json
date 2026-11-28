@@ -49,6 +49,31 @@
               "scheme": "https",
               "host": "diaspora.ga",
               "path": "/mobile/retour"
+            },
+            {
+              "scheme": "https",
+              "host": "diaspora.ga",
+              "path": "/fil"
+            },
+            {
+              "scheme": "https",
+              "host": "diaspora.ga",
+              "pathPrefix": "/@"
+            },
+            {
+              "scheme": "https",
+              "host": "diaspora.ga",
+              "pathPrefix": "/pages/"
+            },
+            {
+              "scheme": "https",
+              "host": "diaspora.ga",
+              "pathPrefix": "/publication/"
+            },
+            {
+              "scheme": "https",
+              "host": "diaspora.ga",
+              "path": "/messages"
             }
           ]
         }

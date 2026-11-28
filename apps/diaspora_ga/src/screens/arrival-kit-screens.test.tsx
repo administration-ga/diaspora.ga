@@ -100,7 +100,7 @@ afterEach(() => {
 describe("la zone de l'adresse", () => {
   it("lit le pays et la ville saisie ; une valeur illisible est ignorée", () => {
     expect(zoneFromParams(new URLSearchParams("pays=ca&ville=%20Montr%C3%A9al%20"), "FR")).toEqual({ country: "CA", city: "Montréal" })
-    expect(zoneFromParams(new URLSearchParams("pays=GA"), "FR")).toEqual({ country: "FR", city: null })
+    expect(zoneFromParams(new URLSearchParams("pays=ZZ"), "FR")).toEqual({ country: "FR", city: null })
     expect(zoneFromParams(new URLSearchParams(`ville=${"x".repeat(81)}`), "BE")).toEqual({ country: "BE", city: null })
   })
 })

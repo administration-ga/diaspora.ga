@@ -155,7 +155,7 @@ afterEach(cleanup)
 describe("/services — le catalogue", () => {
   it("lit les filtres de l'adresse, ignore ce qui est illisible", () => {
     expect(filtersFromParams(new URLSearchParams("q=+tresses+&pays=fr&ville=Paris&categorie=beauty&mode=onsite"))).toEqual({ q: "tresses", country: "FR", city: "Paris", category: "beauty", delivery: "onsite" })
-    expect(filtersFromParams(new URLSearchParams("pays=ga&categorie=sante&mode=partout&ville=+"))).toEqual({})
+    expect(filtersFromParams(new URLSearchParams("pays=zz&categorie=sante&mode=partout&ville=+"))).toEqual({})
   })
 
   it("cherche avec les filtres de l'adresse et montre les offres, le tarif annoncé et la page", () => {

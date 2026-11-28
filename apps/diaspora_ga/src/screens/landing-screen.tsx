@@ -131,6 +131,7 @@ function AccessCard(props: { signUp: boolean; signOutIncomplete: boolean; idnRef
           </NextLink>
         </p>
       ) : null}
+      {source.kind === "engine" && <NextLink className="mt-3 block rounded-md p-2 text-center text-sm font-medium text-primary" href={routes.feed()}>{t("guest.read")}</NextLink>}
       <p className="mt-4 hidden items-start justify-center gap-1.5 text-[13px] leading-snug text-muted-foreground min-[960px]:flex">
         <LockKeyholeIcon className="mt-0.5 size-3.5 shrink-0" aria-hidden />
         <span>{t(props.signUp ? "entry.noPassword" : "landing.privacy")}</span>

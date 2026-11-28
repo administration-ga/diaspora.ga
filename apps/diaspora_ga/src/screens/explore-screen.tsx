@@ -1,242 +1,59 @@
 "use client"
 
-import type { CountryCode } from "@diaspora-ga/domain"
-import { Button, Card, CountryTag, EmptyState, Skeleton, countryName } from "@diaspora-ga/features"
-import { useFeatureGate, useOpenCountries, usePostSearchCapability, type MembershipView, type OpenCountryView } from "@diaspora-ga/features/data"
+import { Button } from "@diaspora-ga/features"
+import { useFeatureGate, usePostSearchCapability, type MembershipView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { ArrowRightIcon, BriefcaseIcon, GlobeIcon, GraduationCapIcon, HandHeartIcon, MapIcon, SearchIcon, StoreIcon } from "lucide-react"
 import NextLink from "next/link"
-import { useId, type ReactNode } from "react"
+import { useState } from "react"
 
 import { AppShell } from "@/components/app-shell"
 import { Gate } from "@/components/gate"
-import { PageDirectory } from "@/components/page-directory"
 import { PostSearchSection } from "@/components/post-search"
 import { hrefServed } from "@/lib/network-features"
 import { routes } from "@/lib/routes"
+import { MemberDirectory } from "./members-screen"
 
-// ═══════════════════════════════════════════════════════════════
-// Membres — le point d'entrée de la découverte (DG-005)
-// ═══════════════════════════════════════════════════════════════
-
-/**
- * `/explorer`, l'entrée « Membres » de la barre (CH-816, lot P1 ; l'adresse ne change pas) —
- * « Je cherche qui ou quoi ? » : la recherche dans les publications (DS-11, CH-817), la
- * recherche d'une personne dans l'annuaire opt-in (elle vit dans `/membres`), les services,
- * l'annuaire des pages et les pays ouverts, chacun menant à son hub. Rien ici n'élargit ce
- * qu'une personne a choisi de montrer : chaque surface garde ses propres gardes.
- */
 export function ExploreScreen() {
   return (
     <Gate require="member">
-      {(session) =>
-        session.membership ? (
-          <AppShell membership={session.membership}>
-            <Explore membership={session.membership} />
-          </AppShell>
-        ) : null
-      }
+      {(session) => session.membership ? (
+        <AppShell membership={session.membership}>
+          <Explore key={session.membership.personId} membership={session.membership} />
+        </AppShell>
+      ) : null}
     </Gate>
   )
 }
 
-function Explore(props: { membership: MembershipView }) {
+function Explore({ membership }: { membership: MembershipView }) {
   const { t } = useDiasporaGaT()
-  // DS-11, volet recherche (CH-817) : chercher dans les publications, si le fournisseur le sert.
-  const postSearch = usePostSearchCapability()
-  return (
-    <>
-      <div>
-        <h1 className="font-display text-3xl font-bold">{t("explore.title")}</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("explore.lead")}</p>
-      </div>
-      {postSearch ? (
-        <PostSearchSection capability={postSearch} membership={props.membership}>
-          <Discovery membership={props.membership} />
-        </PostSearchSection>
-      ) : (
-        <Discovery membership={props.membership} />
-      )}
-    </>
-  )
-}
-
-/** Ce que la page offre hors recherche : les rubriques, l'annuaire des pages, les pays ouverts. */
-function Discovery(props: { membership: MembershipView }) {
-  const { t } = useDiasporaGaT()
-  const ids = useId()
-  // ADR-0041 du moteur : seuls les modules ouverts sur le réseau ont leur raccourci.
   const gate = useFeatureGate()
-  const pagesOpen = gate.isOpen("pages")
-  return (
-    <>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {/* Sous le titre « Membres », la carte dit le geste (chercher une personne), pas la rubrique. */}
-        <Shortcut
-          headingId={`${ids}-membres`}
-          icon={<SearchIcon />}
-          title={t("explore.membersTitle")}
-          body={t("explore.membersBody")}
-          href={routes.members()}
-          action={t("explore.membersAction")}
-        />
-        {hrefServed(gate, routes.services()) ? (
-          <Shortcut
-            headingId={`${ids}-services`}
-            icon={<StoreIcon />}
-            title={t("nav.services")}
-            body={t("explore.servicesBody")}
-            href={routes.services()}
-            action={t("explore.servicesAction")}
-          />
-        ) : null}
-        {/* Vague H du plan global : les rubriques communautaires, filtrées au départ par le pays de résidence. */}
-        {hrefServed(gate, routes.mutualAid(props.membership.facet.countryOfResidence)) ? (
-          <Shortcut
-            headingId={`${ids}-entraide`}
-            icon={<HandHeartIcon />}
-            title={t("nav.community.mutualAid")}
-            body={t("explore.mutualAidBody")}
-            href={routes.mutualAid(props.membership.facet.countryOfResidence)}
-            action={t("explore.mutualAidAction")}
-          />
-        ) : null}
-        {hrefServed(gate, routes.arrivalKit(props.membership.facet.countryOfResidence)) ? (
-          <Shortcut
-            headingId={`${ids}-kit`}
-            icon={<MapIcon />}
-            title={t("nav.community.arrivalKit")}
-            body={t("explore.arrivalKitBody")}
-            href={routes.arrivalKit(props.membership.facet.countryOfResidence)}
-            action={t("explore.arrivalKitAction")}
-          />
-        ) : null}
-        {hrefServed(gate, routes.mentoring(props.membership.facet.countryOfResidence)) ? (
-          <Shortcut
-            headingId={`${ids}-mentorat`}
-            icon={<GraduationCapIcon />}
-            title={t("nav.community.mentoring")}
-            body={t("explore.mentoringBody")}
-            href={routes.mentoring(props.membership.facet.countryOfResidence)}
-            action={t("explore.mentoringAction")}
-          />
-        ) : null}
-        {hrefServed(gate, routes.jobs(props.membership.facet.countryOfResidence)) ? (
-          <Shortcut
-            headingId={`${ids}-emploi`}
-            icon={<BriefcaseIcon />}
-            title={t("nav.community.jobs")}
-            body={t("explore.jobsBody")}
-            href={routes.jobs(props.membership.facet.countryOfResidence)}
-            action={t("explore.jobsAction")}
-          />
-        ) : null}
-      </div>
+  const postSearch = usePostSearchCapability()
+  const [postsOpen, setPostsOpen] = useState(false)
+  const country = membership.facet.countryOfResidence
+  const destinations = [
+    { href: routes.services(), label: t("nav.services") },
+    { href: routes.mutualAid(country), label: t("nav.community.mutualAid") },
+    { href: routes.arrivalKit(country), label: t("nav.community.arrivalKit") },
+    { href: routes.mentoring(country), label: t("nav.community.mentoring") },
+    { href: routes.jobs(country), label: t("nav.community.jobs") },
+  ].filter(({ href }) => hrefServed(gate, href))
 
-      {pagesOpen ? (
-      <nav aria-label={t("pageBrowsing.views")} className="flex flex-wrap gap-2">
-        <Button asChild variant="outline"><NextLink href={routes.pages({ ownerKind: "association", country: props.membership.facet.countryOfResidence })}>{t("pageBrowsing.associations")}</NextLink></Button>
-        <Button asChild variant="outline"><NextLink href={routes.pages({ ownerKind: "company", country: props.membership.facet.countryOfResidence })}>{t("pageBrowsing.companies")}</NextLink></Button>
-        <Button asChild variant="ghost"><NextLink href={routes.pages({ followed: true })}>{t("pageBrowsing.followedTitle")}</NextLink></Button>
+  return (
+    <MemberDirectory membership={membership} compact>
+      <nav aria-label={t("explore.title")} className="flex flex-wrap items-center gap-2">
+        {gate.isOpen("pages") ? <Button asChild variant="secondary" size="sm"><NextLink href={routes.pages()}>{t("pageBrowsing.allKinds")}</NextLink></Button> : null}
+        {postSearch ? <Button variant="secondary" size="sm" aria-expanded={postsOpen} onClick={() => setPostsOpen(!postsOpen)}>{t("profile.posts")}</Button> : null}
       </nav>
+      {postsOpen && postSearch ? <PostSearchSection capability={postSearch} membership={membership}>{null}</PostSearchSection> : null}
+      {destinations.length > 0 ? (
+        <details className="rounded-xl bg-muted px-4 py-3">
+          <summary className="cursor-pointer font-semibold">{t("members.more")}</summary>
+          <div className="mt-2 flex flex-wrap gap-2">{destinations.map(({ href, label }) => (
+            <Button key={href} asChild variant="ghost" size="sm"><NextLink href={href}>{label}</NextLink></Button>
+          ))}</div>
+        </details>
       ) : null}
-
-      {/* L'annuaire des pages (surface du chantier « pages ») part du pays de résidence, filtre visible
-          qu'on ôte ou qu'on change : le contexte pays est gardé, la résidence n'est jamais réécrite. */}
-      {pagesOpen ? <PageDirectory country={props.membership.facet.countryOfResidence} /> : null}
-
-      <OpenCountries home={props.membership.facet.countryOfResidence} headingId={`${ids}-pays`} />
-    </>
-  )
-}
-
-/** Un raccourci de découverte : ce qu'on y trouve, et le geste qui y mène. */
-function Shortcut(props: { headingId: string; icon: ReactNode; title: string; body: string; href: string; action: string }) {
-  return (
-    <section aria-labelledby={props.headingId} className="flex min-w-0 flex-col items-start gap-3 rounded-xl bg-card p-4 text-card-foreground shadow-card">
-      <div className="flex min-w-0 items-center gap-2">
-        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground [&_svg]:size-4">
-          {props.icon}
-        </span>
-        <h2 id={props.headingId} className="min-w-0 text-lg font-semibold">
-          {props.title}
-        </h2>
-      </div>
-      <p className="text-sm leading-relaxed text-muted-foreground">{props.body}</p>
-      <Button asChild variant="outline" className="mt-auto">
-        <NextLink href={props.href}>
-          {props.action}
-          <ArrowRightIcon aria-hidden />
-        </NextLink>
-      </Button>
-    </section>
-  )
-}
-
-/** Mon pays d'abord, puis l'ordre alphabétique dans la langue de la personne. */
-function ordered(countries: readonly OpenCountryView[], home: CountryCode, locale: string): OpenCountryView[] {
-  return [...countries].sort((a, b) => {
-    if (a.country === home) return -1
-    if (b.country === home) return 1
-    return countryName(a.country, locale).localeCompare(countryName(b.country, locale), locale)
-  })
-}
-
-/** Les pays ouverts, chacun menant à son hub : chargement, erreur et absence ont chacun leur état. */
-function OpenCountries(props: { home: CountryCode; headingId: string }) {
-  const { t, locale } = useDiasporaGaT()
-  const open = useOpenCountries()
-  return (
-    <section aria-labelledby={props.headingId} aria-busy={open.status === "loading"} className="flex flex-col gap-3">
-      <div>
-        <h2 id={props.headingId} className="text-xl font-semibold">
-          {t("explore.countriesTitle")}
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("explore.countriesLead")}</p>
-      </div>
-      {open.status === "loading" ? (
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Skeleton className="h-14 w-full rounded-xl" />
-          <Skeleton className="h-14 w-full rounded-xl" />
-        </div>
-      ) : open.status === "error" ? (
-        <Card role="alert" className="flex flex-col items-start gap-3 p-4">
-          <div>
-            <h3 className="font-semibold">{t("explore.countriesErrorTitle")}</h3>
-            <p className="mt-1 text-sm text-muted-foreground">{t("explore.countriesErrorBody")}</p>
-          </div>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            {t("explore.reload")}
-          </Button>
-        </Card>
-      ) : open.data.length === 0 ? (
-        <EmptyState
-          icon={<GlobeIcon />}
-          title={t("explore.countriesEmptyTitle")}
-          description={t("explore.countriesEmptyBody")}
-          action={
-            <Button asChild variant="outline">
-              <NextLink href={routes.communities()}>{t("explore.myCommunity")}</NextLink>
-            </Button>
-          }
-        />
-      ) : (
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {ordered(open.data, props.home, locale).map((item) => (
-            <li key={item.country} className="min-w-0">
-              <NextLink
-                href={routes.hub(item.country)}
-                className="flex min-h-14 min-w-0 items-center gap-3 rounded-xl bg-card p-3 pr-4 text-card-foreground shadow-card transition-colors hover:bg-muted focus-visible:shadow-focus"
-              >
-                <CountryTag country={item.country} size="md" className="min-w-0 shrink" />
-                <span className="min-w-0 flex-1" />
-                {item.country === props.home ? <span className="shrink-0 text-[12px] text-muted-foreground">{t("country.homeTag")}</span> : null}
-                <ArrowRightIcon aria-hidden className="size-4 shrink-0 text-muted-foreground" />
-              </NextLink>
-            </li>
-          ))}
-        </ul>
-      )}
-    </section>
+    </MemberDirectory>
   )
 }

@@ -82,7 +82,7 @@ describe("démonstration — le jeu fictif de l'entraide", () => {
     expect(ids({ country: "CA", status: "open", cursor: null })).toEqual(["aid-q-3"])
     expect(ids({ country: "FR", city: " PARIS ", status: "open", cursor: null })).toEqual(["aid-q-2"])
     expect(ids({ country: "FR", city: "Lyon", status: "open", cursor: null })).toEqual([])
-    expect(renderHook(() => aid.useQuestions({ country: "GA", status: "open", cursor: null })).result.current).toEqual({ status: "error", code: "aid_country_is_home" })
+    expect(renderHook(() => aid.useQuestions({ country: "GA", status: "open", cursor: null })).result.current).toMatchObject({ status: "ready", data: { items: [], isDone: true } })
 
     const resolved = questionOf(aid, "aid-q-1")
     expect(resolved).toMatchObject({ status: "resolved", hasAcceptedAnswer: true, canAnswer: true, canEdit: false, author: { displayName: "Prisca ABANGA", handle: "prisca.abanga" } })
@@ -133,9 +133,8 @@ describe("démonstration — questions, réponses et réponse retenue", () => {
   it("poser, répondre, retenir par l'autrice seule, ne plus retenir", async () => {
     const { store, aid } = setup({ viewer: "p-prisca" })
     expect(await aid.askQuestion({ ...QUESTION, detail: "Appelez-moi au 06 12 34 56 78" })).toEqual({ ok: false, code: "aid_contact_forbidden" })
-    expect(await aid.askQuestion({ ...QUESTION, country: "GA" as never })).toEqual({ ok: false, code: "aid_country_is_home" })
-    expect(await aid.askQuestion(QUESTION)).toEqual({ ok: true, value: { questionId: "aid-q-20" } })
-    expect(questionOf(aid, "aid-q-20")).toMatchObject({ status: "open", version: 1, isMine: true, canEdit: true, city: "Bordeaux" })
+    expect(await aid.askQuestion({ ...QUESTION, country: "GA", city: "Libreville" })).toEqual({ ok: true, value: { questionId: "aid-q-20" } })
+    expect(questionOf(aid, "aid-q-20")).toMatchObject({ status: "open", version: 1, isMine: true, canEdit: true, country: "GA", city: "Libreville" })
 
     await store.switchTo("p-steeve")
     expect(await aid.answer({ questionId: "aid-q-20", body: "Écris-moi : moi@exemple.fr" })).toEqual({ ok: false, code: "aid_contact_forbidden" })

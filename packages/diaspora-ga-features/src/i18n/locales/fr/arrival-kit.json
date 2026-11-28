@@ -215,7 +215,7 @@
     "arrival_kit_category_invalid": "Choisissez une rubrique de la liste.",
     "arrival_kit_country_required": "Choisissez un pays.",
     "arrival_kit_country_unknown": "Ce pays n'est pas reconnu.",
-    "arrival_kit_country_is_home": "Le kit d'arrivée concerne les pays de la diaspora, pas le Gabon.",
+    "arrival_kit_country_is_home": "Ce pays n’a pas été accepté. Vérifiez votre sélection et réessayez.",
     "arrival_kit_city_too_long": "Le nom de la ville est trop long.",
     "arrival_kit_city_invalid": "Saisissez un nom de ville, sans numéro ni adresse.",
     "arrival_kit_source_name_too_short": "Indiquez le nom de la source.",

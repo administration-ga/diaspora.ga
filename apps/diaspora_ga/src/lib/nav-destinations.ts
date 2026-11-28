@@ -166,6 +166,10 @@ export const ROUTE_DESTINATIONS: Readonly<Record<RouteKey, RouteHome>> = {
   talents: member("communities", routes.talents()),
   // Messages : la messagerie et ses sous-adresses, mises en relation comprises.
   messages: member("messages", routes.messages()),
+  smsMessages: member("messages", routes.smsMessages()),
+  composeMessage: member("messages", routes.composeMessage()),
+  composeGroup: member("messages", routes.composeGroup()),
+  membersFromIcom: member("explore", routes.membersFromIcom("message")),
   contextualConversation: member("messages", routes.contextualConversation(SEGMENT)),
   // IM-04 : une conversation de groupe et le journal d'appels d'iCom.
   groupConversation: member("messages", routes.groupConversation(SEGMENT)),

@@ -10,6 +10,7 @@ import { keepConsent, passResult } from "@/lib/consulate-consent"
 import { configuredConsulateGateway } from "@/lib/consulate-gateway"
 import { passMode, startPass, takePass } from "@/lib/consulate-pass"
 import { explicitSignOutHappened } from "@/lib/explicit-sign-out"
+import { peekReturnPath } from "@/lib/return-path"
 import { routes } from "@/lib/routes"
 import { ConsulateTransition } from "./consulate-transition"
 
@@ -42,7 +43,7 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
     if ((resume || (!returning && !legacy && afterIdn)) && session.status === "loading") return
     if (resume && session.status === "ready" && session.data.status === "signed_in") {
       started.current = true
-      location.replace(routes.feed())
+      location.replace(peekReturnPath()?.path ?? routes.feed())
       return
     }
     started.current = true
@@ -70,7 +71,7 @@ export function ConsulatePassage({ returning = false, legacy = false }: { return
           keepConsent(grant, window.sessionStorage)
           location.replace(routes.consulateConsent())
         } else {
-          location.replace(routes.feed())
+          location.replace(peekReturnPath()?.path ?? routes.feed())
         }
         return
       }

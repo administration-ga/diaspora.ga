@@ -1,12 +1,11 @@
 "use client"
 
-import { CITY_MAX_LENGTH, hasCapability, parseResidenceCountry, type CountryCode } from "@diaspora-ga/domain"
+import { ISO_COUNTRY_CODES, CITY_MAX_LENGTH, hasCapability, parseResidenceCountry, type CountryCode } from "@diaspora-ga/domain"
 import { Avatar, Button, Card, CountryTag, EmptyState, Field, FilterBar, Input, Label, MemberSuggestions, Skeleton, Switch, TrustBadges, countryName } from "@diaspora-ga/features"
 import {
   MEMBER_SEARCH_MIN_LENGTH,
   useMemberBrowse,
   useMemberSearch,
-  useOpenCountries,
   type MemberBrowseCapability,
   type MemberHitView,
   type MembershipView,
@@ -16,11 +15,12 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { SearchIcon, UsersRoundIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useId, useMemo, useState } from "react"
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { z } from "zod"
 
 import { AppShell } from "@/components/app-shell"
+import { MemberShareActions } from "@/components/member-share-actions"
 import { Gate } from "@/components/gate"
 import { useEngineNetwork } from "@/components/icom"
 import { ServicePager } from "@/components/service-pager"
@@ -51,7 +51,7 @@ export function MembersScreen() {
       {(session) =>
         session.membership ? (
           <AppShell membership={session.membership}>
-            <Members key={session.membership.personId} membership={session.membership} />
+            <MemberDirectory key={session.membership.personId} membership={session.membership} />
           </AppShell>
         ) : null
       }
@@ -94,7 +94,7 @@ export function membersHrefOf(view: MemberBrowseView): string {
   return routes.members({ country: view.country, ...(view.city ? { city: view.city } : {}), ...(view.verifiedOnly ? { verifiedOnly: true } : {}) })
 }
 
-function Members(props: { membership: MembershipView }) {
+export function MemberDirectory(props: { membership: MembershipView; compact?: boolean; children?: ReactNode }) {
   const { t, locale } = useDiasporaGaT()
   const network = useEngineNetwork()
   const ids = useId()
@@ -106,21 +106,17 @@ function Members(props: { membership: MembershipView }) {
   const results = useMemberSearch({ query: settled, ...(reach === "country" ? { country } : {}) })
   const searching = settled.length >= MEMBER_SEARCH_MIN_LENGTH
   const level = props.membership.directoryVisibility
+  const source = useSearchParams().get("depuis")
+  const compose = source === "groupe" ? routes.composeGroup() : source === "message" ? routes.composeMessage() : null
 
   return (
     <>
       <div>
         <h1 className="font-display text-3xl font-bold">{t("members.title")}</h1>
-        <p className="mt-2 text-[15px] leading-relaxed text-muted-foreground">{t("members.lead")}</p>
-        {network ? (
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button asChild variant="outline"><NextLink href={routes.relations()}>{t("nav.relations")}</NextLink></Button>
-            <Button asChild variant="outline"><NextLink href={routes.relations("dismissed")}>{t("relations.dismissedTab")}</NextLink></Button>
-          </div>
-        ) : null}
+        {compose ? <NextLink href={compose} className="text-sm font-semibold text-primary">{t("members.backToCompose")}</NextLink> : null}
       </div>
 
-      <Card className="flex flex-col gap-3 p-4">
+      <div className="flex flex-col gap-3">
         <div role="search" className="relative">
           <label htmlFor={`${ids}-q`} className="sr-only">
             {t("members.searchLabel")}
@@ -135,7 +131,7 @@ function Members(props: { membership: MembershipView }) {
             placeholder={t("members.searchPlaceholder")}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="pl-9"
+            className="border-transparent bg-muted pl-9"
           />
         </div>
         {/* Une recherche par nom porte sur tout le réseau ou sur mon pays ; le parcours a ses propres filtres. */}
@@ -147,8 +143,14 @@ function Members(props: { membership: MembershipView }) {
             onToggle={setReach}
           />
         ) : null}
-      </Card>
-
+        <MemberShareActions handle={props.membership.handle} />
+      </div>
+      {network ? (
+        <nav aria-label={t("nav.relations")} className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="secondary"><NextLink href={routes.relations()}>{t("nav.relations")}</NextLink></Button>
+          <Button asChild size="sm" variant="secondary"><NextLink href={routes.relations("received")}>{t("relations.receivedTab")}</NextLink></Button>
+        </nav>
+      ) : null}
       {searching ? (
         <section aria-labelledby={`${ids}-results`} aria-busy={results.status === "loading"}>
           <h2 id={`${ids}-results`} className="sr-only">
@@ -158,9 +160,15 @@ function Members(props: { membership: MembershipView }) {
         </section>
       ) : (
         <>
+          {props.children}
           <MemberSuggestions headingId={`${ids}-suggestions`} />
           {browse ? (
-            <MemberBrowse capability={browse} membership={props.membership} />
+            props.compact ? (
+              <details className="rounded-xl bg-muted px-4 py-3">
+                <summary className="cursor-pointer font-semibold">{t("memberBrowse.filtersLabel")}</summary>
+                <div className="mt-3"><MemberBrowse capability={browse} membership={props.membership} /></div>
+              </details>
+            ) : <MemberBrowse capability={browse} membership={props.membership} />
           ) : (
             <EmptyState icon={<UsersRoundIcon />} title={t("members.idleTitle")} description={t("members.idleBody")} />
           )}
@@ -181,11 +189,9 @@ function Members(props: { membership: MembershipView }) {
 function MemberBrowse(props: { capability: MemberBrowseCapability; membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const ids = useId()
-  const openCountries = useOpenCountries()
   const params = useSearchParams()
   const mine = props.membership.facet.countryOfResidence
-  const openKey = openCountries.status === "ready" ? openCountries.data.map((row) => row.country).join(",") : ""
-  const open = useMemo(() => (openKey === "" ? [] : (openKey.split(",") as CountryCode[])), [openKey])
+  const open = ISO_COUNTRY_CODES
   const fromUrl = useMemo(() => memberBrowseFromParams(params, mine, open), [params, mine, open])
   const [view, setView] = useUrlState(fromUrl, membersHrefOf)
 
@@ -193,12 +199,6 @@ function MemberBrowse(props: { capability: MemberBrowseCapability; membership: M
   if (!hasCapability(props.membership.status, "view_directory")) {
     // Un compte en attente lit le réseau ; il ne consulte pas l'annuaire (le refus de la recherche, dit sans reprise).
     body = <p role="status" className="rounded-xl bg-card p-4 text-[15px] shadow-card">{t("memberBrowse.notYet")}</p>
-  } else if (openCountries.status === "loading") {
-    body = <Skeleton className="h-40 w-full rounded-xl" />
-  } else if (openCountries.status === "error") {
-    body = <p role="alert" className="rounded-xl bg-card p-4 text-[15px] shadow-card">{t(`errors.${openCountries.code}`)}</p>
-  } else if (open.length === 0) {
-    body = <p role="status" className="rounded-xl bg-card p-4 text-[15px] shadow-card">{t("memberBrowse.noOpenCountry")}</p>
   } else {
     const href = membersHrefOf(view)
     body = (

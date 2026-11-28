@@ -772,7 +772,7 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
   function talentSearch({ country, skill, cursor }: Parameters<JobsCapability["useTalentSearch"]>[0]): Loadable<JobsPage<TalentHitView>> {
     const main = store.getState()
     const now = store.now()
-    const viewer = viewerOf(main, now, "view_directory")
+    const viewer = viewerOf(main, now, "publish")
     if ("refusal" in viewer) return failed(viewer.refusal)
     const parsed = parseTalentSearch({ country, skill })
     if (!parsed.ok) return failed(parsed.code)
@@ -1016,7 +1016,7 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     markNotSelected: async ({ applicationId, reason }) => decide(applicationId, "not_select", reason),
 
     async saveTalentProfile(input) {
-      const viewer = viewerOf(store.getState(), store.now(), "appear_in_directory")
+      const viewer = viewerOf(store.getState(), store.now(), "publish")
       if ("refusal" in viewer) return fail(viewer.refusal)
       const draft = parseTalentProfile({
         title: input.title,
@@ -1046,7 +1046,7 @@ export function createDemoJobs(store: DemoStore, options: DemoJobsOptions = {}):
     },
 
     async setTalentProfileStatus(input) {
-      const viewer = viewerOf(store.getState(), store.now(), input.status === "active" ? "appear_in_directory" : "read_network")
+      const viewer = viewerOf(store.getState(), store.now(), input.status === "active" ? "publish" : "read_network")
       if ("refusal" in viewer) return fail(viewer.refusal)
       const live = current()
       const existing = live.talents.find((candidate) => candidate.personId === viewer.personId)

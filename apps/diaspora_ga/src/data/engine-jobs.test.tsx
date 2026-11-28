@@ -166,7 +166,7 @@ describe("emploi — lectures du moteur", () => {
     })
   })
 
-  it("mon profil de talent et la recherche des talents, qui exige le droit à l'annuaire", () => {
+  it("mon profil de talent et la recherche professionnelle, réservée aux membres déclarés", () => {
     mocks.results.set("modules/diaspora/jobs:myTalentProfile", TALENT)
     mocks.results.set("modules/diaspora/jobs:searchTalents", { page: [HIT], isDone: false, continueCursor: "suite" })
     const own = renderHook(() => source().useMyTalentProfile())
@@ -175,7 +175,7 @@ describe("emploi — lectures du moteur", () => {
     expect(mocks.loaded).toHaveBeenCalledWith("modules/diaspora/jobs:searchTalents", { networkId: "network-diaspora-ga", country: "FR", paginationOpts: { numItems: 12, cursor: null } })
     expect(found.result.current).toMatchObject({ status: "ready", data: { items: [{ id: "talent-2", shortName: "Prisca A." }], isDone: false } })
     mocks.loaded.mockClear()
-    mocks.membership = { ...MEMBER, capabilities: ["read_network"] }
+    mocks.membership = { ...MEMBER, status: "en_attente", capabilities: ["read_network", "view_directory", "appear_in_directory"] }
     const refused = renderHook(() => source().useTalentSearch({ country: "FR", skill: "paie", cursor: null }))
     expect(refused.result.current).toEqual({ status: "error", code: "status_insufficient" })
     expect(mocks.loaded).not.toHaveBeenCalledWith("modules/diaspora/jobs:searchTalents", expect.anything())

@@ -37,9 +37,9 @@ describe("annuaire opt-in", () => {
     expect(isListedInDirectoryFor({ ...TARGET, visibility: "network", consentActive: false }, VIEWER)).toBe(false)
   })
 
-  test("un membre en attente ne figure pas et ne consulte pas", () => {
-    expect(isListedInDirectoryFor({ ...TARGET, status: "en_attente" }, VIEWER)).toBe(false)
-    expect(isListedInDirectoryFor(TARGET, { ...VIEWER, status: "en_attente" })).toBe(false)
+  test("un membre en attente figure dans le réseau et consulte l’annuaire", () => {
+    expect(isListedInDirectoryFor({ ...TARGET, status: "en_attente" }, VIEWER)).toBe(true)
+    expect(isListedInDirectoryFor(TARGET, { ...VIEWER, status: "en_attente" })).toBe(true)
   })
 
   test("suspendus et partis : ni l'un ni l'autre", () => {
@@ -72,10 +72,10 @@ describe("parcourir l'annuaire par pays et par ville (CH-816, lot P3)", () => {
     expect(parseDirectoryBrowse({ country: "FR", city: null }, OPEN)).toEqual({ ok: true, value: { country: "FR", cityKey: null, verifiedOnly: false } })
   })
 
-  test("un pays fermé, inconnu ou le Gabon ne se parcourt pas", () => {
-    expect(parseDirectoryBrowse({ country: "CA" }, OPEN)).toEqual({ ok: false, code: "directory_country_closed" })
+  test("tout pays ISO se parcourt, y compris avec une ancienne configuration", () => {
+    expect(parseDirectoryBrowse({ country: "CA" }, OPEN).ok).toBe(true)
     expect(parseDirectoryBrowse({ country: "XX" }, ["XX"])).toEqual({ ok: false, code: "directory_country_closed" })
-    expect(parseDirectoryBrowse({ country: "GA" }, ["GA"])).toEqual({ ok: false, code: "directory_country_closed" })
+    expect(parseDirectoryBrowse({ country: "GA" }, ["GA"]).ok).toBe(true)
   })
 
   test("une ville trop longue, sur deux lignes ou sans lettre est refusée", () => {

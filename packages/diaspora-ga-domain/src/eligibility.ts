@@ -284,7 +284,7 @@ export const MEMBER_CAPABILITIES = [
 export type MemberCapability = (typeof MEMBER_CAPABILITIES)[number]
 
 const CAPABILITIES_BY_STATUS: Readonly<Record<MembershipStatus, readonly MemberCapability[]>> = Object.freeze({
-  en_attente: ["read_network", "request_attestation"],
+  en_attente: ["read_network", "request_attestation", "appear_in_directory", "view_directory"],
   declaree: [
     "read_network",
     "publish",

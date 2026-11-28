@@ -357,7 +357,7 @@ describe("membershipStatusDrift — le statut enregistré relu contre les faits 
 
 describe("capacités — table du cahier §6.2", () => {
   const EXPECTED: Record<MembershipStatus, readonly MemberCapability[]> = {
-    en_attente: ["read_network", "request_attestation"],
+    en_attente: ["read_network", "request_attestation", "appear_in_directory", "view_directory"],
     declaree: [
       "read_network",
       "publish",

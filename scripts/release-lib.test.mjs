@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { spawnSync } from "node:child_process"
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs"
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
@@ -15,6 +15,7 @@ import {
   assertPublicOnly,
   catalogProblems,
   CHECK_KEYS,
+  ROLLBACK_KEYS,
   DEFAULT_RELEASE_APP,
   confirmationPhrase,
   confirmPhrase,
@@ -70,6 +71,12 @@ const DEMO_ENV = Object.freeze({
 const ANTSIA_COMMIT = "a".repeat(40)
 const DIASPORA_GA_COMMIT = "d".repeat(40)
 
+function git(cwd, ...args) {
+  const result = spawnSync("git", ["-c", "user.name=Essai", "-c", "user.email=essai@exemple.test", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd, encoding: "utf8" })
+  expect(result.status).toBe(0)
+  return result.stdout.trim()
+}
+
 describe("cibles et variables de la machine", () => {
   test("deux cibles seulement, chacune avec ses propres noms de variables", () => {
     expect(parseTarget("demo")).toBe("demo")
@@ -85,9 +92,29 @@ describe("cibles et variables de la machine", () => {
       projectId: "DIASPORA_GA_DEMO_VERCEL_PROJECT_ID",
       idnPortalUrl: "DIASPORA_GA_DEMO_IDN_PORTAL_URL",
       consulateUrl: "DIASPORA_GA_DEMO_CONSULATE_URL",
+      smsEnabled: "DIASPORA_GA_DEMO_SMS_ENABLED",
       livekitWsUrl: "DIASPORA_GA_DEMO_LIVEKIT_WS_URL",
     })
     expect(Object.values(targetVariableNames("production")).every((name) => name.startsWith("DIASPORA_GA_PRODUCTION_"))).toBe(true)
+  })
+
+  test("le réglage SMS de la cible reste facultatif et accepte uniquement 0 ou 1", () => {
+    const name = "DIASPORA_GA_DEMO_SMS_ENABLED"
+    for (const value of [undefined, "", "0", "1", "true", " 1", "2"]) {
+      const { values, problems } = readTargetEnv("demo", { ...DEMO_ENV, [name]: value })
+      const entry = releaseVariables("demo", "version", values).find(([key]) => key === "NEXT_PUBLIC_DIASPORA_SMS_ENABLED")
+      if (value === "0" || value === "1") {
+        expect(problems).toEqual([])
+        expect(values.smsEnabled).toBe(value)
+        expect(entry).toEqual(["NEXT_PUBLIC_DIASPORA_SMS_ENABLED", envRef(name)])
+      } else {
+        expect(problems).toEqual(value ? [`${name} doit valoir 0 ou 1`] : [])
+        expect(entry).toBeUndefined()
+      }
+    }
+    for (const operationKeys of [CHECK_KEYS, ROLLBACK_KEYS]) {
+      expect(readTargetEnv("demo", { ...DEMO_ENV, [name]: "périmé" }, operationKeys).problems).toEqual([])
+    }
   })
 
   test("un environnement complet se lit sans défaut", () => {
@@ -317,11 +344,6 @@ describe("contexte figé", () => {
 
   test("de vrais dépôts : seuls les fichiers SUIVIS du commit partent, jamais un .env.local", () => {
     const root = mkdtempSync(join(tmpdir(), "diaspora-ga-depots-"))
-    const git = (cwd, ...args) => {
-      const result = spawnSync("git", ["-c", "user.name=Essai", "-c", "user.email=essai@exemple.test", "-c", "commit.gpgsign=false", "-c", "core.hooksPath=/dev/null", ...args], { cwd, encoding: "utf8" })
-      expect(result.status).toBe(0)
-      return result.stdout.trim()
-    }
     const commits = {}
     for (const name of ["ANTSIA", "DIASPORA_GA"]) {
       const repo = join(root, name)
@@ -464,7 +486,7 @@ const CONTRACT_CATALOG = Object.freeze({
   applications: {
     diaspora_ga: {
       path: "../DIASPORA_GA/apps/diaspora_ga",
-      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL", "NEXT_PUBLIC_CONVEX_SITE_URL"],
+      build_args: ["NEXT_PUBLIC_CONVEX_URL", "NEXT_PUBLIC_SITE_URL", "NEXT_PUBLIC_BUILD_SHA", "NEXT_PUBLIC_DIASPORA_GA_DATA_SOURCE", "NEXT_PUBLIC_DIASPORA_SMS_ENABLED", "NEXT_PUBLIC_IDN_PORTAL_URL", "NEXT_PUBLIC_CONSULATE_URL", "NEXT_PUBLIC_CONVEX_SITE_URL"],
       // CH-817 : lue à la construction par la configuration commune du moteur, comme CONVEX_SITE_URL, et facultative.
       runtime_env: ["CONVEX_SITE_URL", "LIVEKIT_WS_URL"],
     },
@@ -695,7 +717,38 @@ describe("préalables aux commits publiés : le catalogue et l'application, en c
     ])
   })
 
-  test("le vrai dépôt : diaspora.ga existe au HEAD et le catalogue du moteur à son HEAD la déclare", () => {
-    expect(releasePrerequisites({ apps: ["diaspora_ga"], antsiaCommit: "HEAD", diasporaGaCommit: "HEAD" })).toEqual([])
+  test("deux commits compatibles permettent la publication, un ancien catalogue sans SMS est refusé", () => {
+    const root = mkdtempSync(join(tmpdir(), "diaspora-ga-contrat-"))
+    const repos = { ANTSIA: join(root, "ANTSIA"), DIASPORA_GA: join(root, "DIASPORA_GA") }
+    try {
+      mkdirSync(join(repos.ANTSIA, "deploy"), { recursive: true })
+      git(repos.ANTSIA, "init", "-q")
+      const catalogPath = join(repos.ANTSIA, "deploy/catalog.json")
+      const previous = structuredClone(diskCatalog)
+      const entry = previous.applications.diaspora_ga
+      entry.build_args = entry.build_args.filter((name) => name !== "NEXT_PUBLIC_DIASPORA_SMS_ENABLED")
+      writeFileSync(catalogPath, JSON.stringify(previous))
+      git(repos.ANTSIA, "add", "deploy/catalog.json")
+      git(repos.ANTSIA, "commit", "-qm", "Catalogue sans SMS")
+      copyFileSync(join(ANTSIA_ROOT, "deploy/catalog.json"), catalogPath)
+      git(repos.ANTSIA, "commit", "-qam", "Catalogue courant")
+
+      for (const app of ALL_APPS_ORDER) {
+        const directory = releaseApp(app).directory
+        mkdirSync(join(repos.DIASPORA_GA, directory), { recursive: true })
+        copyFileSync(join(DIASPORA_GA_ROOT, directory, "package.json"), join(repos.DIASPORA_GA, directory, "package.json"))
+      }
+      git(repos.DIASPORA_GA, "init", "-q")
+      git(repos.DIASPORA_GA, "add", "apps")
+      git(repos.DIASPORA_GA, "commit", "-qm", "Applications courantes")
+
+      const pair = { apps: ALL_APPS_ORDER, repos, diasporaGaCommit: "HEAD" }
+      expect(releasePrerequisites({ ...pair, antsiaCommit: "HEAD" })).toEqual([])
+      expect(releasePrerequisites({ ...pair, antsiaCommit: "HEAD~1" })).toEqual([
+        "la liste publique de diaspora_ga diffère du catalogue du moteur (absente du catalogue : NEXT_PUBLIC_DIASPORA_SMS_ENABLED)",
+      ])
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
   })
 })

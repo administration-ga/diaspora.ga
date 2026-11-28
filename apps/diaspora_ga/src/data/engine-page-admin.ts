@@ -407,6 +407,7 @@ export function createEnginePageAdmin(deps: EngineSourceDeps, options: { fetch?:
       const created = await deps.convex.mutation(api.modules.pages.pages.createPage, {
         networkId: await diasporaGa(),
         name: input.name,
+        ...(input.guestVisible ? { guestVisible: true } : {}),
         ownerKind: input.ownerKind,
         ...(handle ? { handle } : {}),
         ...(shortName ? { shortName } : {}),

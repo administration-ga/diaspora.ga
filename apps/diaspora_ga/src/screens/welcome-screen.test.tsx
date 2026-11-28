@@ -187,11 +187,11 @@ describe("/bienvenue — un seul écran, un seul geste (décision du 25/11/2026)
     await vi.waitFor(() => expect(navigation.push).toHaveBeenCalledWith(`${routes.hub("FR")}?bienvenue=1`))
     expect(store.getState().persons[me]?.profile).toMatchObject({ handle: "awa", displayName: "OGOOUÉ Awa" })
     expect(store.statusOf(me)).toBe("declaree")
-    expect(store.getState().memberships[me]?.directoryVisibility).toBe("hidden")
+    expect(store.getState().memberships[me]?.directoryVisibility).toBe("network")
     const consents = store.getState().consents.filter((record) => record.personId === me)
     expect(consents.map(({ purpose, granted, origin }) => ({ purpose, granted, origin }))).toEqual([
       { purpose: "social_profile", granted: true, origin: "onboarding" },
-      { purpose: "directory", granted: false, origin: "onboarding" },
+      { purpose: "directory", granted: true, origin: "onboarding" },
       { purpose: "notifications", granted: false, origin: "onboarding" },
     ])
   })
@@ -324,8 +324,9 @@ describe("/bienvenue — un seul écran, un seul geste (décision du 25/11/2026)
       facet: { countryOfResidence: "FR", city: "Lyon" },
       handle: "awa",
       displayName: "OGOOUÉ Awa",
-      consents: { social_profile: true, directory: false, notifications: false },
-      directoryVisibility: "hidden",
+      consents: { social_profile: true, directory: true, notifications: false },
+      directoryVisibility: "network",
+      guestProfile: true,
     })
   })
 
@@ -338,29 +339,28 @@ describe("/bienvenue — un seul écran, un seul geste (décision du 25/11/2026)
     expect(screen.getByRole("textbox", { name: "Ville" })).toHaveValue("Lyon")
   })
 
-  it("pays fermé (IDN) : la ligne de rappel porte l'avis, sans promettre de relecture, et l'on entre quand même", async () => {
+  it("une résidence en Espagne issue d’IDN permet une inscription directe", async () => {
     const join = vi.fn<DiasporaGaActions["join"]>().mockResolvedValue({ ok: true, value: { country: "ES", status: "declaree" } })
     const { user } = await signedInAwa({ actions: { join }, source: prefillOf({ ...AWA_PREFILL, residence: { country: "ES", city: null } }) })
-    const notice = await screen.findByText(text("welcome.countryNotOpen"))
-    expect(notice).toHaveTextContent(/publiez pour toute la diaspora/)
-    expect(notice).not.toHaveTextContent(/relue|relecture/i)
+    expect(await screen.findByRole("region", { name: t("welcomeEntry.residenceHeading") })).toHaveTextContent("Espagne")
+    expect(screen.queryByText(text("welcome.countryNotOpen"))).not.toBeInTheDocument()
     await user.click(screen.getByRole("button", { name: SUBMIT }))
     await vi.waitFor(() => expect(join).toHaveBeenCalledTimes(1))
     expect(join.mock.calls[0]?.[0].facet).toEqual({ countryOfResidence: "ES", city: "" })
   })
 
-  it("une résidence au Gabon (IDN) ne se reprend pas : le pays se choisit", async () => {
+  it("une résidence au Gabon issue d’IDN se reprend", async () => {
     await signedInAwa({ source: prefillOf({ ...AWA_PREFILL, residence: { country: "GA", city: "Libreville" } }) })
-    const country = await screen.findByRole("combobox", { name: "Pays de résidence" })
-    expect(country).not.toHaveTextContent(/Gabon/)
-    expect(screen.getByRole("textbox", { name: "Ville" })).toHaveValue("")
+    const residence = await screen.findByRole("region", { name: t("welcomeEntry.residenceHeading") })
+    expect(residence).toHaveTextContent("Gabon")
+    expect(residence).toHaveTextContent("Libreville")
   })
 
-  it("un pays pas encore ouvert, choisi à la main : l'avis dit ce qui est possible (HB-01)", async () => {
+  it("une résidence en Espagne peut être choisie manuellement", async () => {
     const { user } = await signedInAwa()
     await chooseCountry(user, "Espagne")
-    const notice = await screen.findByText(text("welcome.countryNotOpen"))
-    expect(notice).toHaveTextContent(/publiez pour toute la diaspora/)
+    expect(screen.getByRole("combobox", { name: "Pays de résidence" })).toHaveTextContent("Espagne")
+    expect(screen.queryByText(text("welcome.countryNotOpen"))).not.toBeInTheDocument()
   })
 })
 

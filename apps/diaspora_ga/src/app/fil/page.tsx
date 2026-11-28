@@ -1,3 +1,4 @@
+import { GuestEntry } from "@/components/guest-reader"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -13,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default function FeedPage() {
   return (
     <Suspense fallback={<GateSkeleton />}>
-      <FeedScreen />
+      <GuestEntry screen="feed"><FeedScreen /></GuestEntry>
     </Suspense>
   )
 }

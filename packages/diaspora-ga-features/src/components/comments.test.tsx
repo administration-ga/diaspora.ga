@@ -94,13 +94,37 @@ beforeEach(() => {
   replyPages = {}
 })
 
+it("garde la saisie dans la fenêtre visible quand le clavier redimensionne puis décale la feuille", () => {
+  const viewport = Object.assign(new EventTarget(), { height: 600, offsetTop: 0 })
+  vi.stubGlobal("visualViewport", viewport)
+  try {
+    const view = mount()
+    const dialog = screen.getByRole("dialog")
+    expect(dialog.style.getPropertyValue("--comment-center")).toBe("300px")
+    viewport.height = 320
+    viewport.dispatchEvent(new Event("resize"))
+    viewport.offsetTop = 12
+    viewport.dispatchEvent(new Event("scroll"))
+    expect(dialog.style.getPropertyValue("--comment-viewport")).toBe("320px")
+    expect(dialog.style.getPropertyValue("--comment-keyboard")).toBe(`${Math.max(0, window.innerHeight - 332)}px`)
+    expect(dialog.style.getPropertyValue("--comment-center")).toBe("172px")
+    expect(screen.getByRole("textbox", { name: t("comments.label") })).toHaveFocus()
+    view.unmount()
+    viewport.height = 600
+    viewport.dispatchEvent(new Event("resize"))
+    expect(dialog.style.getPropertyValue("--comment-center")).toBe("172px")
+  } finally {
+    vi.unstubAllGlobals()
+  }
+})
+
 describe("Commentaires — édition de l'auteur", () => {
   it.each(["commentaire", "réponse"])("enregistre le %s existant après trim, puis attend le DTO pour le texte et le marqueur", async (kind) => {
     const target = kind === "commentaire" ? comment() : comment({ id: "reply-a", body: "Réponse initiale" })
     setThreads(kind === "commentaire" ? [target] : [comment({ isMine: false, replyCount: 1, replies: [target] })])
     const view = mount()
     const user = userEvent.setup()
-    await waitFor(() => expect(screen.getByRole("button", { name: t("comments.close") })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole("textbox", { name: t("comments.label") })).toHaveFocus())
     const row = screen.getByText(target.body).closest("article")!
     await user.click(within(row).getByRole("button", { name: t("comments.edit") }))
     expect(editor()).toHaveValue(target.body)
@@ -231,6 +255,22 @@ describe("Commentaires — édition de l'auteur", () => {
 })
 
 describe("Commentaires — envoi, retrait et identité", () => {
+  it("saisit dès l’ouverture, conserve le texte sur erreur et envoie avec Entrée", async () => {
+    mocks.comment.mockResolvedValueOnce({ ok: false, code: "unknown" })
+    mount()
+    const field = screen.getByRole("textbox", { name: t("comments.label") })
+    await waitFor(() => expect(field).toHaveFocus())
+    const user = userEvent.setup()
+    await user.keyboard("Depuis le fil{Shift>}{Enter}{/Shift}ligne deux")
+    expect(mocks.comment).not.toHaveBeenCalled()
+    await user.keyboard("{Enter}")
+    expect(await screen.findByRole("alert")).toBeVisible()
+    expect(field).toHaveValue("Depuis le fil\nligne deux")
+    await user.keyboard("{Enter}")
+    await waitFor(() => expect(field).toHaveValue(""))
+    expect(mocks.comment.mock.calls[0]).toEqual(mocks.comment.mock.calls[1])
+  })
+
   it.each(["envoi", "retrait"])("protège aussi %s des doubles gestes et de l'ancien lecteur", async (kind) => {
     const pending = deferred<ActionResult<{ readonly commentId: string }> | ActionResult>()
     if (kind === "envoi") mocks.comment.mockReturnValueOnce(pending.promise as Promise<ActionResult<{ readonly commentId: string }>>)
@@ -248,7 +288,7 @@ describe("Commentaires — envoi, retrait et identité", () => {
       act(() => { fireEvent.click(button); fireEvent.click(button) })
     }
     await waitFor(() => expect(action).toHaveBeenCalledTimes(1))
-    if (kind === "envoi") expect(screen.getByRole("textbox", { name: t("comments.label") })).toBeDisabled()
+    if (kind === "envoi") expect(screen.getByRole("textbox", { name: t("comments.label") })).toHaveAttribute("readonly")
     else expect(screen.getByRole("button", { name: t("comments.confirmRemoveLabel", { name: "Membre A" }) })).toBeDisabled()
     session = signedIn("person-b")
     view.update()
@@ -266,7 +306,7 @@ describe("Commentaires — envoi, retrait et identité", () => {
     mocks.comment.mockResolvedValueOnce({ ok: false, code: "rate_limited" })
     mount()
     const user = userEvent.setup()
-    await waitFor(() => expect(screen.getByRole("button", { name: t("comments.close") })).toHaveFocus())
+    await waitFor(() => expect(screen.getByRole("textbox", { name: t("comments.label") })).toHaveFocus())
     await user.click(screen.getByRole("button", { name: t("comments.reply") }))
     const field = screen.getByRole("textbox", { name: t("comments.label") })
     await waitFor(() => expect(field).toHaveFocus())

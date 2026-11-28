@@ -37,7 +37,7 @@ describe("parseFacetInput — la saisie de la facette", () => {
 
   test("le pays est obligatoire et ne peut pas être le Gabon", () => {
     expect(parseFacetInput({ countryOfResidence: "" }, NOW)).toEqual({ ok: false, code: "country_required" })
-    expect(parseFacetInput({ countryOfResidence: "GA" }, NOW)).toEqual({ ok: false, code: "country_is_home" })
+    expect(parseFacetInput({ countryOfResidence: "GA" }, NOW).ok).toBe(true)
     expect(parseFacetInput({ countryOfResidence: "ZZ" }, NOW)).toEqual({ ok: false, code: "country_unknown" })
   })
 

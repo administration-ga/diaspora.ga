@@ -20,17 +20,22 @@
  */
 import { NetworkProvider } from "@antsia/api/network"
 import { NextRouterAdapter } from "@antsia/api/routing/next"
+import { IcomContactToolsProvider, type IcomContactTools } from "@antsia/social-features/messagerie/contact-tools"
 import { conversationHref, dockStore, draftKey } from "@antsia/social-features/messagerie"
 import { CommunicationShell } from "@antsia/social-features/shell"
 import { useOptionalAppearance } from "@antsia/social-features/shell/appearance"
 import { useIsReseauMobile } from "@antsia/ui/overlay"
 import { api } from "@convex/_generated/api"
 import { DIASPORA_GA_NETWORK_SLUG } from "@diaspora-ga/domain"
+import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { useSession } from "@diaspora-ga/features/data"
 import { useQuery } from "convex/react"
+import NextLink from "next/link"
 import { useRouter } from "next/navigation"
 import { createContext, type ReactNode, useCallback, useContext, useMemo } from "react"
 
+import { MemberInviteButton } from "./member-share-actions"
+import { shareDiasporaLink } from "@/lib/share-diaspora-link"
 import { DEFAULT_CHARTE } from "@/lib/appearance"
 import { callsAreOpen } from "@/lib/calls"
 import { engineRoutes } from "@/lib/engine-routes"
@@ -42,6 +47,19 @@ export type { IcomNetwork, IcomOffReason, IcomState } from "@/lib/icom-state"
 
 /** Le palier `xl` où la coque montre son rail droit, donc la carte iCom ancrée (`xl:flex` d'`AppShell`). */
 const RAIL_VISIBLE_QUERY = "(min-width: 80rem)"
+
+function CarrierSmsEntry() {
+  const { t } = useDiasporaGaT()
+  const available = useQuery(api.modules.diaspora.sms.available, {})
+  return available ? <NextLink className="msg-group-btn" href={routes.smsMessages()}>{t("sms.title")}</NextLink> : null
+}
+
+const contactTools: IcomContactTools = {
+  smsEntry: process.env.NEXT_PUBLIC_DIASPORA_SMS_ENABLED === "1" ? <CarrierSmsEntry /> : null,
+  findMembers: (origin) => routes.membersFromIcom(origin),
+  inviteButton: <MemberInviteButton />,
+  shareLink: shareDiasporaLink,
+}
 
 const IcomStateContext = createContext<IcomState>(ICOM_DEMO)
 const EngineNetworkContext = createContext<IcomNetwork | null>(null)
@@ -89,8 +107,9 @@ export function IcomIsland(props: { network: IcomNetwork; children: ReactNode })
         routes={engineRoutes}
         callsAvailable={callsAreOpen()}
         liveAvailable={liveIsOpen()}
+        liveStudioPreview
       >
-        {props.children}
+        <IcomContactToolsProvider value={contactTools}>{props.children}</IcomContactToolsProvider>
       </NetworkProvider>
     </NextRouterAdapter>
   )

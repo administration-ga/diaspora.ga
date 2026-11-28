@@ -215,7 +215,7 @@
     "arrival_kit_category_invalid": "Choose a section from the list.",
     "arrival_kit_country_required": "Choose a country.",
     "arrival_kit_country_unknown": "This country is not recognised.",
-    "arrival_kit_country_is_home": "The arrival kit covers diaspora countries, not Gabon.",
+    "arrival_kit_country_is_home": "This country was not accepted. Check your selection and try again.",
     "arrival_kit_city_too_long": "The city name is too long.",
     "arrival_kit_city_invalid": "Enter a city name, without a number or an address.",
     "arrival_kit_source_name_too_short": "Enter the name of the source.",

@@ -1,6 +1,6 @@
 "use client"
 
-import { isCountryOpen, parseResidenceCountry, type CountryCode } from "@diaspora-ga/domain"
+import { parseResidenceCountry, type CountryCode } from "@diaspora-ga/domain"
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "lucide-react"
 import { useId, useMemo, useRef, useState, type ReactNode } from "react"
 
@@ -37,15 +37,13 @@ function writeRecent(key: string, countries: readonly CountryCode[]): void {
 
 /**
  * Sélecteur de pays (C11/P2) : un bouton à étiquette qui ouvre une feuille de
- * recherche. Liste de tous les pays de résidence (jamais le Gabon), triée dans
+ * recherche. Liste de tous les pays et territoires de résidence, triée dans
  * la langue de la personne, recherche par nom sans accents ou par code ISO.
- * Les pays ouverts portent une mention (A8) — un pays fermé reste choisissable :
- * on y entre et on y lit, ses contenus passent par la relecture réseau.
  */
 export function CountrySwitch(props: {
   value: CountryCode | null
   onChange: (country: CountryCode) => void
-  openCountries: readonly CountryCode[]
+  openCountries?: readonly CountryCode[]
   /** Libellé de la feuille (« Changer de pays », « Votre pays de résidence »). */
   title: string
   description: string
@@ -94,7 +92,6 @@ export function CountrySwitch(props: {
 
   const renderOption = (option: { code: CountryCode; name: string }, tag?: string) => {
     const selected = option.code === props.value
-    const isOpen = isCountryOpen(option.code, props.openCountries)
     return (
       <button
         type="button"
@@ -110,11 +107,6 @@ export function CountrySwitch(props: {
         </span>
         <span className="min-w-0 flex-1 truncate">{option.name}</span>
         {tag ? <span className="text-[12px] text-muted-foreground">{tag}</span> : null}
-        {isOpen ? (
-          <span className="rounded-[var(--radius-xs)] bg-published px-1.5 py-0.5 text-[11px] font-semibold text-published-foreground">
-            {t("country.openBadge")}
-          </span>
-        ) : null}
         {selected ? <CheckIcon className="size-4 shrink-0 text-primary" aria-hidden /> : null}
       </button>
     )
@@ -135,7 +127,7 @@ export function CountrySwitch(props: {
             aria-invalid={props.invalid || undefined}
             aria-describedby={props.describedBy}
             className={cn(
-              "inline-flex h-11 w-full items-center gap-3 rounded-md border border-input bg-card px-3 text-left text-[15px] transition-[box-shadow,border-color] duration-150 ease-charte hover:bg-muted focus-visible:border-ring focus-visible:shadow-focus aria-invalid:border-destructive",
+              "inline-flex h-11 w-full items-center gap-3 rounded-md bg-muted px-3 text-left text-[15px] transition-[box-shadow,border-color] duration-150 ease-charte hover:bg-muted focus-visible:border-ring focus-visible:shadow-focus aria-invalid:border-destructive",
               props.className,
             )}
           >
@@ -160,7 +152,7 @@ export function CountrySwitch(props: {
         title={props.title}
         description={props.description}
         closeLabel={t("common.close")}
-        // Une feuille de recherche s'ouvre sur son champ : on cherche avant de parcourir 248 pays.
+        // Une feuille de recherche s'ouvre sur son champ : on cherche avant de parcourir la liste.
         onOpenAutoFocus={(event) => {
           event.preventDefault()
           searchRef.current?.focus()

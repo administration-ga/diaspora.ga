@@ -69,11 +69,8 @@ export function checkProductionBuild(env: ProductionBuildEnv): ProductionBuildVe
   if (source === "engine" && !present(env.convexUrl)) {
     errors.push("NEXT_PUBLIC_CONVEX_URL manque : la source « engine » exige l'adresse du moteur ANTSIA.")
   }
-  if (source === "demo" && publicSite) {
-    errors.push(
-      `${DATA_SOURCE_VARIABLE} vaut « demo » alors que NEXT_PUBLIC_SITE_URL désigne un domaine public : ` +
-        "un site public sert le moteur, jamais les données fictives.",
-    )
+  if (source === "demo") {
+    errors.push(`${DATA_SOURCE_VARIABLE} doit valoir « engine » pour construire DIASPORA. Les données fictives sont réservées aux tests locaux.`)
   }
   if (!present(env.buildSha)) {
     const message = "NEXT_PUBLIC_BUILD_SHA manque : la sonde de santé dira la version « dev »."

@@ -94,15 +94,15 @@ export interface LegalTextEdition {
  */
 const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
   notice: {
-    version: "1.0",
-    date: "2026-11-23",
+    version: "1.1",
+    date: "2026-11-28",
     status: "final",
     sections: ["publisher", "director", "hosting", "service", "intellectualProperty", "illegalContent", "rightOfReply", "personalData", "contact", "law"],
     awaiting: {},
   },
   privacy: {
-    version: "1.1",
-    date: "2026-11-26",
+    version: "1.2",
+    date: "2026-11-28",
     status: "final",
     sections: [
       "controller",
@@ -128,8 +128,8 @@ const EDITIONS: Readonly<Record<LegalTextKind, LegalTextEdition>> = {
     awaiting: {},
   },
   terms: {
-    version: "1.1",
-    date: "2026-11-26",
+    version: "1.2",
+    date: "2026-11-28",
     status: "final",
     sections: [
       "purpose",

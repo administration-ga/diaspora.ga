@@ -97,7 +97,7 @@ describe("démonstration — le jeu fictif du kit d'arrivée", () => {
     const anonymous = setup({ viewer: null }).kit
     expect(renderHook(() => anonymous.useResources(request())).result.current).toEqual({ status: "error", code: "not_signed_in" })
     const { kit } = setup()
-    expect(renderHook(() => kit.useResources(request({ country: "GA" as never }))).result.current).toEqual({ status: "error", code: "arrival_kit_country_is_home" })
+    expect(renderHook(() => kit.useResources(request({ country: "GA" }))).result.current).toMatchObject({ status: "ready", data: { items: [], isDone: true } })
     expect(renderHook(() => kit.useResources(request({ cursor: "pas-un-curseur" }))).result.current).toEqual({ status: "error", code: "unknown" })
     expect(renderHook(() => kit.useResources(request({ cursor: JSON.stringify(["demo-arrival-kit", "autre", 20]) }))).result.current).toEqual({ status: "error", code: "unknown" })
   })
@@ -151,7 +151,7 @@ describe("démonstration — fiche, file de relecture et situation", () => {
     expect(ids(ready(renderHook(() => prisca.useReviewQueue({ country: "FR", cursor: null })).result.current))).toEqual(["kit-5"])
     expect(ready(renderHook(() => steeve.useReviewQueue({ country: "FR", cursor: null })).result.current).items).toEqual([])
     expect(renderHook(() => rodrigue.useReviewQueue({ country: "FR", cursor: null })).result.current).toEqual({ status: "error", code: "arrival_kit_reviewer_not_eligible" })
-    expect(renderHook(() => prisca.useReviewQueue({ country: "GA" as never, cursor: null })).result.current).toEqual({ status: "error", code: "arrival_kit_country_is_home" })
+    expect(renderHook(() => prisca.useReviewQueue({ country: "GA", cursor: null })).result.current).toMatchObject({ status: "ready", data: { items: [], isDone: true } })
   })
 
   it("ma situation : proposer et relire ; les pages au nom desquelles je peux proposer", () => {

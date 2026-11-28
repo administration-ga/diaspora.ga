@@ -1,16 +1,16 @@
 "use client"
 
 import { hasCapability, parseFeedScope, parseResidenceCountry, type CounterPresentation, type CountryCode, type FeedScope } from "@diaspora-ga/domain"
-import { Avatar, Button, Card, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
-import { POST_PHOTO_ACCEPT, POST_VIDEO_ACCEPT, useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
+import { Avatar, Card, CountrySwitch, EmptyState, EventCard, FeedDiscovery, FolderTabsNav, MemberSuggestions, StatCounter, TrustBadge, countryName } from "@diaspora-ga/features"
+import { useCountryHub, useFeatureGate, useOptionalDataSource, type MembershipView, type PagesCapability } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
-import { MEMBER_CREATE_ICONS } from "@diaspora-ga/features/navigation"
-import { ArrowRightIcon, Building2Icon, FilmIcon, GalleryVerticalEndIcon, HandshakeIcon, ImagePlusIcon, ListIcon, NewspaperIcon, UsersRoundIcon } from "lucide-react"
+import { ArrowRightIcon, ChevronDownIcon, GalleryVerticalEndIcon, HandshakeIcon, ListIcon, NewspaperIcon } from "lucide-react"
 import NextLink from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type RefObject } from "react"
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 
 import { AppShell, useComposer } from "@/components/app-shell"
+import { CreationActions } from "@/components/creation-actions"
 import { ArrivalCard } from "@/components/arrival-card"
 import { Gate } from "@/components/gate"
 import { FeedLives } from "@/components/feed-lives"
@@ -76,7 +76,6 @@ function Feed(props: { membership: MembershipView }) {
   const discovery = showsFeedDiscovery(isDiscoveryView(searchParams), FEED_DISCOVERY_OFFERED)
   const composer = useComposer()
   // ADR-0041 du moteur : l'inscription d'une organisation n'est proposée que pages ouvertes.
-  const pagesOpen = useFeatureGate().isOpen("pages")
   const country = hubCountry ?? props.membership.facet.countryOfResidence
   const now = Date.now()
   // Changer de portée ou retirer le filtre garde le mode d'affichage choisi.
@@ -143,13 +142,28 @@ function Feed(props: { membership: MembershipView }) {
           href: viewHref(id, tag),
           active: id === scope,
         }))}
-        renderLink={(item, className, children) => (
+        renderLink={(item, className, children) => item.id === "mon_pays" ? (
+          <CountrySwitch
+            key={item.id}
+            value={country}
+            home={props.membership.facet.countryOfResidence}
+            rememberKey="diaspora-ga:fil:pays-recents"
+            title={t("hub.switchTitle")}
+            description={t("feed.chooseCountryHint")}
+            onChange={(next) => router.push(discovery ? discoveryHref("mon_pays", tag, next) : routes.feed("mon_pays", tag, next), { scroll: false })}
+            trigger={
+              <button type="button" className={className} aria-current={item.active ? "page" : undefined}>
+                {children}<ChevronDownIcon aria-hidden className="size-4" />
+              </button>
+            }
+          />
+        ) : (
           <NextLink key={item.id} href={item.href} className={className} aria-current={item.active ? "page" : undefined} scroll={false}>
             {children}
           </NextLink>
         )}
       />
-      {discovery ? null : <p className="-mt-1 text-[13px] text-muted-foreground">{t(`feed.scopeHint.${scope}`, { country: countryName(country, locale) })}</p>}
+      {discovery ? null : <p className="sr-only">{t(`feed.scopeHint.${scope}`, { country: countryName(country, locale) })}</p>}
 
       {tag !== undefined ? (
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2 rounded-lg bg-muted px-3 py-2">
@@ -184,48 +198,29 @@ function Feed(props: { membership: MembershipView }) {
           {/* CH-816 (P2) : la bascule ne paraît que la découverte offerte (`FEED_DISCOVERY_OFFERED`). */}
           {FEED_DISCOVERY_OFFERED ? <div className="flex">{viewToggle}</div> : null}
 
-          <FeedStories now={now} />
-
-          {/* Les lives en cours, sous le bandeau des actus, là où le rail droit est retiré (sous 1 280 px) ;
-              dès 1 280 px, la même carte vit au rail droit (`FeedRail`) : jamais deux exemplaires à l'écran. */}
-          <FeedLives now={now} className="xl:hidden" />
-
           {/* La carte d'identité du fil, comme celle du réseau de l'administration : elle porte les gestes
               de création — publier, et inscrire son organisation (AS-05) — à la même place sur chaque visite. */}
-          {composer.canPublish ? (
+          {composer.canPublish || composer.formats.some((format) => format.id === "live" || format.id === "company" || format.id === "association") ? (
             <Card className="flex flex-col gap-3 p-3">
-              <div className="flex items-center gap-3">
+              {composer.canPublish ? <div className="flex items-center gap-3">
                 <Avatar id={props.membership.personId} name={props.membership.displayName} />
                 <button
                   type="button"
                   onClick={composer.open}
                   className="flex min-h-11 flex-1 items-center rounded-[var(--esp-r-chrome)] bg-muted px-4 text-left text-[15px] text-muted-foreground transition-colors hover:bg-[var(--ink-150)] focus-visible:shadow-focus"
                 >
-                  {props.membership.facet.city ? t("feed.prompt", { city: props.membership.facet.city }) : t("feed.promptNoCity")}
+                  {t("feed.promptNoCity")}
                 </button>
-              </div>
-              <ComposerMediaShortcuts open={composer.open} attach={composer.attach} goLive={composer.goLive} />
-              {/* Qui publie est en règle (`declaree` ou `verifiee`) : l'inscription lui est proposée ici ; un membre en
-                  attente la trouve dans l'annuaire des pages, qui lui dit comment devenir vérifié. Pages fermées
-                  sur le réseau (ADR-0041 du moteur) : aucune inscription proposée. */}
-              {pagesOpen ? (
-              <div role="group" aria-label={t("feed.registerLabel")} className="flex flex-wrap gap-2 border-t border-border pt-3">
-                  <Button asChild size="sm" variant="ghost">
-                    <NextLink href={routes.newPage("association")}>
-                      <UsersRoundIcon aria-hidden />
-                      {t("pageAdmin.myPages.createAssociation")}
-                    </NextLink>
-                  </Button>
-                  <Button asChild size="sm" variant="ghost">
-                    <NextLink href={routes.newPage("company")}>
-                      <Building2Icon aria-hidden />
-                      {t("pageAdmin.myPages.createCompany")}
-                    </NextLink>
-                  </Button>
-              </div>
-              ) : null}
+              </div> : null}
+              <CreationActions formats={composer.formats} onPost={composer.canPublish ? composer.open : null} onLive={() => composer.goLive?.()} />
             </Card>
           ) : null}
+
+          <FeedStories now={now} />
+
+          {/* Les lives en cours, sous le bandeau des actus, là où le rail droit est retiré (sous 1 280 px) ;
+              dès 1 280 px, la même carte vit au rail droit (`FeedRail`) : jamais deux exemplaires à l'écran. */}
+          <FeedLives now={now} className="xl:hidden" />
 
           <FeedPages
             membership={props.membership}
@@ -239,53 +234,6 @@ function Feed(props: { membership: MembershipView }) {
         </>
       )}
     </>
-  )
-}
-
-/**
- * A3 (25/11/2026, comme UDB) : les raccourcis Photo et Vidéo de la carte « Quoi de neuf ? ».
- * Un seul geste ouvre la feuille de publication ET le sélecteur de fichiers : le sélecteur
- * est appelé dans le geste même (un navigateur de téléphone refuse de l'ouvrir plus tard),
- * puis les fichiers choisis rejoignent le composeur, qui les juge comme un choix fait chez lui.
- *
- * Live (26/11/2026) : à côté de Photo et Vidéo, comme « Lancer une conférence » à côté de « Publier »
- * dans la carte d'identité du réseau de l'administration (`ReseauAgentPage` du socle). Le même geste
- * que « Créer → Un live » (la création du moteur s'ouvre en place), offert seulement quand la coque
- * l'offre (`goLive`) : jamais en démonstration, jamais l'interrupteur du direct fermé.
- */
-function ComposerMediaShortcuts(props: { open: () => void; attach: (files: readonly File[]) => void; goLive: (() => void) | null }) {
-  const { t } = useDiasporaGaT()
-  const LiveIcon = MEMBER_CREATE_ICONS.live
-  const photoInput = useRef<HTMLInputElement>(null)
-  const videoInput = useRef<HTMLInputElement>(null)
-  const pick = (input: HTMLInputElement | null) => {
-    input?.click()
-    props.open()
-  }
-  const chosen = (event: ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? [])
-    event.target.value = ""
-    if (files.length > 0) props.attach(files)
-  }
-  return (
-    <div role="group" aria-label={props.goLive === null ? t("feed.shortcutsLabel") : t("feed.shortcutsLabelLive")} className="flex flex-wrap gap-2">
-      <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={() => pick(photoInput.current)}>
-        <ImagePlusIcon aria-hidden />
-        {t("feed.shortcutPhoto")}
-      </Button>
-      <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={() => pick(videoInput.current)}>
-        <FilmIcon aria-hidden />
-        {t("feed.shortcutVideo")}
-      </Button>
-      {props.goLive === null ? null : (
-        <Button type="button" size="sm" variant="ghost" className="min-h-11" onClick={props.goLive}>
-          <LiveIcon aria-hidden />
-          {t("feed.shortcutLive")}
-        </Button>
-      )}
-      <input ref={photoInput} type="file" accept={POST_PHOTO_ACCEPT} multiple hidden onChange={chosen} />
-      <input ref={videoInput} type="file" accept={POST_VIDEO_ACCEPT} hidden onChange={chosen} />
-    </div>
   )
 }
 

@@ -1,3 +1,5 @@
+import { publicShareUrl } from "./share-links"
+
 export const ORIGIN = "https://diaspora.ga"
 export const feed = ORIGIN + "/fil"
 
@@ -12,6 +14,11 @@ export function incoming(link: string | null): string | null {
       const values = new URLSearchParams(url.hash.slice(1))
       if (["state", "code"].every(key => /^[a-f0-9]{64}$/.test(values.get(key) ?? ""))) return ORIGIN + "/mobile/retour" + url.hash
     }
+    // Android associates the inbox path, including links without a group invitation.
+    if (url.pathname === "/messages" && !url.searchParams.has("invitation-groupe")) return ORIGIN + "/messages"
+    const target = publicShareUrl(url)
+    if (target && url.pathname.startsWith("/publication/") && url.hash === "#commenter") return target + "#commenter"
+    return target
   } catch { /* A launch without a supported link starts at the feed. */ }
   return null
 }

@@ -159,7 +159,7 @@ describe("entraide — le lieu", () => {
     expect(parseAidCountry(undefined)).toEqual({ ok: false, code: "aid_country_required" })
     expect(parseAidCountry(null)).toEqual({ ok: false, code: "aid_country_required" })
     expect(parseAidCountry("ZZ")).toEqual({ ok: false, code: "aid_country_unknown" })
-    expect(parseAidCountry("ga")).toEqual({ ok: false, code: "aid_country_is_home" })
+    expect(parseAidCountry("ga")).toEqual({ ok: true, value: "GA" })
   })
 
   test("la ville saisie se replie ; vide, trop longue, sans lettre ou portant une coordonnée : refusée", () => {
@@ -181,7 +181,7 @@ describe("entraide — le lieu", () => {
   test("le filtre d'une liste : un pays obligatoire, une ville facultative repliée", () => {
     expect(parseAidPlaceFilter({ country: "be" })).toEqual({ ok: true, value: { country: "BE", cityKey: null } })
     expect(parseAidPlaceFilter({ country: "FR", city: " LYON " })).toEqual({ ok: true, value: { country: "FR", cityKey: "lyon" } })
-    expect(parseAidPlaceFilter({ country: "GA", city: "Lyon" })).toEqual({ ok: false, code: "aid_country_is_home" })
+    expect(parseAidPlaceFilter({ country: "GA", city: "Lyon" }).ok).toBe(true)
     expect(parseAidPlaceFilter({ country: "FR", city: "x".repeat(81) })).toEqual({ ok: false, code: "aid_city_too_long" })
   })
 })
@@ -212,7 +212,6 @@ describe("entraide — une question", () => {
     [{ detail: "Mon numéro : 07 11 22 33 44" }, "aid_contact_forbidden"],
     [{ detail: "J'habite au 3 bis, avenue Jean Jaurès" }, "aid_address_forbidden"],
     [{ theme: "finance" }, "aid_theme_invalid"],
-    [{ country: "GA" }, "aid_country_is_home"],
     [{ city: "x".repeat(AID_CITY_MAX_LENGTH + 1) }, "aid_city_too_long"],
   ] as const)("refuse %o avec %s", (change, code) => {
     expect(parseAidQuestion({ ...QUESTION, ...change })).toEqual({ ok: false, code })
@@ -347,7 +346,6 @@ describe("entraide — une mission bénévole", () => {
     [{ description: "Trop bref" }, "aid_mission_description_too_short"],
     [{ description: "x".repeat(AID_MISSION_DESCRIPTION_MAX_LENGTH + 1) }, "aid_mission_description_too_long"],
     [{ description: "Contactez le responsable au 06 12 34 56 78." }, "aid_contact_forbidden"],
-    [{ country: "GA" }, "aid_country_is_home"],
     [{ city: "" }, "aid_city_required"],
     [{ area: "x".repeat(AID_MISSION_AREA_MAX_LENGTH + 1) }, "aid_mission_area_too_long"],
     [{ area: "Au 5 rue de la République" }, "aid_address_forbidden"],

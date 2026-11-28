@@ -196,15 +196,15 @@ describe("démonstration — mentorat", () => {
     const mine = renderHook(() => capability.useMyProfile())
     expect(mine.result.current).toEqual({ status: "ready", data: null })
     expect(await capability.becomeMentor({ ...profileInput(), consent: false })).toEqual({ ok: false, code: "mentor_consent_required" })
-    expect(await capability.becomeMentor({ ...profileInput({ country: "GA" as CountryCode }), consent: true })).toEqual({ ok: false, code: "mentor_country_invalid" })
+    expect(await capability.becomeMentor({ ...profileInput({ country: "ZZ" as CountryCode }), consent: true })).toEqual({ ok: false, code: "mentor_country_invalid" })
     let mentorId = ""
     await act(async () => {
-      const result = await capability.becomeMentor({ ...profileInput(), consent: true })
+      const result = await capability.becomeMentor({ ...profileInput({ country: "GA", city: "Libreville" }), consent: true })
       if (!result.ok) throw new Error(result.code)
       mentorId = result.value.mentorId
       expect(result.value.version).toBe(1)
     })
-    expect(ready(mine.result.current)).toMatchObject({ mentorId, state: "active", domains: ["studies"], city: "Bordeaux", activeMentees: 0, pendingRequests: 0, optedInAt: NOW })
+    expect(ready(mine.result.current)).toMatchObject({ mentorId, state: "active", domains: ["studies"], country: "GA", city: "Libreville", activeMentees: 0, pendingRequests: 0, optedInAt: NOW })
     expect(await capability.becomeMentor({ ...profileInput(), consent: true })).toEqual({ ok: false, code: "mentor_profile_exists" })
     await act(async () => { expect(await capability.updateProfile({ ...profileInput({ domains: ["studies", "admin"], city: null }), expectedVersion: 1 })).toEqual({ ok: true, value: { version: 2 } }) })
     expect(ready(mine.result.current)).toMatchObject({ domains: ["studies", "admin"], city: null, version: 2 })

@@ -170,25 +170,28 @@ describe("CountrySwitch — le sélecteur de pays", () => {
     return { onChange, user: userEvent.setup() }
   }
 
-  it("s'ouvre sur sa recherche, filtre sans accents, et ne propose jamais le Gabon", async () => {
+  it("s'ouvre sur sa recherche, filtre sans accents, et inclut le Gabon", async () => {
     const { user } = setup()
     await user.click(screen.getByRole("combobox"))
     const search = screen.getByRole("searchbox", { name: "Rechercher un pays" })
     expect(search).toHaveFocus()
     await user.type(search, "gab")
+    expect(screen.getByRole("button", { name: /Gabon/ })).toBeInTheDocument()
+    await user.clear(search)
+    await user.type(search, "introuvable")
     expect(screen.getByText("Aucun pays ne correspond à votre recherche.")).toBeInTheDocument()
     await user.clear(search)
     await user.type(search, "etats")
     expect(screen.getByText("États-Unis")).toBeInTheDocument()
   })
 
-  it("marque les pays ouverts et rend le code choisi", async () => {
+  it("présente une liste uniforme et rend le code choisi", async () => {
     const { user, onChange } = setup()
     await user.click(screen.getByRole("combobox"))
     await user.type(screen.getByRole("searchbox"), "France")
     const dialog = screen.getByRole("dialog")
     const france = within(dialog).getByRole("button", { name: /France/ })
-    expect(france).toHaveTextContent("Ouvert")
+    expect(france).not.toHaveTextContent("Ouvert")
     await user.click(france)
     expect(onChange).toHaveBeenCalledWith("FR")
     expect(screen.queryByRole("dialog")).toBeNull()

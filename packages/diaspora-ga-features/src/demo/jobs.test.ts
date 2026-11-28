@@ -233,7 +233,7 @@ describe("démonstration de l'emploi — profils de talent", () => {
     // Masqué de la recherche (Canada) ou masqué tout court (Belgique) : introuvables.
     expect(data(renderHook(() => jobs.useTalentSearch({ country: "CA", cursor: null })).result.current).items).toEqual([])
     expect(data(renderHook(() => jobs.useTalentSearch({ country: "BE", cursor: null })).result.current).items).toEqual([])
-    expect(renderHook(() => jobs.useTalentSearch({ country: "GA" as "FR", cursor: null })).result.current).toEqual({ status: "error", code: "job_country_is_home" })
+    expect(renderHook(() => jobs.useTalentSearch({ country: "GA", cursor: null })).result.current).toMatchObject({ status: "ready", data: { items: [], isDone: true } })
     const steeve = setup("p-steeve")
     expect(data(renderHook(() => steeve.jobs.useTalentSearch({ country: "FR", cursor: null })).result.current).items.map((item) => item.id)).toEqual(["talent-demo-a"])
   })

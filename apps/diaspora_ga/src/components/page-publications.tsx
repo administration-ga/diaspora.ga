@@ -1,8 +1,11 @@
 "use client"
 
+import { api } from "@convex/_generated/api"
+import type { Id } from "@convex/_generated/dataModel"
+import { useLoaded } from "@/data/engine-kit"
+import { useEngineNetwork } from "./icom"
 import { Button, PostComposerSheet, Sheet, SheetContent } from "@diaspora-ga/features"
 import {
-  useOpenCountries,
   useOptionalDataSource,
   type MembershipView,
   type PagePublicationsCapability,
@@ -18,12 +21,23 @@ import { toast } from "sonner"
 export function PagePublishButton(props: { page: PageView; membership: MembershipView; role: PageViewerRole | null }) {
   const capability = useOptionalDataSource()?.pagePublications
   if (!capability || !props.membership.canPublish || props.role === null) return null
-  return <PagePublisher key={`${props.membership.personId}:${props.page.id}`} {...props} capability={capability} />
+  return <NetworkPagePublisher key={`${props.membership.personId}:${props.page.id}`} {...props} capability={capability} />
 }
 
-function PagePublisher(props: { page: PageView; membership: MembershipView; capability: PagePublicationsCapability }) {
+type PublisherProps = { page: PageView; membership: MembershipView; capability: PagePublicationsCapability }
+
+function NetworkPagePublisher(props: PublisherProps) {
+  const network = useEngineNetwork()
+  return network ? <EnginePagePublisher {...props} networkId={network.networkId} /> : <PagePublisher {...props} />
+}
+
+function EnginePagePublisher({ networkId, ...props }: PublisherProps & { networkId: Id<"networks"> }) {
+  const setting = useLoaded(api.modules.diaspora.guestReading.setting, { networkId, pageId: props.page.id as Id<"pages"> })
+  return <PagePublisher {...props} guestSharing={setting.state === "ready" && setting.value} />
+}
+
+function PagePublisher(props: { guestSharing?: boolean; page: PageView; membership: MembershipView; capability: PagePublicationsCapability }) {
   const { t } = useDiasporaGaT()
-  const countries = useOpenCountries()
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -35,9 +49,9 @@ function PagePublisher(props: { page: PageView; membership: MembershipView; capa
         open={open}
         onOpenChange={setOpen}
         memberCountry={props.page.country ?? props.membership.facet.countryOfResidence}
-        openCountries={countries.status === "ready" ? countries.data.map((row) => row.country) : null}
+
         draftKey={`diaspora-ga:brouillon:${props.membership.personId}:page:${props.page.id}`}
-        page={{ id: props.page.id, name: props.page.name, country: props.page.country, publish: props.capability.publish }}
+        page={{ guestSharing: props.guestSharing, id: props.page.id, name: props.page.name, country: props.page.country, publish: props.capability.publish }}
       />
     </>
   )

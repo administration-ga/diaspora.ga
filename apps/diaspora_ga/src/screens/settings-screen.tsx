@@ -1,5 +1,7 @@
 "use client"
 
+import { GuestVisibilitySetting } from "@/components/guest-visibility-setting"
+
 import { zodResolver } from "@hookform/resolvers/zod"
 import {
   FACET_FIELDS,
@@ -29,7 +31,7 @@ import {
   formatDate,
   type SubViewItem,
 } from "@diaspora-ga/features"
-import { useActions, useFeatureGate, useMyConsents, useOpenCountries, type MembershipView } from "@diaspora-ga/features/data"
+import { useActions, useFeatureGate, useMyConsents, type MembershipView } from "@diaspora-ga/features/data"
 import { useDiasporaGaT } from "@diaspora-ga/features/i18n/client"
 import { MEMBER_INFORMATION_ICON } from "@diaspora-ga/features/navigation"
 import {
@@ -303,7 +305,6 @@ function FacetSection(props: { membership: MembershipView }) {
   const { t } = useDiasporaGaT()
   const actions = useActions()
   const ids = useId()
-  const open = useOpenCountries()
   const { facet } = props.membership
   const form = useForm<FacetInput, unknown, FacetValues>({
     resolver: zodResolver(facetSchema),
@@ -349,7 +350,7 @@ function FacetSection(props: { membership: MembershipView }) {
                     invalid={control.invalid}
                     value={isResidenceCountry(field.value) ? field.value : null}
                     onChange={field.onChange}
-                    openCountries={open.status === "ready" ? open.data.map((item) => item.country) : []}
+
                     title={t("welcome.countrySheetTitle")}
                     description={t("welcome.countrySheetDescription")}
                   />
@@ -400,6 +401,7 @@ function DirectorySection(props: { membership: MembershipView }) {
   const directoryConsent = consents.status === "ready" && consents.data.some((item) => item.purpose === "directory" && item.granted)
   return (
     <Section id="annuaire" title={t("settings.directory")} lead={t("settings.directoryLead")}>
+      <GuestVisibilitySetting canEnable={directoryConsent && props.membership.directoryVisibility === "network"} />
       {!directoryConsent ? <p className="rounded-lg bg-muted px-3 py-2 text-[13px]">{t("settings.directoryNeedsConsent")}</p> : null}
       <RadioGroup
         value={props.membership.directoryVisibility}

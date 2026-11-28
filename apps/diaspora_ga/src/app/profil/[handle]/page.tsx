@@ -1,3 +1,4 @@
+import { GuestEntry } from "@/components/guest-reader"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 
@@ -14,7 +15,7 @@ export default async function ProfilePage(props: { params: Promise<{ handle: str
   const { handle } = await props.params
   return (
     <Suspense fallback={<GateSkeleton />}>
-      <ProfileScreen handle={handle} />
+      <GuestEntry screen="profile" target={handle}><ProfileScreen handle={handle} /></GuestEntry>
     </Suspense>
   )
 }
